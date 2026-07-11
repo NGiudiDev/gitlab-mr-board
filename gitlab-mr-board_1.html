@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Tablero de MRs — GitLab</title>
+<style>
+  :root{
+    --bg:#12141A;
+    --surface:#1A1D24;
+    --surface-raised:#22262F;
+    --border:#2A2F3A;
+    --border-soft:#22252D;
+    --text:#E7E9ED;
+    --text-muted:#9098A6;
+    --text-faint:#5C6270;
+    --accent:#45B8C9;
+    --accent-soft:#173238;
+    --ready:#4FB477;
+    --ready-soft:#16261D;
+    --draft:#D9A441;
+    --draft-soft:#2B2213;
+    --conflict:#E5484D;
+    --conflict-soft:#301617;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Cascadia Code", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body,html{margin:0;padding:0;}
+  #root{
+    font-family:var(--sans);
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    padding:20px 22px 40px;
+    -webkit-font-smoothing:antialiased;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important; animation:none !important;}
+  }
+  a{color:var(--accent); text-decoration:none;}
+  a:hover{text-decoration:underline;}
+  button{
+    font-family:var(--sans);
+    background:var(--surface-raised);
+    color:var(--text);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:7px 12px;
+    font-size:13px;
+    cursor:pointer;
+  }
+  button:hover{border-color:var(--text-faint);}
+  button:focus-visible, input:focus-visible, select:focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:1px;
+  }
+  button.primary{background:var(--accent); border-color:var(--accent); color:#0A2226; font-weight:600;}
+  button.primary:hover{opacity:0.9;}
+  button.ghost{background:transparent;}
+  button.small{padding:4px 9px; font-size:12px;}
+  input[type=text], input[type=password], input[type=url]{
+    font-family:var(--sans);
+    background:var(--bg);
+    color:var(--text);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:8px 10px;
+    font-size:13px;
+    width:100%;
+  }
+  label.field-label{font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;}
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    flex-wrap:wrap; margin-bottom:18px;
+  }
+  .title-block h1{font-size:18px; font-weight:600; margin:0 0 2px;}
+  .title-block .sub{font-size:12.5px; color:var(--text-muted); font-family:var(--mono);}
+  .status-pill{
+    display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--text-muted);
+    padding:4px 10px; border:1px solid var(--border); border-radius:999px; background:var(--surface);
+  }
+  .dot{width:7px; height:7px; border-radius:50%; background:var(--text-faint); flex:none;}
+  .dot.on{background:var(--ready);}
+  .dot.off{background:var(--conflict);}
+  .topbar-actions{display:flex; gap:8px; align-items:center;}
+
+  .config-panel{
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    padding:18px 20px; margin-bottom:18px;
+  }
+  .config-panel h2{font-size:14px; font-weight:600; margin:0 0 4px;}
+  .config-panel p.hint{font-size:12.5px; color:var(--text-muted); margin:0 0 14px;}
+  .config-grid{display:grid; grid-template-columns:1.2fr 1.4fr 1fr; gap:12px; align-items:end;}
+  @media (max-width:800px){ .config-grid{grid-template-columns:1fr;} }
+  .config-grid .actions{display:flex; gap:8px;}
+  .error-box{
+    background:var(--conflict-soft); border:1px solid var(--conflict); color:#FFD9D6;
+    border-radius:8px; padding:10px 12px; font-size:12.5px; margin-top:12px; line-height:1.5;
+  }
+
+  .toolbar{
+    display:flex; align-items:center; justify-content:space-between; gap:14px;
+    flex-wrap:wrap; margin-bottom:14px;
+  }
+  .tabs{display:flex; gap:4px; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:3px;}
+  .tab{
+    font-size:12.5px; padding:6px 12px; border-radius:6px; color:var(--text-muted); cursor:pointer; user-select:none;
+  }
+  .tab.active{background:var(--surface-raised); color:var(--text);}
+  .search-wrap{position:relative; min-width:220px; flex:1; max-width:320px;}
+  .chips{display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;}
+  .chip{
+    font-family:var(--mono); font-size:11.5px; padding:4px 9px; border-radius:6px;
+    border:1px solid var(--border); color:var(--text-muted); cursor:pointer; user-select:none; background:var(--surface);
+  }
+  .chip.active{color:var(--text); border-color:var(--accent); background:var(--accent-soft);}
+
+  .board{display:flex; gap:14px; overflow-x:auto; padding-bottom:12px;}
+  .column{
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    min-width:290px; max-width:290px; flex:none; display:flex; flex-direction:column; max-height:74vh;
+  }
+  .column.dragover{border-color:var(--accent);}
+  .column-head{
+    padding:11px 13px; border-bottom:1px solid var(--border-soft); display:flex; align-items:center; justify-content:space-between;
+  }
+  .column-head .name{font-size:12.5px; font-weight:600; display:flex; align-items:center; gap:6px;}
+  .column-head .name::before{content:"›"; color:var(--text-faint); font-weight:700;}
+  .column-head .count{font-size:11px; color:var(--text-muted); background:var(--surface-raised); padding:1px 7px; border-radius:999px;}
+  .column-body{overflow-y:auto; padding:9px; display:flex; flex-direction:column; gap:8px;}
+  .empty-col{font-size:12px; color:var(--text-faint); text-align:center; padding:18px 6px;}
+
+  .card{
+    background:var(--surface-raised); border:1px solid var(--border-soft); border-left:3px solid var(--text-faint);
+    border-radius:6px; padding:9px 11px; cursor:grab;
+  }
+  .card.status-ready{border-left-color:var(--ready);}
+  .card.status-draft{border-left-color:var(--draft);}
+  .card.status-conflict{border-left-color:var(--conflict);}
+  .card.status-blocked{border-left-color:var(--draft);}
+  .card:active{cursor:grabbing;}
+  .card .mr-title{font-size:13px; line-height:1.4; margin:0 0 6px; display:block;}
+  .card .mr-meta-row{display:flex; align-items:center; justify-content:space-between; gap:6px; margin-top:6px;}
+  .card .proj{font-family:var(--mono); font-size:10.5px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .card .branch{font-family:var(--mono); font-size:10.5px; color:var(--text-faint); margin-top:5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .card .author{font-size:11px; color:var(--text-muted);}
+  .card .labels{display:flex; flex-wrap:wrap; gap:4px; margin-top:7px;}
+  .label-pill{font-size:10px; padding:1px 6px; border-radius:4px; background:var(--surface); color:var(--text-muted); border:1px solid var(--border);}
+  .status-tag{font-size:10px; padding:1px 6px; border-radius:4px; font-weight:600;}
+  .status-tag.status-ready{color:var(--ready); background:var(--ready-soft);}
+  .status-tag.status-draft{color:var(--draft); background:var(--draft-soft);}
+  .status-tag.status-conflict{color:var(--conflict); background:var(--conflict-soft);}
+  .status-tag.status-blocked{color:var(--draft); background:var(--draft-soft);}
+
+  .loading, .empty-state{
+    text-align:center; color:var(--text-muted); font-size:13px; padding:60px 20px;
+    border:1px dashed var(--border); border-radius:10px; background:var(--surface);
+  }
+  .footer-note{font-size:11.5px; color:var(--text-faint); margin-top:16px; line-height:1.6;}
+  .sr-only{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0);}
+</style>
+</head>
+<body>
+<div id="root">
+  <h2 class="sr-only">Tablero de merge requests abiertas de un grupo de GitLab, agrupables por proyecto, estado o columnas personalizadas con arrastrar y soltar.</h2>
+
+  <div class="topbar">
+    <div class="title-block">
+      <h1 id="boardTitle">Tablero de MRs</h1>
+      <div class="sub" id="boardSub">sin conectar</div>
+    </div>
+    <div class="topbar-actions">
+      <span class="status-pill" id="statusPill"><span class="dot" id="statusDot"></span><span id="statusText">Sin conexión</span></span>
+      <button class="small" id="btnRefresh" style="display:none;">Actualizar</button>
+      <button class="small" id="btnConfig">Conexión</button>
+    </div>
+  </div>
+
+  <div class="config-panel" id="configPanel">
+    <h2>Conectar con GitLab</h2>
+    <p class="hint">El token se usa solo en este navegador para llamar directamente a la API de GitLab. No se guarda ni pasa por ningún otro lado — hay que pegarlo de nuevo en cada sesión.</p>
+    <div class="config-grid">
+      <div>
+        <label class="field-label" for="inpBaseUrl">URL de la instancia</label>
+        <input type="url" id="inpBaseUrl" placeholder="https://gitlab.com" value="https://gitlab.com">
+      </div>
+      <div>
+        <label class="field-label" for="inpGroup">Grupo (path completo o ID)</label>
+        <input type="text" id="inpGroup" placeholder="mi-empresa/frontend">
+      </div>
+      <div>
+        <label class="field-label" for="inpToken">Personal Access Token (scope read_api)</label>
+        <input type="password" id="inpToken" placeholder="glpat-xxxxxxxxxxxx">
+      </div>
+    </div>
+    <div class="config-grid" style="margin-top:12px; grid-template-columns:1fr auto;">
+      <div></div>
+      <div class="actions">
+        <button class="ghost small" id="btnCancelConfig">Cancelar</button>
+        <button class="primary" id="btnConnect">Conectar y cargar</button>
+      </div>
+    </div>
+    <div class="error-box" id="configError" style="display:none;"></div>
+  </div>
+
+  <div id="mainArea" style="display:none;">
+    <div class="toolbar">
+      <div class="tabs" id="viewTabs">
+        <div class="tab active" data-view="project">Por proyecto</div>
+        <div class="tab" data-view="status">Por estado</div>
+        <div class="tab" data-view="custom">Mi tablero</div>
+      </div>
+      <div class="search-wrap">
+        <input type="text" id="inpSearch" placeholder="Buscar por título, autor o rama…">
+      </div>
+    </div>
+    <div class="chips" id="projectChips"></div>
+    <div id="boardWrap" style="margin-top:14px;"></div>
+  </div>
+
+  <div class="footer-note" id="footerNote"></div>
+</div>
+
+<script>
+(function(){
+  var state = {
+    baseUrl: "https://gitlab.com",
+    groupPath: "",
+    token: "",
+    mrs: [],
+    connected: false,
+    view: "project",
+    search: "",
+    activeProjects: null,
+    assignments: {},
+    lastLoaded: null
+  };
+
+  var CUSTOM_COLUMNS = [
+    {id:"todo", name:"Por revisar"},
+    {id:"doing", name:"En progreso"},
+    {id:"approved", name:"Aprobada"},
+    {id:"blocked", name:"Bloqueada"}
+  ];
+
+  var el = {};
+  ["boardTitle","boardSub","statusPill","statusDot","statusText","btnRefresh","btnConfig",
+   "configPanel","inpBaseUrl","inpGroup","inpToken","btnCancelConfig","btnConnect","configError",
+   "mainArea","viewTabs","inpSearch","projectChips","boardWrap","footerNote"].forEach(function(id){
+    el[id] = document.getElementById(id);
+  });
+
+  function slug(s){ return (s||"").toLowerCase().replace(/[^a-z0-9]+/g,"-"); }
+
+  function hasStorage(){
+    return typeof window !== "undefined" && window.storage &&
+      typeof window.storage.get === "function" && typeof window.storage.set === "function";
+  }
+
+  function loadLocalConfig(){
+    if(!hasStorage()) return Promise.resolve();
+    return window.storage.get("gitlab-board-config", false)
+      .then(function(r){
+        var v = JSON.parse(r.value);
+        state.baseUrl = v.baseUrl || state.baseUrl;
+        state.groupPath = v.groupPath || "";
+        state.view = v.view || "project";
+      })
+      .catch(function(){ });
+  }
+
+  function saveLocalConfig(){
+    if(!hasStorage()) return;
+    var payload = JSON.stringify({baseUrl: state.baseUrl, groupPath: state.groupPath, view: state.view});
+    window.storage.set("gitlab-board-config", payload, false).catch(function(){});
+  }
+
+  function loadAssignments(){
+    if(!hasStorage()){ state.assignments = {}; return Promise.resolve(); }
+    var key = "gitlab-board-assign:" + slug(state.groupPath);
+    return window.storage.get(key, false)
+      .then(function(r){ state.assignments = JSON.parse(r.value); })
+      .catch(function(){ state.assignments = {}; });
+  }
+
+  function saveAssignments(){
+    if(!hasStorage()) return;
+    var key = "gitlab-board-assign:" + slug(state.groupPath);
+    window.storage.set(key, JSON.stringify(state.assignments), false).catch(function(){});
+  }
+
+  function setStatus(connected, text){
+    el.statusDot.className = "dot " + (connected ? "on" : "off");
+    el.statusText.textContent = text;
+  }
+
+  function showConfigPanel(show){
+    el.configPanel.style.display = show ? "block" : "none";
+    el.mainArea.style.display = show ? "none" : "block";
+    el.btnRefresh.style.display = (show || !state.connected) ? "none" : "inline-block";
+  }
+
+  el.btnConfig.addEventListener("click", function(){
+    el.inpBaseUrl.value = state.baseUrl;
+    el.inpGroup.value = state.groupPath;
+    el.inpToken.value = "";
+    el.configError.style.display = "none";
+    showConfigPanel(true);
+  });
+
+  el.btnCancelConfig.addEventListener("click", function(){
+    if(state.connected) showConfigPanel(false);
+  });
+
+  el.btnRefresh.addEventListener("click", function(){ fetchAll(); });
+
+  function apiUrl(base, path){
+    return base.replace(/\/$/,"") + "/api/v4" + path;
+  }
+
+  function fetchAllPages(url){
+    var acc = [];
+    function step(pageUrl, pagesLeft){
+      if(pagesLeft <= 0) return Promise.resolve(acc);
+      return fetch(pageUrl, {headers: {"PRIVATE-TOKEN": state.token}})
+        .then(function(res){
+          if(!res.ok){
+            return res.text().then(function(t){
+              var msg = "Error " + res.status;
+              if(res.status === 401) msg = "Token inválido o sin permisos (necesita al menos scope read_api).";
+              else if(res.status === 404) msg = "No se encontró el grupo, o el token no tiene acceso a él.";
+              else msg = "Error " + res.status + " de la API: " + t.slice(0,200);
+              throw new Error(msg);
+            });
+          }
+          return res.json().then(function(data){
+            acc = acc.concat(data);
+            var next = res.headers.get("x-next-page");
+            if(next){
+              var u = new URL(pageUrl);
+              u.searchParams.set("page", next);
+              return step(u.toString(), pagesLeft - 1);
+            }
+            return acc;
+          });
+        });
+    }
+    return step(url, 10);
+  }
+
+  function fetchAll(){
+    el.boardWrap.innerHTML = '<div class="loading">Cargando merge requests…</div>';
+    setStatus(true, "Cargando…");
+    var url = apiUrl(state.baseUrl, "/groups/" + encodeURIComponent(state.groupPath) + "/merge_requests");
+    var u = new URL(url);
+    u.searchParams.set("state","opened");
+    u.searchParams.set("scope","all");
+    u.searchParams.set("per_page","100");
+    u.searchParams.set("include_subgroups","true");
+    u.searchParams.set("order_by","updated_at");
+    u.searchParams.set("sort","desc");
+
+    fetchAllPages(u.toString())
+      .then(function(mrs){
+        state.mrs = mrs.map(normalizeMR);
+        state.lastLoaded = new Date();
+        state.connected = true;
+        setStatus(true, "Conectado · " + state.mrs.length + " MRs abiertas");
+        el.boardSub.textContent = state.baseUrl.replace(/^https?:\/\//,"") + " / " + state.groupPath;
+        buildProjectChips();
+        render();
+        showConfigPanel(false);
+      })
+      .catch(function(err){
+        setStatus(false, "Error de conexión");
+        el.boardWrap.innerHTML = '<div class="loading">No se pudo cargar el tablero.<br><br>' + escapeHtml(err.message || String(err)) +
+          '<br><br>Si es una instancia self-managed y esto falla por CORS, un admin puede necesitar habilitarlo en la configuración de GitLab.</div>';
+      });
+  }
+
+  function normalizeMR(mr){
+    var ref = (mr.references && mr.references.full) || "";
+    var projectPath = ref;
+    var idx = ref.lastIndexOf("!");
+    if(idx > -1) projectPath = ref.slice(0, idx);
+    if(!projectPath){
+      try{
+        var u = new URL(mr.web_url);
+        projectPath = u.pathname.split("/-/merge_requests/")[0].replace(/^\//,"");
+      }catch(e){ projectPath = "proyecto desconocido"; }
+    }
+    var status = "ready";
+    if(mr.draft || mr.work_in_progress) status = "draft";
+    else if(mr.has_conflicts || mr.merge_status === "cannot_be_merged") status = "conflict";
+    else if(mr.detailed_merge_status && ["blocked_status","need_rebase","ci_must_pass","discussions_not_resolved","not_approved"].indexOf(mr.detailed_merge_status) > -1) status = "blocked";
+
+    return {
+      key: mr.project_id + "-" + mr.iid,
+      iid: mr.iid,
+      title: mr.title,
+      url: mr.web_url,
+      author: mr.author ? mr.author.name : "desconocido",
+      labels: mr.labels || [],
+      status: status,
+      sourceBranch: mr.source_branch,
+      targetBranch: mr.target_branch,
+      projectPath: projectPath,
+      updatedAt: mr.updated_at
+    };
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  function buildProjectChips(){
+    var projects = Array.from(new Set(state.mrs.map(function(m){ return m.projectPath; }))).sort();
+    if(state.activeProjects === null){
+      state.activeProjects = new Set(projects);
+    }
+    el.projectChips.innerHTML = "";
+    projects.forEach(function(p){
+      var chip = document.createElement("div");
+      chip.className = "chip" + (state.activeProjects.has(p) ? " active" : "");
+      chip.textContent = p;
+      chip.addEventListener("click", function(){
+        if(state.activeProjects.has(p)) state.activeProjects.delete(p);
+        else state.activeProjects.add(p);
+        buildProjectChips();
+        render();
+      });
+      el.projectChips.appendChild(chip);
+    });
+  }
+
+  function filteredMRs(){
+    var q = state.search.trim().toLowerCase();
+    return state.mrs.filter(function(m){
+      if(state.activeProjects && !state.activeProjects.has(m.projectPath)) return false;
+      if(!q) return true;
+      return (m.title + " " + m.author + " " + m.sourceBranch + " " + m.targetBranch + " " + m.projectPath)
+        .toLowerCase().indexOf(q) > -1;
+    });
+  }
+
+  function statusLabel(s){
+    return {ready:"Lista", draft:"Draft", conflict:"Conflicto", blocked:"Bloqueada"}[s] || s;
+  }
+
+  function timeAgo(iso){
+    var d = new Date(iso);
+    var diff = (Date.now() - d.getTime()) / 1000;
+    if(diff < 3600) return Math.max(1, Math.round(diff/60)) + "m";
+    if(diff < 86400) return Math.round(diff/3600) + "h";
+    return Math.round(diff/86400) + "d";
+  }
+
+  function cardHtml(m, showProject){
+    return '<div class="card status-' + m.status + '" draggable="true" data-key="' + m.key + '">' +
+      '<a class="mr-title" href="' + m.url + '" target="_blank" rel="noopener">' + escapeHtml(m.title) + '</a>' +
+      (showProject ? '<div class="proj">' + escapeHtml(m.projectPath) + '</div>' : '') +
+      '<div class="branch">' + escapeHtml(m.sourceBranch) + ' → ' + escapeHtml(m.targetBranch) + '</div>' +
+      '<div class="mr-meta-row">' +
+        '<span class="author">' + escapeHtml(m.author) + ' · ' + timeAgo(m.updatedAt) + '</span>' +
+        '<span class="status-tag status-' + m.status + '">' + statusLabel(m.status) + '</span>' +
+      '</div>' +
+      (m.labels.length ? '<div class="labels">' + m.labels.slice(0,4).map(function(l){ return '<span class="label-pill">' + escapeHtml(l) + '</span>'; }).join("") + '</div>' : '') +
+    '</div>';
+  }
+
+  function render(){
+    var mrs = filteredMRs();
+    if(mrs.length === 0){
+      el.boardWrap.innerHTML = '<div class="empty-state">Ninguna MR coincide con los filtros actuales.</div>';
+      return;
+    }
+    var columns = [];
+    if(state.view === "project"){
+      var byProj = {};
+      mrs.forEach(function(m){ (byProj[m.projectPath] = byProj[m.projectPath] || []).push(m); });
+      columns = Object.keys(byProj).sort().map(function(p){ return {id:p, name:p, mrs: byProj[p], showProject:false}; });
+    } else if(state.view === "status"){
+      var order = ["conflict","blocked","draft","ready"];
+      var names = {conflict:"Con conflictos", blocked:"Bloqueadas", draft:"Draft", ready:"Listas para revisar"};
+      columns = order.map(function(s){ return {id:s, name:names[s], mrs: mrs.filter(function(m){ return m.status === s; }), showProject:true}; });
+    } else {
+      columns = CUSTOM_COLUMNS.map(function(c){
+        return {id:c.id, name:c.name, showProject:true,
+          mrs: mrs.filter(function(m){ return (state.assignments[m.key] || "todo") === c.id; })};
+      });
+    }
+
+    var html = '<div class="board" id="boardInner">';
+    columns.forEach(function(col){
+      html += '<div class="column" data-col="' + col.id + '">' +
+        '<div class="column-head"><span class="name">' + escapeHtml(col.name) + '</span><span class="count">' + col.mrs.length + '</span></div>' +
+        '<div class="column-body">' +
+        (col.mrs.length ? col.mrs.map(function(m){ return cardHtml(m, col.showProject); }).join("") : '<div class="empty-col">Sin MRs</div>') +
+        '</div></div>';
+    });
+    html += '</div>';
+    el.boardWrap.innerHTML = html;
+
+    if(state.view === "custom"){
+      var cols = el.boardWrap.querySelectorAll(".column");
+      cols.forEach(function(c){
+        c.addEventListener("dragover", function(e){ e.preventDefault(); c.classList.add("dragover"); });
+        c.addEventListener("dragleave", function(){ c.classList.remove("dragover"); });
+        c.addEventListener("drop", function(e){
+          e.preventDefault();
+          c.classList.remove("dragover");
+          var key = e.dataTransfer.getData("text/plain");
+          if(key){
+            state.assignments[key] = c.getAttribute("data-col");
+            saveAssignments();
+            render();
+          }
+        });
+      });
+      var cards = el.boardWrap.querySelectorAll(".card");
+      cards.forEach(function(card){
+        card.addEventListener("dragstart", function(e){
+          e.dataTransfer.setData("text/plain", card.getAttribute("data-key"));
+        });
+      });
+    }
+
+    el.footerNote.textContent = state.lastLoaded ? "Última actualización: " + state.lastLoaded.toLocaleTimeString() + " · " + state.mrs.length + " MRs en total en el grupo." : "";
+  }
+
+  el.viewTabs.addEventListener("click", function(e){
+    var tab = e.target.closest(".tab");
+    if(!tab) return;
+    Array.from(el.viewTabs.children).forEach(function(t){ t.classList.remove("active"); });
+    tab.classList.add("active");
+    state.view = tab.getAttribute("data-view");
+    saveLocalConfig();
+    render();
+  });
+
+  el.inpSearch.addEventListener("input", function(){
+    state.search = el.inpSearch.value;
+    render();
+  });
+
+  el.btnConnect.addEventListener("click", function(){
+    var baseUrl = el.inpBaseUrl.value.trim().replace(/\/$/,"");
+    var groupPath = el.inpGroup.value.trim().replace(/^\//,"");
+    var token = el.inpToken.value.trim();
+    el.configError.style.display = "none";
+    if(!baseUrl || !groupPath || !token){
+      el.configError.textContent = "Completá la URL, el grupo y el token para continuar.";
+      el.configError.style.display = "block";
+      return;
+    }
+    state.baseUrl = baseUrl;
+    state.groupPath = groupPath;
+    state.token = token;
+    state.activeProjects = null;
+    saveLocalConfig();
+    el.boardTitle.textContent = "Tablero de MRs · " + groupPath.split("/").pop();
+    el.mainArea.style.display = "block";
+    loadAssignments().then(fetchAll);
+  });
+
+  loadLocalConfig().then(function(){
+    el.inpBaseUrl.value = state.baseUrl;
+    el.inpGroup.value = state.groupPath;
+    Array.from(el.viewTabs.children).forEach(function(t){
+      t.classList.toggle("active", t.getAttribute("data-view") === state.view);
+    });
+    showConfigPanel(true);
+  });
+})();
+</script>
+</body>
+</html>

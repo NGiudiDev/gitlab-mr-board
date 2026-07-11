@@ -1,0 +1,9 @@
+{
+  "name": "gitlab-mr-board",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GitLab MR Board - Backend + Frontend",
+  "scripts": {
+    "start": "start-dev.bat"
+  }
+}
