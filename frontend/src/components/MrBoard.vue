@@ -24,8 +24,8 @@ const columns = computed(() => {
     const order = [
       { id: 'gray', name: 'Draft' },
       { id: 'red', name: 'Bloqueadas' },
-      { id: 'review', name: 'Code Review' },
       { id: 'yellow', name: 'Pendientes' },
+      { id: 'review', name: 'Code Review' },
       { id: 'green', name: 'Listas para mergear' },
       { id: 'backlog', name: 'Despriorizado' },
     ]
