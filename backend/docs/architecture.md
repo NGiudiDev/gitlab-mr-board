@@ -26,10 +26,10 @@ services/mergeRequestService.js
     │
     ├── Paso 2: Para cada MR, en paralelo (rate-limited):
     │   ├── GET /projects/:id/merge_requests/:iid/approvals
-    │   └── GET /projects/:id/merge_requests/:iid/discussions
-    │   (Pipeline se extrae del campo head_pipeline del MR)
+    │   ├── GET /projects/:id/merge_requests/:iid/discussions
+    │   └── GET /projects/:id/merge_requests/:iid/pipelines
     │
-    ├── Paso 3: Computa mergeability (green/yellow/red/gray)
+    ├── Paso 3: Computa mergeability (backlog/gray/attention/red/review/yellow/green)
     │
     └── Retorna JSON consolidado al frontend
 ```
@@ -40,7 +40,7 @@ services/mergeRequestService.js
 
 Carga las variables de entorno desde `.env` usando `dotenv`. Valida que las requeridas (`GITLAB_TOKEN`, `PROJECT_IDS`) esten presentes y termina el proceso con un mensaje claro si faltan.
 
-Exporta un objeto `config` con los valores ya parseados (IDs como array, puerto como numero, etc.).
+Exporta un objeto `config` con los valores ya parseados (IDs como array, puerto como numero, `teamLeadUsername`, `minApprovals`, etc.).
 
 ### `src/services/gitlabApi.js`
 
@@ -55,10 +55,10 @@ Cliente HTTP generico para la API de GitLab v4. Provee dos niveles:
 Orquesta toda la logica de negocio:
 
 - **`fetchOpenMRsForProject(projectId)`**: Trae los MRs abiertos de un proyecto.
-- **`fetchApprovals(projectId, mrIid)`**: Consulta el estado de aprobaciones. Si falla (ej: GitLab Free no tiene este endpoint), retorna `status: "unknown"` en lugar de romper.
+- **`fetchApprovals(projectId, mrIid)`**: Consulta el estado de aprobaciones via `/approvals`. Usa `approved_by.length` para contar approvals reales, verifica si el team lead (`config.teamLeadUsername`) aprobo, y requiere al menos `config.minApprovals`. Si falla (ej: GitLab Free), retorna `status: "unknown"`.
 - **`fetchUnresolvedThreads(projectId, mrIid)`**: Cuenta los hilos de discusion no resueltos usando el endpoint de discussions.
-- **`extractPipeline(mr)`**: Extrae el estado del pipeline desde el campo `head_pipeline` del MR (no hace request adicional).
-- **`computeMergeability(mr, approvals, threads, pipeline)`**: Evalua los bloqueantes y asigna un color (green/yellow/red/gray).
+- **`fetchPipeline(projectId, mrIid)`**: Consulta el pipeline mas reciente del MR via `/pipelines` (endpoint dedicado, no se usa `head_pipeline` del MR porque no siempre esta disponible).
+- **`computeMergeability(mr, approvals, threads, pipeline)`**: Evalua los bloqueantes y labels (`backlog`, `qa_approved`) para asignar un estado: `backlog`, `gray`, `attention`, `red`, `review`, `yellow` o `green`.
 - **`enrichMR(mr)`**: Compone todas las funciones anteriores para enriquecer un MR crudo de GitLab.
 - **`getAllMergeRequests()`**: Entry point principal. Consulta todos los proyectos en paralelo, enriquece cada MR, ordena por fecha de actualizacion.
 
@@ -95,6 +95,7 @@ La estrategia es **degradacion elegante** (graceful degradation):
 | Proyecto entero falla | Se loguea el error y se excluye ese proyecto. Los demas se muestran. |
 | Approvals falla      | El MR se muestra con `approvals.status: "unknown"`.                  |
 | Discussions falla    | El MR se muestra con `threads.status: "unknown"`.                    |
+| Pipeline falla       | El MR se muestra con `pipeline.status: "none"`.                      |
 | Todos los proyectos  | Se retorna HTTP 502 con detalle del error.                           |
 | Error inesperado     | Se retorna HTTP 500 con mensaje generico.                            |
 

@@ -42,12 +42,17 @@ El dashboard usa un tema oscuro heredado del prototipo original (`gitlab-mr-boar
 
 ### Mapeo de mergeability a colores
 
-| Mergeability | Borde izquierdo card | Badge background | Badge text |
-|--------------|---------------------|------------------|------------|
-| `green`      | `border-l-ready`    | `bg-ready-soft`  | `text-ready`  |
-| `yellow`     | `border-l-draft`    | `bg-draft-soft`  | `text-draft`  |
-| `red`        | `border-l-conflict` | `bg-conflict-soft`| `text-conflict`|
-| `gray`       | `border-l-text-faint`| `bg-surface`    | `text-text-muted`|
+| Mergeability | Borde izquierdo card    | Badge background   | Badge text        |
+|--------------|------------------------|--------------------|--------------------|
+| `green`      | `border-l-ready`       | `bg-ready-soft`    | `text-ready`       |
+| `yellow`     | `border-l-draft`       | `bg-draft-soft`    | `text-draft`       |
+| `red`        | `border-l-conflict`    | `bg-conflict-soft` | `text-conflict`    |
+| `gray`       | `border-l-text-faint`  | `bg-surface`       | `text-text-muted`  |
+| `review`     | `border-l-blue-400`    | —                  | —                  |
+| `attention`  | `border-l-orange-400`  | —                  | —                  |
+| `backlog`    | `border-l-text-muted`  | —                  | —                  |
+
+> **Nota**: `review`, `attention` y `backlog` usan colores de Tailwind directamente (`blue-400`, `orange-400`, `text-muted`) en vez de tokens semanticos custom. Los badges internos de cada card siguen usando los colores semanticos del bloqueante correspondiente.
 
 ## Tipografia
 

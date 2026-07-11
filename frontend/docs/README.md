@@ -34,7 +34,10 @@ VITE_API_BASE_URL=https://mi-backend.ejemplo.com
 ## Ejecucion
 
 ```bash
-# Desarrollo (con hot-reload)
+# Desde el root del proyecto (levanta backend + frontend juntos)
+npm start
+
+# Solo frontend en desarrollo (con hot-reload)
 npx vite
 
 # Build para produccion

@@ -29,6 +29,8 @@ Las variables de entorno se cargan desde el archivo `.env` ubicado en la raiz de
 | `PROJECT_IDS`        | Si        | —                    | IDs numericos de proyectos, separados por coma           |
 | `PORT`               | No        | `3001`               | Puerto en el que escucha el servidor                     |
 | `POLL_CACHE_TTL_MS`  | No        | `60000`              | Tiempo de vida del cache en milisegundos (default 1 min) |
+| `TEAM_LEAD_USERNAME` | No        | `NGiudi`             | Username de GitLab del lider del equipo                  |
+| `MIN_APPROVALS`      | No        | `2`                  | Cantidad minima de approvals requeridos para mergear     |
 
 ### Ejemplo de `.env`
 
@@ -38,6 +40,8 @@ GITLAB_BASE_URL=https://gitlab.com
 PROJECT_IDS=12345,67890,11223
 PORT=3001
 POLL_CACHE_TTL_MS=60000
+TEAM_LEAD_USERNAME=NGiudi
+MIN_APPROVALS=2
 ```
 
 > **Seguridad**: El archivo `.env` esta incluido en `.gitignore` y nunca debe ser commiteado. El token jamas se expone al frontend.
@@ -45,10 +49,13 @@ POLL_CACHE_TTL_MS=60000
 ## Ejecucion
 
 ```bash
-# Produccion
+# Desde el root del proyecto (levanta backend + frontend juntos)
 npm start
 
-# Desarrollo (con hot-reload usando --watch de Node.js)
+# Solo backend en produccion
+npm start
+
+# Solo backend en desarrollo (con hot-reload usando --watch de Node.js)
 npm run dev
 ```
 

@@ -89,7 +89,7 @@ Recibe la lista de MRs filtrados y los agrupa en columnas segun el modo de vista
 
 **Por estado** (`viewMode: "status"`):
 - Agrupa MRs por `mergeability`.
-- Columnas fijas: Bloqueadas (red), Pendientes (yellow), Listas para mergear (green), Draft (gray).
+- Columnas fijas en orden: Draft (gray), Bloqueadas (red), Pendientes (yellow), Code Review (review), Requiere atencion (attention), Listas para mergear (green), Despriorizado (backlog).
 
 ---
 
@@ -140,12 +140,15 @@ Card principal que representa un Merge Request individual.
 
 ### Color del borde izquierdo
 
-| Mergeability | Color             | Codigo   |
-|--------------|-------------------|----------|
-| `green`      | Verde (ready)     | #4FB477  |
-| `yellow`     | Amarillo (draft)  | #D9A441  |
-| `red`        | Rojo (conflict)   | #E5484D  |
-| `gray`       | Gris (text-faint) | #5C6270  |
+| Mergeability | Color               | Clase Tailwind          |
+|--------------|---------------------|-------------------------|
+| `green`      | Verde (ready)       | `border-l-ready`        |
+| `yellow`     | Amarillo (draft)    | `border-l-draft`        |
+| `red`        | Rojo (conflict)     | `border-l-conflict`     |
+| `gray`       | Gris (text-faint)   | `border-l-text-faint`   |
+| `review`     | Azul                | `border-l-blue-400`     |
+| `attention`  | Naranja             | `border-l-orange-400`   |
+| `backlog`    | Gris claro (muted)  | `border-l-text-muted`   |
 
 ---
 
@@ -153,7 +156,7 @@ Card principal que representa un Merge Request individual.
 
 **Tipo**: Presentacional
 
-Pill/badge que muestra el estado de un bloqueante individual.
+Pill/badge que muestra el estado de un bloqueante individual. El badge de pipeline es clickeable y abre el pipeline en GitLab.
 
 ### Props
 
@@ -161,6 +164,11 @@ Pill/badge que muestra el estado de un bloqueante individual.
 |--------|--------|--------------------------------------------------------|
 | `type` | String | Tipo de bloqueante: `"pipeline"`, `"threads"`, `"approvals"` |
 | `data` | Object | Datos del bloqueante (estructura segun tipo)           |
+
+### Comportamiento
+
+- El componente raiz usa `<component :is>` dinamico: si el badge tiene un `pipelineUrl`, renderiza un `<a>` clickeable; si no, un `<span>`.
+- Los badges de pipeline abren el link en una nueva pestana (`target="_blank"`).
 
 ### Variantes por tipo
 
@@ -187,6 +195,13 @@ Pill/badge que muestra el estado de un bloqueante individual.
 | `approved`   | Verde    | `{N}/{N}`     |
 | `pending`    | Amarillo | `{dado}/{req}`|
 | `unknown`    | Gris     | Approvals ?   |
+
+### Tooltip de approvals
+
+El tooltip muestra informacion detallada:
+- Cantidad de approvals dados sobre los requeridos (`X/2 aprobaciones`)
+- Usernames de quienes aprobaron (`Aprobado por: user1, user2`)
+- Indicador si falta la aprobacion del lider (`Falta aprobación del líder`)
 
 ---
 

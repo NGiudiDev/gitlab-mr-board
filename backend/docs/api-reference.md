@@ -56,7 +56,9 @@ Retorna todos los Merge Requests abiertos de los proyectos configurados, enrique
           "status": "pending",
           "required": 2,
           "given": 1,
-          "missingApprovers": ["Maria Garcia"]
+          "approvers": ["user1"],
+          "hasLeadApproval": false,
+          "missingApprovers": []
         },
         "threads": {
           "status": "open",
@@ -98,18 +100,22 @@ Retorna todos los Merge Requests abiertos de los proyectos configurados, enrique
 | `updatedAt`      | string   | Fecha de ultima actualizacion (ISO 8601)             |
 | `createdAt`      | string   | Fecha de creacion (ISO 8601)                         |
 | `blockers`       | object   | Objeto con los 3 bloqueantes analizados              |
-| `mergeability`   | string   | Estado de mergeabilidad: `green`, `yellow`, `red`, `gray` |
+| `mergeability`   | string   | Estado de mergeabilidad: `green`, `yellow`, `red`, `gray`, `review`, `attention`, `backlog` |
 
 ### Objeto `blockers.approvals`
 
 | Campo              | Tipo     | Descripcion                                      |
 |--------------------|----------|--------------------------------------------------|
 | `status`           | string   | `"approved"`, `"pending"` o `"unknown"`          |
-| `required`         | number   | Cantidad de approvals requeridos                 |
-| `given`            | number   | Cantidad de approvals otorgados                  |
+| `required`         | number   | Cantidad de approvals requeridos (configurable via `MIN_APPROVALS`) |
+| `given`            | number   | Cantidad de approvals otorgados (conteo real de `approved_by`) |
+| `approvers`        | string[] | Usernames de GitLab de quienes aprobaron         |
+| `hasLeadApproval`  | boolean  | `true` si el team lead (configurable via `TEAM_LEAD_USERNAME`) aprobo |
 | `missingApprovers` | string[] | Nombres de los aprobadores faltantes             |
 
 > **Nota**: El endpoint de approvals requiere GitLab Premium o Ultimate. En GitLab Free retorna `status: "unknown"`.
+>
+> Un MR se considera `"approved"` cuando tiene al menos `MIN_APPROVALS` approvals y uno de ellos es del team lead.
 
 ### Objeto `blockers.threads`
 
@@ -129,12 +135,22 @@ Retorna todos los Merge Requests abiertos de los proyectos configurados, enrique
 
 El campo `mergeability` se calcula en el backend segun esta prioridad:
 
-| Valor      | Condicion                                                    |
-|------------|--------------------------------------------------------------|
-| `gray`     | El MR es draft o WIP                                         |
-| `red`      | Tiene conflictos, pipeline fallo/cancelado, o hilos abiertos |
-| `yellow`   | Approvals pendientes, o pipeline corriendo/pendiente         |
-| `green`    | Pipeline ok, hilos resueltos, approvals completos            |
+| Valor       | Condicion                                                              |
+|-------------|------------------------------------------------------------------------|
+| `backlog`   | El MR tiene el label `backlog`                                         |
+| `gray`      | El MR es draft o WIP                                                   |
+| `attention` | Tiene label `qa_approved` pero esta bloqueado (conflictos, CI fallido, hilos abiertos) |
+| `red`       | Tiene conflictos, pipeline fallo/cancelado, o hilos abiertos           |
+| `review`    | Faltan approvals (minimo 2, incluyendo el del team lead)               |
+| `yellow`    | Pipeline corriendo/pendiente, o falta el label `qa_approved`           |
+| `green`     | Pipeline ok, hilos resueltos, approvals completos, y label `qa_approved` |
+
+### Labels que afectan mergeability
+
+| Label          | Efecto                                                                   |
+|----------------|--------------------------------------------------------------------------|
+| `backlog`      | Mueve el MR a estado `backlog` (se evalua primero, antes que draft)      |
+| `qa_approved`  | Requerido para llegar a `green`. Si presente pero bloqueado, va a `attention` |
 
 ### Response `502 Bad Gateway`
 
