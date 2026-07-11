@@ -17,6 +17,8 @@ const config = {
   projectIds: process.env.PROJECT_IDS.split(',').map((id) => id.trim()).filter(Boolean),
   port: parseInt(process.env.PORT, 10) || 3001,
   cacheTtlMs: parseInt(process.env.POLL_CACHE_TTL_MS, 10) || 60000,
+  teamLeadUsername: process.env.TEAM_LEAD_USERNAME || 'NGiudi',
+  minApprovals: parseInt(process.env.MIN_APPROVALS, 10) || 2,
 };
 
 module.exports = config;

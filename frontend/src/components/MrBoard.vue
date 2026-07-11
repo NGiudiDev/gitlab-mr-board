@@ -22,10 +22,10 @@ const columns = computed(() => {
   const mrs = props.mergeRequests
   if (props.viewMode === 'status') {
     const order = [
+      { id: 'gray', name: 'Draft' },
       { id: 'red', name: 'Bloqueadas' },
       { id: 'yellow', name: 'Pendientes' },
       { id: 'green', name: 'Listas para mergear' },
-      { id: 'gray', name: 'Draft' },
     ]
     return order.map((col) => ({
       ...col,

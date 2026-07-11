@@ -59,10 +59,11 @@ const tooltip = computed(() => {
   if (props.type === 'threads') return `${props.data.unresolvedCount} hilos sin resolver`
   if (props.type === 'approvals') {
     if (props.data.status === 'unknown') return 'No se pudo obtener info de approvals'
-    const missing = props.data.missingApprovers
-    return missing.length > 0
-      ? `Faltan: ${missing.join(', ')}`
-      : `${props.data.given}/${props.data.required} aprobaciones`
+    const { given, required, approvers, hasLeadApproval } = props.data
+    const parts = [`${given}/${required} aprobaciones`]
+    if (approvers && approvers.length > 0) parts.push(`Aprobado por: ${approvers.join(', ')}`)
+    if (!hasLeadApproval) parts.push('Falta aprobación del líder')
+    return parts.join('\n')
   }
   return ''
 })

@@ -1,6 +1,7 @@
 const config = require('../config');
 const { fetchPaginatedWithLimit, fetchWithLimit } = require('./gitlabApi');
 
+
 async function fetchOpenMRsForProject(projectId) {
   return fetchPaginatedWithLimit(`/projects/${projectId}/merge_requests`, {
     state: 'opened',
@@ -15,22 +16,19 @@ async function fetchApprovals(projectId, mrIid) {
     const { data } = await fetchWithLimit(
       `/projects/${projectId}/merge_requests/${mrIid}/approvals`
     );
-    const required = data.approvals_required || 0;
     const approvedBy = data.approved_by || [];
     const given = approvedBy.length;
-    const approvalsLeft = data.approvals_left !== undefined
-      ? data.approvals_left
-      : Math.max(0, required - given);
-
-    const missingApprovers = approvalsLeft > 0
-      ? (data.suggested_approvers || []).map((a) => a.name)
-      : [];
+    const approvers = approvedBy.map((a) => a.user.username);
+    const hasLeadApproval = approvers.includes(config.teamLeadUsername);
+    const isApproved = given >= config.minApprovals && hasLeadApproval;
 
     return {
-      status: approvalsLeft === 0 ? 'approved' : 'pending',
-      required,
+      status: isApproved ? 'approved' : 'pending',
+      required: config.minApprovals,
       given,
-      missingApprovers,
+      approvers,
+      hasLeadApproval,
+      missingApprovers: [],
     };
   } catch {
     return { status: 'unknown', required: 0, given: 0, missingApprovers: [] };
