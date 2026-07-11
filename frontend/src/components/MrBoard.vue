@@ -18,25 +18,20 @@ const props = defineProps({
   viewMode: { type: String, default: 'project' },
 })
 
-const isBacklog = (mr) => mr.labels.some((l) => l.toLowerCase() === 'backlog')
-
 const columns = computed(() => {
   const mrs = props.mergeRequests
   if (props.viewMode === 'status') {
-    const backlogMrs = mrs.filter(isBacklog)
-    const activeMrs = mrs.filter((mr) => !isBacklog(mr))
     const order = [
       { id: 'gray', name: 'Draft' },
       { id: 'red', name: 'Bloqueadas' },
       { id: 'yellow', name: 'Pendientes' },
       { id: 'green', name: 'Listas para mergear' },
+      { id: 'backlog', name: 'Despriorizado' },
     ]
-    const cols = order.map((col) => ({
+    return order.map((col) => ({
       ...col,
-      mrs: activeMrs.filter((mr) => mr.mergeability === col.id),
+      mrs: mrs.filter((mr) => mr.mergeability === col.id),
     }))
-    cols.push({ id: 'backlog', name: 'Despriorizado', mrs: backlogMrs })
-    return cols
   }
 
   const byProject = {}

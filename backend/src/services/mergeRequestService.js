@@ -83,6 +83,8 @@ async function fetchPipeline(projectId, mrIid) {
 }
 
 function computeMergeability(mr, approvals, threads, pipeline) {
+  const labels = (mr.labels || []).map((l) => l.toLowerCase());
+  if (labels.includes('backlog')) return 'backlog';
   if (mr.draft || mr.work_in_progress) return 'gray';
   if (mr.has_conflicts) return 'red';
   if (pipeline.status === 'failed' || pipeline.status === 'canceled') return 'red';

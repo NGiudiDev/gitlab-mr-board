@@ -47,6 +47,7 @@ const cardClasses = computed(() => {
     yellow: 'border-l-draft',
     red: 'border-l-conflict',
     gray: 'border-l-text-faint',
+    backlog: 'border-l-text-muted',
   }
   return `${base} ${colorMap[props.mr.mergeability] || 'border-l-text-faint'}`
 })
