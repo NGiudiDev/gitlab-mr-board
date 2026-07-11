@@ -89,7 +89,7 @@ function computeMergeability(mr, approvals, threads, pipeline) {
   if (mr.has_conflicts) return 'red';
   if (pipeline.status === 'failed' || pipeline.status === 'canceled') return 'red';
   if (threads.status === 'open') return 'red';
-  if (approvals.status === 'pending') return 'yellow';
+  if (approvals.status === 'pending') return 'review';
   if (pipeline.status === 'running' || pipeline.status === 'pending') return 'yellow';
   if (
     (pipeline.status === 'success' || pipeline.status === 'none') &&
