@@ -14,6 +14,11 @@
       <BlockerBadge type="approvals" :data="mr.blockers.approvals" />
     </div>
 
+    <div v-if="assignee" class="flex items-center gap-1.5 mt-2">
+      <span class="text-[10px] font-semibold text-text-muted">Responsable:</span>
+      <span class="text-[10px] text-text-primary">{{ assignee }}</span>
+    </div>
+
     <div class="flex items-center justify-between mt-2 gap-2">
       <span class="text-[11px] text-text-muted truncate">{{ mr.author }} · {{ timeAgo(mr.updatedAt) }}</span>
       <span v-if="mr.isDraft" class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-surface text-text-muted">Draft</span>
@@ -52,6 +57,17 @@ const cardClasses = computed(() => {
     backlog: 'border-l-text-muted',
   }
   return `${base} ${colorMap[props.mr.mergeability] || 'border-l-text-faint'}`
+})
+
+const assignee = computed(() => {
+  const m = props.mr.mergeability
+  if (m === 'gray' || m === 'red' || m === 'attention' || m === 'green') return props.mr.author
+  if (m === 'review') {
+    const reviewers = props.mr.reviewers || []
+    if (reviewers.length > 0) return reviewers.map((r) => r.name).join(', ')
+    return null
+  }
+  return null
 })
 
 function timeAgo(iso) {

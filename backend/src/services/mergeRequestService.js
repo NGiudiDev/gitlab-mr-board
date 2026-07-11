@@ -140,6 +140,11 @@ async function enrichMR(mr) {
     labels: mr.labels || [],
     isDraft: Boolean(mr.draft || mr.work_in_progress),
     hasConflicts: Boolean(mr.has_conflicts),
+    reviewers: (mr.reviewers || []).map((r) => ({
+      name: r.name,
+      username: r.username,
+      avatar: r.avatar_url,
+    })),
     updatedAt: mr.updated_at,
     createdAt: mr.created_at,
     blockers: {
