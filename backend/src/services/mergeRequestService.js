@@ -86,20 +86,20 @@ function computeMergeability(mr, approvals, threads, pipeline) {
   const labels = (mr.labels || []).map((l) => l.toLowerCase());
   if (labels.includes('backlog')) return 'backlog';
   if (mr.draft || mr.work_in_progress) return 'gray';
-  if (mr.has_conflicts) return 'red';
-  if (pipeline.status === 'failed' || pipeline.status === 'canceled') return 'red';
-  if (threads.status === 'open') return 'red';
+
+  const hasQa = labels.includes('qa_approved');
+  const isBlocked = mr.has_conflicts
+    || pipeline.status === 'failed' || pipeline.status === 'canceled'
+    || threads.status === 'open';
+
+  if (hasQa && isBlocked) return 'attention';
+
+  if (isBlocked) return 'red';
   if (approvals.status === 'pending') return 'review';
   if (pipeline.status === 'running' || pipeline.status === 'pending') return 'yellow';
-  if (!labels.includes('qa_approved')) return 'yellow';
-  if (
-    (pipeline.status === 'success' || pipeline.status === 'none') &&
-    threads.status !== 'open' &&
-    approvals.status !== 'pending'
-  ) {
-    return 'green';
-  }
-  return 'yellow';
+  if (!hasQa) return 'yellow';
+
+  return 'green';
 }
 
 function extractProjectPath(mr) {
@@ -126,7 +126,6 @@ async function enrichMR(mr) {
     fetchPipeline(projectId, iid),
   ]);
   const mergeability = computeMergeability(mr, approvals, threads, pipeline);
-
   return {
     id: `${projectId}-${iid}`,
     iid,

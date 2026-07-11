@@ -26,6 +26,7 @@ const columns = computed(() => {
       { id: 'red', name: 'Bloqueadas' },
       { id: 'yellow', name: 'Pendientes' },
       { id: 'review', name: 'Code Review' },
+      { id: 'attention', name: 'Requiere atención' },
       { id: 'green', name: 'Listas para mergear' },
       { id: 'backlog', name: 'Despriorizado' },
     ]
