@@ -60,7 +60,8 @@ Orquesta toda la logica de negocio:
 - **`fetchPipeline(projectId, mrIid)`**: Consulta el pipeline mas reciente del MR via `/pipelines` (endpoint dedicado, no se usa `head_pipeline` del MR porque no siempre esta disponible).
 - **`computeMergeability(mr, approvals, threads, pipeline)`**: Evalua los bloqueantes y labels (`backlog`, `qa_approved`) para asignar un estado: `backlog`, `gray`, `attention`, `red`, `review`, `yellow` o `green`.
 - **`enrichMR(mr)`**: Compone todas las funciones anteriores para enriquecer un MR crudo de GitLab.
-- **`getAllMergeRequests()`**: Entry point principal. Consulta todos los proyectos en paralelo, enriquece cada MR, ordena por fecha de actualizacion.
+- **`fetchProjectPath(projectId)`**: Obtiene el `path_with_namespace` de un proyecto via `GET /projects/:id`.
+- **`getAllMergeRequests()`**: Entry point principal. Consulta todos los proyectos en paralelo, enriquece cada MR, ordena por fecha de actualizacion. Incluye `allProjects` en el meta con los paths de todos los proyectos configurados.
 
 ### `src/utils/rateLimiter.js`
 

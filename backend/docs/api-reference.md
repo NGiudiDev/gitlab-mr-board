@@ -75,7 +75,8 @@ Retorna todos los Merge Requests abiertos de los proyectos configurados, enrique
   "meta": {
     "fetchedAt": "2026-07-10T15:00:00.000Z",
     "projectCount": 3,
-    "totalMRs": 15
+    "totalMRs": 15,
+    "allProjects": ["my-org/backend", "my-org/frontend", "my-org/shared"]
   }
 }
 ```

@@ -6,9 +6,8 @@
 App.vue
 ├── TopBar.vue
 ├── SearchBar.vue
-├── FilterChips.vue
-└── MrBoard.vue
-    └── BoardColumn.vue (x N columnas)
+└── MrBoard.vue (secciones colapsables por repositorio)
+    └── BoardColumn.vue (x 7 columnas de estado)
         └── MrCard.vue (x N merge requests)
             └── BlockerBadge.vue (x 3: pipeline, threads, approvals)
 ```
@@ -24,15 +23,8 @@ Componente principal que orquesta toda la aplicacion. Conecta el composable `use
 ### Responsabilidades
 
 - Inicializa el composable `useMergeRequests()` que arranca el fetch y polling.
-- Maneja los tabs de vista ("Por proyecto" / "Por estado").
-- Pasa los datos filtrados a los componentes hijos via props.
+- Pasa los datos filtrados y la lista de proyectos (`meta.allProjects`) a `MrBoard`.
 - Muestra estados de carga, error y vacio.
-
-### Estado local
-
-| Ref          | Tipo   | Descripcion                                    |
-|--------------|--------|------------------------------------------------|
-| `viewMode`   | string | Vista activa: `"project"` o `"status"`         |
 
 ---
 
@@ -72,24 +64,21 @@ Header del dashboard con informacion de estado y acciones globales.
 
 **Tipo**: Contenedor logico
 
-Recibe la lista de MRs filtrados y los agrupa en columnas segun el modo de vista.
+Muestra una seccion colapsable por cada repositorio. Dentro de cada seccion, organiza los MRs en columnas por estado de mergeabilidad. Se muestran todos los proyectos configurados, incluso sin MRs abiertos. Todas las secciones inician colapsadas.
 
 ### Props
 
-| Prop             | Tipo   | Default     | Descripcion                          |
-|------------------|--------|-------------|--------------------------------------|
-| `mergeRequests`  | Array  | requerido   | Lista de MRs ya filtrados            |
-| `viewMode`       | String | `"project"` | Modo de agrupacion                   |
+| Prop             | Tipo   | Default     | Descripcion                                    |
+|------------------|--------|-------------|-------------------------------------------------|
+| `mergeRequests`  | Array  | requerido   | Lista de MRs ya filtrados                       |
+| `allProjects`    | Array  | `[]`        | Paths de todos los proyectos configurados       |
 
-### Modos de vista
+### Comportamiento
 
-**Por proyecto** (`viewMode: "project"`):
-- Agrupa MRs por `projectPath`.
-- Cada columna es un proyecto, ordenadas alfabeticamente.
-
-**Por estado** (`viewMode: "status"`):
-- Agrupa MRs por `mergeability`.
-- Columnas fijas en orden: Draft (gray), Bloqueadas (red), Pendientes (yellow), Code Review (review), Requiere atencion (attention), Listas para mergear (green), Despriorizado (backlog).
+- Agrupa MRs por `projectPath` y muestra un header colapsable por repositorio con el nombre y la cantidad de MRs.
+- Los proyectos de `allProjects` sin MRs se muestran con 0 MRs.
+- Dentro de cada seccion, muestra 7 columnas fijas por estado: Draft (gray), Bloqueadas (red), Pendientes (yellow), Code Review (review), Requiere atencion (attention), Listas para mergear (green), Despriorizado (backlog).
+- El estado de expansion se almacena en un `ref({})` reactivo (objeto con keys por repo).
 
 ---
 
@@ -109,8 +98,7 @@ Columna individual del tablero con header y lista de cards.
 ### Comportamiento
 
 - Muestra el contador de MRs en un badge junto al titulo.
-- Si no hay MRs, muestra el texto "Sin MRs".
-- El cuerpo tiene `overflow-y: auto` con altura maxima de `74vh`.
+- El cuerpo tiene `overflow-y: auto` con altura maxima de `60vh`.
 
 ---
 
@@ -229,33 +217,6 @@ Filtra MRs por coincidencia parcial (case-insensitive) en: titulo, autor, rama o
 
 ---
 
-## `FilterChips.vue`
-
-**Tipo**: Presentacional interactivo
-
-Chips toggleables para filtrar MRs por proyecto.
-
-### Props
-
-| Prop             | Tipo   | Descripcion                      |
-|------------------|--------|----------------------------------|
-| `projects`       | Array  | Lista de nombres de proyectos    |
-| `activeProjects` | Set    | Proyectos actualmente activos    |
-
-### Eventos
-
-| Evento   | Payload | Descripcion                          |
-|----------|---------|--------------------------------------|
-| `toggle` | String  | Nombre del proyecto toggled          |
-
-### Comportamiento
-
-- Los chips activos se resaltan con borde y fondo de color accent.
-- Al hacer click en un chip, se alterna su estado activo/inactivo.
-- Los MRs de proyectos inactivos se ocultan del tablero.
-
----
-
 ## Composable: `useMergeRequests()`
 
 **Archivo**: `src/composables/useMergeRequests.js`
@@ -267,21 +228,18 @@ Maneja todo el estado reactivo, la comunicacion con el backend y la logica de po
 | Ref/Computed     | Tipo       | Descripcion                                 |
 |------------------|------------|---------------------------------------------|
 | `mergeRequests`  | Ref        | Lista cruda de MRs del backend              |
-| `meta`           | Ref        | Metadatos de la respuesta (`fetchedAt`, etc) |
+| `meta`           | Ref        | Metadatos de la respuesta (`fetchedAt`, `allProjects`, etc) |
 | `loading`        | Ref        | `true` durante un fetch                     |
 | `error`          | Ref        | Mensaje de error o `null`                    |
 | `lastFetched`    | Ref        | `Date` de la ultima consulta exitosa         |
 | `searchQuery`    | Ref        | Texto del filtro de busqueda                |
-| `activeProjects` | Ref        | `Set` de proyectos activos para filtrar     |
-| `projects`       | Computed   | Lista unica de proyectos (derivada de MRs)  |
-| `filteredMRs`    | Computed   | MRs filtrados por busqueda + proyectos      |
+| `filteredMRs`    | Computed   | MRs filtrados por busqueda de texto          |
 
 ### Metodos exportados
 
 | Metodo            | Parametros | Descripcion                                          |
 |-------------------|------------|------------------------------------------------------|
 | `fetchMRs(force)` | `boolean`  | Consulta el backend. `force=true` bypasea cache      |
-| `toggleProject(p)`| `string`   | Alterna un proyecto en el filtro activo               |
 
 ### Ciclo de vida
 

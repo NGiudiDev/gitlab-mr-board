@@ -45,13 +45,12 @@ gitlab-mr-board/
 │   │   ├── composables/
 │   │   │   └── useMergeRequests.js  # Fetch y polling de datos
 │   │   └── components/
-│   │       ├── MrBoard.vue       # Board con columnas
-│   │       ├── BoardColumn.vue   # Columna individual
+│   │       ├── MrBoard.vue       # Tableros colapsables por repositorio
+│   │       ├── BoardColumn.vue   # Columna de estado individual
 │   │       ├── MrCard.vue        # Card de cada MR
 │   │       ├── BlockerBadge.vue  # Badge de CI, hilos y approvals
 │   │       ├── TopBar.vue        # Barra superior
-│   │       ├── SearchBar.vue     # Busqueda
-│   │       └── FilterChips.vue   # Filtros por proyecto
+│   │       └── SearchBar.vue     # Busqueda
 │   └── package.json
 │
 ├── start-dev.bat             # Script para levantar backend + frontend
@@ -124,13 +123,9 @@ Editar `backend/.env` con los siguientes valores:
 
 ## Funcionalidades
 
-### Vistas del tablero
+### Vista del tablero
 
-El tablero tiene dos modos de visualizacion:
-
-**Por proyecto**: Columnas agrupadas por repositorio de GitLab.
-
-**Por estado**: Columnas segun el estado de mergeabilidad de cada MR:
+El tablero muestra una seccion colapsable por cada repositorio configurado. Dentro de cada seccion, los MRs se organizan en columnas por estado de mergeabilidad. Se muestran todos los proyectos configurados, incluso los que no tienen MRs abiertos. Todas las secciones inician colapsadas.
 
 | Columna | Color | Condicion |
 |---|---|---|
@@ -190,7 +185,6 @@ Cada card muestra tres badges:
 ### Filtros
 
 - Busqueda por texto (titulo, autor, rama, proyecto)
-- Filtro por proyecto via chips toggleables
 
 ## API
 
@@ -234,7 +228,8 @@ Devuelve todos los MRs abiertos de los proyectos configurados, enriquecidos con 
   "meta": {
     "fetchedAt": "2026-07-10T00:00:00.000Z",
     "projectCount": 7,
-    "totalMRs": 26
+    "totalMRs": 26,
+    "allProjects": ["group/project-a", "group/project-b"]
   }
 }
 ```

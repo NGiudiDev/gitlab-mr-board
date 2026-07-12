@@ -2,7 +2,7 @@
 
 ## Descripcion general
 
-Aplicacion web construida con **Vue.js 3** (Composition API) y **Tailwind CSS** que muestra un dashboard de Merge Requests de GitLab. Consume datos del backend BFF y los presenta en un tablero visual tipo kanban con indicadores de color por bloqueante.
+Aplicacion web construida con **Vue.js 3** (Composition API) y **Tailwind CSS** que muestra un dashboard de Merge Requests de GitLab. Consume datos del backend BFF y los presenta en secciones colapsables por repositorio, cada una con columnas tipo kanban por estado de mergeabilidad.
 
 ## Requisitos previos
 
@@ -69,12 +69,11 @@ src/
 │   └── useMergeRequests.js          # Estado reactivo, fetch, polling, filtros
 └── components/
     ├── TopBar.vue                   # Header con titulo, status y boton refrescar
-    ├── MrBoard.vue                  # Contenedor del tablero (columnas)
-    ├── BoardColumn.vue              # Columna individual con lista de cards
+    ├── MrBoard.vue                  # Tableros colapsables por repositorio
+    ├── BoardColumn.vue              # Columna de estado individual
     ├── MrCard.vue                   # Card de MR con bloqueantes visuales
     ├── BlockerBadge.vue             # Pill/badge de un bloqueante individual
-    ├── SearchBar.vue                # Input de busqueda
-    └── FilterChips.vue              # Chips de filtro por proyecto
+    └── SearchBar.vue                # Input de busqueda
 ```
 
 Documentacion detallada de componentes en [components.md](./components.md).

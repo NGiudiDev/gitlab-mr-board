@@ -83,13 +83,22 @@ El dashboard usa un tema oscuro heredado del prototipo original (`gitlab-mr-boar
 - Border radius: `rounded-md` (6px)
 - Padding: `p-2.5 px-3`
 
-### Columnas del tablero
+### Secciones de repositorio (MrBoard)
 
-- Fondo: `bg-surface`
-- Borde: `border border-border rounded-lg`
-- Ancho fijo: `min-w-[290px] max-w-[290px]`
-- Altura maxima: `max-h-[74vh]` con scroll interno
-- Gap entre columnas: `gap-3.5`
+- Contenedor: `border border-border rounded-lg bg-surface overflow-hidden`
+- Header colapsable: `px-4 py-2.5 hover:bg-surface-raised cursor-pointer`
+- Indicador de expansion: `▶` con `transition-transform rotate-90`
+- Nombre del repo: `text-[13px] font-semibold font-mono`
+- Contenido: `flex gap-3 overflow-x-auto p-3 border-t border-border-soft`
+- Gap entre secciones: `gap-4`
+
+### Columnas de estado
+
+- Fondo: `bg-surface-raised`
+- Borde: `border border-border-soft rounded-lg`
+- Ancho fijo: `min-w-[250px] max-w-[250px]`
+- Altura maxima: `max-h-[60vh]` con scroll interno
+- Gap entre columnas: `gap-3`
 
 ### Blocker Badges
 
@@ -98,13 +107,6 @@ El dashboard usa un tema oscuro heredado del prototipo original (`gitlab-mr-boar
 - Padding: `px-1.5 py-0.5`
 - Border radius: `rounded`
 - Colores de fondo/texto segun la tabla de colores semanticos
-
-### Chips de filtro
-
-- Font: `font-mono text-[11.5px]`
-- Padding: `px-2 py-1`
-- Activo: `border-accent bg-accent-soft text-text-primary`
-- Inactivo: `border-border bg-surface text-text-muted`
 
 ### Botones
 
@@ -122,7 +124,7 @@ Definidos en `src/assets/main.css`:
 
 ## Responsive
 
-- El tablero usa `overflow-x: auto` para scroll horizontal cuando hay muchas columnas.
-- Las columnas tienen ancho fijo de 290px, se acomodan horizontalmente.
+- Cada seccion de repositorio usa `overflow-x: auto` para scroll horizontal cuando hay muchas columnas de estado.
+- Las columnas tienen ancho fijo de 250px, se acomodan horizontalmente.
 - El layout principal tiene `max-w-[1600px] mx-auto` para centrar en pantallas muy anchas.
-- Los tabs y la barra de busqueda usan `flex-wrap` para adaptarse a pantallas chicas.
+- La barra de busqueda se alinea a la derecha con `justify-end`.
