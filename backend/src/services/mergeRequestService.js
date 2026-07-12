@@ -156,15 +156,27 @@ async function enrichMR(mr) {
   };
 }
 
+async function fetchProjectPath(projectId) {
+  try {
+    const { data } = await fetchWithLimit(`/projects/${projectId}`);
+    return data.path_with_namespace;
+  } catch {
+    return `project-${projectId}`;
+  }
+}
+
 async function getAllMergeRequests() {
-  const projectResults = await Promise.all(
-    config.projectIds.map((id) =>
-      fetchOpenMRsForProject(id).catch((err) => {
-        console.error(`Error fetching MRs for project ${id}:`, err.message);
-        return [];
-      })
-    )
-  );
+  const [projectResults, projectPaths] = await Promise.all([
+    Promise.all(
+      config.projectIds.map((id) =>
+        fetchOpenMRsForProject(id).catch((err) => {
+          console.error(`Error fetching MRs for project ${id}:`, err.message);
+          return [];
+        })
+      )
+    ),
+    Promise.all(config.projectIds.map((id) => fetchProjectPath(id))),
+  ]);
 
   const allMRs = projectResults.flat();
 
@@ -178,6 +190,7 @@ async function getAllMergeRequests() {
       fetchedAt: new Date().toISOString(),
       projectCount: config.projectIds.length,
       totalMRs: enriched.length,
+      allProjects: projectPaths,
     },
   };
 }

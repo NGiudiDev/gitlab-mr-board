@@ -14,35 +14,18 @@
     </div>
 
     <template v-else>
-      <div class="flex items-center justify-between gap-4 flex-wrap mb-3">
-        <div class="flex gap-1 bg-surface border border-border rounded-lg p-0.5">
-          <button
-            v-for="tab in viewTabs"
-            :key="tab.id"
-            @click="viewMode = tab.id"
-            :class="viewMode === tab.id ? 'bg-surface-raised text-text-primary' : 'text-text-muted'"
-            class="text-[12.5px] px-3 py-1.5 rounded-md cursor-pointer"
-          >
-            {{ tab.label }}
-          </button>
-        </div>
+      <div class="flex items-center justify-end mb-3">
         <SearchBar v-model="searchQuery" />
       </div>
 
-      <FilterChips
-        :projects="projects"
-        :active-projects="activeProjects"
-        @toggle="toggleProject"
-      />
-
-      <div class="mt-3.5">
+      <div>
         <div v-if="loading && mergeRequests.length === 0" class="text-center text-text-muted text-[13px] py-16 border border-dashed border-border rounded-lg bg-surface">
           Cargando merge requests...
         </div>
-        <div v-else-if="filteredMRs.length === 0" class="text-center text-text-muted text-[13px] py-16 border border-dashed border-border rounded-lg bg-surface">
+        <div v-else-if="filteredMRs.length === 0 && !(meta?.allProjects?.length)" class="text-center text-text-muted text-[13px] py-16 border border-dashed border-border rounded-lg bg-surface">
           Ninguna MR coincide con los filtros actuales.
         </div>
-        <MrBoard v-else :merge-requests="filteredMRs" :view-mode="viewMode" />
+        <MrBoard v-else :merge-requests="filteredMRs" :all-projects="meta?.allProjects || []" />
       </div>
 
       <div v-if="lastFetched" class="text-[11.5px] text-text-faint mt-4">
@@ -53,11 +36,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
 import { useMergeRequests } from './composables/useMergeRequests.js'
 import TopBar from './components/TopBar.vue'
 import SearchBar from './components/SearchBar.vue'
-import FilterChips from './components/FilterChips.vue'
 import MrBoard from './components/MrBoard.vue'
 
 const {
@@ -67,16 +48,7 @@ const {
   error,
   lastFetched,
   searchQuery,
-  activeProjects,
-  projects,
   filteredMRs,
   fetchMRs,
-  toggleProject,
 } = useMergeRequests()
-
-const viewMode = ref('project')
-const viewTabs = [
-  { id: 'project', label: 'Por proyecto' },
-  { id: 'status', label: 'Por estado' },
-]
 </script>
