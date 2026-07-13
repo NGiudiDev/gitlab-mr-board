@@ -53,190 +53,153 @@ gitlab-mr-board/
 │   │       └── SearchBar.vue     # Busqueda
 │   └── package.json
 │
-├── start-dev.bat             # Script para levantar backend + frontend
+├── docs/                     # Documentacion centralizada
+│   ├── backend.md                # Arquitectura, modulos y referencia de la API
+│   ├── frontend.md               # Componentes, composables, props y eventos
+│   └── ui_&_ux.md                # Guia de estilos, paleta de colores y tipografia
+│
+├── start-dev.bat             # Script para levantar backend + frontend (Windows)
 ├── package.json              # npm start para desarrollo
+├── AGENTS.md                 # Reglas de trabajo para agentes de IA
 ├── .gitignore
 └── README.md
 ```
 
 ## Quick Start
 
-### Requisitos
+### Requisitos previos
 
 - **Node.js** >= 18.0.0
-- Un **Personal Access Token** de GitLab con scope `read_api`
+- **npm** >= 8.0.0
+- Un **Personal Access Token (PAT)** de GitLab con scope `read_api`
 - Los **IDs numericos** de los proyectos que quieras trackear
 
-### 1. Configurar el backend
+> Para encontrar el ID de un proyecto en GitLab: ir a la pagina del proyecto → Settings → General → el ID aparece debajo del nombre del proyecto.
+
+### Paso 1: Clonar el repositorio
+
+```bash
+git clone <url-del-repo>
+cd gitlab-mr-board
+```
+
+### Paso 2: Configurar el backend
 
 ```bash
 cd backend
 cp .env.example .env
 ```
 
-Editar `.env` con tus valores (ver seccion Configuracion).
+Editar `backend/.env` con tus valores:
 
-> Para encontrar el ID de un proyecto en GitLab: ir a la pagina del proyecto → Settings → General → el ID aparece debajo del nombre del proyecto.
+```env
+GITLAB_TOKEN=glpat-xxxxxxxxxxxx
+GITLAB_BASE_URL=https://gitlab.com
+PROJECT_IDS=12345,67890,11223
+PORT=3001
+POLL_CACHE_TTL_MS=60000
+TEAM_LEAD_USERNAME=NGiudi
+MIN_APPROVALS=2
+```
 
-### 2. Instalar dependencias
+Las unicas variables **obligatorias** son `GITLAB_TOKEN` y `PROJECT_IDS`. El resto tienen valores por defecto.
+
+> **Seguridad**: El archivo `.env` esta incluido en `.gitignore` y nunca debe ser commiteado. El token jamas se expone al frontend.
+
+### Paso 3: Instalar dependencias
 
 ```bash
+# Desde la raiz del proyecto
 cd backend && npm install
 cd ../frontend && npm install
 ```
 
-### 3. Ejecutar
+### Paso 4: Ejecutar
 
-Desde el root del proyecto:
+**Opcion A — Ambos juntos (recomendado para desarrollo)**
+
+Desde la raiz del proyecto:
 
 ```bash
 npm start
 ```
 
-Esto levanta backend y frontend en la misma terminal:
-- **Backend** -> http://localhost:3001
-- **Frontend** -> http://localhost:5173
+Esto ejecuta `start-dev.bat` que levanta ambos servidores en la misma terminal.
 
-Tambien se pueden levantar por separado:
+**Opcion B — Por separado**
 
 ```bash
-# Backend (con hot reload)
-cd backend && npm run dev
+# Terminal 1: Backend (con hot reload via node --watch)
+cd backend
+npm run dev
 
-# Frontend (Vite dev server)
-cd frontend && npm run dev
+# Terminal 2: Frontend (Vite dev server con HMR)
+cd frontend
+npm run dev
 ```
+
+**URLs de acceso:**
+
+| Servicio  | URL                    | Descripcion                    |
+|-----------|------------------------|--------------------------------|
+| Frontend  | http://localhost:5173  | Dashboard (interfaz principal) |
+| Backend   | http://localhost:3001  | API del BFF                    |
+| Health    | http://localhost:3001/health | Verificar que el backend esta corriendo |
+
+Al iniciar, el backend imprime los proyectos que esta rastreando:
+
+```
+Backend running on http://localhost:3001
+Tracking 3 projects: 12345, 67890, 11223
+```
+
+### Paso 5: Verificar
+
+1. Abrir http://localhost:3001/health — debe responder `{"status":"ok","projects":N}`.
+2. Abrir http://localhost:5173 — debe mostrar el dashboard con los MRs de los proyectos configurados.
 
 ## Configuracion
 
-Editar `backend/.env` con los siguientes valores:
+### Variables de entorno (backend/.env)
+
+| Variable | Descripcion | Requerida | Default |
+|---|---|---|---|
+| `GITLAB_TOKEN` | Token de GitLab con scope `read_api` | Si | — |
+| `PROJECT_IDS` | IDs de los proyectos separados por coma | Si | — |
+| `GITLAB_BASE_URL` | URL base de la instancia de GitLab | No | `https://gitlab.com` |
+| `PORT` | Puerto del servidor backend | No | `3001` |
+| `POLL_CACHE_TTL_MS` | Tiempo de cache de la API en ms | No | `60000` (1 min) |
+| `TEAM_LEAD_USERNAME` | Username de GitLab del lider del equipo | No | `NGiudi` |
+| `MIN_APPROVALS` | Cantidad minima de approvals requeridos | No | `2` |
+
+### Frontend (frontend/.env)
 
 | Variable | Descripcion | Default |
 |---|---|---|
-| `GITLAB_TOKEN` | Token de GitLab con scope `read_api` | *requerido* |
-| `GITLAB_BASE_URL` | URL base de la instancia de GitLab | `https://gitlab.com` |
-| `PROJECT_IDS` | IDs de los proyectos separados por coma | *requerido* |
-| `PORT` | Puerto del servidor backend | `3001` |
-| `POLL_CACHE_TTL_MS` | Tiempo de cache de la API en ms | `60000` |
-| `TEAM_LEAD_USERNAME` | Username de GitLab del lider del equipo | `NGiudi` |
-| `MIN_APPROVALS` | Cantidad minima de approvals requeridos | `2` |
+| `VITE_API_BASE_URL` | URL base del backend | `""` (usa proxy de Vite) |
 
-## Funcionalidades
+En desarrollo no hace falta configurar `VITE_API_BASE_URL` — Vite proxea `/api/*` a `http://localhost:3001` automaticamente.
 
-### Vista del tablero
+Para produccion:
 
-El tablero muestra una seccion colapsable por cada repositorio configurado. Dentro de cada seccion, los MRs se organizan en columnas por estado de mergeabilidad. Se muestran todos los proyectos configurados, incluso los que no tienen MRs abiertos. Todas las secciones inician colapsadas.
-
-| Columna | Color | Condicion |
-|---|---|---|
-| **Draft** | Gris | MR en estado draft o WIP |
-| **Bloqueadas** | Rojo | Conflictos, CI fallido/cancelado, o hilos sin resolver |
-| **Code Review** | Azul | Faltan approvals (minimo 2, incluyendo el del team lead) |
-| **Pendientes** | Amarillo | Pipeline en progreso, o falta el label `qa_approved` |
-| **Requiere atencion** | Naranja | Tiene label `qa_approved` pero esta bloqueado (conflictos, CI fallido, o hilos abiertos) |
-| **Listas para mergear** | Verde | CI OK, hilos resueltos, approvals completos, y label `qa_approved` |
-| **Despriorizado** | Gris claro | Tiene el label `backlog` |
-
-### Logica de mergeabilidad (orden de prioridad)
-
-1. Label `backlog` → **Despriorizado**
-2. Draft/WIP → **Draft**
-3. Label `qa_approved` + bloqueado → **Requiere atencion**
-4. Conflictos / CI fallido / hilos abiertos → **Bloqueadas**
-5. Approvals pendientes → **Code Review**
-6. Pipeline running/pending → **Pendientes**
-7. Sin label `qa_approved` → **Pendientes**
-8. Todo OK → **Listas para mergear**
-
-### Reglas de approvals
-
-Un MR se considera aprobado cuando cumple ambas condiciones:
-- Tiene al menos **2 approvals** (configurable con `MIN_APPROVALS`)
-- Uno de los approvals es del **team lead** (configurable con `TEAM_LEAD_USERNAME`)
-
-El badge de approvals muestra:
-- `X/2` con la cantidad de approvals dados sobre los requeridos
-- Tooltip con los usernames de quienes aprobaron
-- Indicador si falta la aprobacion del lider
-
-### Labels relevantes
-
-| Label | Efecto |
-|---|---|
-| `backlog` | Mueve el MR a la columna "Despriorizado" (maxima prioridad en la logica, se evalua primero) |
-| `qa_approved` | Requerido para que un MR llegue a "Listas para mergear". Si esta presente pero el MR tiene bloqueantes, va a "Requiere atencion" |
-
-### Badges de cada MR
-
-Cada card muestra tres badges:
-
-| Badge | Estados | Detalle |
-|---|---|---|
-| **Pipeline (CI)** | `CI OK`, `CI Fallo`, `CI...`, `CI Cancel`, `Sin CI` | Clickeable, abre el pipeline en GitLab |
-| **Hilos** | `Hilos OK`, `N hilo(s)` | Cantidad de hilos de discusion sin resolver |
-| **Approvals** | `X/2` | Approvals dados sobre los requeridos |
-
-### Actualizacion automatica
-
-- Polling cada 5 minutos via `setInterval`
-- Boton "Refrescar ahora" para actualizacion manual inmediata (bypasea el cache)
-- Cache server-side de 1 minuto para evitar saturar la API de GitLab
-
-### Filtros
-
-- Busqueda por texto (titulo, autor, rama, proyecto)
-
-## API
-
-### `GET /api/pull-requests`
-
-Devuelve todos los MRs abiertos de los proyectos configurados, enriquecidos con datos de pipeline, approvals y hilos.
-
-**Query params:**
-- `force=true` — Ignora el cache y hace un fetch fresco a GitLab
-
-**Response:**
-```json
-{
-  "mergeRequests": [
-    {
-      "id": "123-45",
-      "iid": 45,
-      "title": "Feature X",
-      "url": "https://gitlab.com/...",
-      "author": "Nombre",
-      "projectPath": "group/project",
-      "sourceBranch": "feature-x",
-      "targetBranch": "master",
-      "labels": ["qa_approved"],
-      "isDraft": false,
-      "hasConflicts": false,
-      "mergeability": "green",
-      "blockers": {
-        "pipeline": { "status": "success", "pipelineUrl": "https://..." },
-        "threads": { "status": "resolved", "unresolvedCount": 0 },
-        "approvals": {
-          "status": "approved",
-          "required": 2,
-          "given": 2,
-          "approvers": ["user1", "user2"],
-          "hasLeadApproval": true
-        }
-      }
-    }
-  ],
-  "meta": {
-    "fetchedAt": "2026-07-10T00:00:00.000Z",
-    "projectCount": 7,
-    "totalMRs": 26,
-    "allProjects": ["group/project-a", "group/project-b"]
-  }
-}
+```env
+VITE_API_BASE_URL=https://mi-backend.ejemplo.com
 ```
 
-## Limitaciones conocidas
+### Build para produccion
 
-- **Approvals API**: Requiere GitLab Premium o Ultimate. En GitLab Free, el indicador de approvals muestra "?" en lugar de datos.
-- **Rate limits**: GitLab.com permite 300 requests/minuto. Con muchos proyectos y MRs, considerar aumentar el TTL del cache.
-- **Sin autenticacion propia**: El dashboard no tiene login — cualquiera con acceso a la URL puede ver los MRs. Adecuado para redes internas o VPN.
-- **Sin persistencia**: No usa base de datos. El cache es en memoria y se pierde al reiniciar el backend.
+```bash
+cd frontend
+npm run build      # Genera archivos estaticos en frontend/dist/
+npm run preview    # Preview local del build en http://localhost:4173
+```
+
+## Documentacion
+
+La documentacion detallada del proyecto esta en la carpeta `docs/`:
+
+| Documento | Contenido |
+|---|---|
+| [docs/backend.md](docs/backend.md) | Arquitectura del backend, modulos, flujo de datos y manejo de errores |
+| [docs/frontend.md](docs/frontend.md) | Componentes Vue, composables, props, eventos y ciclo de vida |
+| [docs/ui_&_ux.md](docs/ui_&_ux.md) | Paleta de colores, tipografia, tokens de Tailwind y guia visual |
