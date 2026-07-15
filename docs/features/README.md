@@ -1,8 +1,8 @@
 # Features
 
-Documentacion de las features implementadas en GitLab MR Board.
+Documentacion de las features de GitLab MR Board.
 
-## Indice
+## Implementadas
 
 | Feature | Descripcion |
 |---|---|
@@ -14,3 +14,9 @@ Documentacion de las features implementadas en GitLab MR Board.
 | [Blocker badges](blocker-badges.md) | Indicadores visuales de CI, threads y aprobaciones |
 | [Responsable dinamico](responsable-dinamico.md) | Muestra quien es responsable de actuar sobre cada MR |
 | [Rate limiting](rate-limiting.md) | Control de concurrencia en llamadas a la API de GitLab |
+
+## Por desarrollar
+
+| Feature | Descripcion |
+|---|---|
+| [Columnas configurables](columnas-configurables.md) | Definir columnas y reglas de clasificacion desde un archivo JSON |
