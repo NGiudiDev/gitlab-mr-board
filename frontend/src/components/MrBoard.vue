@@ -34,10 +34,9 @@ const props = defineProps({
 
 const STATUS_ORDER = [
   { id: 'gray', name: 'Draft' },
-  { id: 'red', name: 'Bloqueadas' },
   { id: 'yellow', name: 'Pendientes' },
   { id: 'review', name: 'Code Review' },
-  { id: 'attention', name: 'Requiere atención' },
+  { id: 'qa', name: 'QA' },
   { id: 'green', name: 'Listas para mergear' },
   { id: 'backlog', name: 'Despriorizado' },
 ]

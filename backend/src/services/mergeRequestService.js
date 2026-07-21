@@ -87,15 +87,15 @@ function computeMergeability(mr, approvals, threads, pipeline) {
   if (labels.includes('backlog')) return 'backlog';
   if (mr.draft || mr.work_in_progress) return 'gray';
 
+  const hasQaPending = labels.includes('qa_pending');
   const hasQa = labels.includes('qa_approved');
   const isBlocked = mr.has_conflicts
     || pipeline.status === 'failed' || pipeline.status === 'canceled'
     || threads.status === 'open';
 
-  if (hasQa && isBlocked) return 'attention';
-
-  if (isBlocked) return 'red';
+  if (isBlocked) return 'yellow';
   if (approvals.status === 'pending') return 'review';
+  if (hasQaPending) return 'qa';
   if (pipeline.status === 'running' || pipeline.status === 'pending') return 'yellow';
   if (!hasQa) return 'yellow';
 
