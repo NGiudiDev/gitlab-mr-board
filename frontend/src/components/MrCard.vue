@@ -21,7 +21,6 @@
 
     <div class="flex items-center justify-between mt-2 gap-2">
       <span class="text-[11px] text-text-muted truncate">{{ mr.author }} · {{ timeAgo(mr.updatedAt) }}</span>
-      <span v-if="mr.isDraft" class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-surface text-text-muted">Draft</span>
       <span v-if="mr.hasConflicts" class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-conflict-soft text-conflict">Conflicto</span>
     </div>
 
@@ -50,10 +49,9 @@ const cardClasses = computed(() => {
   const colorMap = {
     green: 'border-l-ready',
     yellow: 'border-l-draft',
-    red: 'border-l-conflict',
     gray: 'border-l-text-faint',
     review: 'border-l-blue-400',
-    attention: 'border-l-orange-400',
+    qa: 'border-l-purple-400',
     backlog: 'border-l-text-muted',
   }
   return `${base} ${colorMap[props.mr.mergeability] || 'border-l-text-faint'}`
@@ -61,7 +59,7 @@ const cardClasses = computed(() => {
 
 const assignee = computed(() => {
   const m = props.mr.mergeability
-  if (m === 'gray' || m === 'red' || m === 'attention' || m === 'green') return props.mr.author
+  if (m === 'gray' || m === 'yellow' || m === 'green' || m === 'qa') return props.mr.author
   if (m === 'review') {
     const reviewers = props.mr.reviewers || []
     if (reviewers.length > 0) return reviewers.map((r) => r.name).join(', ')

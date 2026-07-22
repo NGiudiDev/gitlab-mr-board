@@ -4,15 +4,15 @@ Logica central del sistema que determina en que columna del tablero se ubica cad
 
 ## Estados
 
-Cada MR se clasifica en uno de 7 estados, evaluados en este orden de prioridad:
+Cada MR se clasifica en uno de 6 estados, evaluados en este orden de prioridad:
 
 | Prioridad | Estado | Condicion |
 |---|---|---|
 | 1 | `backlog` | Tiene el label "backlog" |
 | 2 | `gray` | Es draft o WIP |
-| 3 | `attention` | Tiene label "qa_approved" pero aun tiene bloqueantes (conflictos, CI fallido o threads sin resolver) |
-| 4 | `red` | Tiene bloqueantes: conflictos de merge, pipeline fallido/cancelado, o threads sin resolver |
-| 5 | `review` | No tiene suficientes aprobaciones o falta la aprobacion del team lead |
+| 3 | `yellow` | Tiene bloqueantes: conflictos de merge, pipeline fallido/cancelado, o threads sin resolver |
+| 4 | `review` | No tiene suficientes aprobaciones o falta la aprobacion del team lead |
+| 5 | `qa` | Tiene el label "qa_pending" (pendiente de QA) |
 | 6 | `yellow` | Pipeline corriendo/pendiente, o falta el label "qa_approved" |
 | 7 | `green` | Todo ok: sin bloqueantes, aprobado, pipeline pasado, QA aprobado |
 

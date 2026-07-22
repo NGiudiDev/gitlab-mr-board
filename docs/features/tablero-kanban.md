@@ -4,21 +4,20 @@ Vista principal de la aplicacion. Muestra todos los Merge Requests abiertos orga
 
 ## Columnas
 
-El tablero tiene 7 columnas, una por cada estado posible:
+El tablero tiene 6 columnas, una por cada estado posible:
 
 | Columna | Estado | Color del borde |
 |---|---|---|
 | Draft | `gray` | Gris |
-| Bloqueadas | `red` | Rojo |
 | Pendientes | `yellow` | Amarillo |
 | Code Review | `review` | Azul |
-| Requiere atencion | `attention` | Naranja |
+| QA | `qa` | Púrpura |
 | Listas para mergear | `green` | Verde |
 | Despriorizado | `backlog` | Atenuado |
 
 ## Agrupacion por repositorio
 
-Los MRs se agrupan por proyecto/repositorio. Cada repositorio tiene su propia seccion colapsable con las 7 columnas. Esto permite ver rapidamente el estado de cada repo sin mezclar MRs de distintos proyectos.
+Los MRs se agrupan por proyecto/repositorio. Cada repositorio tiene su propia seccion colapsable con las 6 columnas. Esto permite ver rapidamente el estado de cada repo sin mezclar MRs de distintos proyectos.
 
 ## Componentes involucrados
 
