@@ -35,6 +35,9 @@ const icon = computed(() => {
   if (props.type === 'approvals') {
     return props.data.status === 'approved' ? '&#10003;' : '&#9998;'
   }
+  if (props.type === 'conflicts') {
+    return props.data.hasConflicts ? '&#10007;' : '&#10003;'
+  }
   return ''
 })
 
@@ -51,6 +54,9 @@ const label = computed(() => {
     if (props.data.status === 'unknown') return 'Approvals ?'
     return `${props.data.given}/${props.data.required}`
   }
+  if (props.type === 'conflicts') {
+    return props.data.hasConflicts ? 'Con conflictos' : 'Sin conflictos'
+  }
   return ''
 })
 
@@ -64,6 +70,9 @@ const tooltip = computed(() => {
     if (approvers && approvers.length > 0) parts.push(`Aprobado por: ${approvers.join(', ')}`)
     if (!hasLeadApproval) parts.push('Falta aprobación del líder')
     return parts.join('\n')
+  }
+  if (props.type === 'conflicts') {
+    return props.data.hasConflicts ? 'Tiene conflictos de merge' : 'Sin conflictos de merge'
   }
   return ''
 })
@@ -90,6 +99,11 @@ const badgeClasses = computed(() => {
     if (props.data.status === 'approved') return 'bg-ready-soft text-ready'
     if (props.data.status === 'pending') return 'bg-draft-soft text-draft'
     return 'bg-surface text-text-muted'
+  }
+  if (props.type === 'conflicts') {
+    return props.data.hasConflicts
+      ? 'bg-conflict-soft text-conflict'
+      : 'bg-ready-soft text-ready'
   }
   return 'bg-surface text-text-muted'
 })

@@ -93,10 +93,10 @@ function computeMergeability(mr, approvals, threads, pipeline) {
     || pipeline.status === 'failed' || pipeline.status === 'canceled'
     || threads.status === 'open';
 
-  if (isBlocked) return 'yellow';
-  if (approvals.status === 'pending') return 'review';
   if (hasQaPending) return 'qa';
+  if (isBlocked) return 'yellow';
   if (pipeline.status === 'running' || pipeline.status === 'pending') return 'yellow';
+  if (approvals.status === 'pending') return 'review';
   if (!hasQa) return 'yellow';
 
   return 'green';
