@@ -36,10 +36,10 @@
 </template>
 
 <script setup>
-import { useMergeRequests } from './composables/useMergeRequests.js'
-import TopBar from './components/TopBar.vue'
-import SearchBar from './components/SearchBar.vue'
-import MrBoard from './components/MrBoard.vue'
+import { useMergeRequests } from '../features/mergeRequests/composables/useMergeRequests.js'
+import TopBar from '../features/mergeRequests/components/TopBar.vue'
+import SearchBar from '../features/mergeRequests/components/SearchBar.vue'
+import MrBoard from '../features/mergeRequests/components/MrBoard.vue'
 
 const {
   mergeRequests,

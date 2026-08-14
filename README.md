@@ -41,21 +41,29 @@ gitlab-mr-board/
 │
 ├── frontend/                 # Vue.js 3 + Vite + Tailwind CSS
 │   ├── src/
-│   │   ├── App.vue
-│   │   ├── composables/
-│   │   │   └── useMergeRequests.js  # Fetch y polling de datos
-│   │   └── components/
-│   │       ├── MrBoard.vue       # Tableros colapsables por repositorio
-│   │       ├── BoardColumn.vue   # Columna de estado individual
-│   │       ├── MrCard.vue        # Card de cada MR
-│   │       ├── BlockerBadge.vue  # Badge de CI, hilos y approvals
-│   │       ├── TopBar.vue        # Barra superior
-│   │       └── SearchBar.vue     # Busqueda
+│   │   ├── app/
+│   │   │   └── App.vue            # Componente root y orquestacion del layout
+│   │   ├── assets/
+│   │   │   └── main.css           # Estilos globales y tokens de Tailwind
+│   │   ├── features/
+│   │   │   └── mergeRequests/
+│   │   │       ├── components/
+│   │   │       │   ├── MrBoard.vue       # Tableros colapsables por repositorio
+│   │   │       │   ├── BoardColumn.vue   # Columna de estado individual
+│   │   │       │   ├── MrCard.vue        # Card de cada MR
+│   │   │       │   ├── BlockerBadge.vue  # Badge de CI, hilos y approvals
+│   │   │       │   ├── TopBar.vue        # Barra superior
+│   │   │       │   ├── SearchBar.vue     # Busqueda
+│   │   │       │   └── FilterChips.vue   # Filtros opcionales del tablero
+│   │   │       └── composables/
+│   │   │           └── useMergeRequests.js # Fetch, polling y filtrado
+│   │   └── main.js                # Bootstrap de Vue
 │   └── package.json
 │
 ├── docs/                     # Documentacion centralizada
-│   ├── backend.md                # Arquitectura, modulos y referencia de la API
-│   ├── frontend.md               # Componentes, composables, props y eventos
+│   ├── backend.md                # Arquitectura del backend y flujo de datos
+│   ├── frontend.md               # Documentacion del frontend por componente
+│   ├── frontend-architecture.md  # Estructura limpia y principios de la capa UI
 │   └── ui_&_ux.md                # Guia de estilos, paleta de colores y tipografia
 │
 ├── start-dev.bat             # Script para levantar backend + frontend (Windows)

@@ -8,19 +8,23 @@ Aplicacion web construida con **Vue.js 3** (Composition API) y **Tailwind CSS** 
 
 ```
 src/
-├── main.js                          # Bootstrap de la app Vue
-├── App.vue                          # Componente raiz, layout principal
+├── main.js                                  # Bootstrap de la app Vue
+├── app/
+│   └── App.vue                              # Componente raiz y orchestration del layout
 ├── assets/
-│   └── main.css                     # Tailwind directives + estilos globales
-├── composables/
-│   └── useMergeRequests.js          # Estado reactivo, fetch, polling, filtros
-└── components/
-    ├── TopBar.vue                   # Header con titulo, status y boton refrescar
-    ├── MrBoard.vue                  # Tableros colapsables por repositorio
-    ├── BoardColumn.vue              # Columna de estado individual
-    ├── MrCard.vue                   # Card de MR con bloqueantes visuales
-    ├── BlockerBadge.vue             # Pill/badge de un bloqueante individual
-    └── SearchBar.vue                # Input de busqueda
+│   └── main.css                             # Tailwind directives + estilos globales
+├── features/
+│   └── mergeRequests/
+│       ├── composables/
+│       │   └── useMergeRequests.js          # Estado reactivo, fetch, polling, filtros
+│       └── components/
+│           ├── TopBar.vue                   # Header con titulo, status y boton refrescar
+│           ├── MrBoard.vue                  # Tableros colapsables por repositorio
+│           ├── BoardColumn.vue              # Columna de estado individual
+│           ├── MrCard.vue                   # Card de MR con bloqueantes visuales
+│           ├── BlockerBadge.vue             # Pill/badge de un bloqueante individual
+│           ├── SearchBar.vue                # Input de busqueda
+│           └── FilterChips.vue              # Filtros visuales opcionales
 ```
 
 ## Arbol de componentes
