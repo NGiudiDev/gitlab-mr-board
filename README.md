@@ -42,7 +42,7 @@ cd frontend
 npm run build
 ```
 
-El backend usa ES modules y no requiere compilación: se ejecuta con `npm start` dentro de `backend/`. Consultar la [guía de despliegue](docs/deployment/produccion.md).
+El backend está escrito en TypeScript. `npm start` lo ejecuta directamente con `tsx`; para producción, `npm run build` genera `dist/` y `npm run start:prod` ejecuta el JavaScript compilado. Consultar la [guía de despliegue](docs/deployment/produccion.md).
 
 ## Documentación
 

@@ -26,7 +26,7 @@
 - **Respetar la arquitectura existente**: la lógica de negocio va en `backend/src/services/`, las rutas en `backend/src/routes/`, los componentes Vue en `frontend/src/components/`, y los composables en `frontend/src/composables/`.
 - **No crear archivos innecesarios**: preferir editar archivos existentes. Solo crear nuevos cuando la responsabilidad no encaja en ninguno existente.
 - **Un componente, una responsabilidad**: cada componente Vue debe tener un propósito claro. Si crece demasiado, extraer subcomponentes.
-- Al agregar una nueva variable de entorno, actualizar `backend/.env.example`, `backend/src/config.js`, y la tabla de este archivo.
+- Al agregar una nueva variable de entorno, actualizar `backend/.env.example`, `backend/src/config.ts`, y la tabla de este archivo.
 
 ### Frontend
 
@@ -38,9 +38,10 @@
 
 ### Backend
 
-- Usar **ES modules** (`import`/`export`) y escribir la extensión `.js` en imports relativos del backend.
+- Usar **TypeScript estricto y ES modules** (`import`/`export`). Escribir la extensión `.js` en imports relativos para que sean compatibles con la salida `NodeNext`.
+- Ejecutar `npm run typecheck` y `npm run build` al modificar el backend.
 - Nuevas rutas deben validar parámetros de entrada y devolver errores HTTP apropiados (400, 404, 500).
-- Si se agrega un endpoint, registrarlo en `backend/src/index.js` y documentarlo.
+- Si se agrega un endpoint, registrarlo en `backend/src/index.ts` y documentarlo.
 - Respetar el **rate limiter** existente al hacer llamadas a la API de GitLab.
 
 ### Dependencias
@@ -57,7 +58,7 @@
 
 ### Antes de Entregar un Cambio
 
-- Verificar que el backend levanta sin errores (`npm run dev` en `backend/`).
+- Verificar tipos y compilación del backend (`npm run typecheck` y `npm run build` en `backend/`) y que levanta sin errores (`npm run dev`).
 - Verificar que el frontend compila y renderiza correctamente (`npm run dev` en `frontend/`).
 - Revisar la consola del navegador por errores o warnings.
 - Si el cambio afecta la UI, verificar visualmente en el browser.

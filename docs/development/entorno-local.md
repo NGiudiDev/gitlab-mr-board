@@ -20,6 +20,8 @@ El frontend admite `VITE_API_BASE_URL`; sin ella usa el proxy de Vite.
 
 En Windows, `npm start` desde la raíz inicia ambos servicios. Alternativamente, ejecutar `npm run dev` dentro de `backend/` y `frontend/` en terminales separadas.
 
+`npm start` ejecuta el backend TypeScript directamente con `tsx`. Durante el desarrollo, `npm run dev` agrega recarga ante cambios. `npm run typecheck` valida los tipos sin generar `dist/` y `npm run build` compila el JavaScript de producción.
+
 - Frontend: `http://localhost:5173`
 - Backend: `http://localhost:3001`
 - Salud: `http://localhost:3001/health`
