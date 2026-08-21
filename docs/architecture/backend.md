@@ -1,6 +1,6 @@
 # Arquitectura del backend
 
-Aplicación Node.js con Express y módulos CommonJS.
+Aplicación Node.js con Express y ES modules. `backend/package.json` declara `"type": "module"` y todos los imports relativos incluyen la extensión `.js`.
 
 - `src/index.js`: CORS, JSON, health check, rutas y errores globales.
 - `src/config.js`: carga y valida `backend/.env`.

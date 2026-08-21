@@ -38,7 +38,7 @@
 
 ### Backend
 
-- Usar **CommonJS** (`require`/`module.exports`) — no migrar a ESM.
+- Usar **ES modules** (`import`/`export`) y escribir la extensión `.js` en imports relativos del backend.
 - Nuevas rutas deben validar parámetros de entrada y devolver errores HTTP apropiados (400, 404, 500).
 - Si se agrega un endpoint, registrarlo en `backend/src/index.js` y documentarlo.
 - Respetar el **rate limiter** existente al hacer llamadas a la API de GitLab.

@@ -1,5 +1,5 @@
-const config = require('../config');
-const { fetchPaginatedWithLimit, fetchWithLimit } = require('./gitlabApi');
+import config from '../config.js';
+import { fetchPaginatedWithLimit, fetchWithLimit } from './gitlabApi.js';
 
 
 async function fetchOpenMRsForProject(projectId) {
@@ -195,4 +195,4 @@ async function getAllMergeRequests() {
   };
 }
 
-module.exports = { getAllMergeRequests };
+export { getAllMergeRequests };

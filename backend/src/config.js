@@ -1,7 +1,10 @@
-const dotenv = require('dotenv');
-const path = require('path');
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import dotenv from 'dotenv';
 
-dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
+const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
+
+dotenv.config({ path: path.resolve(currentDirectory, '..', '.env') });
 
 const required = ['GITLAB_TOKEN', 'PROJECT_IDS'];
 const missing = required.filter((key) => !process.env[key]);
@@ -21,4 +24,4 @@ const config = {
   minApprovals: parseInt(process.env.MIN_APPROVALS, 10) || 2,
 };
 
-module.exports = config;
+export default config;

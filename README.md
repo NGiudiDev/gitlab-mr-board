@@ -42,7 +42,7 @@ cd frontend
 npm run build
 ```
 
-El backend no requiere compilación: se ejecuta con `npm start` dentro de `backend/`. Consultar la [guía de despliegue](docs/deployment/produccion.md).
+El backend usa ES modules y no requiere compilación: se ejecuta con `npm start` dentro de `backend/`. Consultar la [guía de despliegue](docs/deployment/produccion.md).
 
 ## Documentación
 

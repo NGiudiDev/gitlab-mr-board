@@ -1,6 +1,6 @@
-const express = require('express');
-const config = require('../config');
-const { getAllMergeRequests } = require('../services/mergeRequestService');
+import express from 'express';
+import config from '../config.js';
+import { getAllMergeRequests } from '../services/mergeRequestService.js';
 
 const router = express.Router();
 
@@ -28,4 +28,4 @@ router.get('/pull-requests', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

@@ -1,5 +1,5 @@
-const config = require('../config');
-const RateLimiter = require('../utils/rateLimiter');
+import config from '../config.js';
+import RateLimiter from '../utils/rateLimiter.js';
 
 const limiter = new RateLimiter(6);
 
@@ -58,4 +58,4 @@ async function fetchPaginatedWithLimit(path, params = {}) {
   return limiter.run(() => fetchPaginated(path, params));
 }
 
-module.exports = { fetchJson, fetchPaginated, fetchWithLimit, fetchPaginatedWithLimit };
+export { fetchJson, fetchPaginated, fetchWithLimit, fetchPaginatedWithLimit };

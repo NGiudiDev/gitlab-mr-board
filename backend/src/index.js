@@ -1,7 +1,7 @@
-const express = require('express');
-const cors = require('cors');
-const config = require('./config');
-const mergeRequestsRouter = require('./routes/mergeRequests');
+import cors from 'cors';
+import express from 'express';
+import config from './config.js';
+import mergeRequestsRouter from './routes/mergeRequests.js';
 
 const app = express();
 
