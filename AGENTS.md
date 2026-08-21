@@ -7,6 +7,8 @@
 - **Todo en español**: comentarios, commits, documentación, nombres de columnas/estados en la UI, y mensajes de error visibles al usuario.
 - Al agregar una feature nueva, **siempre actualizar la documentación** correspondiente: este archivo (`AGENTS.md`), el `README.md`, la carpeta `docs/`, y comentarios inline si aplica.
 - **Toda la documentación vive en la raíz del proyecto**: `README.md`, `AGENTS.md`, y la carpeta `docs/` centralizada. No crear carpetas `docs/` dentro de `backend/` o `frontend/` — todo va en `docs/` de la raíz.
+- Organizar `docs/` por propósito: `architecture/` para estructura técnica, `decisions/` para ADR, `development/` para trabajo local y pruebas, `deployment/` para operación, y `domains/` para reglas funcionales.
+- El `README.md` debe ser una entrada breve que responda qué es el proyecto, requisitos, puesta en marcha, tests, build y ubicación de la documentación.
 - Los nombres de variables, funciones y archivos se mantienen en **inglés** (convención estándar de código).
 
 ### Buenas Prácticas de Código
@@ -49,7 +51,7 @@
 
 ### Commits
 
-- Mensajes de commit en **español**, descriptivos y concisos.
+- Mensajes de commit en **inglés**, descriptivos y concisos.
 - Formato: `<tipo>: <descripción>` (ej: `feat: agregar filtro por autor`, `fix: corregir cálculo de approvals`).
 - Tipos válidos: `feat`, `fix`, `refactor`, `docs`, `style`, `chore`.
 
