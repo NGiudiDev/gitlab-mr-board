@@ -1,7 +1,8 @@
 <template>
-  <div :class="cardClasses" class="rounded-md p-2.5 px-3 border border-border-soft">
-    <a :href="mr.url" target="_blank" rel="noopener" class="text-[13px] leading-snug block mb-1.5">
+  <article :class="cardClasses" class="rounded-md p-2.5 px-3 border border-border-soft">
+    <a :href="mr.url" target="_blank" rel="noopener" class="text-[13px] leading-snug block mb-1.5 rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
       {{ mr.title }}
+      <span class="sr-only">(abre en una pestaña nueva)</span>
     </a>
 
     <div class="font-mono text-[10.5px] text-text-faint truncate">
@@ -23,7 +24,7 @@
     <div class="flex items-center mt-2">
       <span class="text-[11px] text-text-muted truncate">{{ mr.author }} · {{ timeAgo(mr.updatedAt) }}</span>
     </div>
-  </div>
+  </article>
 </template>
 
 <script setup>

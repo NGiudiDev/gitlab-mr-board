@@ -4,8 +4,9 @@
       v-for="project in projects"
       :key="project"
       @click="$emit('toggle', project)"
+      :aria-pressed="isActive(project)"
       :class="isActive(project) ? 'border-accent bg-accent-soft text-text-primary' : 'border-border bg-surface text-text-muted'"
-      class="font-mono text-[11.5px] px-2 py-1 rounded-md border cursor-pointer hover:border-text-faint"
+      class="font-mono text-[12px] px-2 py-1 rounded-md border cursor-pointer hover:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
     >
       {{ project }}
     </button>

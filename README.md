@@ -2,9 +2,11 @@
 
 GitLab MR Board es un tablero web que reúne los Merge Requests abiertos de varios proyectos de GitLab y los organiza según su estado de mergeabilidad. Muestra aprobaciones, discusiones pendientes, pipelines, conflictos y responsables sin exponer el token de GitLab en el navegador.
 
+La interfaz incluye navegación por teclado, foco visible, anuncios para lectores de pantalla y una paleta de alto contraste orientada a WCAG 2.2 nivel AA. La validación manual de accesibilidad se documenta en la [estrategia de pruebas](docs/development/pruebas.md).
+
 ## Requisitos
 
-- Node.js 18 o superior.
+- Node.js 18 o superior. Las versiones anteriores no pueden ejecutar `tsx` ni la salida ES2022 del backend.
 - npm 8 o superior.
 - Un Personal Access Token de GitLab con alcance `read_api`.
 - Los IDs numéricos de los proyectos que se quieren monitorear.
@@ -28,6 +30,8 @@ GitLab MR Board es un tablero web que reúne los Merge Requests abiertos de vari
 En cualquier sistema también se pueden abrir dos terminales y ejecutar `npm run dev` dentro de `backend/` y `frontend/`. El tablero queda disponible en `http://localhost:5173`, el backend en `http://localhost:3001` y su comprobación de estado en `GET /health`.
 
 La configuración completa está en la [guía de desarrollo](docs/development/entorno-local.md).
+
+Si el inicio informa una versión de Node incompatible, actualizar Node.js, cerrar y abrir la terminal para refrescar `PATH`, comprobar con `node --version` y reinstalar las dependencias con `npm install`.
 
 ## Tests
 

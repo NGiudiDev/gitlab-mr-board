@@ -35,9 +35,12 @@
 - Mantener la **reactividad** con `ref()` y `computed()`. No mutar estado directamente.
 - Nuevos componentes deben aceptar **props tipadas** y emitir eventos con `defineEmits`.
 - Verificar que los cambios se ven bien en el **tema oscuro** (el proyecto usa dark mode por defecto).
+- Mantener el objetivo de **WCAG 2.2 nivel AA**: HTML semántico, uso completo por teclado, foco visible, nombres accesibles, estados dinámicos anunciados y contraste mínimo de 4.5:1 para texto normal y 3:1 para controles e indicadores visuales.
+- No usar solamente color, posición o iconos para comunicar un estado; acompañarlos con texto accesible.
 
 ### Backend
 
+- El backend requiere **Node.js 18 o superior**. Mantener sincronizados `engines`, el chequeo `backend/scripts/check-node-version.cjs` y la documentación cuando cambie este mínimo.
 - Usar **TypeScript estricto y ES modules** (`import`/`export`). Escribir la extensión `.js` en imports relativos para que sean compatibles con la salida `NodeNext`.
 - Ejecutar `npm run typecheck` y `npm run build` al modificar el backend.
 - Nuevas rutas deben validar parámetros de entrada y devolver errores HTTP apropiados (400, 404, 500).
@@ -62,3 +65,4 @@
 - Verificar que el frontend compila y renderiza correctamente (`npm run dev` en `frontend/`).
 - Revisar la consola del navegador por errores o warnings.
 - Si el cambio afecta la UI, verificar visualmente en el browser.
+- Para cambios de UI, recorrer los controles con teclado, comprobar foco, nombres y estados accesibles, y validar contraste en tema oscuro.

@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "description": "GitLab MR Board - Backend + Frontend",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
   "scripts": {
     "start": "start-dev.bat"
   }

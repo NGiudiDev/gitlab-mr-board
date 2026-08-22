@@ -6,10 +6,12 @@
     :rel="linkUrl ? 'noopener' : undefined"
     :class="badgeClasses"
     :title="tooltip"
-    class="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded no-underline"
+    :aria-label="accessibleLabel"
+    class="inline-flex items-center gap-1 text-[11px] font-semibold px-1.5 py-0.5 rounded no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
   >
-    <span v-html="icon"></span>
+    <span v-html="icon" aria-hidden="true"></span>
     <span>{{ label }}</span>
+    <span v-if="linkUrl" class="sr-only">(abre en una pestaña nueva)</span>
   </component>
 </template>
 
@@ -81,6 +83,8 @@ const linkUrl = computed(() => {
   if (props.type === 'pipeline') return props.data.pipelineUrl || null
   return null
 })
+
+const accessibleLabel = computed(() => `${tooltip.value}${linkUrl.value ? '. Abre en una pestaña nueva.' : ''}`)
 
 const badgeClasses = computed(() => {
   if (props.type === 'pipeline') {

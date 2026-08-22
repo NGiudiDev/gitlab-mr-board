@@ -4,6 +4,19 @@
 
 Se requieren Node.js 18+, npm 8+, acceso a GitLab, un PAT `read_api` e IDs de proyectos. Ejecutar `npm install` dentro de `backend/` y `frontend/`, y copiar `backend/.env.example` como `backend/.env`.
 
+El backend valida la versión de Node antes de ejecutar desarrollo, build, typecheck o producción. `tsx` y `esbuild` requieren Node 18; con una versión anterior se muestra un error descriptivo antes de cargar esas herramientas.
+
+El paquete raíz también declara el requisito mediante `engines`. El script de Windows valida Node antes de abrir los dos procesos, por lo que un código de salida `ELIFECYCLE` después del mensaje de versión incompatible es esperado: indica que el inicio se detuvo de forma segura.
+
+Para comprobar el runtime efectivo en Windows:
+
+```powershell
+node --version
+where.exe node
+```
+
+Después de actualizar Node.js hay que abrir una terminal nueva y ejecutar nuevamente `npm install` en `backend/` y `frontend/`. Esto evita conservar binarios opcionales generados para el runtime anterior.
+
 | Variable | Obligatoria | Predeterminado | Uso |
 |---|---:|---|---|
 | `GITLAB_TOKEN` | Sí | — | PAT de GitLab |

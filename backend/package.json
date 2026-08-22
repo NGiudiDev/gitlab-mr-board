@@ -4,11 +4,21 @@
   "description": "BFF backend for GitLab MR Dashboard",
   "type": "module",
   "main": "src/index.ts",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
   "scripts": {
+    "check:node": "node scripts/check-node-version.cjs",
+    "prebuild": "npm run check:node",
     "build": "tsc",
+    "prestart": "npm run check:node",
     "start": "tsx src/index.ts",
+    "prestart:prod": "npm run check:node",
     "start:prod": "node dist/index.js",
+    "predev": "npm run check:node",
     "dev": "tsx watch src/index.ts",
+    "pretypecheck": "npm run check:node",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
