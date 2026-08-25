@@ -66,3 +66,14 @@
 - Revisar la consola del navegador por errores o warnings.
 - Si el cambio afecta la UI, verificar visualmente en el browser.
 - Para cambios de UI, recorrer los controles con teclado, comprobar foco, nombres y estados accesibles, y validar contraste en tema oscuro.
+
+### Pruebas Automatizadas
+
+- La estrategia objetivo está documentada en `docs/development/pruebas.md`: Vitest para pruebas unitarias y de integración, Vue Test Utils para componentes Vue y Playwright Test para E2E.
+- Mientras no existan scripts `test`, seguir la validación manual indicada en esa guía; no afirmar que `npm test` está disponible.
+- Al incorporar la suite, ubicar las pruebas junto al código con sufijo `.test.ts` o `.test.js` y usar fixtures locales en lugar de la API real de GitLab.
+- Priorizar comportamiento observable y reglas de negocio. No acoplar pruebas a clases Tailwind, estado interno o snapshots extensos.
+- Toda corrección de un defecto debe agregar una prueba de regresión que falle antes de la corrección.
+- Los cambios de clasificación deben cubrir la matriz de estados y prioridades descrita en la estrategia.
+- Las pruebas E2E deben usar Playwright, simular la API de GitLab con fixtures locales y priorizar selectores accesibles. No deben depender de un token ni de servicios externos.
+- Ejecutar inicialmente los E2E solo en Chromium; agregar Firefox o WebKit únicamente cuando exista un requisito explícito de compatibilidad.

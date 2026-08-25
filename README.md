@@ -35,7 +35,9 @@ Si el inicio informa una versión de Node incompatible, actualizar Node.js, cerr
 
 ## Tests
 
-El proyecto todavía no tiene una suite automatizada ni scripts `test`. Antes de entregar cambios se realizan las verificaciones descritas en la [estrategia de pruebas](docs/development/pruebas.md).
+El proyecto todavía no tiene una suite automatizada ni scripts `test`. Se recomienda adoptar Vitest para las pruebas unitarias y de integración, Vue Test Utils para los componentes y Playwright Test para los recorridos E2E. La adopción requiere elevar primero el mínimo a Node.js 22 para usar versiones vigentes y soportadas de estas herramientas.
+
+Hasta implementar esa infraestructura, antes de entregar cambios se realizan typecheck, builds y verificaciones manuales. La [estrategia de pruebas](docs/development/pruebas.md) detalla herramientas, casos prioritarios, comandos objetivo y un plan gradual.
 
 ## Build
 
