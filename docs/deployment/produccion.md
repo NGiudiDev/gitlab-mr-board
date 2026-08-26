@@ -1,5 +1,7 @@
 # Despliegue en producción
 
+El build y la ejecución requieren Node.js 22 o superior y npm 10 o superior.
+
 ## Frontend
 
 ```bash

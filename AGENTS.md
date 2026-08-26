@@ -40,7 +40,7 @@
 
 ### Backend
 
-- El backend requiere **Node.js 18 o superior**. Mantener sincronizados `engines`, el chequeo `backend/scripts/check-node-version.cjs` y la documentación cuando cambie este mínimo.
+- El proyecto requiere **Node.js 22 o superior y npm 10 o superior**. Mantener sincronizados los campos `engines`, el chequeo `backend/scripts/check-node-version.cjs` y la documentación cuando cambie este mínimo.
 - Usar **TypeScript estricto y ES modules** (`import`/`export`). Escribir la extensión `.js` en imports relativos para que sean compatibles con la salida `NodeNext`.
 - Ejecutar `npm run typecheck` y `npm run build` al modificar el backend.
 - Nuevas rutas deben validar parámetros de entrada y devolver errores HTTP apropiados (400, 404, 500).
@@ -70,7 +70,7 @@
 ### Pruebas Automatizadas
 
 - La estrategia objetivo está documentada en `docs/development/pruebas.md`: Vitest para pruebas unitarias y de integración, Vue Test Utils para componentes Vue y Playwright Test para E2E.
-- Mientras no existan scripts `test`, seguir la validación manual indicada en esa guía; no afirmar que `npm test` está disponible.
+- Mientras no existan casos automatizados, los scripts `test` usan `--passWithNoTests`; seguir también la validación manual indicada en la guía.
 - Al incorporar la suite, ubicar las pruebas junto al código con sufijo `.test.ts` o `.test.js` y usar fixtures locales en lugar de la API real de GitLab.
 - Priorizar comportamiento observable y reglas de negocio. No acoplar pruebas a clases Tailwind, estado interno o snapshots extensos.
 - Toda corrección de un defecto debe agregar una prueba de regresión que falle antes de la corrección.

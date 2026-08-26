@@ -6,8 +6,8 @@ La interfaz incluye navegación por teclado, foco visible, anuncios para lectore
 
 ## Requisitos
 
-- Node.js 18 o superior. Las versiones anteriores no pueden ejecutar `tsx` ni la salida ES2022 del backend.
-- npm 8 o superior.
+- Node.js 22 o superior. Este mínimo permite usar versiones vigentes de Vitest, Vue Test Utils y Playwright.
+- npm 10 o superior.
 - Un Personal Access Token de GitLab con alcance `read_api`.
 - Los IDs numéricos de los proyectos que se quieren monitorear.
 
@@ -35,7 +35,7 @@ Si el inicio informa una versión de Node incompatible, actualizar Node.js, cerr
 
 ## Tests
 
-El proyecto todavía no tiene una suite automatizada ni scripts `test`. Se recomienda adoptar Vitest para las pruebas unitarias y de integración, Vue Test Utils para los componentes y Playwright Test para los recorridos E2E. La adopción requiere elevar primero el mínimo a Node.js 22 para usar versiones vigentes y soportadas de estas herramientas.
+El proyecto tiene configurado Vitest para comenzar a incorporar pruebas unitarias y de integración, y Vue Test Utils para componentes. Playwright Test será la herramienta para los recorridos E2E en una etapa posterior. Todavía no hay casos automatizados implementados, por lo que los scripts actuales aceptan una suite vacía.
 
 Hasta implementar esa infraestructura, antes de entregar cambios se realizan typecheck, builds y verificaciones manuales. La [estrategia de pruebas](docs/development/pruebas.md) detalla herramientas, casos prioritarios, comandos objetivo y un plan gradual.
 

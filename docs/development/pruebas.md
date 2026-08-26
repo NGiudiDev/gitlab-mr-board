@@ -2,15 +2,15 @@
 
 ## Estado actual
 
-El proyecto todavía no tiene framework, archivos de pruebas ni scripts `test`; por lo tanto, `npm test` no es un comando válido. El backend cuenta con `npm run typecheck` y ambos paquetes cuentan con `npm run build` como verificaciones estáticas.
+Vitest está configurado en backend y frontend, y Vue Test Utils junto con el entorno `happy-dom` están disponibles en el frontend. `frontend/vite.config.js` establece `happy-dom` como entorno predeterminado para las pruebas. Todavía no hay archivos de pruebas; por eso los scripts usan `--passWithNoTests` temporalmente. El backend cuenta además con `npm run typecheck` y ambos paquetes con `npm run build` como verificaciones estáticas.
 
 ## Recomendación
 
 Adoptar **Vitest como ejecutor de pruebas unitarias y de integración** para backend y frontend. En el frontend se complementa con **Vue Test Utils 2** y un entorno DOM liviano para montar componentes Vue 3. Para las pruebas de extremo a extremo se debe usar **Playwright Test**. Esta combinación cubre cada nivel con una herramienta adecuada sin usar el navegador para reglas que pueden comprobarse de forma más rápida y aislada.
 
-Las versiones vigentes de estas herramientas ya no admiten el Node.js 18 que utiliza el proyecto; Playwright requiere una versión reciente con soporte activo. La implementación debe comenzar elevando el mínimo a **Node.js 22** de forma coordinada en `package.json`, `backend/package.json`, `backend/scripts/check-node-version.cjs`, `AGENTS.md`, `README.md` y las guías de desarrollo y despliegue. No se deben fijar versiones antiguas de las herramientas solo para conservar el runtime actual.
+El proyecto requiere **Node.js 22** y npm 10 para usar versiones vigentes de estas herramientas. Los campos `engines`, el chequeo del backend y la documentación deben mantenerse sincronizados cuando cambie este mínimo.
 
-Esta página define el destino recomendado; todavía no implica que las dependencias o scripts estén instalados.
+Vitest, Vue Test Utils y `happy-dom` corresponden al primer paso del plan y ya están incorporados. Playwright se instalará al implementar la capa E2E.
 
 ## Pirámide propuesta
 
@@ -87,7 +87,7 @@ Una vez implementada la infraestructura, cada `package.json` debe exponer:
 ```json
 {
   "scripts": {
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest"
   }
 }
@@ -117,7 +117,7 @@ No establecer un porcentaje global de cobertura al inicio. Primero cubrir todas 
 
 ## Plan de adopción
 
-1. Elevar el mínimo a Node.js 22 e instalar Vitest en ambos paquetes; agregar Vue Test Utils y el entorno DOM solo al frontend.
+1. **Completado:** elevar el mínimo a Node.js 22 e instalar Vitest en ambos paquetes; agregar Vue Test Utils y `happy-dom` solo al frontend.
 2. Extraer las reglas puras sin cambiar comportamiento y cubrir la matriz completa de mergeabilidad.
 3. Hacer inyectables la llamada a GitLab y el reloj de la caché; agregar integración del backend.
 4. Cubrir `useMergeRequests`, `MrBoard`, `BoardColumn` y `MrCard` por comportamiento.

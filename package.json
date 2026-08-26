@@ -4,10 +4,12 @@
   "private": true,
   "description": "GitLab MR Board - Backend + Frontend",
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
   },
   "scripts": {
-    "start": "start-dev.bat"
+    "start": "start-dev.bat",
+    "test": "npm run test:unit",
+    "test:unit": "npm run test --prefix backend && npm run test --prefix frontend"
   }
 }

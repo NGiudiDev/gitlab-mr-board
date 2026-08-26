@@ -5,8 +5,8 @@
   "type": "module",
   "main": "src/index.ts",
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
   },
   "scripts": {
     "check:node": "node scripts/check-node-version.cjs",
@@ -19,7 +19,9 @@
     "predev": "npm run check:node",
     "dev": "tsx watch src/index.ts",
     "pretypecheck": "npm run check:node",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -31,6 +33,7 @@
     "@types/express": "^5.0.0",
     "@types/node": "^22.10.5",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.11"
   }
 }

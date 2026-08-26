@@ -2,9 +2,9 @@
 
 ## Requisitos e instalación
 
-Se requieren Node.js 18+, npm 8+, acceso a GitLab, un PAT `read_api` e IDs de proyectos. Ejecutar `npm install` dentro de `backend/` y `frontend/`, y copiar `backend/.env.example` como `backend/.env`.
+Se requieren Node.js 22+, npm 10+, acceso a GitLab, un PAT `read_api` e IDs de proyectos. Ejecutar `npm install` en la raíz, `backend/` y `frontend/`, y copiar `backend/.env.example` como `backend/.env`.
 
-El backend valida la versión de Node antes de ejecutar desarrollo, build, typecheck o producción. `tsx` y `esbuild` requieren Node 18; con una versión anterior se muestra un error descriptivo antes de cargar esas herramientas.
+El backend valida la versión de Node antes de ejecutar desarrollo, build, typecheck o producción. El mínimo de Node 22 permite usar las versiones vigentes de las herramientas de pruebas; con una versión anterior se muestra un error descriptivo antes de cargarlas.
 
 El paquete raíz también declara el requisito mediante `engines`. El script de Windows valida Node antes de abrir los dos procesos, por lo que un código de salida `ELIFECYCLE` después del mensaje de versión incompatible es esperado: indica que el inicio se detuvo de forma segura.
 
@@ -15,7 +15,7 @@ node --version
 where.exe node
 ```
 
-Después de actualizar Node.js hay que abrir una terminal nueva y ejecutar nuevamente `npm install` en `backend/` y `frontend/`. Esto evita conservar binarios opcionales generados para el runtime anterior.
+Después de actualizar Node.js hay que abrir una terminal nueva y ejecutar nuevamente `npm install` en la raíz, `backend/` y `frontend/`. Esto evita conservar binarios opcionales generados para el runtime anterior.
 
 | Variable | Obligatoria | Predeterminado | Uso |
 |---|---:|---|---|
