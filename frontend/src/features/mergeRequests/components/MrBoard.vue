@@ -36,12 +36,12 @@ const props = defineProps({
 })
 
 const STATUS_ORDER = [
-  { id: 'gray', name: 'Draft' },
-  { id: 'yellow', name: 'Pendientes' },
+  { id: 'in_progress', name: 'En progreso' },
+  { id: 'mr_warning', name: 'Pendientes' },
   { id: 'review', name: 'Code Review' },
   { id: 'qa', name: 'QA' },
-  { id: 'green', name: 'Listas para mergear' },
-  { id: 'backlog', name: 'Despriorizado' },
+  { id: 'ready_to_merge', name: 'Listas para mergear' },
+  { id: 'backlog', name: 'Pausados' },
 ]
 
 const expanded = ref({})

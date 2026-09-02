@@ -1,3 +1,5 @@
+import { hasMergeRequestWarning } from '../utils/isMergeRequestBlocked.js';
+
 import type {
   ApprovalStatus,
   GitLabMergeRequest,
@@ -18,20 +20,15 @@ function computeMergeability(
   pipeline: PipelineStatus,
 ): Mergeability {
   const labels = (mr.labels ?? []).map((label) => label.toLowerCase());
-  if (labels.includes('backlog')) return 'backlog';
-  if (mr.draft || mr.work_in_progress) return 'gray';
-
-  const isBlocked = mr.has_conflicts
-    || pipeline.status === 'failed'
-    || pipeline.status === 'canceled'
-    || threads.status === 'open';
-
+  
+  if (labels.includes('backlog')) return 'backlog'; 
+  if (mr.draft || mr.work_in_progress) return 'in_progress';
   if (labels.includes('qa_pending')) return 'qa';
-  if (isBlocked) return 'yellow';
-  if (pipeline.status === 'running' || pipeline.status === 'pending') return 'yellow';
+  if (hasMergeRequestWarning(mr, threads, pipeline)) return 'mr_warning';
   if (approvals.status === 'pending') return 'review';
-  if (!labels.includes('qa_approved')) return 'yellow';
-  return 'green';
+  if (!labels.includes('qa_approved')) return 'mr_warning';
+
+  return 'ready_to_merge';
 }
 
 /**

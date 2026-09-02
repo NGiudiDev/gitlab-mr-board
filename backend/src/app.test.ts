@@ -48,7 +48,7 @@ describe('GET /api/pull-requests', () => {
 
     expect(response.status).toBe(200);
     expect(payload.meta.totalMRs).toBe(1);
-    expect(payload.mergeRequests[0]?.mergeability).toBe('green');
+    expect(payload.mergeRequests[0]?.mergeability).toBe('ready_to_merge');
     expect(response.body).not.toContain(TEST_TOKEN);
   });
 

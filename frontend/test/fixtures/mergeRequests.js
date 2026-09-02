@@ -30,7 +30,7 @@ function buildMergeRequest(overrides = {}) {
     reviewers: [],
     updatedAt: '2026-08-28T10:00:00.000Z',
     createdAt: '2026-08-27T10:00:00.000Z',
-    mergeability: 'green',
+    mergeability: 'ready_to_merge',
     ...overrides,
     blockers: {
       approvals: { ...DEFAULT_APPROVALS },

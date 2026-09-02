@@ -10,6 +10,7 @@ Aplicación Node.js con Express, TypeScript estricto y ES modules. `tsconfig.jso
 - `src/services/gitlabApi.ts`: cliente tipado de GitLab y paginación.
 - `src/services/mergeRequestService.ts`: obtiene y enriquece los MRs consultando GitLab.
 - `src/services/mergeRequestRules.ts`: reglas puras de clasificación y ruta del proyecto.
+- `src/utils/isMergeRequestBlocked.ts`: decide si un MR tiene un bloqueo técnico (conflictos, pipeline fallido o cancelado, discusiones abiertas) y si merece la advertencia `mr_warning` (además, pipeline sin terminar).
 - `src/utils/rateLimiter.ts`: limita a seis las llamadas concurrentes.
 - `test/`: fixtures de la API de GitLab y utilidades de prueba.
 

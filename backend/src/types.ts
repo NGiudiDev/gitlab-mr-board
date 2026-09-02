@@ -50,7 +50,7 @@ export interface PipelineStatus {
   pipelineUrl: string | null;
 }
 
-export type Mergeability = 'backlog' | 'gray' | 'qa' | 'yellow' | 'review' | 'green';
+export type Mergeability = 'backlog' | 'in_progress' | 'qa' | 'mr_warning' | 'review' | 'ready_to_merge';
 
 export interface EnrichedMergeRequest {
   id: string;

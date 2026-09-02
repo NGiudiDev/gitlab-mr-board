@@ -1,8 +1,10 @@
 # Estrategia de pruebas
 
+La decisión de fondo —Vitest, la pirámide y el veto a usar la API real de GitLab— está registrada en [ADR 0003](../decisions/0003-estrategia-de-pruebas.md). Este documento describe cómo se aplica.
+
 ## Estado actual
 
-Vitest está configurado en backend y frontend, con Vue Test Utils 2 y el entorno `happy-dom` en el frontend. Las tres primeras capas de la pirámide están implementadas: 64 pruebas en el backend y 110 en el frontend, todas sin red, sin token y sin la API real de GitLab. Falta la capa E2E con Playwright.
+Vitest está configurado en backend y frontend, con Vue Test Utils 2 y el entorno `happy-dom` en el frontend. Las tres primeras capas de la pirámide están implementadas: 80 pruebas en el backend y 110 en el frontend, todas sin red, sin token y sin la API real de GitLab. Falta la capa E2E con Playwright.
 
 Comandos:
 
@@ -21,6 +23,7 @@ Archivos del backend:
 - `src/services/mergeRequestService.test.ts`: enriquecimiento, orden, fallos parciales y bloqueos desconocidos.
 - `src/app.test.ts`: `GET /health`, `GET /api/pull-requests`, caché, `?force=true` y errores 502.
 - `src/utils/rateLimiter.test.ts`: concurrencia máxima, orden de la cola y liberación ante fallos.
+- `src/utils/isMergeRequestBlocked.test.ts`: bloqueos y advertencias por conflictos, pipelines y discusiones, más los estados desconocidos.
 - `test/`: `setup.ts` fija la configuración antes de `config.ts`, `fixtures/gitlab.ts` simula la API y `httpClient.ts` ejecuta la app en memoria.
 
 Archivos del frontend:
@@ -49,13 +52,13 @@ Son la primera prioridad porque la clasificación de un Merge Request determina 
 Casos cubiertos de `computeMergeability`:
 
 - `backlog` tiene prioridad sobre los demás estados.
-- draft o work in progress resulta en `gray`.
+- draft o work in progress resulta en `in_progress`.
 - `qa_pending` resulta en `qa`.
-- conflictos, discusiones abiertas y pipelines fallidos o cancelados resultan en `yellow`.
-- pipelines en ejecución o pendientes resultan en `yellow`.
+- conflictos, discusiones abiertas y pipelines fallidos o cancelados resultan en `mr_warning`.
+- pipelines en ejecución o pendientes resultan en `mr_warning`.
 - aprobaciones pendientes resultan en `review`.
-- sin la etiqueta `qa_approved` resulta en `yellow`.
-- con aprobaciones, pipeline y QA correctos resulta en `green`.
+- sin la etiqueta `qa_approved` resulta en `mr_warning`.
+- con aprobaciones, pipeline y QA correctos resulta en `ready_to_merge`.
 - las etiquetas se comparan sin distinguir mayúsculas de minúsculas.
 
 También deben cubrirse `extractProjectPath`, la construcción de URLs de GitLab, la paginación y el rate limiter. Estas pruebas no acceden a la red ni dependen de un token real.

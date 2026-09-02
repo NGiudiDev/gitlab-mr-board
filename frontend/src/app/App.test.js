@@ -7,7 +7,7 @@ import App from './App.vue'
 const MRS = [
   buildMergeRequest({
     id: '101-1', title: 'Agregar filtro por autor', author: 'Ana Pérez',
-    projectPath: 'equipo/tablero', mergeability: 'green',
+    projectPath: 'equipo/tablero', mergeability: 'ready_to_merge',
   }),
   buildMergeRequest({
     id: '202-1', title: 'Corregir cálculo de approvals', author: 'Beto Ruiz',

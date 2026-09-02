@@ -50,7 +50,7 @@ describe('MrCard', () => {
     expect(wrapper.text()).toContain('Sin conflictos')
   })
 
-  it.each(['gray', 'yellow', 'green', 'qa'])('muestra al autor como responsable en %s', (mergeability) => {
+  it.each(['in_progress', 'mr_warning', 'ready_to_merge', 'qa'])('muestra al autor como responsable en %s', (mergeability) => {
     const wrapper = mountCard({ mergeability, author: 'Ana Pérez' })
 
     expect(wrapper.text()).toContain('Responsable:')

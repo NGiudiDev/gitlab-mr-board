@@ -26,16 +26,16 @@ describe('computeMergeability', () => {
     expect(computeMergeability(mr, pendingApprovals, openThreads, pipeline('failed'))).toBe('backlog');
   });
 
-  it('clasifica como gray un draft', () => {
+  it('clasifica como in_progress un draft', () => {
     const mr = buildMergeRequest({ draft: true });
 
-    expect(computeMergeability(mr, approved, resolvedThreads, successPipeline)).toBe('gray');
+    expect(computeMergeability(mr, approved, resolvedThreads, successPipeline)).toBe('in_progress');
   });
 
-  it('clasifica como gray un work in progress', () => {
+  it('clasifica como in_progress un work in progress', () => {
     const mr = buildMergeRequest({ draft: false, work_in_progress: true });
 
-    expect(computeMergeability(mr, approved, resolvedThreads, successPipeline)).toBe('gray');
+    expect(computeMergeability(mr, approved, resolvedThreads, successPipeline)).toBe('in_progress');
   });
 
   it('clasifica como qa la etiqueta qa_pending, aun con bloqueos', () => {
@@ -44,34 +44,34 @@ describe('computeMergeability', () => {
     expect(computeMergeability(mr, pendingApprovals, openThreads, pipeline('failed'))).toBe('qa');
   });
 
-  it('clasifica como yellow un MR con conflictos', () => {
+  it('clasifica como mr_warning un MR con conflictos', () => {
     const mr = buildMergeRequest({ has_conflicts: true, labels: ['qa_approved'] });
 
-    expect(computeMergeability(mr, approved, resolvedThreads, successPipeline)).toBe('yellow');
+    expect(computeMergeability(mr, approved, resolvedThreads, successPipeline)).toBe('mr_warning');
   });
 
-  it('clasifica como yellow las discusiones abiertas', () => {
+  it('clasifica como mr_warning las discusiones abiertas', () => {
     const mr = buildMergeRequest({ labels: ['qa_approved'] });
 
-    expect(computeMergeability(mr, approved, openThreads, successPipeline)).toBe('yellow');
+    expect(computeMergeability(mr, approved, openThreads, successPipeline)).toBe('mr_warning');
   });
 
-  it.each(['failed', 'canceled'])('clasifica como yellow el pipeline %s', (status) => {
+  it.each(['failed', 'canceled'])('clasifica como mr_warning el pipeline %s', (status) => {
     const mr = buildMergeRequest({ labels: ['qa_approved'] });
 
-    expect(computeMergeability(mr, approved, resolvedThreads, pipeline(status))).toBe('yellow');
+    expect(computeMergeability(mr, approved, resolvedThreads, pipeline(status))).toBe('mr_warning');
   });
 
-  it.each(['running', 'pending'])('clasifica como yellow el pipeline %s', (status) => {
+  it.each(['running', 'pending'])('clasifica como mr_warning el pipeline %s', (status) => {
     const mr = buildMergeRequest({ labels: ['qa_approved'] });
 
-    expect(computeMergeability(mr, approved, resolvedThreads, pipeline(status))).toBe('yellow');
+    expect(computeMergeability(mr, approved, resolvedThreads, pipeline(status))).toBe('mr_warning');
   });
 
   it('un pipeline en ejecución gana sobre las aprobaciones pendientes', () => {
     const mr = buildMergeRequest({ labels: ['qa_approved'] });
 
-    expect(computeMergeability(mr, pendingApprovals, resolvedThreads, pipeline('running'))).toBe('yellow');
+    expect(computeMergeability(mr, pendingApprovals, resolvedThreads, pipeline('running'))).toBe('mr_warning');
   });
 
   it('clasifica como review las aprobaciones pendientes', () => {
@@ -80,16 +80,16 @@ describe('computeMergeability', () => {
     expect(computeMergeability(mr, pendingApprovals, resolvedThreads, successPipeline)).toBe('review');
   });
 
-  it('clasifica como yellow cuando falta la etiqueta qa_approved', () => {
+  it('clasifica como mr_warning cuando falta la etiqueta qa_approved', () => {
     const mr = buildMergeRequest({ labels: [] });
 
-    expect(computeMergeability(mr, approved, resolvedThreads, successPipeline)).toBe('yellow');
+    expect(computeMergeability(mr, approved, resolvedThreads, successPipeline)).toBe('mr_warning');
   });
 
-  it('clasifica como green cuando no queda ningún bloqueo', () => {
+  it('clasifica como ready_to_merge cuando no queda ningún bloqueo', () => {
     const mr = buildMergeRequest({ labels: ['qa_approved'] });
 
-    expect(computeMergeability(mr, approved, resolvedThreads, successPipeline)).toBe('green');
+    expect(computeMergeability(mr, approved, resolvedThreads, successPipeline)).toBe('ready_to_merge');
   });
 
   it('compara las etiquetas sin distinguir mayúsculas de minúsculas', () => {
@@ -99,26 +99,26 @@ describe('computeMergeability', () => {
 
     expect(computeMergeability(backlog, approved, resolvedThreads, successPipeline)).toBe('backlog');
     expect(computeMergeability(qaPending, approved, resolvedThreads, successPipeline)).toBe('qa');
-    expect(computeMergeability(qaApproved, approved, resolvedThreads, successPipeline)).toBe('green');
+    expect(computeMergeability(qaApproved, approved, resolvedThreads, successPipeline)).toBe('ready_to_merge');
   });
 
   it('trata un pipeline inexistente como no bloqueante', () => {
     const mr = buildMergeRequest({ labels: ['qa_approved'] });
 
-    expect(computeMergeability(mr, approved, resolvedThreads, pipeline('none'))).toBe('green');
+    expect(computeMergeability(mr, approved, resolvedThreads, pipeline('none'))).toBe('ready_to_merge');
   });
 
   it('no bloquea cuando el estado de las aprobaciones es desconocido', () => {
     const unknownApprovals: ApprovalStatus = { status: 'unknown', required: 0, given: 0, missingApprovers: [] };
     const mr = buildMergeRequest({ labels: ['qa_approved'] });
 
-    expect(computeMergeability(mr, unknownApprovals, resolvedThreads, successPipeline)).toBe('green');
+    expect(computeMergeability(mr, unknownApprovals, resolvedThreads, successPipeline)).toBe('ready_to_merge');
   });
 
   it('tolera un MR sin etiquetas definidas', () => {
     const mr = buildMergeRequest({ labels: undefined });
 
-    expect(computeMergeability(mr, approved, resolvedThreads, successPipeline)).toBe('yellow');
+    expect(computeMergeability(mr, approved, resolvedThreads, successPipeline)).toBe('mr_warning');
   });
 });
 

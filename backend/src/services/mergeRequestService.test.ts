@@ -69,7 +69,7 @@ describe('getAllMergeRequests', () => {
     });
     expect(mr?.blockers.threads).toEqual({ status: 'resolved', unresolvedCount: 0 });
     expect(mr?.blockers.pipeline).toEqual({ status: 'success', pipelineUrl: 'https://gitlab.example.com/pipe/9' });
-    expect(mr?.mergeability).toBe('green');
+    expect(mr?.mergeability).toBe('ready_to_merge');
   });
 
   it('marca las aprobaciones como pendientes sin la del líder', async () => {
@@ -103,7 +103,7 @@ describe('getAllMergeRequests', () => {
     const { mergeRequests } = await getAllMergeRequests();
 
     expect(mergeRequests[0]?.blockers.threads).toEqual({ status: 'open', unresolvedCount: 2 });
-    expect(mergeRequests[0]?.mergeability).toBe('yellow');
+    expect(mergeRequests[0]?.mergeability).toBe('mr_warning');
   });
 
   it('ordena los MRs por fecha de actualización descendente', async () => {
@@ -173,7 +173,7 @@ describe('getAllMergeRequests', () => {
     });
     expect(mergeRequests[0]?.blockers.threads).toEqual({ status: 'unknown', unresolvedCount: 0 });
     expect(mergeRequests[0]?.blockers.pipeline).toEqual({ status: 'none', pipelineUrl: null });
-    expect(mergeRequests[0]?.mergeability).toBe('green');
+    expect(mergeRequests[0]?.mergeability).toBe('ready_to_merge');
   });
 
   it('trata un MR sin pipelines como sin CI', async () => {

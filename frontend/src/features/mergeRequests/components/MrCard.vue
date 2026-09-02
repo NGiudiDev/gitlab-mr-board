@@ -38,9 +38,9 @@ const props = defineProps({
 const cardClasses = computed(() => {
   const base = 'bg-surface-raised border-l-[3px]'
   const colorMap = {
-    green: 'border-l-ready',
-    yellow: 'border-l-draft',
-    gray: 'border-l-text-faint',
+    ready_to_merge: 'border-l-ready',
+    mr_warning: 'border-l-draft',
+    in_progress: 'border-l-text-faint',
     review: 'border-l-blue-400',
     qa: 'border-l-purple-400',
     backlog: 'border-l-text-muted',
@@ -50,7 +50,7 @@ const cardClasses = computed(() => {
 
 const assignee = computed(() => {
   const m = props.mr.mergeability
-  if (m === 'gray' || m === 'yellow' || m === 'green' || m === 'qa') return props.mr.author
+  if (m === 'in_progress' || m === 'mr_warning' || m === 'ready_to_merge' || m === 'qa') return props.mr.author
   if (m === 'review') {
     const reviewers = props.mr.reviewers || []
     if (reviewers.length > 0) return reviewers.map((r) => r.name).join(', ')

@@ -4,7 +4,7 @@ import { buildMergeRequest } from '../../../../test/fixtures/mergeRequests.js'
 import BoardColumn from './BoardColumn.vue'
 import MrBoard from './MrBoard.vue'
 
-const COLUMN_NAMES = ['Draft', 'Pendientes', 'Code Review', 'QA', 'Listas para mergear', 'Despriorizado']
+const COLUMN_NAMES = ['En progreso', 'Pendientes', 'Code Review', 'QA', 'Listas para mergear', 'Pausados']
 
 function mountBoard(props = {}) {
   return mount(MrBoard, {
@@ -79,11 +79,11 @@ describe('columnas por estado', () => {
     const wrapper = mountBoard({
       allProjects: ['equipo/tablero'],
       mergeRequests: [
-        buildMergeRequest({ id: '101-1', mergeability: 'gray' }),
-        buildMergeRequest({ id: '101-2', mergeability: 'yellow' }),
+        buildMergeRequest({ id: '101-1', mergeability: 'in_progress' }),
+        buildMergeRequest({ id: '101-2', mergeability: 'mr_warning' }),
         buildMergeRequest({ id: '101-3', mergeability: 'review' }),
         buildMergeRequest({ id: '101-4', mergeability: 'qa' }),
-        buildMergeRequest({ id: '101-5', mergeability: 'green' }),
+        buildMergeRequest({ id: '101-5', mergeability: 'ready_to_merge' }),
         buildMergeRequest({ id: '101-6', mergeability: 'backlog' }),
       ],
     })
@@ -112,7 +112,7 @@ describe('columnas por estado', () => {
     const wrapper = mountBoard({
       allProjects: ['equipo/api', 'equipo/tablero'],
       mergeRequests: [
-        buildMergeRequest({ id: '101-1', projectPath: 'equipo/tablero', mergeability: 'green' }),
+        buildMergeRequest({ id: '101-1', projectPath: 'equipo/tablero', mergeability: 'ready_to_merge' }),
         buildMergeRequest({ id: '202-1', projectPath: 'equipo/api', mergeability: 'review' }),
       ],
     })
