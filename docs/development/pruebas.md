@@ -39,7 +39,7 @@ Para hacer testeable el backend se hicieron tres cambios de estructura sin alter
 
 Adoptar **Vitest como ejecutor de pruebas unitarias y de integración** para backend y frontend. En el frontend se complementa con **React Testing Library** y un entorno DOM liviano para montar componentes React. Para las pruebas de extremo a extremo se debe usar **Playwright Test**. Esta combinación cubre cada nivel con una herramienta adecuada sin usar el navegador para reglas que pueden comprobarse de forma más rápida y aislada.
 
-El proyecto requiere **Node.js 22** y npm 10 para usar versiones vigentes de estas herramientas. Los campos `engines`, el chequeo del backend y la documentación deben mantenerse sincronizados cuando cambie este mínimo.
+El proyecto requiere **Node.js 22** y npm 10 para usar versiones vigentes de estas herramientas. Los campos `engines` de los tres `package.json` y la documentación deben mantenerse sincronizados cuando cambie este mínimo.
 
 Vitest, React Testing Library y `happy-dom` corresponden al primer paso del plan y ya están incorporados. Playwright se instalará al implementar la capa E2E.
 

@@ -4,9 +4,7 @@
 
 Se requieren Node.js 22+, npm 10+, acceso a GitLab, un PAT `read_api` e IDs de proyectos. Ejecutar `npm install` en la raíz, `backend/` y `frontend/`, y copiar `backend/.env.example` como `backend/.env`.
 
-El backend valida la versión de Node antes de ejecutar desarrollo, build, typecheck o producción. El mínimo de Node 22 permite usar las versiones vigentes de las herramientas de pruebas; con una versión anterior se muestra un error descriptivo antes de cargarlas.
-
-El paquete raíz también declara el requisito mediante `engines`. El script de Windows valida Node antes de abrir los dos procesos, por lo que un código de salida `ELIFECYCLE` después del mensaje de versión incompatible es esperado: indica que el inicio se detuvo de forma segura.
+El mínimo de Node 22 permite usar las versiones vigentes de las herramientas de pruebas. Los tres `package.json` —raíz, `backend/` y `frontend/`— lo declaran mediante `engines`, así que `npm install` advierte con `EBADENGINE` si el runtime no lo cumple. No hay una comprobación propia del proyecto: con una versión menor el aviso llega en la instalación y, más adelante, desde la herramienta que no la soporte.
 
 Para comprobar el runtime efectivo en Windows:
 
@@ -31,9 +29,9 @@ El frontend admite `VITE_API_BASE_URL`; sin ella usa el proxy de Vite.
 
 ## Ejecución
 
-En Windows, `npm start` desde la raíz inicia ambos servicios. Alternativamente, ejecutar `npm run dev` dentro de `backend/` y `frontend/` en terminales separadas.
+`npm run dev` desde la raíz inicia ambos servicios en una sola terminal, en cualquier sistema operativo. Usa [concurrently](https://www.npmjs.com/package/concurrently): prefija cada línea con `backend` o `frontend` para saber quién la emitió, Ctrl+C detiene los dos, y `--kill-others-on-fail` baja el proceso restante si uno falla al arrancar —así un `.env` incompleto no deja el frontend corriendo contra un backend inexistente—. Los scripts `dev:backend` y `dev:frontend` permiten levantar uno solo.
 
-`npm start` ejecuta el backend TypeScript directamente con `tsx`. Durante el desarrollo, `npm run dev` agrega recarga ante cambios. `npm run typecheck` valida los tipos sin generar `dist/` y `npm run build` compila el JavaScript de producción.
+Dentro de `backend/`, `npm run dev` agrega recarga ante cambios con `tsx watch` y `npm start` lo ejecuta una sola vez. `npm run typecheck` valida los tipos sin generar `dist/` y `npm run build` compila el JavaScript de producción.
 
 - Frontend: `http://localhost:5173`
 - Backend: `http://localhost:3001`
