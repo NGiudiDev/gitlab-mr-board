@@ -20,6 +20,8 @@
 
 - **Nombres descriptivos**: variables, funciones y componentes deben tener nombres que expliquen su propósito sin necesidad de comentarios. Preferir `fetchMergeRequestApprovals` sobre `getData`.
 
+- **Código fácil de leer**: priorizar soluciones claras y directas que otro desarrollador pueda comprender y mantener sin esfuerzo innecesario. Evitar abstracciones prematuras, estructuras rebuscadas y optimizaciones que dificulten la lectura sin aportar un beneficio comprobable.
+
 - **Funciones pequeñas y con responsabilidad única**: si una función hace más de una cosa, separarla. Cada función debe poder describirse en una oración.
 
 - **Comentarios solo para lógica compleja**: no comentar lo obvio. Dejar comentarios cuando hay una decisión no evidente, un workaround, una regla de negocio sutil, o un algoritmo que requiere explicación. El comentario debe explicar el **por qué**, no el **qué**.
@@ -114,7 +116,7 @@
 
 - Ejecutar `npm test` en la raíz antes de entregar un cambio, además de la validación manual indicada en la guía.
 
-- Ubicar las pruebas junto al código con sufijo `.test.ts` o `.test.js`, y las utilidades y fixtures compartidas en la carpeta `test/` del paquete. Nunca usar la API real de GitLab.
+- Ubicar las pruebas junto al código con sufijo `.test.ts` o `.test.js`, y las utilidades y fixtures compartidas en la carpeta `test/` del paquete. Las pruebas unitarias y de integración nunca deben usar la API real de GitLab.
 
 - En el backend, las pruebas se excluyen del build (`tsconfig.json`) y se validan por tipos con `tsconfig.test.json`; `npm run typecheck` corre ambos.
 
@@ -126,6 +128,6 @@
 
 - Los cambios de clasificación deben cubrir la matriz de estados y prioridades descrita en la estrategia.
 
-- Las pruebas E2E deben usar Playwright, simular la API de GitLab con fixtures locales y priorizar selectores accesibles. No deben depender de un token ni de servicios externos.
+- Las pruebas E2E deben usar Playwright, conectarse a la API real de GitLab mediante `GITLAB_TOKEN` y priorizar selectores accesibles. Deben ejecutarse contra proyectos de prueba configurados para este propósito y fallar con un mensaje claro cuando el token no esté disponible.
 
 - Ejecutar inicialmente los E2E solo en Chromium; agregar Firefox o WebKit únicamente cuando exista un requisito explícito de compatibilidad.
