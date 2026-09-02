@@ -14,8 +14,8 @@ Se aplica la primera regla coincidente:
 6. `mr_warning`: falta `qa_approved`.
 7. `ready_to_merge`: no queda ningún bloqueo.
 
-El frontend muestra En progreso, Pendientes, Code Review, QA, Listas para mergear y Pausados, agrupadas por proyecto. Hay polling cada cinco minutos; la actualización manual omite la caché de un minuto del backend.
+El frontend muestra En progreso, Pendientes, Code Review, QA, Listas para mergear y Pausados, agrupadas por proyecto.
 
 ## Responsable mostrado
 
-En draft, bloqueos, pendientes, lista y backlog se muestra el autor como responsable. En Code Review se muestran los reviewers asignados. En QA, la responsabilidad depende del contexto del equipo.
+En En progreso, Pendientes, QA, Listas para mergear y Pausados se muestra el autor como responsable. En Code Review se muestran los reviewers asignados; si no existen, no se presenta responsable.

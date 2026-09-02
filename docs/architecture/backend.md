@@ -17,9 +17,7 @@ La implementación separa el transporte HTTP, la lógica de negocio y la integra
 - `src/services/mergeRequestRules.ts`: contiene reglas puras de clasificación y normalización que no dependen de Express ni de la red.
 - `src/utils/`: aloja utilidades reutilizables, como el limitador de concurrencia y las reglas de bloqueo técnico.
 - `src/types.ts`: define los contratos recibidos desde GitLab y los modelos expuestos por el backend.
-- `test/`: contiene configuración, fixtures y utilidades compartidas por las pruebas del paquete.
-
-Las pruebas específicas viven junto al módulo cubierto con el sufijo `.test.ts`.
+- `test/`: contiene configuración, fixtures y utilidades compartidas por las pruebas del paquete. Las convenciones se mantienen en la [estrategia de pruebas](../development/pruebas.md).
 
 ## Construcción y arranque
 
@@ -87,15 +85,4 @@ El parámetro opcional `force=true` fuerza la actualización de la caché. Cualq
 
 `src/config.ts` carga `backend/.env`. `GITLAB_TOKEN` y `PROJECT_IDS` son obligatorias; si falta alguna, el proceso informa el problema y termina. Los valores opcionales controlan la URL de GitLab, el puerto, el TTL de la caché y las reglas de aprobación.
 
-La lista completa y sus valores predeterminados se mantienen en la [guía de entorno local](../development/entorno-local.md). Al agregar una variable hay que actualizar, como mínimo, `backend/.env.example`, `src/config.ts` y esa guía.
-
-## Validación y pruebas
-
-Los comandos principales del paquete son:
-
-- `npm run dev`: ejecuta TypeScript con recarga automática.
-- `npm run typecheck`: valida el código de producción y las pruebas.
-- `npm test`: ejecuta las pruebas con Vitest.
-- `npm run build`: compila ES modules en `dist/`.
-
-Las pruebas unitarias y de integración no usan la API real de GitLab. Inyectan dependencias, simulan `fetch` y usan fixtures locales. Las pruebas E2E se ejecutan por separado contra proyectos de prueba y requieren un `GITLAB_TOKEN` válido.
+La lista completa, sus valores predeterminados y el procedimiento de actualización se mantienen en la [guía de entorno local](../development/entorno-local.md).

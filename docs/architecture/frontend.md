@@ -13,9 +13,7 @@ El código se divide entre la composición general y las funcionalidades del dom
 - `src/features/mergeRequests/hooks/useMergeRequests.js`: contiene el store compartido, el acceso al backend y el polling.
 - `src/features/mergeRequests/components/`: contiene los componentes del tablero de merge requests.
 - `src/assets/main.css`: incluye las directivas de Tailwind y los pocos estilos globales que no se expresan mediante utilidades.
-- `test/`: reúne la configuración, los fixtures y las utilidades compartidas por las pruebas del frontend.
-
-Las pruebas específicas viven junto a cada componente o hook con el sufijo `.test.jsx`.
+- `test/`: reúne la configuración, los fixtures y las utilidades compartidas según la [estrategia de pruebas](../development/pruebas.md).
 
 Las funcionalidades nuevas deben seguir la estructura `src/features/<feature>/components/` y `src/features/<feature>/hooks/`. `src/app/` se reserva para la composición de alto nivel y no debe absorber lógica propia de una feature.
 
@@ -104,15 +102,4 @@ La interfaz apunta a WCAG 2.2 nivel AA y aplica estas decisiones:
 - Los badges combinan texto, iconos y color; ningún estado depende solo del color.
 - Las animaciones y transiciones se reducen cuando el sistema indica `prefers-reduced-motion`.
 
-Todo cambio de interfaz debe verificarse con teclado, tema oscuro y los estados de carga, error y ausencia de datos.
-
-## Validación y pruebas
-
-Los comandos principales del paquete son:
-
-- `npm run dev`: inicia Vite y el proxy local hacia el backend.
-- `npm test`: ejecuta las pruebas con Vitest y Happy DOM.
-- `npm run build`: genera la aplicación optimizada para producción.
-- `npm run preview`: sirve localmente el build generado.
-
-Las pruebas de componentes usan React Testing Library y verifican comportamiento observable, roles y nombres accesibles. No deben acoplarse a clases de Tailwind, detalles internos del store ni snapshots extensos. Las respuestas del backend se simulan con fixtures en las pruebas unitarias y de integración.
+La validación automatizada y manual de estos comportamientos se define en la [estrategia de pruebas](../development/pruebas.md).

@@ -1,12 +1,12 @@
 # Despliegue en producción
 
-El build y la ejecución requieren Node.js 22 o superior y npm 10 o superior.
+Los requisitos de runtime y las variables disponibles se mantienen en la [guía de entorno local](../development/entorno-local.md).
 
 ## Frontend
 
 ```bash
 cd frontend
-npm install
+npm ci
 npm run build
 ```
 
@@ -27,7 +27,7 @@ Proporcionar las variables de la [guía local](../development/entorno-local.md) 
 ## Operación
 
 - Publicar ambos servicios detrás de HTTPS.
-- Ajustar CORS en `backend/src/index.ts`; hoy solo permite los puertos locales 5173 y 4173.
+- Ajustar CORS en `backend/src/app.ts`; hoy solo permite los orígenes locales con puertos 5173 y 4173.
 - Usar `/health` como prueba de vida, sabiendo que no valida GitLab.
 - Mantener una instancia o aceptar cachés independientes.
 - Verificar `/api/pull-requests` y que el navegador nunca reciba `GITLAB_TOKEN`.

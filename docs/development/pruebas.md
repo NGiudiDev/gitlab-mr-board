@@ -1,131 +1,28 @@
 # Estrategia de pruebas
 
-La decisión de fondo —Vitest, la pirámide y el veto a usar la API real de GitLab— está registrada en [ADR 0003](../decisions/0003-estrategia-de-pruebas.md). Este documento describe cómo se aplica.
+Este documento es la fuente de verdad para ejecutar, escribir y validar pruebas. La elección de herramientas y sus consecuencias se registran en el [ADR 0003](../decisions/0003-estrategia-de-pruebas.md).
 
-## Estado actual
+## Estado y herramientas
 
-Vitest está configurado en backend y frontend, con React Testing Library y el entorno `happy-dom` en el frontend. Las tres primeras capas de la pirámide están implementadas: 80 pruebas en el backend y 98 en el frontend, todas sin red, sin token y sin la API real de GitLab. Falta la capa E2E con Playwright.
+Las pruebas unitarias y de integración están implementadas en ambos paquetes:
 
-Comandos:
+- **Backend:** Vitest sobre Node.js.
+- **Frontend:** Vitest, React Testing Library y `happy-dom`.
+- **E2E:** Playwright Test sobre Chromium, pendiente de implementación.
+
+Las pruebas unitarias y de integración no acceden a GitLab. Las E2E deben recorrer la aplicación completa contra proyectos de prueba reales y requieren `GITLAB_TOKEN`.
+
+## Comandos
 
 | Comando | Alcance |
 |---|---|
-| `npm test` en la raíz | Ejecuta las suites de backend y frontend |
-| `npm test` en `backend/` | Reglas, cliente de GitLab, rate limiter y contrato HTTP |
-| `npm test` en `frontend/` | Store de datos y componentes React |
-| `npm run test:watch` | Modo interactivo en cada paquete |
-| `npm run typecheck` en `backend/` | Tipos del código de producción y de las pruebas |
+| `npm test` en la raíz | Ejecuta las suites unitarias y de integración de ambos paquetes |
+| `npm test` en `backend/` | Ejecuta la suite del backend |
+| `npm test` en `frontend/` | Ejecuta la suite del frontend |
+| `npm run test:watch` en un paquete | Ejecuta su suite en modo interactivo |
+| `npm run typecheck` en `backend/` | Valida los tipos de producción y pruebas |
 
-Archivos del backend:
-
-- `src/services/mergeRequestRules.test.ts`: matriz completa de clasificación y `extractProjectPath`.
-- `src/services/gitlabApi.test.ts`: construcción de URLs, cabecera del token, traducción de errores y paginación.
-- `src/services/mergeRequestService.test.ts`: enriquecimiento, orden, fallos parciales y bloqueos desconocidos.
-- `src/app.test.ts`: `GET /health`, `GET /api/pull-requests`, caché, `?force=true` y errores 502.
-- `src/utils/rateLimiter.test.ts`: concurrencia máxima, orden de la cola y liberación ante fallos.
-- `src/utils/isMergeRequestBlocked.test.ts`: bloqueos y advertencias por conflictos, pipelines y discusiones, más los estados desconocidos.
-- `test/`: `setup.ts` fija la configuración antes de `config.ts`, `fixtures/gitlab.ts` simula la API y `httpClient.ts` ejecuta la app en memoria.
-
-Archivos del frontend:
-
-- `src/features/mergeRequests/hooks/useMergeRequests.test.jsx`: carga, errores, polling y consumidores múltiples.
-- `src/features/mergeRequests/components/*.test.jsx`: `MrBoard`, `BoardColumn`, `MrCard`, `BlockerBadge`, `TopBar` y `FilterChips`.
-- `src/app/App.test.jsx`: carga inicial, error, vacío, actualización manual y anuncios accesibles.
-- `test/`: `setup.js` registra la limpieza de Testing Library, `fixtures/` arma la respuesta del backend y `sharedState.js` reinicia el store entre pruebas.
-
-Para hacer testeable el backend se hicieron tres cambios de estructura sin alterar el comportamiento: las reglas puras se movieron a `src/services/mergeRequestRules.ts`; la aplicación Express se construye en `src/app.ts` con `createApp()`, y `src/index.ts` sólo escucha el puerto; el router de merge requests recibe la fuente de datos y el reloj de la caché por inyección. Además, `tsconfig.json` excluye las pruebas del build y `tsconfig.test.json` las valida por tipos.
-
-## Recomendación
-
-Adoptar **Vitest como ejecutor de pruebas unitarias y de integración** para backend y frontend. En el frontend se complementa con **React Testing Library** y un entorno DOM liviano para montar componentes React. Para las pruebas de extremo a extremo se debe usar **Playwright Test**. Esta combinación cubre cada nivel con una herramienta adecuada sin usar el navegador para reglas que pueden comprobarse de forma más rápida y aislada.
-
-El proyecto requiere **Node.js 22** y npm 10 para usar versiones vigentes de estas herramientas. Los campos `engines` de los tres `package.json` y la documentación deben mantenerse sincronizados cuando cambie este mínimo.
-
-Vitest, React Testing Library y `happy-dom` corresponden al primer paso del plan y ya están incorporados. Playwright se instalará al implementar la capa E2E.
-
-## Pirámide propuesta
-
-### 1. Pruebas unitarias de reglas de negocio
-
-Son la primera prioridad porque la clasificación de un Merge Request determina en qué columna aparece. Las funciones puras ya viven en `mergeRequestRules.ts`, separadas de las llamadas a GitLab de `mergeRequestService.ts`.
-
-Casos cubiertos de `computeMergeability`:
-
-- `backlog` tiene prioridad sobre los demás estados.
-- draft o work in progress resulta en `in_progress`.
-- `qa_pending` resulta en `qa`.
-- conflictos, discusiones abiertas y pipelines fallidos o cancelados resultan en `mr_warning`.
-- pipelines en ejecución o pendientes resultan en `mr_warning`.
-- aprobaciones pendientes resultan en `review`.
-- sin la etiqueta `qa_approved` resulta en `mr_warning`.
-- con aprobaciones, pipeline y QA correctos resulta en `ready_to_merge`.
-- las etiquetas se comparan sin distinguir mayúsculas de minúsculas.
-
-También deben cubrirse `extractProjectPath`, la construcción de URLs de GitLab, la paginación y el rate limiter. Estas pruebas no acceden a la red ni dependen de un token real.
-
-### 2. Pruebas de integración del backend
-
-Ejecutar la aplicación Express en memoria y reemplazar `global.fetch` por respuestas controladas. Verificar el contrato observable, no detalles internos:
-
-- `GET /health` devuelve un estado exitoso.
-- `GET /api/pull-requests` enriquece y ordena los MRs.
-- una segunda petición dentro del TTL utiliza caché.
-- `?force=true` evita la caché.
-- errores de GitLab se traducen al código HTTP y mensaje en español esperados.
-- respuestas 401, 404, paginadas y parcialmente incompletas se manejan correctamente.
-- el token nunca aparece en el cuerpo ni en logs capturados por las pruebas.
-
-Los datos de GitLab deben vivir en fixtures pequeñas y explícitas. No usar la API real en la suite repetible: sería lenta, consumiría rate limit y volvería los resultados dependientes de datos externos.
-
-### 3. Pruebas de componentes y del store
-
-Montar los componentes con React Testing Library y comprobar su comportamiento desde la perspectiva de una persona usuaria:
-
-- agrupación de tarjetas en la columna correcta;
-- estados de carga, error, vacío y actualización;
-- expansión y contracción de proyectos;
-- textos accesibles, roles, nombres de controles y anuncios dinámicos;
-- interacción por teclado y foco visible donde pueda verificarse en DOM.
-
-Mockear `fetch`, fechas e intervalos en `useMergeRequests`. Afirmar sobre el DOM renderizado —texto, roles y atributos accesibles— y no sobre props de componentes hijos ni clases Tailwind. Reservar snapshots para estructuras pequeñas y estables.
-
-### 4. Pruebas de extremo a extremo con Playwright
-
-Es la única capa pendiente: las tres anteriores ya están implementadas y en verde. Falta agregar pruebas con Playwright Test y un servidor de API simulado. Playwright debe iniciar el frontend y el backend mediante la opción `webServer` de su configuración, o iniciar solamente el frontend cuando todas las respuestas se intercepten desde el navegador.
-
-Recorrido crítico inicial:
-
-1. abrir el tablero;
-2. esperar la carga de fixtures;
-3. expandir un proyecto;
-4. comprobar la columna y los bloqueadores de un MR;
-5. forzar una actualización;
-6. recorrer los controles principales por teclado.
-
-Usar `page.route()` para responder las llamadas a `/api/pull-requests` con fixtures locales. La suite no debe comunicarse con GitLab ni requerir `GITLAB_TOKEN`. Priorizar `getByRole()`, `getByLabel()` y aserciones con espera automática; no localizar elementos por clases Tailwind. Cada prueba debe ser independiente y poder ejecutarse en cualquier orden.
-
-La configuración inicial debe ejecutar solamente Chromium para mantener bajo el tiempo de instalación y de integración continua. Firefox y WebKit se agregarán cuando exista una necesidad explícita de compatibilidad entre navegadores. Conservar trazas, capturas y videos solo ante fallos o reintentos.
-
-No conviene empezar la adopción por esta capa: es más costosa y no localiza fallas de reglas tan bien como las pruebas unitarias.
-
-## Estructura y comandos
-
-Las pruebas viven junto al código que cubren con el sufijo `.test.ts` o `.test.js`. Los fixtures y utilidades compartidas están en la carpeta `test/` de cada paquete.
-
-Cada `package.json` expone:
-
-```json
-{
-  "scripts": {
-    "test": "vitest run --passWithNoTests",
-    "test:watch": "vitest"
-  }
-}
-```
-
-En el backend, `vitest.config.ts` usa el entorno `node` y `test/setup.ts` como archivo de preparación; en el frontend, el entorno `happy-dom` se define en `vite.config.js`.
-
-Al implementar la capa E2E, la raíz debe agregar comandos separados para que el propósito de cada ejecución sea explícito:
+Cuando se incorpore Playwright, la raíz debe exponer comandos separados:
 
 ```json
 {
@@ -138,61 +35,82 @@ Al implementar la capa E2E, la raíz debe agregar comandos separados para que el
 }
 ```
 
-En integración continua se deben ejecutar ambas capas de forma explícita:
+## Convenciones
 
-```bash
-npm run test:unit
-npm run test:e2e
-```
+- Ubicar cada prueba junto al módulo cubierto con el sufijo `.test.ts`, `.test.js` o `.test.jsx`, según el tipo de archivo.
+- Reservar `test/` dentro de cada paquete para configuración, fixtures y utilidades compartidas.
+- Priorizar reglas de negocio y comportamiento observable sobre detalles internos.
+- Evitar snapshots extensos y aserciones sobre clases de Tailwind.
+- Mantener cada prueba independiente y ejecutable en cualquier orden.
+- Agregar una prueba de regresión para toda corrección de un defecto.
+- No depender de la cobertura como único indicador: primero cubrir todas las ramas de clasificación y los contratos críticos.
 
-No establecer un porcentaje global de cobertura al inicio. Primero cubrir todas las ramas de clasificación y los contratos HTTP críticos; después medir una línea base y subir el umbral gradualmente. La cobertura es una señal, no el criterio de calidad por sí sola.
+## Backend
 
-## Plan de adopción
+La suite debe cubrir:
 
-1. **Completado:** elevar el mínimo a Node.js 22 e instalar Vitest en ambos paquetes; agregar React Testing Library y `happy-dom` solo al frontend.
-2. **Completado:** extraer las reglas puras sin cambiar comportamiento y cubrir la matriz completa de mergeabilidad.
-3. **Completado:** hacer inyectables la llamada a GitLab y el reloj de la caché; agregar integración del backend.
-4. **Completado:** cubrir `useMergeRequests`, `App`, `MrBoard`, `BoardColumn`, `MrCard` y los demás componentes por comportamiento.
-5. Instalar Playwright Test en la raíz, descargar Chromium y agregar el recorrido crítico con la API simulada.
-6. Ejecutar las suites unitarias y E2E como pasos separados en integración continua.
+- La matriz completa y el orden de prioridad de `computeMergeability()`.
+- La extracción de la ruta del proyecto.
+- La construcción de URLs, autenticación, errores y paginación del cliente de GitLab.
+- El límite de concurrencia y la liberación de la cola ante fallos.
+- El enriquecimiento, orden y degradación parcial de los merge requests.
+- `GET /health`, `GET /api/pull-requests`, la caché, `force=true` y la traducción de errores HTTP.
 
-Cada etapa debe dejar `npm test`, typecheck y builds en verde. Una corrección de defecto debe incluir primero una prueba que reproduzca la regresión.
+Las pruebas de integración construyen Express en memoria mediante `createApp()`. Deben inyectar la fuente de datos y el reloj cuando corresponda, y reemplazar `global.fetch` con respuestas controladas. Los contratos de estas piezas se describen en la [arquitectura del backend](../architecture/backend.md).
 
-## Validación manual complementaria
+`backend/tsconfig.json` excluye las pruebas del build y `backend/tsconfig.test.json` las incluye en la validación de tipos.
 
-Las pruebas automatizadas no reemplazan estas comprobaciones, porque no consultan la instancia real de GitLab ni renderizan la interfaz en un navegador:
+## Frontend
 
-1. Ejecutar `npm test`, `npm run check:node`, `npm run typecheck` y `npm run build` en `backend/`.
-2. Iniciar el backend y comprobar `GET /health` y `GET /api/pull-requests`.
-3. Iniciar el frontend y verificar carga, agrupación, columnas y actualización manual.
-4. Revisar consola del navegador y terminales.
-5. Ejecutar `npm run build` en `frontend/`.
-6. Para cambios de clasificación, cubrir draft, conflictos, pipelines, aprobaciones, QA y backlog.
+Las pruebas de componentes y del store deben cubrir:
 
-## Validación manual de accesibilidad
+- Carga inicial, actualización manual, polling y errores.
+- Estados vacío, de carga y con datos anteriores.
+- Agrupación por proyecto y clasificación en columnas.
+- Expansión y contracción de proyectos.
+- Información y enlaces de tarjetas e indicadores.
+- Roles, nombres accesibles, estados dinámicos e interacción por teclado.
 
-Para cada cambio de interfaz:
+Las pruebas deben consultar el DOM como lo haría una persona usuaria. No deben afirmar props de componentes hijos ni el estado interno del store.
 
-1. Recorrer la página solo con `Tab`, `Shift+Tab`, `Enter` y `Espacio`; el orden debe ser lógico, todo control debe funcionar y el foco debe permanecer visible.
-2. Activar “Saltar al contenido principal” y comprobar que mueve el foco al tablero.
-3. Verificar con el árbol de accesibilidad que existe un único `main`, una jerarquía de encabezados coherente y estado expandido o contraído para cada proyecto.
-4. Confirmar que carga, actualización, error y resultado vacío se anuncian sin mover el foco.
-5. Medir contraste en tema oscuro: 4.5:1 para texto normal y 3:1 para controles, foco e información gráfica.
-6. Probar zoom del navegador al 200 % y preferencia de movimiento reducido sin pérdida de contenido ni funcionalidad.
+El store vive a nivel de módulo: cada prueba debe reiniciarlo con `resetSharedState()` de `frontend/test/sharedState.js`. Las actualizaciones asíncronas se esperan con `act()`. Con temporizadores falsos se usa `fireEvent`; `user-event` se reserva para pruebas con reloj real.
 
-Esta revisión es una base técnica orientada a WCAG 2.2 AA; una declaración formal de conformidad requiere evaluar todas las pantallas y estados con pruebas manuales y tecnologías de asistencia reales.
+La composición y el ciclo del store se detallan en la [arquitectura del frontend](../architecture/frontend.md).
 
-## Particularidades del frontend React
+## Pruebas E2E
 
-Tres detalles a tener en cuenta al escribir pruebas de la capa React ([ADR 0005](../decisions/0005-frontend-en-react.md)):
+Playwright debe iniciar frontend y backend mediante `webServer` y ejecutar el recorrido contra proyectos de GitLab exclusivos para pruebas. La suite debe fallar con un mensaje claro antes de comenzar si falta `GITLAB_TOKEN` o la configuración de proyectos.
 
-- El store de `useMergeRequests` vive a nivel de módulo, así que **cada prueba debe reiniciarlo** con `resetSharedState()` de `test/sharedState.js`.
-- Las actualizaciones asíncronas se esperan con `act()`; `test/setup.js` registra la limpieza automática porque el proyecto no usa globals de Vitest.
-- Con temporizadores falsos conviene `fireEvent` en lugar de `user-event`, que necesita coordinarse con el reloj simulado. `user-event` se usa en las pruebas sin temporizadores porque respeta cosas como un botón deshabilitado.
+El recorrido crítico inicial es:
 
-## Referencias
+1. Abrir el tablero y esperar una respuesta real de GitLab.
+2. Expandir un proyecto.
+3. Verificar la columna y los bloqueadores de un merge request conocido.
+4. Forzar una actualización.
+5. Recorrer los controles principales con teclado.
 
-- [Guía oficial de Vitest](https://vitest.dev/guide/)
-- [Guía oficial de React Testing Library](https://testing-library.com/docs/react-testing-library/intro/)
-- [Instalación oficial de Playwright](https://playwright.dev/docs/intro)
-- [Buenas prácticas oficiales de Playwright](https://playwright.dev/docs/best-practices)
+Usar selectores accesibles como `getByRole()` y `getByLabel()`, junto con aserciones con espera automática. No localizar elementos mediante clases de Tailwind.
+
+La configuración inicial ejecuta solo Chromium. Firefox y WebKit se agregan únicamente ante un requisito explícito. Conservar trazas, capturas y videos solo para fallos o reintentos.
+
+Los datos E2E deben ser controlados y estables. La suite no debe crear, modificar, aprobar ni fusionar merge requests salvo que un caso futuro lo requiera expresamente y disponga de limpieza segura.
+
+## Validación antes de entregar
+
+Para cualquier cambio:
+
+1. Ejecutar `npm test` desde la raíz.
+2. Si cambia el backend, ejecutar `npm run typecheck` y `npm run build` en `backend/`.
+3. Si cambia el frontend, ejecutar `npm run build` en `frontend/`.
+4. Iniciar los paquetes afectados y revisar terminales y consola del navegador.
+
+Para cambios de interfaz, además:
+
+1. Recorrer la página con `Tab`, `Shift+Tab`, `Enter` y `Espacio`.
+2. Comprobar el enlace para saltar al contenido, el orden del foco y su visibilidad.
+3. Verificar encabezados, regiones, nombres y estados en el árbol de accesibilidad.
+4. Confirmar los anuncios de carga, actualización, error y resultado vacío.
+5. Validar contraste en tema oscuro y zoom al 200 %.
+6. Probar la preferencia de movimiento reducido.
+
+Esta revisión apunta a WCAG 2.2 nivel AA, pero una declaración formal de conformidad requiere evaluar todas las pantallas y estados con tecnologías de asistencia reales.

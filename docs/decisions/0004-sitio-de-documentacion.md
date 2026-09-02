@@ -5,13 +5,13 @@
 
 ## Contexto
 
-`docs/` reúne dieciocho archivos Markdown organizados por propósito, con índices por carpeta y enlaces relativos entre documentos. Leerlos exige navegar el repositorio archivo por archivo: no hay búsqueda entre documentos, la jerarquía sólo se ve abriendo cada índice y nada verifica que los enlaces relativos sigan apuntando a donde dicen. La documentación ya es un producto del proyecto —AGENTS.md obliga a actualizarla junto con el comportamiento— pero no tiene una superficie de lectura propia.
+`docs/` reúne archivos Markdown organizados por propósito, con índices por carpeta y enlaces relativos entre documentos. Leerlos exige navegar el repositorio archivo por archivo: no hay búsqueda entre documentos, la jerarquía sólo se ve abriendo cada índice y nada verifica que los enlaces relativos sigan apuntando a donde dicen. La documentación ya es un producto del proyecto —AGENTS.md obliga a actualizarla junto con el comportamiento— pero no tiene una superficie de lectura propia.
 
 ## Decisión
 
-Generar un sitio estático desde `docs/` con **VitePress**, agregado como única dependencia de desarrollo en la raíz.
+Generar un sitio estático desde `docs/` con **VitePress**, agregado como dependencia de desarrollo en la raíz.
 
-Se eligió sobre las alternativas por coherencia de herramientas: VitePress corre sobre Vite y Vue 3, que ya son la base del frontend, así que no incorpora un ecosistema nuevo. Docusaurus traería React, MkDocs Material una cadena de Python en un repositorio que hoy es sólo Node, y Docsify renderiza en el navegador sin HTML pre-generado ni búsqueda comparable.
+Se eligió sobre las alternativas por coherencia de herramientas: VitePress pertenece al ecosistema de Vite y se ejecuta con el runtime de Node.js que ya usa el repositorio. MkDocs Material incorporaría una cadena de Python y Docsify renderiza en el navegador sin HTML pregenerado ni búsqueda comparable.
 
 Reglas que acompañan la decisión:
 

@@ -13,26 +13,10 @@ Esta decisión reemplaza la elección implícita de Vue que menciona el [ADR 000
 
 Reescribir el frontend en **React 19** con Vite, y reemplazar **Vue Test Utils** por **React Testing Library** con `user-event`.
 
-Lo que no cambió:
+Mantener el contrato del backend y el comportamiento observable del tablero. Usar `useSyncExternalStore` para conectar el estado compartido a React sin incorporar un provider ni otra dependencia.
 
-- El backend, su contrato y sus pruebas. El frontend sigue consumiendo `GET /api/pull-requests`.
-- Tailwind CSS, los tokens de color y `main.css`, que pasaron textuales.
-- Vitest, `happy-dom`, la estructura de carpetas por feature y los fixtures compartidos.
-- El comportamiento observable: mismas columnas, misma clasificación, mismos textos y la misma estructura accesible.
-
-Decisiones propias de la migración:
-
-- El estado compartido usa **`useSyncExternalStore`** sobre el mismo estado a nivel de módulo que tenía el composable. React no ofrece un equivalente a un `ref` compartido entre componentes, y esta opción replica la semántica sin provider ni librería de estado.
-- El polling se gobierna con un **contador de consumidores**: arranca con el primero y se detiene con el último, en lugar de atarse al ciclo de vida de un componente.
-- La carga inicial está protegida por una **guarda de petición en curso**, para que el doble montaje de `StrictMode` en desarrollo no dispare dos consultas.
-- El panel de cada proyecto se mantiene en el DOM cuando está contraído, como hacía `v-show`: `aria-controls` debe apuntar a un elemento existente.
-- Los iconos de `BlockerBadge` pasaron de entidades inyectadas con `v-html` a caracteres literales, evitando `dangerouslySetInnerHTML`.
-- Las pruebas que verificaban eventos emitidos o props de componentes hijos se reescribieron contra el DOM renderizado, en línea con la prioridad de comportamiento observable del [ADR 0003](0003-estrategia-de-pruebas.md).
-
-`@vitejs/plugin-react` quedó fijado en la versión 4: la 6 exige Vite 8 y el proyecto usa Vite 6.
+La estructura resultante y los mecanismos de polling, carga y accesibilidad se documentan en la [arquitectura del frontend](../architecture/frontend.md). Las pruebas siguen la estrategia del [ADR 0003](0003-estrategia-de-pruebas.md).
 
 ## Consecuencias
 
-El frontend queda en la librería que el equipo usa a diario, y las pruebas de componentes verifican DOM en lugar de contratos internos. El costo es un cambio de idioma completo en la capa de vista: quien conozca la versión Vue no reconoce los archivos, y el historial de esos archivos se corta. El bundle de producción pasó a 207 kB (65 kB gzip), mayor que el de Vue por el peso de React y su DOM.
-
-Aparecen dos trampas que Vue no tenía y que hay que respetar al agregar código: los efectos se ejecutan dos veces en desarrollo por `StrictMode`, y todo estado compartido nuevo debe pasar por el store en vez de por `useState`, o dejará de estar sincronizado entre componentes. La capa E2E con Playwright sigue pendiente y ahora debe escribirse contra la aplicación React.
+El frontend queda en la librería que el equipo usa a diario y las pruebas verifican el DOM en lugar de contratos internos entre componentes. El costo es perder continuidad directa con los archivos de la implementación anterior y asumir las particularidades de los efectos y el estado compartido de React.

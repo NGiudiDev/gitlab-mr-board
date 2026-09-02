@@ -12,6 +12,8 @@
 
 - Organizar `docs/` por propósito: `architecture/` para estructura técnica, `decisions/` para ADR, `development/` para trabajo local y pruebas, `deployment/` para operación, y `domains/` para reglas funcionales.
 
+- **Evitar documentación redundante**: cada concepto debe tener una única fuente de verdad en la sección que corresponda. En otros documentos, resumir solo el contexto imprescindible y enlazar a esa fuente en lugar de copiar requisitos, comandos, reglas o explicaciones. Los índices deben servir para navegar, no para duplicar contenido.
+
 - `docs/` se puede leer como sitio con VitePress (`npm run docs:dev`). Al agregar un documento, **sumarlo al sidebar** de `docs/.vitepress/config.mjs` y ejecutar `npm run docs:build`, que falla ante enlaces internos rotos. Los índices de carpeta se siguen llamando `README.md`; `rewrites` los sirve como `index.md`.
 
 - Los nombres de variables, funciones y archivos se mantienen en **inglés** (convención estándar de código).
@@ -118,7 +120,7 @@
 
 - Ejecutar `npm test` en la raíz antes de entregar un cambio, además de la validación manual indicada en la guía.
 
-- Ubicar las pruebas junto al código con sufijo `.test.ts` o `.test.js`, y las utilidades y fixtures compartidas en la carpeta `test/` del paquete. Las pruebas unitarias y de integración nunca deben usar la API real de GitLab.
+- Ubicar las pruebas junto al código con sufijo `.test.ts`, `.test.js` o `.test.jsx`, según el archivo probado, y las utilidades y fixtures compartidas en la carpeta `test/` del paquete. Las pruebas unitarias y de integración nunca deben usar la API real de GitLab.
 
 - En el backend, las pruebas se excluyen del build (`tsconfig.json`) y se validan por tipos con `tsconfig.test.json`; `npm run typecheck` corre ambos.
 

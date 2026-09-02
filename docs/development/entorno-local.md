@@ -2,7 +2,7 @@
 
 ## Requisitos e instalación
 
-Se requieren Node.js 22+, npm 10+, acceso a GitLab, un PAT `read_api` e IDs de proyectos. Ejecutar `npm install` en la raíz, `backend/` y `frontend/`, y copiar `backend/.env.example` como `backend/.env`.
+Se requieren Node.js 22+, npm 10+, acceso a GitLab, un PAT `read_api` e IDs de proyectos. Ejecutar `npm ci` en la raíz, `backend/` y `frontend/`, y copiar `backend/.env.example` como `backend/.env`.
 
 El mínimo de Node 22 permite usar las versiones vigentes de las herramientas de pruebas. Los tres `package.json` —raíz, `backend/` y `frontend/`— lo declaran mediante `engines`, así que `npm install` advierte con `EBADENGINE` si el runtime no lo cumple. No hay una comprobación propia del proyecto: con una versión menor el aviso llega en la instalación y, más adelante, desde la herramienta que no la soporte.
 
@@ -13,7 +13,7 @@ node --version
 where.exe node
 ```
 
-Después de actualizar Node.js hay que abrir una terminal nueva y ejecutar nuevamente `npm install` en la raíz, `backend/` y `frontend/`. Esto evita conservar binarios opcionales generados para el runtime anterior.
+Después de actualizar Node.js hay que abrir una terminal nueva y ejecutar nuevamente `npm ci` en la raíz, `backend/` y `frontend/`. Esto evita conservar binarios opcionales generados para el runtime anterior.
 
 | Variable | Obligatoria | Predeterminado | Uso |
 |---|---:|---|---|
@@ -31,7 +31,7 @@ El frontend admite `VITE_API_BASE_URL`; sin ella usa el proxy de Vite.
 
 `npm run dev` desde la raíz inicia ambos servicios en una sola terminal, en cualquier sistema operativo. Usa [concurrently](https://www.npmjs.com/package/concurrently): prefija cada línea con `backend` o `frontend` para saber quién la emitió, Ctrl+C detiene los dos, y `--kill-others-on-fail` baja el proceso restante si uno falla al arrancar —así un `.env` incompleto no deja el frontend corriendo contra un backend inexistente—. Los scripts `dev:backend` y `dev:frontend` permiten levantar uno solo.
 
-Dentro de `backend/`, `npm run dev` agrega recarga ante cambios con `tsx watch` y `npm start` lo ejecuta una sola vez. `npm run typecheck` valida los tipos sin generar `dist/` y `npm run build` compila el JavaScript de producción.
+Dentro de `backend/`, `npm run dev` agrega recarga ante cambios con `tsx watch` y `npm start` lo ejecuta una sola vez. Los comandos de validación están en la [estrategia de pruebas](pruebas.md) y los builds productivos en la [guía de despliegue](../deployment/produccion.md).
 
 - Frontend: `http://localhost:5173`
 - Backend: `http://localhost:3001`

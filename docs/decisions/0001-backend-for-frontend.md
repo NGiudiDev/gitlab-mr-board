@@ -9,7 +9,7 @@ El tablero combina respuestas de GitLab y utiliza un token privado. Consultar de
 
 ## Decisión
 
-Usar Express como BFF. Vue consume una respuesta consolidada; el backend autentica, limita concurrencia, normaliza y clasifica.
+Usar Express como BFF. El frontend consume una respuesta consolidada; el backend autentica, limita concurrencia, normaliza y clasifica.
 
 ## Consecuencias
 
