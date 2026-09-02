@@ -86,6 +86,8 @@
 
 - **No agregar dependencias sin justificación** — el proyecto es intencionalmente liviano.
 
+- **Usar versiones exactas**: declarar las dependencias y `devDependencies` con una versión fija, sin rangos como `^` o `~`, para evitar que una actualización reciente introduzca incompatibilidades o regresiones inesperadas. Mantener actualizado el `package-lock.json` correspondiente.
+
 - Antes de instalar un paquete, evaluar si se puede resolver con lo que ya hay o con código propio simple.
 
 - Si se agrega una dependencia, documentar el motivo en el commit.

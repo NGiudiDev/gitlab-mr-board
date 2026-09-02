@@ -22,8 +22,6 @@ gitlab-mr-board/
 └── frontend/
 ```
 
-No existe actualmente `infrastructure/`: el repositorio no contiene infraestructura como código ni manifiestos de despliegue.
-
 ## Flujo principal
 
 1. El frontend consulta `/api/pull-requests`.

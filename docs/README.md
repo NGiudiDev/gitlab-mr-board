@@ -6,16 +6,6 @@ La interfaz incluye navegación por teclado, foco visible, anuncios para lectore
 
 El código es la fuente de verdad; estos documentos explican su estructura, decisiones y operación.
 
-## Secciones
-
-| Área | Contenido |
-|---|---|
-| [Arquitectura](architecture/README.md) | Límites, componentes y flujo de datos |
-| [Decisiones](decisions/README.md) | Registros de decisiones de arquitectura (ADR) |
-| [Desarrollo](development/README.md) | Configuración local, comandos y pruebas |
-| [Despliegue](deployment/README.md) | Build y operación en producción |
-| [Dominios](domains/README.md) | Lenguaje y reglas del negocio |
-
 ## Requisitos
 
 - Node.js 22 o superior. Este mínimo permite usar versiones vigentes de Vitest, React Testing Library y Playwright.
