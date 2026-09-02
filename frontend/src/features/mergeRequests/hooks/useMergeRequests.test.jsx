@@ -2,13 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, render } from '@testing-library/react'
 import { buildMergeRequest, buildResponse } from '../../../../test/fixtures/mergeRequests.js'
 import { jsonResponse, resetSharedState } from '../../../../test/sharedState.js'
-import {
-  fetchMergeRequests,
-  getFilteredMergeRequests,
-  getState,
-  setSearchQuery,
-  useMergeRequests,
-} from './useMergeRequests.js'
+import { fetchMergeRequests, getState, useMergeRequests } from './useMergeRequests.js'
 
 const POLL_INTERVAL_MS = 5 * 60 * 1000
 
@@ -130,66 +124,6 @@ describe('fetchMergeRequests', () => {
     await fetchMergeRequests(true)
 
     expect(getState().error).toBeNull()
-  })
-})
-
-describe('filtrado por búsqueda', () => {
-  const mrs = [
-    buildMergeRequest({
-      id: '101-1', title: 'Agregar filtro por autor', author: 'Ana Pérez',
-      sourceBranch: 'feature/filtro-autor', projectPath: 'equipo/tablero',
-    }),
-    buildMergeRequest({
-      id: '202-2', title: 'Corregir cálculo de approvals', author: 'Beto Ruiz',
-      sourceBranch: 'fix/approvals', targetBranch: 'develop', projectPath: 'equipo/api',
-    }),
-  ]
-
-  beforeEach(async () => {
-    fetchMock.mockResolvedValueOnce(jsonResponse(buildResponse(mrs)))
-    await fetchMergeRequests()
-  })
-
-  it('devuelve todos los MRs sin búsqueda', () => {
-    expect(getFilteredMergeRequests()).toHaveLength(2)
-  })
-
-  it('filtra por título', () => {
-    setSearchQuery('cálculo')
-
-    expect(getFilteredMergeRequests().map((mr) => mr.id)).toEqual(['202-2'])
-  })
-
-  it('filtra por autor', () => {
-    setSearchQuery('beto')
-
-    expect(getFilteredMergeRequests().map((mr) => mr.id)).toEqual(['202-2'])
-  })
-
-  it('filtra por rama de origen y de destino', () => {
-    setSearchQuery('filtro-autor')
-    expect(getFilteredMergeRequests().map((mr) => mr.id)).toEqual(['101-1'])
-
-    setSearchQuery('develop')
-    expect(getFilteredMergeRequests().map((mr) => mr.id)).toEqual(['202-2'])
-  })
-
-  it('filtra por ruta del proyecto', () => {
-    setSearchQuery('equipo/api')
-
-    expect(getFilteredMergeRequests().map((mr) => mr.id)).toEqual(['202-2'])
-  })
-
-  it('ignora mayúsculas y espacios sobrantes', () => {
-    setSearchQuery('  ANA  ')
-
-    expect(getFilteredMergeRequests().map((mr) => mr.id)).toEqual(['101-1'])
-  })
-
-  it('devuelve una lista vacía cuando nada coincide', () => {
-    setSearchQuery('no-existe')
-
-    expect(getFilteredMergeRequests()).toEqual([])
   })
 })
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useSyncExternalStore } from 'react'
+import { useEffect, useSyncExternalStore } from 'react'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
 const POLL_INTERVAL = 5 * 60 * 1000
@@ -9,7 +9,6 @@ const INITIAL_STATE = {
   loading: false,
   error: null,
   lastFetched: null,
-  searchQuery: '',
 }
 
 /**
@@ -80,25 +79,6 @@ function stopPolling() {
   pollTimer = null
 }
 
-function setSearchQuery(searchQuery) {
-  setState({ searchQuery })
-}
-
-/** Filtra por título, autor, ramas y ruta del proyecto. Función pura. */
-function filterMergeRequests(mergeRequests, searchQuery) {
-  const query = searchQuery.trim().toLowerCase()
-  if (!query) return mergeRequests
-
-  return mergeRequests.filter((mr) => {
-    const haystack = `${mr.title} ${mr.author} ${mr.sourceBranch} ${mr.targetBranch} ${mr.projectPath}`.toLowerCase()
-    return haystack.includes(query)
-  })
-}
-
-function getFilteredMergeRequests() {
-  return filterMergeRequests(state.mergeRequests, state.searchQuery)
-}
-
 /** Deja el store como al arrancar la app. Sólo para pruebas. */
 function resetStore() {
   stopPolling()
@@ -123,21 +103,13 @@ function useMergeRequests() {
     }
   }, [])
 
-  const filteredMRs = useMemo(
-    () => filterMergeRequests(snapshot.mergeRequests, snapshot.searchQuery),
-    [snapshot.mergeRequests, snapshot.searchQuery],
-  )
-
-  return { ...snapshot, filteredMRs, fetchMRs: fetchMergeRequests, setSearchQuery }
+  return { ...snapshot, fetchMRs: fetchMergeRequests }
 }
 
 export {
   fetchMergeRequests,
-  filterMergeRequests,
-  getFilteredMergeRequests,
   getState,
   resetStore,
-  setSearchQuery,
   subscribe,
   useMergeRequests,
 }

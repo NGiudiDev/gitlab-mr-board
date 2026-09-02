@@ -4,7 +4,7 @@ Aplicación React 19 con Vite y Tailwind CSS ([ADR 0005](../decisions/0005-front
 
 - `src/main.jsx`: arranque de React con `createRoot` y `StrictMode`.
 - `src/app/App.jsx`: composición y estados de carga, error y vacío.
-- `src/features/mergeRequests/hooks/useMergeRequests.js`: store compartido, consulta, polling y filtrado.
+- `src/features/mergeRequests/hooks/useMergeRequests.js`: store compartido, consulta y polling.
 - `src/features/mergeRequests/components/`: tablero, columnas, tarjetas e indicadores.
 - `src/assets/main.css`: estilos globales.
 

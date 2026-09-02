@@ -27,10 +27,6 @@ function liveRegion() {
   return container.querySelector('[aria-live="polite"]')
 }
 
-function searchInput() {
-  return screen.getByLabelText('Buscar merge requests')
-}
-
 function refreshButton() {
   return screen.getByRole('button', { name: 'Refrescar ahora' })
 }
@@ -93,7 +89,7 @@ describe('carga inicial', () => {
     await renderApp()
 
     expect(liveRegion().textContent)
-      .toBe('Actualización completa. Se muestran 2 de 2 merge requests.')
+      .toBe('Actualización completa. Se muestran 2 merge requests.')
   })
 
   it('ofrece un enlace para saltar al contenido principal', async () => {
@@ -147,44 +143,7 @@ describe('estado vacío', () => {
     fetchMock.mockResolvedValueOnce(jsonResponse(buildResponse([])))
     await renderApp()
 
-    expect(boardStatus().textContent).toContain('Ninguna MR coincide con los filtros actuales.')
-  })
-
-  it('avisa cuando la búsqueda no encuentra coincidencias', async () => {
-    await renderApp()
-
-    fireEvent.change(searchInput(), { target: { value: 'no-existe' } })
-
-    expect(boardStatus().textContent).toContain('Ninguna MR coincide con los filtros actuales.')
-  })
-})
-
-describe('búsqueda', () => {
-  it('deja sólo los merge requests que coinciden', async () => {
-    await renderApp()
-
-    fireEvent.change(searchInput(), { target: { value: 'cálculo' } })
-
-    expect(container.textContent).toContain('Corregir cálculo de approvals')
-    expect(container.textContent).not.toContain('Agregar filtro por autor')
-  })
-
-  it('busca por autor', async () => {
-    await renderApp()
-
-    fireEvent.change(searchInput(), { target: { value: 'Ana' } })
-
-    expect(container.textContent).toContain('Agregar filtro por autor')
-    expect(container.textContent).not.toContain('Corregir cálculo de approvals')
-  })
-
-  it('informa cuántos merge requests quedan visibles', async () => {
-    await renderApp()
-
-    fireEvent.change(searchInput(), { target: { value: 'Ana' } })
-
-    expect(liveRegion().textContent)
-      .toBe('Actualización completa. Se muestran 1 de 2 merge requests.')
+    expect(boardStatus().textContent).toContain('No hay merge requests abiertos.')
   })
 })
 

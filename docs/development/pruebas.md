@@ -4,7 +4,7 @@ La decisión de fondo —Vitest, la pirámide y el veto a usar la API real de Gi
 
 ## Estado actual
 
-Vitest está configurado en backend y frontend, con React Testing Library y el entorno `happy-dom` en el frontend. Las tres primeras capas de la pirámide están implementadas: 80 pruebas en el backend y 113 en el frontend, todas sin red, sin token y sin la API real de GitLab. Falta la capa E2E con Playwright.
+Vitest está configurado en backend y frontend, con React Testing Library y el entorno `happy-dom` en el frontend. Las tres primeras capas de la pirámide están implementadas: 80 pruebas en el backend y 98 en el frontend, todas sin red, sin token y sin la API real de GitLab. Falta la capa E2E con Playwright.
 
 Comandos:
 
@@ -28,9 +28,9 @@ Archivos del backend:
 
 Archivos del frontend:
 
-- `src/features/mergeRequests/hooks/useMergeRequests.test.jsx`: carga, errores, búsqueda, polling y consumidores múltiples.
-- `src/features/mergeRequests/components/*.test.jsx`: `MrBoard`, `BoardColumn`, `MrCard`, `BlockerBadge`, `TopBar`, `SearchBar` y `FilterChips`.
-- `src/app/App.test.jsx`: carga inicial, error, vacío, búsqueda, actualización manual y anuncios accesibles.
+- `src/features/mergeRequests/hooks/useMergeRequests.test.jsx`: carga, errores, polling y consumidores múltiples.
+- `src/features/mergeRequests/components/*.test.jsx`: `MrBoard`, `BoardColumn`, `MrCard`, `BlockerBadge`, `TopBar` y `FilterChips`.
+- `src/app/App.test.jsx`: carga inicial, error, vacío, actualización manual y anuncios accesibles.
 - `test/`: `setup.js` registra la limpieza de Testing Library, `fixtures/` arma la respuesta del backend y `sharedState.js` reinicia el store entre pruebas.
 
 Para hacer testeable el backend se hicieron tres cambios de estructura sin alterar el comportamiento: las reglas puras se movieron a `src/services/mergeRequestRules.ts`; la aplicación Express se construye en `src/app.ts` con `createApp()`, y `src/index.ts` sólo escucha el puerto; el router de merge requests recibe la fuente de datos y el reloj de la caché por inyección. Además, `tsconfig.json` excluye las pruebas del build y `tsconfig.test.json` las valida por tipos.
@@ -81,7 +81,6 @@ Los datos de GitLab deben vivir en fixtures pequeñas y explícitas. No usar la 
 
 Montar los componentes con React Testing Library y comprobar su comportamiento desde la perspectiva de una persona usuaria:
 
-- búsqueda por título, autor, rama y proyecto;
 - agrupación de tarjetas en la columna correcta;
 - estados de carga, error, vacío y actualización;
 - expansión y contracción de proyectos;
@@ -98,8 +97,8 @@ Recorrido crítico inicial:
 
 1. abrir el tablero;
 2. esperar la carga de fixtures;
-3. buscar un MR;
-4. comprobar su columna y bloqueadores;
+3. expandir un proyecto;
+4. comprobar la columna y los bloqueadores de un MR;
 5. forzar una actualización;
 6. recorrer los controles principales por teclado.
 
@@ -165,7 +164,7 @@ Las pruebas automatizadas no reemplazan estas comprobaciones, porque no consulta
 
 1. Ejecutar `npm test`, `npm run check:node`, `npm run typecheck` y `npm run build` en `backend/`.
 2. Iniciar el backend y comprobar `GET /health` y `GET /api/pull-requests`.
-3. Iniciar el frontend y verificar carga, búsqueda, agrupación, columnas y actualización manual.
+3. Iniciar el frontend y verificar carga, agrupación, columnas y actualización manual.
 4. Revisar consola del navegador y terminales.
 5. Ejecutar `npm run build` en `frontend/`.
 6. Para cambios de clasificación, cubrir draft, conflictos, pipelines, aprobaciones, QA y backlog.
@@ -176,7 +175,7 @@ Para cada cambio de interfaz:
 
 1. Recorrer la página solo con `Tab`, `Shift+Tab`, `Enter` y `Espacio`; el orden debe ser lógico, todo control debe funcionar y el foco debe permanecer visible.
 2. Activar “Saltar al contenido principal” y comprobar que mueve el foco al tablero.
-3. Verificar con el árbol de accesibilidad que existe un único `main`, una jerarquía de encabezados coherente, nombre para el buscador y estado expandido o contraído para cada proyecto.
+3. Verificar con el árbol de accesibilidad que existe un único `main`, una jerarquía de encabezados coherente y estado expandido o contraído para cada proyecto.
 4. Confirmar que carga, actualización, error y resultado vacío se anuncian sin mover el foco.
 5. Medir contraste en tema oscuro: 4.5:1 para texto normal y 3:1 para controles, foco e información gráfica.
 6. Probar zoom del navegador al 200 % y preferencia de movimiento reducido sin pérdida de contenido ni funcionalidad.

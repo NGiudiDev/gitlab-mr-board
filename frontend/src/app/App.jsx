@@ -1,36 +1,24 @@
 import MrBoard from '../features/mergeRequests/components/MrBoard.jsx'
-import SearchBar from '../features/mergeRequests/components/SearchBar.jsx'
 import TopBar from '../features/mergeRequests/components/TopBar.jsx'
 import { useMergeRequests } from '../features/mergeRequests/hooks/useMergeRequests.js'
 
 const PLACEHOLDER_CLASSES = 'text-center text-text-muted text-[13px] py-16 border border-dashed border-border rounded-lg bg-surface'
 
-function announcementFor({ loading, error, lastFetched, visible, total }) {
+function announcementFor({ loading, error, lastFetched, total }) {
   if (loading) return 'Actualizando merge requests.'
   if (error) return `No se pudieron actualizar los datos: ${error}`
   if (!lastFetched) return ''
-  return `Actualización completa. Se muestran ${visible} de ${total} merge requests.`
+  return `Actualización completa. Se muestran ${total} merge requests.`
 }
 
 function App() {
-  const {
-    mergeRequests,
-    meta,
-    loading,
-    error,
-    lastFetched,
-    searchQuery,
-    filteredMRs,
-    fetchMRs,
-    setSearchQuery,
-  } = useMergeRequests()
+  const { mergeRequests, meta, loading, error, lastFetched, fetchMRs } = useMergeRequests()
 
   const statusAnnouncement = announcementFor({
     loading,
     error,
     lastFetched,
-    visible: filteredMRs.length,
-    total: meta?.totalMRs || 0,
+    total: mergeRequests.length,
   })
 
   const failedWithoutData = error && mergeRequests.length === 0
@@ -56,20 +44,16 @@ function App() {
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-end mb-3">
-              <SearchBar value={searchQuery} onChange={setSearchQuery} />
-            </div>
-
             <section aria-labelledby="tablero-heading">
               <h2 id="tablero-heading" className="sr-only">Merge requests por proyecto y estado</h2>
               {loading && mergeRequests.length === 0 ? (
                 <div role="status" className={PLACEHOLDER_CLASSES}>Cargando merge requests...</div>
-              ) : filteredMRs.length === 0 ? (
+              ) : mergeRequests.length === 0 ? (
                 <div role="status" className={PLACEHOLDER_CLASSES}>
-                  Ninguna MR coincide con los filtros actuales.
+                  No hay merge requests abiertos.
                 </div>
               ) : (
-                <MrBoard mergeRequests={filteredMRs} allProjects={meta?.allProjects || []} />
+                <MrBoard mergeRequests={mergeRequests} allProjects={meta?.allProjects || []} />
               )}
             </section>
 
