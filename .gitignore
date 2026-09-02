@@ -29,3 +29,7 @@ frontend/.vite/
 
 # Claude Code
 .claude/
+
+# VitePress
+docs/.vitepress/dist/
+docs/.vitepress/cache/

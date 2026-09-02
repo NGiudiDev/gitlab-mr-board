@@ -40,3 +40,15 @@ En Windows, `npm start` desde la raíz inicia ambos servicios. Alternativamente,
 - Salud: `http://localhost:3001/health`
 
 Si el backend no inicia, revisar las variables obligatorias. Un HTTP 502 indica un error al consultar GitLab; comprobar token, permisos, URL e IDs.
+
+## Sitio de documentación
+
+`docs/` se publica como sitio estático con VitePress, agregado como dependencia de desarrollo en la raíz ([ADR 0004](../decisions/0004-sitio-de-documentacion.md)). Desde la raíz:
+
+| Comando | Uso |
+|---|---|
+| `npm run docs:dev` | Servidor local con recarga en `http://localhost:5175` |
+| `npm run docs:build` | Genera el sitio en `docs/.vitepress/dist/` |
+| `npm run docs:preview` | Sirve el resultado del build |
+
+Al agregar un documento hay que sumarlo al sidebar de `docs/.vitepress/config.mjs`; si no, la página existe pero queda fuera de la navegación. El build falla ante enlaces internos rotos, así que conviene ejecutar `npm run docs:build` antes de entregar cambios de documentación.

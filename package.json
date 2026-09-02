@@ -10,6 +10,12 @@
   "scripts": {
     "start": "start-dev.bat",
     "test": "npm run test:unit",
-    "test:unit": "npm run test --prefix backend && npm run test --prefix frontend"
+    "test:unit": "npm run test --prefix backend && npm run test --prefix frontend",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.4"
   }
 }

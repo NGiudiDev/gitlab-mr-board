@@ -68,4 +68,6 @@ La documentación detallada está en [`docs/`](docs/README.md):
 - [`deployment/`](docs/deployment/README.md): build y operación en producción.
 - [`domains/`](docs/domains/README.md): reglas del dominio de Merge Requests.
 
+Esa documentación también se puede leer como sitio estático con VitePress. Desde la raíz, `npm run docs:dev` la sirve en `http://localhost:5175` con búsqueda y navegación, y `npm run docs:build` genera el sitio en `docs/.vitepress/dist/`. El motivo está en el [ADR 0004](docs/decisions/0004-sitio-de-documentacion.md).
+
 Las reglas para contribuir están en [`AGENTS.md`](AGENTS.md).

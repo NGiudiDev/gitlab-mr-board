@@ -9,6 +9,7 @@
 - **Toda la documentación vive en la raíz del proyecto**: `README.md`, `AGENTS.md`, y la carpeta `docs/` centralizada. No crear carpetas `docs/` dentro de `backend/` o `frontend/` — todo va en `docs/` de la raíz.
 - Organizar `docs/` por propósito: `architecture/` para estructura técnica, `decisions/` para ADR, `development/` para trabajo local y pruebas, `deployment/` para operación, y `domains/` para reglas funcionales.
 - El `README.md` debe ser una entrada breve que responda qué es el proyecto, requisitos, puesta en marcha, tests, build y ubicación de la documentación.
+- `docs/` se puede leer como sitio con VitePress (`npm run docs:dev`). Al agregar un documento, **sumarlo al sidebar** de `docs/.vitepress/config.mjs` y ejecutar `npm run docs:build`, que falla ante enlaces internos rotos. Los índices de carpeta se siguen llamando `README.md`; `rewrites` los sirve como `index.md`.
 - Los nombres de variables, funciones y archivos se mantienen en **inglés** (convención estándar de código).
 
 ### Buenas Prácticas de Código
