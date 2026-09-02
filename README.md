@@ -35,9 +35,17 @@ Si el inicio informa una versión de Node incompatible, actualizar Node.js, cerr
 
 ## Tests
 
-El proyecto tiene configurado Vitest para comenzar a incorporar pruebas unitarias y de integración, y Vue Test Utils para componentes. Playwright Test será la herramienta para los recorridos E2E en una etapa posterior. Todavía no hay casos automatizados implementados, por lo que los scripts actuales aceptan una suite vacía.
+Las pruebas usan Vitest en ambos paquetes y Vue Test Utils para los componentes. No consultan GitLab ni requieren un token: la API se simula con fixtures locales.
 
-Hasta implementar esa infraestructura, antes de entregar cambios se realizan typecheck, builds y verificaciones manuales. La [estrategia de pruebas](docs/development/pruebas.md) detalla herramientas, casos prioritarios, comandos objetivo y un plan gradual.
+```bash
+npm test
+```
+
+Ese comando ejecuta las dos suites. También se pueden correr por separado con `npm test` dentro de `backend/` o `frontend/`, y en modo interactivo con `npm run test:watch`.
+
+Cubren la matriz de clasificación de merge requests, el cliente de GitLab, el rate limiter, el contrato de `GET /health` y `GET /api/pull-requests` con su caché, el composable de datos y el comportamiento accesible de los componentes. Los recorridos E2E con Playwright Test son la etapa pendiente.
+
+Antes de entregar cambios también se ejecutan typecheck, builds y las verificaciones manuales de la [estrategia de pruebas](docs/development/pruebas.md), que detalla casos, comandos y el plan gradual.
 
 ## Build
 

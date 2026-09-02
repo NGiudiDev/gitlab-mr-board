@@ -69,9 +69,11 @@
 
 ### Pruebas Automatizadas
 
-- La estrategia objetivo está documentada en `docs/development/pruebas.md`: Vitest para pruebas unitarias y de integración, Vue Test Utils para componentes Vue y Playwright Test para E2E.
-- Mientras no existan casos automatizados, los scripts `test` usan `--passWithNoTests`; seguir también la validación manual indicada en la guía.
-- Al incorporar la suite, ubicar las pruebas junto al código con sufijo `.test.ts` o `.test.js` y usar fixtures locales en lugar de la API real de GitLab.
+- La estrategia está documentada en `docs/development/pruebas.md`: Vitest para pruebas unitarias y de integración, Vue Test Utils para componentes Vue y Playwright Test para E2E (pendiente).
+- Ejecutar `npm test` en la raíz antes de entregar un cambio, además de la validación manual indicada en la guía.
+- Ubicar las pruebas junto al código con sufijo `.test.ts` o `.test.js`, y las utilidades y fixtures compartidas en la carpeta `test/` del paquete. Nunca usar la API real de GitLab.
+- En el backend, las pruebas se excluyen del build (`tsconfig.json`) y se validan por tipos con `tsconfig.test.json`; `npm run typecheck` corre ambos.
+- Mantener las reglas puras en `src/services/mergeRequestRules.ts` e inyectar dependencias (fuente de datos, reloj) en lugar de acoplarlas al módulo, para que sigan siendo testeables.
 - Priorizar comportamiento observable y reglas de negocio. No acoplar pruebas a clases Tailwind, estado interno o snapshots extensos.
 - Toda corrección de un defecto debe agregar una prueba de regresión que falle antes de la corrección.
 - Los cambios de clasificación deben cubrir la matriz de estados y prioridades descrita en la estrategia.

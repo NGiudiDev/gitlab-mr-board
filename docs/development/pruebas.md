@@ -2,7 +2,35 @@
 
 ## Estado actual
 
-Vitest está configurado en backend y frontend, y Vue Test Utils junto con el entorno `happy-dom` están disponibles en el frontend. `frontend/vite.config.js` establece `happy-dom` como entorno predeterminado para las pruebas. Todavía no hay archivos de pruebas; por eso los scripts usan `--passWithNoTests` temporalmente. El backend cuenta además con `npm run typecheck` y ambos paquetes con `npm run build` como verificaciones estáticas.
+Vitest está configurado en backend y frontend, con Vue Test Utils 2 y el entorno `happy-dom` en el frontend. Las tres primeras capas de la pirámide están implementadas: 64 pruebas en el backend y 110 en el frontend, todas sin red, sin token y sin la API real de GitLab. Falta la capa E2E con Playwright.
+
+Comandos:
+
+| Comando | Alcance |
+|---|---|
+| `npm test` en la raíz | Ejecuta las suites de backend y frontend |
+| `npm test` en `backend/` | Reglas, cliente de GitLab, rate limiter y contrato HTTP |
+| `npm test` en `frontend/` | Composable y componentes Vue |
+| `npm run test:watch` | Modo interactivo en cada paquete |
+| `npm run typecheck` en `backend/` | Tipos del código de producción y de las pruebas |
+
+Archivos del backend:
+
+- `src/services/mergeRequestRules.test.ts`: matriz completa de clasificación y `extractProjectPath`.
+- `src/services/gitlabApi.test.ts`: construcción de URLs, cabecera del token, traducción de errores y paginación.
+- `src/services/mergeRequestService.test.ts`: enriquecimiento, orden, fallos parciales y bloqueos desconocidos.
+- `src/app.test.ts`: `GET /health`, `GET /api/pull-requests`, caché, `?force=true` y errores 502.
+- `src/utils/rateLimiter.test.ts`: concurrencia máxima, orden de la cola y liberación ante fallos.
+- `test/`: `setup.ts` fija la configuración antes de `config.ts`, `fixtures/gitlab.ts` simula la API y `httpClient.ts` ejecuta la app en memoria.
+
+Archivos del frontend:
+
+- `src/features/mergeRequests/composables/useMergeRequests.test.js`: carga, errores, búsqueda y polling.
+- `src/features/mergeRequests/components/*.test.js`: `MrBoard`, `BoardColumn`, `MrCard`, `BlockerBadge`, `TopBar`, `SearchBar` y `FilterChips`.
+- `src/app/App.test.js`: carga inicial, error, vacío, búsqueda, actualización manual y anuncios accesibles.
+- `test/`: fixtures de la respuesta del backend y utilidades para reiniciar el estado compartido del composable.
+
+Para hacer testeable el backend se hicieron tres cambios de estructura sin alterar el comportamiento: las reglas puras se movieron a `src/services/mergeRequestRules.ts`; la aplicación Express se construye en `src/app.ts` con `createApp()`, y `src/index.ts` sólo escucha el puerto; el router de merge requests recibe la fuente de datos y el reloj de la caché por inyección. Además, `tsconfig.json` excluye las pruebas del build y `tsconfig.test.json` las valida por tipos.
 
 ## Recomendación
 
@@ -16,9 +44,9 @@ Vitest, Vue Test Utils y `happy-dom` corresponden al primer paso del plan y ya e
 
 ### 1. Pruebas unitarias de reglas de negocio
 
-Son la primera prioridad porque la clasificación de un Merge Request determina en qué columna aparece. Conviene extraer y exportar las funciones puras que hoy están dentro de `mergeRequestService.ts`, sin cambiar su comportamiento.
+Son la primera prioridad porque la clasificación de un Merge Request determina en qué columna aparece. Las funciones puras ya viven en `mergeRequestRules.ts`, separadas de las llamadas a GitLab de `mergeRequestService.ts`.
 
-Casos mínimos para `computeMergeability`:
+Casos cubiertos de `computeMergeability`:
 
 - `backlog` tiene prioridad sobre los demás estados.
 - draft o work in progress resulta en `gray`.
@@ -61,7 +89,7 @@ Mockear `fetch`, fechas e intervalos en `useMergeRequests`. Evitar aserciones so
 
 ### 4. Pruebas de extremo a extremo con Playwright
 
-Cuando las tres capas anteriores estén estables, agregar pruebas con Playwright Test y un servidor de API simulado. Playwright debe iniciar el frontend y el backend mediante la opción `webServer` de su configuración, o iniciar solamente el frontend cuando todas las respuestas se intercepten desde el navegador.
+Es la única capa pendiente: las tres anteriores ya están implementadas y en verde. Falta agregar pruebas con Playwright Test y un servidor de API simulado. Playwright debe iniciar el frontend y el backend mediante la opción `webServer` de su configuración, o iniciar solamente el frontend cuando todas las respuestas se intercepten desde el navegador.
 
 Recorrido crítico inicial:
 
@@ -78,11 +106,11 @@ La configuración inicial debe ejecutar solamente Chromium para mantener bajo el
 
 No conviene empezar la adopción por esta capa: es más costosa y no localiza fallas de reglas tan bien como las pruebas unitarias.
 
-## Estructura y comandos objetivo
+## Estructura y comandos
 
-Mantener las pruebas junto al código que cubren con el sufijo `.test.ts` o `.test.js`. Los fixtures compartidos pueden ubicarse en una carpeta `test/fixtures/` dentro de cada paquete.
+Las pruebas viven junto al código que cubren con el sufijo `.test.ts` o `.test.js`. Los fixtures y utilidades compartidas están en la carpeta `test/` de cada paquete.
 
-Una vez implementada la infraestructura, cada `package.json` debe exponer:
+Cada `package.json` expone:
 
 ```json
 {
@@ -93,7 +121,9 @@ Una vez implementada la infraestructura, cada `package.json` debe exponer:
 }
 ```
 
-La raíz debe agregar comandos separados para que el propósito de cada ejecución sea explícito:
+En el backend, `vitest.config.ts` usa el entorno `node` y `test/setup.ts` como archivo de preparación; en el frontend, el entorno `happy-dom` se define en `vite.config.js`.
+
+Al implementar la capa E2E, la raíz debe agregar comandos separados para que el propósito de cada ejecución sea explícito:
 
 ```json
 {
@@ -118,17 +148,19 @@ No establecer un porcentaje global de cobertura al inicio. Primero cubrir todas 
 ## Plan de adopción
 
 1. **Completado:** elevar el mínimo a Node.js 22 e instalar Vitest en ambos paquetes; agregar Vue Test Utils y `happy-dom` solo al frontend.
-2. Extraer las reglas puras sin cambiar comportamiento y cubrir la matriz completa de mergeabilidad.
-3. Hacer inyectables la llamada a GitLab y el reloj de la caché; agregar integración del backend.
-4. Cubrir `useMergeRequests`, `MrBoard`, `BoardColumn` y `MrCard` por comportamiento.
+2. **Completado:** extraer las reglas puras sin cambiar comportamiento y cubrir la matriz completa de mergeabilidad.
+3. **Completado:** hacer inyectables la llamada a GitLab y el reloj de la caché; agregar integración del backend.
+4. **Completado:** cubrir `useMergeRequests`, `App`, `MrBoard`, `BoardColumn`, `MrCard` y los demás componentes por comportamiento.
 5. Instalar Playwright Test en la raíz, descargar Chromium y agregar el recorrido crítico con la API simulada.
 6. Ejecutar las suites unitarias y E2E como pasos separados en integración continua.
 
 Cada etapa debe dejar `npm test`, typecheck y builds en verde. Una corrección de defecto debe incluir primero una prueba que reproduzca la regresión.
 
-## Validación manual mientras no exista la suite
+## Validación manual complementaria
 
-1. Ejecutar `npm run check:node`, `npm run typecheck` y `npm run build` en `backend/`.
+Las pruebas automatizadas no reemplazan estas comprobaciones, porque no consultan la instancia real de GitLab ni renderizan la interfaz en un navegador:
+
+1. Ejecutar `npm test`, `npm run check:node`, `npm run typecheck` y `npm run build` en `backend/`.
 2. Iniciar el backend y comprobar `GET /health` y `GET /api/pull-requests`.
 3. Iniciar el frontend y verificar carga, búsqueda, agrupación, columnas y actualización manual.
 4. Revisar consola del navegador y terminales.

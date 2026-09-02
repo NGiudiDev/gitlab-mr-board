@@ -19,7 +19,7 @@
     "predev": "npm run check:node",
     "dev": "tsx watch src/index.ts",
     "pretypecheck": "npm run check:node",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --project tsconfig.test.json",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest"
   },

@@ -65,4 +65,4 @@ function fetchPaginatedWithLimit<T>(resourcePath: string, params: QueryParams = 
   return limiter.run(() => fetchPaginated<T>(resourcePath, params));
 }
 
-export { fetchJson, fetchPaginated, fetchWithLimit, fetchPaginatedWithLimit };
+export { buildUrl, fetchJson, fetchPaginated, fetchWithLimit, fetchPaginatedWithLimit };
