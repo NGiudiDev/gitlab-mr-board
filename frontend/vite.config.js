@@ -1,14 +1,15 @@
 import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
+import react from '@vitejs/plugin-react'
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [react()],
   test: {
     environment: 'happy-dom',
+    setupFiles: ['./test/setup.js'],
   },
   server: {
     proxy: {
-      '/api': 'http://localhost:3002',
+      '/api': 'http://localhost:3001',
     },
   },
 })

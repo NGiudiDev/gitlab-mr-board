@@ -3,7 +3,7 @@
 GitLab MR Board usa un patrón Backend for Frontend (BFF):
 
 ```text
-Navegador (Vue) -> API BFF (Express) -> API v4 de GitLab
+Navegador (React) -> API BFF (Express) -> API v4 de GitLab
        :5173             :3001
 ```
 
@@ -31,6 +31,6 @@ No existe actualmente `infrastructure/`: el repositorio no contiene infraestruct
 3. El servicio consulta los proyectos y detalles de MRs en paralelo.
 4. Un limitador restringe las solicitudes concurrentes a GitLab.
 5. El backend normaliza y clasifica los MRs.
-6. Vue agrupa el resultado por proyecto y lo muestra en columnas.
+6. React agrupa el resultado por proyecto y lo muestra en columnas.
 
 La caché vive en memoria, el token solo pertenece al backend y no hay base de datos ni autenticación propia.

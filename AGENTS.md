@@ -19,22 +19,23 @@
 - **Comentarios solo para lógica compleja**: no comentar lo obvio. Dejar comentarios cuando hay una decisión no evidente, un workaround, una regla de negocio sutil, o un algoritmo que requiere explicación. El comentario debe explicar el **por qué**, no el **qué**.
 - **Early returns**: preferir retornos tempranos para reducir anidamiento. Evitar `else` después de un `return`.
 - **Manejo de errores**: siempre manejar errores en llamadas a APIs externas y operaciones async. Loguear con contexto suficiente para diagnosticar el problema.
-- **No repetir código (DRY)**: si una lógica se repite en más de dos lugares, extraerla a una función utilitaria o composable.
+- **No repetir código (DRY)**: si una lógica se repite en más de dos lugares, extraerla a una función utilitaria o a un hook.
 - **Destructuring** cuando mejore la legibilidad, no por default en todos los casos.
 
 ### Estructura y Organización
 
-- **Respetar la arquitectura existente**: la lógica de negocio va en `backend/src/services/`, las rutas en `backend/src/routes/`, los componentes Vue en `frontend/src/components/`, y los composables en `frontend/src/composables/`.
+- **Respetar la arquitectura existente**: la lógica de negocio va en `backend/src/services/`, las rutas en `backend/src/routes/`, los componentes React en `frontend/src/features/<feature>/components/`, y los hooks en `frontend/src/features/<feature>/hooks/`.
 - **No crear archivos innecesarios**: preferir editar archivos existentes. Solo crear nuevos cuando la responsabilidad no encaja en ninguno existente.
-- **Un componente, una responsabilidad**: cada componente Vue debe tener un propósito claro. Si crece demasiado, extraer subcomponentes.
+- **Un componente, una responsabilidad**: cada componente React debe tener un propósito claro. Si crece demasiado, extraer subcomponentes.
 - Al agregar una nueva variable de entorno, actualizar `backend/.env.example`, `backend/src/config.ts`, y la tabla de este archivo.
 
 ### Frontend
 
-- Usar **Composition API con `<script setup>`** en todos los componentes Vue.
+- Usar **React 19 con componentes de función** en archivos `.jsx` ([ADR 0005](docs/decisions/0005-frontend-en-react.md)).
 - Estilos con **Tailwind CSS** — no usar CSS custom salvo para casos que Tailwind no cubra.
-- Mantener la **reactividad** con `ref()` y `computed()`. No mutar estado directamente.
-- Nuevos componentes deben aceptar **props tipadas** y emitir eventos con `defineEmits`.
+- **El estado compartido va al store** de `hooks/useMergeRequests.js`, que usa `useSyncExternalStore`. Un `useState` sirve para estado local del componente; si dos componentes deben verlo, va al store.
+- **Los efectos se ejecutan dos veces en desarrollo** por `StrictMode`. Todo `useEffect` con suscripciones, timers o peticiones debe limpiar en su retorno y ser idempotente.
+- Nuevos componentes reciben **props explícitas con valores por omisión** y avisan al padre con callbacks `onAlgo`. No mutar props ni estado.
 - Verificar que los cambios se ven bien en el **tema oscuro** (el proyecto usa dark mode por defecto).
 - Mantener el objetivo de **WCAG 2.2 nivel AA**: HTML semántico, uso completo por teclado, foco visible, nombres accesibles, estados dinámicos anunciados y contraste mínimo de 4.5:1 para texto normal y 3:1 para controles e indicadores visuales.
 - No usar solamente color, posición o iconos para comunicar un estado; acompañarlos con texto accesible.
@@ -70,7 +71,7 @@
 
 ### Pruebas Automatizadas
 
-- La estrategia está documentada en `docs/development/pruebas.md`: Vitest para pruebas unitarias y de integración, Vue Test Utils para componentes Vue y Playwright Test para E2E (pendiente).
+- La estrategia está documentada en `docs/development/pruebas.md`: Vitest para pruebas unitarias y de integración, React Testing Library para componentes y Playwright Test para E2E (pendiente).
 - Ejecutar `npm test` en la raíz antes de entregar un cambio, además de la validación manual indicada en la guía.
 - Ubicar las pruebas junto al código con sufijo `.test.ts` o `.test.js`, y las utilidades y fixtures compartidas en la carpeta `test/` del paquete. Nunca usar la API real de GitLab.
 - En el backend, las pruebas se excluyen del build (`tsconfig.json`) y se validan por tipos con `tsconfig.test.json`; `npm run typecheck` corre ambos.

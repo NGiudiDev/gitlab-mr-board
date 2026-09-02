@@ -6,7 +6,7 @@ La interfaz incluye navegación por teclado, foco visible, anuncios para lectore
 
 ## Requisitos
 
-- Node.js 22 o superior. Este mínimo permite usar versiones vigentes de Vitest, Vue Test Utils y Playwright.
+- Node.js 22 o superior. Este mínimo permite usar versiones vigentes de Vitest, React Testing Library y Playwright.
 - npm 10 o superior.
 - Un Personal Access Token de GitLab con alcance `read_api`.
 - Los IDs numéricos de los proyectos que se quieren monitorear.
@@ -35,7 +35,7 @@ Si el inicio informa una versión de Node incompatible, actualizar Node.js, cerr
 
 ## Tests
 
-Las pruebas usan Vitest en ambos paquetes y Vue Test Utils para los componentes. No consultan GitLab ni requieren un token: la API se simula con fixtures locales.
+Las pruebas usan Vitest en ambos paquetes y React Testing Library para los componentes. No consultan GitLab ni requieren un token: la API se simula con fixtures locales.
 
 ```bash
 npm test
@@ -43,7 +43,7 @@ npm test
 
 Ese comando ejecuta las dos suites. También se pueden correr por separado con `npm test` dentro de `backend/` o `frontend/`, y en modo interactivo con `npm run test:watch`.
 
-Cubren la matriz de clasificación de merge requests, el cliente de GitLab, el rate limiter, el contrato de `GET /health` y `GET /api/pull-requests` con su caché, el composable de datos y el comportamiento accesible de los componentes. Los recorridos E2E con Playwright Test son la etapa pendiente.
+Cubren la matriz de clasificación de merge requests, el cliente de GitLab, el rate limiter, el contrato de `GET /health` y `GET /api/pull-requests` con su caché, el store de datos del frontend y el comportamiento accesible de los componentes. Los recorridos E2E con Playwright Test son la etapa pendiente.
 
 Antes de entregar cambios también se ejecutan typecheck, builds y las verificaciones manuales de la [estrategia de pruebas](docs/development/pruebas.md), que detalla casos, comandos y el plan gradual.
 

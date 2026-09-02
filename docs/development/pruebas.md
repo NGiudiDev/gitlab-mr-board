@@ -4,7 +4,7 @@ La decisión de fondo —Vitest, la pirámide y el veto a usar la API real de Gi
 
 ## Estado actual
 
-Vitest está configurado en backend y frontend, con Vue Test Utils 2 y el entorno `happy-dom` en el frontend. Las tres primeras capas de la pirámide están implementadas: 80 pruebas en el backend y 110 en el frontend, todas sin red, sin token y sin la API real de GitLab. Falta la capa E2E con Playwright.
+Vitest está configurado en backend y frontend, con React Testing Library y el entorno `happy-dom` en el frontend. Las tres primeras capas de la pirámide están implementadas: 80 pruebas en el backend y 113 en el frontend, todas sin red, sin token y sin la API real de GitLab. Falta la capa E2E con Playwright.
 
 Comandos:
 
@@ -12,7 +12,7 @@ Comandos:
 |---|---|
 | `npm test` en la raíz | Ejecuta las suites de backend y frontend |
 | `npm test` en `backend/` | Reglas, cliente de GitLab, rate limiter y contrato HTTP |
-| `npm test` en `frontend/` | Composable y componentes Vue |
+| `npm test` en `frontend/` | Store de datos y componentes React |
 | `npm run test:watch` | Modo interactivo en cada paquete |
 | `npm run typecheck` en `backend/` | Tipos del código de producción y de las pruebas |
 
@@ -28,20 +28,20 @@ Archivos del backend:
 
 Archivos del frontend:
 
-- `src/features/mergeRequests/composables/useMergeRequests.test.js`: carga, errores, búsqueda y polling.
-- `src/features/mergeRequests/components/*.test.js`: `MrBoard`, `BoardColumn`, `MrCard`, `BlockerBadge`, `TopBar`, `SearchBar` y `FilterChips`.
-- `src/app/App.test.js`: carga inicial, error, vacío, búsqueda, actualización manual y anuncios accesibles.
-- `test/`: fixtures de la respuesta del backend y utilidades para reiniciar el estado compartido del composable.
+- `src/features/mergeRequests/hooks/useMergeRequests.test.jsx`: carga, errores, búsqueda, polling y consumidores múltiples.
+- `src/features/mergeRequests/components/*.test.jsx`: `MrBoard`, `BoardColumn`, `MrCard`, `BlockerBadge`, `TopBar`, `SearchBar` y `FilterChips`.
+- `src/app/App.test.jsx`: carga inicial, error, vacío, búsqueda, actualización manual y anuncios accesibles.
+- `test/`: `setup.js` registra la limpieza de Testing Library, `fixtures/` arma la respuesta del backend y `sharedState.js` reinicia el store entre pruebas.
 
 Para hacer testeable el backend se hicieron tres cambios de estructura sin alterar el comportamiento: las reglas puras se movieron a `src/services/mergeRequestRules.ts`; la aplicación Express se construye en `src/app.ts` con `createApp()`, y `src/index.ts` sólo escucha el puerto; el router de merge requests recibe la fuente de datos y el reloj de la caché por inyección. Además, `tsconfig.json` excluye las pruebas del build y `tsconfig.test.json` las valida por tipos.
 
 ## Recomendación
 
-Adoptar **Vitest como ejecutor de pruebas unitarias y de integración** para backend y frontend. En el frontend se complementa con **Vue Test Utils 2** y un entorno DOM liviano para montar componentes Vue 3. Para las pruebas de extremo a extremo se debe usar **Playwright Test**. Esta combinación cubre cada nivel con una herramienta adecuada sin usar el navegador para reglas que pueden comprobarse de forma más rápida y aislada.
+Adoptar **Vitest como ejecutor de pruebas unitarias y de integración** para backend y frontend. En el frontend se complementa con **React Testing Library** y un entorno DOM liviano para montar componentes React. Para las pruebas de extremo a extremo se debe usar **Playwright Test**. Esta combinación cubre cada nivel con una herramienta adecuada sin usar el navegador para reglas que pueden comprobarse de forma más rápida y aislada.
 
 El proyecto requiere **Node.js 22** y npm 10 para usar versiones vigentes de estas herramientas. Los campos `engines`, el chequeo del backend y la documentación deben mantenerse sincronizados cuando cambie este mínimo.
 
-Vitest, Vue Test Utils y `happy-dom` corresponden al primer paso del plan y ya están incorporados. Playwright se instalará al implementar la capa E2E.
+Vitest, React Testing Library y `happy-dom` corresponden al primer paso del plan y ya están incorporados. Playwright se instalará al implementar la capa E2E.
 
 ## Pirámide propuesta
 
@@ -77,9 +77,9 @@ Ejecutar la aplicación Express en memoria y reemplazar `global.fetch` por respu
 
 Los datos de GitLab deben vivir en fixtures pequeñas y explícitas. No usar la API real en la suite repetible: sería lenta, consumiría rate limit y volvería los resultados dependientes de datos externos.
 
-### 3. Pruebas de componentes y composables
+### 3. Pruebas de componentes y del store
 
-Montar los componentes con Vue Test Utils y comprobar su comportamiento desde la perspectiva de una persona usuaria:
+Montar los componentes con React Testing Library y comprobar su comportamiento desde la perspectiva de una persona usuaria:
 
 - búsqueda por título, autor, rama y proyecto;
 - agrupación de tarjetas en la columna correcta;
@@ -88,7 +88,7 @@ Montar los componentes con Vue Test Utils y comprobar su comportamiento desde la
 - textos accesibles, roles, nombres de controles y anuncios dinámicos;
 - interacción por teclado y foco visible donde pueda verificarse en DOM.
 
-Mockear `fetch`, fechas e intervalos en `useMergeRequests`. Evitar aserciones sobre clases Tailwind o estado interno cuando se pueda afirmar texto, atributos accesibles, eventos o contenido renderizado. Reservar snapshots para estructuras pequeñas y estables.
+Mockear `fetch`, fechas e intervalos en `useMergeRequests`. Afirmar sobre el DOM renderizado —texto, roles y atributos accesibles— y no sobre props de componentes hijos ni clases Tailwind. Reservar snapshots para estructuras pequeñas y estables.
 
 ### 4. Pruebas de extremo a extremo con Playwright
 
@@ -150,7 +150,7 @@ No establecer un porcentaje global de cobertura al inicio. Primero cubrir todas 
 
 ## Plan de adopción
 
-1. **Completado:** elevar el mínimo a Node.js 22 e instalar Vitest en ambos paquetes; agregar Vue Test Utils y `happy-dom` solo al frontend.
+1. **Completado:** elevar el mínimo a Node.js 22 e instalar Vitest en ambos paquetes; agregar React Testing Library y `happy-dom` solo al frontend.
 2. **Completado:** extraer las reglas puras sin cambiar comportamiento y cubrir la matriz completa de mergeabilidad.
 3. **Completado:** hacer inyectables la llamada a GitLab y el reloj de la caché; agregar integración del backend.
 4. **Completado:** cubrir `useMergeRequests`, `App`, `MrBoard`, `BoardColumn`, `MrCard` y los demás componentes por comportamiento.
@@ -183,9 +183,17 @@ Para cada cambio de interfaz:
 
 Esta revisión es una base técnica orientada a WCAG 2.2 AA; una declaración formal de conformidad requiere evaluar todas las pantallas y estados con pruebas manuales y tecnologías de asistencia reales.
 
+## Particularidades del frontend React
+
+Tres detalles a tener en cuenta al escribir pruebas de la capa React ([ADR 0005](../decisions/0005-frontend-en-react.md)):
+
+- El store de `useMergeRequests` vive a nivel de módulo, así que **cada prueba debe reiniciarlo** con `resetSharedState()` de `test/sharedState.js`.
+- Las actualizaciones asíncronas se esperan con `act()`; `test/setup.js` registra la limpieza automática porque el proyecto no usa globals de Vitest.
+- Con temporizadores falsos conviene `fireEvent` en lugar de `user-event`, que necesita coordinarse con el reloj simulado. `user-event` se usa en las pruebas sin temporizadores porque respeta cosas como un botón deshabilitado.
+
 ## Referencias
 
 - [Guía oficial de Vitest](https://vitest.dev/guide/)
-- [Guía oficial de Vue Test Utils](https://test-utils.vuejs.org/guide/)
+- [Guía oficial de React Testing Library](https://testing-library.com/docs/react-testing-library/intro/)
 - [Instalación oficial de Playwright](https://playwright.dev/docs/intro)
 - [Buenas prácticas oficiales de Playwright](https://playwright.dev/docs/best-practices)
