@@ -1,5 +1,4 @@
 import { hasMergeRequestWarning } from '../utils/isMergeRequestBlocked.js';
-
 import type {
   ApprovalStatus,
   GitLabMergeRequest,
@@ -20,8 +19,8 @@ function computeMergeability(
   pipeline: PipelineStatus,
 ): Mergeability {
   const labels = (mr.labels ?? []).map((label) => label.toLowerCase());
-  
-  if (labels.includes('backlog')) return 'backlog'; 
+
+  if (labels.includes('backlog')) return 'backlog';
   if (mr.draft || mr.work_in_progress) return 'in_progress';
   if (labels.includes('qa_pending')) return 'qa';
   if (hasMergeRequestWarning(mr, threads, pipeline)) return 'mr_warning';
@@ -37,17 +36,19 @@ function computeMergeability(
  * no incluye ese campo.
  */
 function extractProjectPath(mr: GitLabMergeRequest): string {
+  const fallbackProjectPath = `project-${mr.project_id}`;
   const reference = mr.references?.full;
+
   if (reference) {
     const separatorIndex = reference.lastIndexOf('!');
     if (separatorIndex > -1) return reference.slice(0, separatorIndex);
   }
 
   try {
-    return new URL(mr.web_url).pathname.split('/-/merge_requests/')[0]?.replace(/^\//, '')
-      || `project-${mr.project_id}`;
+    const [projectPath] = new URL(mr.web_url).pathname.split('/-/merge_requests/');
+    return projectPath?.replace(/^\//, '') || fallbackProjectPath;
   } catch {
-    return `project-${mr.project_id}`;
+    return fallbackProjectPath;
   }
 }
 

@@ -1,3 +1,4 @@
+// Tipos compartidos de infraestructura.
 export type QueryValue = string | number | boolean | null | undefined;
 export type QueryParams = Record<string, QueryValue>;
 export type QueueResolver = () => void;
@@ -17,6 +18,7 @@ export interface MergeRequestsDependencies {
 export type CreateAppOptions = MergeRequestsDependencies;
 export type MergeRequestsRouterOptions = MergeRequestsDependencies;
 
+// Contratos recibidos desde la API de GitLab.
 export interface GitLabUser {
   name: string;
   username: string;
@@ -73,6 +75,7 @@ export interface GitLabProject {
   path_with_namespace: string;
 }
 
+// Contratos del dominio expuestos al frontend.
 export interface ApprovalStatus {
   status: 'approved' | 'pending' | 'unknown';
   required: number;
@@ -92,7 +95,13 @@ export interface PipelineStatus {
   pipelineUrl: string | null;
 }
 
-export type Mergeability = 'backlog' | 'in_progress' | 'qa' | 'mr_warning' | 'review' | 'ready_to_merge';
+export type Mergeability =
+  | 'backlog'
+  | 'in_progress'
+  | 'qa'
+  | 'mr_warning'
+  | 'review'
+  | 'ready_to_merge';
 
 export interface MergeRequestReviewer {
   name: string;
@@ -139,6 +148,7 @@ export interface MergeRequestResponse {
   meta: MergeRequestMetadata;
 }
 
+// Contratos usados exclusivamente por la infraestructura de pruebas.
 export interface HttpTestResponse {
   status: number;
   body: string;

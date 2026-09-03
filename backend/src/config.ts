@@ -3,15 +3,15 @@ import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
+const environmentFilePath = path.resolve(currentDirectory, '..', '.env');
+const requiredEnvironmentVariables = ['GITLAB_TOKEN', 'PROJECT_IDS'] as const;
 
-dotenv.config({ path: path.resolve(currentDirectory, '..', '.env') });
+dotenv.config({ path: environmentFilePath });
 
-const required = ['GITLAB_TOKEN', 'PROJECT_IDS'] as const;
+const missingEnvironmentVariables = requiredEnvironmentVariables.filter((key) => !process.env[key]);
 
-const missing = required.filter((key) => !process.env[key]);
-
-if (missing.length > 0) {
-  console.error(`Faltan variables de entorno obligatorias: ${missing.join(', ')}`);
+if (missingEnvironmentVariables.length > 0) {
+  console.error(`Faltan variables de entorno obligatorias: ${missingEnvironmentVariables.join(', ')}`);
   console.error('Copiá .env.example como .env y completá los valores.');
 
   process.exit(1);
@@ -24,14 +24,30 @@ if (!gitlabToken || !projectIds) {
   throw new Error('La configuración obligatoria no está disponible.');
 }
 
+/**
+ * Convierte una variable numérica y conserva el valor predeterminado cuando
+ * está vacía, no es un número o vale cero.
+ */
+function parseIntegerOrDefault(value: string | undefined, defaultValue: number): number {
+  return Number.parseInt(value ?? '', 10) || defaultValue;
+}
+
+/** Convierte la lista separada por comas en IDs limpios y no vacíos. */
+function parseProjectIds(value: string): string[] {
+  return value
+    .split(',')
+    .map((projectId) => projectId.trim())
+    .filter(Boolean);
+}
+
 const config = {
   gitlabToken,
   gitlabBaseUrl: (process.env.GITLAB_BASE_URL || 'https://gitlab.com').replace(/\/+$/, ''),
-  projectIds: projectIds.split(',').map((id) => id.trim()).filter(Boolean),
-  port: Number.parseInt(process.env.PORT ?? '', 10) || 3001,
-  cacheTtlMs: Number.parseInt(process.env.POLL_CACHE_TTL_MS ?? '', 10) || 60000,
+  projectIds: parseProjectIds(projectIds),
+  port: parseIntegerOrDefault(process.env.PORT, 3001),
+  cacheTtlMs: parseIntegerOrDefault(process.env.POLL_CACHE_TTL_MS, 60_000),
   teamLeadUsername: process.env.TEAM_LEAD_USERNAME || 'NGiudi',
-  minApprovals: Number.parseInt(process.env.MIN_APPROVALS ?? '', 10) || 2,
+  minApprovals: parseIntegerOrDefault(process.env.MIN_APPROVALS, 2),
 };
 
 export default config;

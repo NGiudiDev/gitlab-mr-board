@@ -1,33 +1,36 @@
 import type { QueueResolver } from '../types.js';
 
 class RateLimiter {
-  private running = 0;
-  private readonly queue: QueueResolver[] = [];
+  private activeOperations = 0;
+  private readonly waitingQueue: QueueResolver[] = [];
 
   constructor(private readonly maxConcurrent = 6) {}
 
+  /** Reserva un turno inmediato o espera en orden de llegada. */
   private acquire(): Promise<void> {
     return new Promise((resolve) => {
-      if (this.running < this.maxConcurrent) {
-        this.running++;
+      if (this.activeOperations < this.maxConcurrent) {
+        this.activeOperations++;
         resolve();
         return;
       }
 
-      this.queue.push(resolve);
+      this.waitingQueue.push(resolve);
     });
   }
 
+  /** Entrega el turno a la siguiente operación o libera capacidad. */
   private release(): void {
-    const next = this.queue.shift();
-    if (next) {
-      next();
+    const nextOperation = this.waitingQueue.shift();
+    if (nextOperation) {
+      nextOperation();
       return;
     }
 
-    this.running--;
+    this.activeOperations--;
   }
 
+  /** Ejecuta una operación cuando hay capacidad y siempre libera su turno. */
   async run<T>(operation: () => Promise<T>): Promise<T> {
     await this.acquire();
     try {
