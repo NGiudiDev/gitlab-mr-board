@@ -170,7 +170,7 @@ describe('getAllMergeRequests', () => {
     const { mergeRequests } = await getAllMergeRequests();
 
     expect(mergeRequests[0]?.blockers.approvals).toEqual({
-      status: 'unknown', required: 0, given: 0, missingApprovers: [],
+      status: 'unknown', required: 0, given: 0,
     });
     expect(mergeRequests[0]?.blockers.threads).toEqual({ status: 'unknown', unresolvedCount: 0 });
     expect(mergeRequests[0]?.blockers.pipeline).toEqual({ status: 'none', pipelineUrl: null });

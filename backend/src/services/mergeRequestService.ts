@@ -52,10 +52,9 @@ async function fetchApprovals(projectId: number, mergeRequestIid: number): Promi
       given: approvedBy.length,
       approvers,
       hasLeadApproval,
-      missingApprovers: [],
     };
   } catch {
-    return { status: 'unknown', required: 0, given: 0, missingApprovers: [] };
+    return { status: 'unknown', required: 0, given: 0 };
   }
 }
 

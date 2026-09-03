@@ -82,7 +82,6 @@ export interface ApprovalStatus {
   given: number;
   approvers?: string[];
   hasLeadApproval?: boolean;
-  missingApprovers: string[];
 }
 
 export interface ThreadStatus {

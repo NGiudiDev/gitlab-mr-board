@@ -4,10 +4,10 @@ import { computeMergeability, extractProjectPath } from './mergeRequestRules.js'
 import type { ApprovalStatus, PipelineStatus, ThreadStatus } from '../types.js';
 
 const approved: ApprovalStatus = {
-  status: 'approved', required: 2, given: 2, approvers: ['ana', 'lider'], hasLeadApproval: true, missingApprovers: [],
+  status: 'approved', required: 2, given: 2, approvers: ['ana', 'lider'], hasLeadApproval: true,
 };
 const pendingApprovals: ApprovalStatus = {
-  status: 'pending', required: 2, given: 1, approvers: ['ana'], hasLeadApproval: false, missingApprovers: [],
+  status: 'pending', required: 2, given: 1, approvers: ['ana'], hasLeadApproval: false,
 };
 const resolvedThreads: ThreadStatus = { status: 'resolved', unresolvedCount: 0 };
 const openThreads: ThreadStatus = { status: 'open', unresolvedCount: 2 };
@@ -109,7 +109,7 @@ describe('computeMergeability', () => {
   });
 
   it('no bloquea cuando el estado de las aprobaciones es desconocido', () => {
-    const unknownApprovals: ApprovalStatus = { status: 'unknown', required: 0, given: 0, missingApprovers: [] };
+    const unknownApprovals: ApprovalStatus = { status: 'unknown', required: 0, given: 0 };
     const mr = buildMergeRequest({ labels: ['qa_approved'] });
 
     expect(computeMergeability(mr, unknownApprovals, resolvedThreads, successPipeline)).toBe('ready_to_merge');

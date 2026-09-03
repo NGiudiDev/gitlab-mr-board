@@ -110,6 +110,5 @@ export {
   fetchMergeRequests,
   getState,
   resetStore,
-  subscribe,
   useMergeRequests,
 }

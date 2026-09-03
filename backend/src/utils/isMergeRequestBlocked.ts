@@ -38,9 +38,4 @@ function hasMergeRequestWarning(
   return UNFINISHED_PIPELINE_STATUSES.includes(pipeline.status);
 }
 
-export {
-  BLOCKING_PIPELINE_STATUSES,
-  UNFINISHED_PIPELINE_STATUSES,
-  hasMergeRequestWarning,
-  isMergeRequestBlocked,
-};
+export { hasMergeRequestWarning, isMergeRequestBlocked };

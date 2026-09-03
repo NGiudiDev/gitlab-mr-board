@@ -11,7 +11,6 @@ export default {
         'border-soft': '#22252D',
         control: '#667085',
         accent: '#45B8C9',
-        'accent-soft': '#173238',
         ready: '#4FB477',
         'ready-soft': '#16261D',
         draft: '#D9A441',

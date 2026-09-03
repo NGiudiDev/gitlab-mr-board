@@ -9,7 +9,6 @@ const DEFAULT_APPROVALS = {
   given: 2,
   approvers: ['ana', 'lider'],
   hasLeadApproval: true,
-  missingApprovers: [],
 }
 
 function buildMergeRequest(overrides = {}) {
