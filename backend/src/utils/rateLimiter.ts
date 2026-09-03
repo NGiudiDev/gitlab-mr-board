@@ -1,4 +1,4 @@
-type QueueResolver = () => void;
+import type { QueueResolver } from '../types.js';
 
 class RateLimiter {
   private running = 0;

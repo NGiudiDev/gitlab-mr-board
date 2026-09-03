@@ -2,29 +2,17 @@ import config from '../config.js';
 import type {
   ApprovalStatus,
   EnrichedMergeRequest,
+  GitLabApprovalsResponse,
+  GitLabDiscussion,
   GitLabMergeRequest,
+  GitLabPipeline,
+  GitLabProject,
   MergeRequestResponse,
   PipelineStatus,
   ThreadStatus,
 } from '../types.js';
 import { fetchPaginatedWithLimit, fetchWithLimit } from './gitlabApi.js';
 import { computeMergeability, extractProjectPath } from './mergeRequestRules.js';
-
-interface GitLabApproval {
-  user: { username: string };
-}
-
-interface GitLabApprovalsResponse {
-  approved_by?: GitLabApproval[];
-}
-
-interface GitLabDiscussion {
-  notes?: Array<{ resolvable?: boolean; resolved?: boolean }>;
-}
-
-interface GitLabProject {
-  path_with_namespace: string;
-}
 
 async function fetchOpenMRsForProject(projectId: string): Promise<GitLabMergeRequest[]> {
   return fetchPaginatedWithLimit<GitLabMergeRequest>(`/projects/${projectId}/merge_requests`, {
@@ -70,7 +58,7 @@ async function fetchUnresolvedThreads(projectId: number, mrIid: number): Promise
 
 async function fetchPipeline(projectId: number, mrIid: number): Promise<PipelineStatus> {
   try {
-    const { data } = await fetchWithLimit<Array<{ status?: string; web_url?: string }>>(
+    const { data } = await fetchWithLimit<GitLabPipeline[]>(
       `/projects/${projectId}/merge_requests/${mrIid}/pipelines`,
     );
     const latest = data[0];

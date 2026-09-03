@@ -1,13 +1,6 @@
 import config from '../config.js';
-import type { QueryValue } from '../types.js';
+import type { GitLabResponse, QueryParams } from '../types.js';
 import RateLimiter from '../utils/rateLimiter.js';
-
-type QueryParams = Record<string, QueryValue>;
-
-interface GitLabResponse<T> {
-  data: T;
-  headers: Headers;
-}
 
 const limiter = new RateLimiter(6);
 

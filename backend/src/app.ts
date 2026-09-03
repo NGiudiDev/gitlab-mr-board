@@ -2,14 +2,7 @@ import cors from 'cors';
 import express, { type ErrorRequestHandler, type Express } from 'express';
 import config from './config.js';
 import { createMergeRequestsRouter } from './routes/mergeRequests.js';
-import type { MergeRequestResponse } from './types.js';
-
-interface CreateAppOptions {
-  /** Fuente de datos de los merge requests; inyectable en las pruebas. */
-  fetchMergeRequests?: () => Promise<MergeRequestResponse>;
-  /** Reloj de la caché; inyectable en las pruebas. */
-  now?: () => number;
-}
+import type { CreateAppOptions } from './types.js';
 
 /**
  * Construye la aplicación Express sin escuchar en un puerto, para que las

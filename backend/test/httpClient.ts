@@ -1,12 +1,7 @@
 import http from 'node:http';
 import type { AddressInfo } from 'node:net';
 import type { Express } from 'express';
-
-interface HttpTestResponse {
-  status: number;
-  body: string;
-  json: <T>() => T;
-}
+import type { HttpTestResponse } from '../src/types.js';
 
 /**
  * Ejecuta una petición real contra la app en memoria usando `node:http`.
@@ -40,4 +35,3 @@ function requestApp(app: Express, path: string): Promise<HttpTestResponse> {
 }
 
 export { requestApp };
-export type { HttpTestResponse };

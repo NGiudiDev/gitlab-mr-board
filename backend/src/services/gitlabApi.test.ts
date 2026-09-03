@@ -1,10 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { TEST_BASE_URL, TEST_TOKEN } from '../../test/constants.js';
+import type { GitLabTestItem } from '../types.js';
 import { buildUrl, fetchJson, fetchPaginated } from './gitlabApi.js';
-
-interface Item {
-  id: number;
-}
 
 function jsonResponse(body: unknown, headers: Record<string, string> = {}): Response {
   return new Response(JSON.stringify(body), {
@@ -48,7 +45,7 @@ describe('fetchJson', () => {
     const fetchMock = vi.fn(async () => jsonResponse({ id: 1 }));
     vi.stubGlobal('fetch', fetchMock);
 
-    const { data } = await fetchJson<Item>('/projects/101');
+    const { data } = await fetchJson<GitLabTestItem>('/projects/101');
 
     expect(data).toEqual({ id: 1 });
     const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
@@ -89,7 +86,7 @@ describe('fetchPaginated', () => {
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    const items = await fetchPaginated<Item>('/projects/101/merge_requests');
+    const items = await fetchPaginated<GitLabTestItem>('/projects/101/merge_requests');
 
     expect(items).toEqual([{ id: 1 }, { id: 2 }]);
     expect(fetchMock).toHaveBeenCalledTimes(2);
@@ -125,7 +122,7 @@ describe('fetchPaginated', () => {
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    const items = await fetchPaginated<Item>('/projects/101/merge_requests');
+    const items = await fetchPaginated<GitLabTestItem>('/projects/101/merge_requests');
 
     expect(fetchMock).toHaveBeenCalledTimes(10);
     expect(items).toHaveLength(10);

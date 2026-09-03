@@ -1,40 +1,10 @@
-import type { GitLabMergeRequest } from '../../src/types.js';
-
-interface ApprovalsFixture {
-  approved_by?: Array<{ user: { username: string } }>;
-}
-
-interface PipelineFixture {
-  status?: string;
-  web_url?: string;
-}
-
-interface DiscussionFixture {
-  notes?: Array<{ resolvable?: boolean; resolved?: boolean }>;
-}
-
-/** Un número representa un código HTTP de error en lugar de una respuesta. */
-type FixtureOr<T> = T | number;
-
-interface GitLabFixture {
-  /** Ruta del proyecto por ID, o código HTTP de error. */
-  projects?: Record<string, FixtureOr<string>>;
-  /** Páginas de MRs abiertos por ID de proyecto. */
-  mergeRequestPages?: Record<string, FixtureOr<GitLabMergeRequest[][]>>;
-  /** Claves con el formato `projectId-iid`. */
-  approvals?: Record<string, FixtureOr<ApprovalsFixture>>;
-  /** Páginas de discusiones por MR. */
-  discussions?: Record<string, FixtureOr<DiscussionFixture[][]>>;
-  pipelines?: Record<string, FixtureOr<PipelineFixture[]>>;
-}
-
-interface GitLabStub {
-  fetch: (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
-  /** URLs solicitadas, en orden, para verificar paginación y concurrencia. */
-  requestedUrls: string[];
-  /** Cabeceras enviadas en cada llamada, para verificar el token. */
-  sentHeaders: Array<Record<string, string>>;
-}
+import type {
+  DiscussionFixture,
+  FixtureOr,
+  GitLabFixture,
+  GitLabMergeRequest,
+  GitLabStub,
+} from '../../src/types.js';
 
 const AVATAR = 'https://gitlab.example.com/uploads/avatar.png';
 
@@ -141,4 +111,3 @@ function createGitLabStub(fixture: GitLabFixture = {}): GitLabStub {
 }
 
 export { buildMergeRequest, createGitLabStub };
-export type { GitLabFixture };

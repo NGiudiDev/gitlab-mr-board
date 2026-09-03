@@ -1,9 +1,30 @@
 export type QueryValue = string | number | boolean | null | undefined;
+export type QueryParams = Record<string, QueryValue>;
+export type QueueResolver = () => void;
+
+export interface GitLabResponse<T> {
+  data: T;
+  headers: Headers;
+}
+
+export interface MergeRequestsDependencies {
+  /** Fuente de datos de los merge requests; inyectable en las pruebas. */
+  fetchMergeRequests?: () => Promise<MergeRequestResponse>;
+  /** Reloj de la caché; inyectable en las pruebas. */
+  now?: () => number;
+}
+
+export type CreateAppOptions = MergeRequestsDependencies;
+export type MergeRequestsRouterOptions = MergeRequestsDependencies;
 
 export interface GitLabUser {
   name: string;
   username: string;
   avatar_url: string | null;
+}
+
+export interface GitLabReferences {
+  full?: string;
 }
 
 export interface GitLabPipeline {
@@ -17,7 +38,7 @@ export interface GitLabMergeRequest {
   title: string;
   web_url: string;
   author: GitLabUser | null;
-  references?: { full?: string };
+  references?: GitLabReferences;
   source_branch: string;
   target_branch: string;
   labels?: string[];
@@ -29,6 +50,27 @@ export interface GitLabMergeRequest {
   created_at: string;
   head_pipeline?: GitLabPipeline;
   pipeline?: GitLabPipeline;
+}
+
+export interface GitLabApproval {
+  user: Pick<GitLabUser, 'username'>;
+}
+
+export interface GitLabApprovalsResponse {
+  approved_by?: GitLabApproval[];
+}
+
+export interface GitLabDiscussionNote {
+  resolvable?: boolean;
+  resolved?: boolean;
+}
+
+export interface GitLabDiscussion {
+  notes?: GitLabDiscussionNote[];
+}
+
+export interface GitLabProject {
+  path_with_namespace: string;
 }
 
 export interface ApprovalStatus {
@@ -52,6 +94,18 @@ export interface PipelineStatus {
 
 export type Mergeability = 'backlog' | 'in_progress' | 'qa' | 'mr_warning' | 'review' | 'ready_to_merge';
 
+export interface MergeRequestReviewer {
+  name: string;
+  username: string;
+  avatar: string | null;
+}
+
+export interface MergeRequestBlockers {
+  approvals: ApprovalStatus;
+  threads: ThreadStatus;
+  pipeline: PipelineStatus;
+}
+
 export interface EnrichedMergeRequest {
   id: string;
   iid: number;
@@ -66,19 +120,56 @@ export interface EnrichedMergeRequest {
   labels: string[];
   isDraft: boolean;
   hasConflicts: boolean;
-  reviewers: Array<{ name: string; username: string; avatar: string | null }>;
+  reviewers: MergeRequestReviewer[];
   updatedAt: string;
   createdAt: string;
-  blockers: { approvals: ApprovalStatus; threads: ThreadStatus; pipeline: PipelineStatus };
+  blockers: MergeRequestBlockers;
   mergeability: Mergeability;
+}
+
+export interface MergeRequestMetadata {
+  fetchedAt: string;
+  projectCount: number;
+  totalMRs: number;
+  allProjects: string[];
 }
 
 export interface MergeRequestResponse {
   mergeRequests: EnrichedMergeRequest[];
-  meta: {
-    fetchedAt: string;
-    projectCount: number;
-    totalMRs: number;
-    allProjects: string[];
-  };
+  meta: MergeRequestMetadata;
+}
+
+export interface HttpTestResponse {
+  status: number;
+  body: string;
+  json: <T>() => T;
+}
+
+export type FixtureOr<T> = T | number;
+export type ApprovalsFixture = GitLabApprovalsResponse;
+export type PipelineFixture = GitLabPipeline;
+export type DiscussionFixture = GitLabDiscussion;
+
+export interface GitLabFixture {
+  /** Ruta del proyecto por ID, o código HTTP de error. */
+  projects?: Record<string, FixtureOr<string>>;
+  /** Páginas de MRs abiertos por ID de proyecto. */
+  mergeRequestPages?: Record<string, FixtureOr<GitLabMergeRequest[][]>>;
+  /** Claves con el formato `projectId-iid`. */
+  approvals?: Record<string, FixtureOr<ApprovalsFixture>>;
+  /** Páginas de discusiones por MR. */
+  discussions?: Record<string, FixtureOr<DiscussionFixture[][]>>;
+  pipelines?: Record<string, FixtureOr<PipelineFixture[]>>;
+}
+
+export interface GitLabStub {
+  fetch: (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
+  /** URLs solicitadas, en orden, para verificar paginación y concurrencia. */
+  requestedUrls: string[];
+  /** Cabeceras enviadas en cada llamada, para verificar el token. */
+  sentHeaders: Array<Record<string, string>>;
+}
+
+export interface GitLabTestItem {
+  id: number;
 }

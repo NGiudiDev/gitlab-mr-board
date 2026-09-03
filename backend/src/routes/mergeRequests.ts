@@ -1,14 +1,7 @@
 import express, { type Router } from 'express';
 import config from '../config.js';
 import { getAllMergeRequests } from '../services/mergeRequestService.js';
-import type { MergeRequestResponse } from '../types.js';
-
-interface MergeRequestsRouterOptions {
-  /** Fuente de datos; inyectable para no depender de GitLab en las pruebas. */
-  fetchMergeRequests?: () => Promise<MergeRequestResponse>;
-  /** Reloj de la caché; inyectable para controlar el vencimiento del TTL. */
-  now?: () => number;
-}
+import type { MergeRequestResponse, MergeRequestsRouterOptions } from '../types.js';
 
 function createMergeRequestsRouter({
   fetchMergeRequests = getAllMergeRequests,

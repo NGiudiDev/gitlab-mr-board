@@ -16,7 +16,7 @@ La implementación separa el transporte HTTP, la lógica de negocio y la integra
 - `src/services/mergeRequestService.ts`: coordina las consultas, enriquece los merge requests y construye la respuesta del BFF.
 - `src/services/mergeRequestRules.ts`: contiene reglas puras de clasificación y normalización que no dependen de Express ni de la red.
 - `src/utils/`: aloja utilidades reutilizables, como el limitador de concurrencia y las reglas de bloqueo técnico.
-- `src/types.ts`: define los contratos recibidos desde GitLab y los modelos expuestos por el backend.
+- `src/types.ts`: centraliza los contratos recibidos desde GitLab, los modelos expuestos por el backend y los tipos internos compartidos entre capas.
 - `test/`: contiene configuración, fixtures y utilidades compartidas por las pruebas del paquete. Las convenciones se mantienen en la [estrategia de pruebas](../development/pruebas.md).
 
 ## Construcción y arranque
