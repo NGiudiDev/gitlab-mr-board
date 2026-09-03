@@ -66,6 +66,8 @@
 
 - Organizar cada funcionalidad en `frontend/src/features/<feature>/`: los componentes van en `components/` y los hooks en `hooks/`. Reservar `frontend/src/app/` para la composición general de la aplicación.
 
+- Centralizar la lectura y validación de variables de entorno del frontend en `frontend/src/config.js`. Al agregar una variable, actualizar también `frontend/.env.example` y `docs/development/entorno-local.md`.
+
 - Usar **React 19 con componentes de función** en archivos `.jsx` ([ADR 0005](docs/decisions/0005-frontend-en-react.md)).
 
 - **Un componente, una responsabilidad**: cada componente debe tener un propósito claro. Si crece demasiado, extraer subcomponentes dentro de la feature correspondiente.

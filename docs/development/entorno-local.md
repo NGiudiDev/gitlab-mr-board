@@ -25,7 +25,13 @@ Después de actualizar Node.js hay que abrir una terminal nueva y ejecutar nueva
 | `TEAM_LEAD_USERNAME` | No | `NGiudi` | Aprobación del líder |
 | `MIN_APPROVALS` | No | `2` | Mínimo de aprobaciones |
 
-El frontend admite `VITE_API_BASE_URL`; sin ella usa el proxy de Vite.
+El frontend usa esta variable, expuesta por Vite durante el build:
+
+| Variable | Obligatoria | Predeterminado | Uso |
+|---|---:|---|---|
+| `VITE_API_BASE_URL` | No | `http://localhost:3001` | URL base HTTP(S) del backend |
+
+`frontend/src/config.js` valida el valor y elimina la barra final. `frontend/.env.example` contiene la configuración recomendada para desarrollo local. Vite solo expone al navegador variables con el prefijo `VITE_`; nunca colocar secretos en ellas.
 
 ## Ejecución
 

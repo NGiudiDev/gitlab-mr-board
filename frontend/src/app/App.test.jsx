@@ -66,7 +66,7 @@ describe('carga inicial', () => {
   it('consulta el backend al abrir el tablero', async () => {
     await renderApp()
 
-    expect(fetchMock).toHaveBeenCalledWith('/api/pull-requests')
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:3001/api/pull-requests')
   })
 
   it('muestra el tablero con los proyectos recibidos', async () => {
@@ -154,7 +154,7 @@ describe('actualización manual', () => {
     fireEvent.click(refreshButton())
     await flush()
 
-    expect(fetchMock).toHaveBeenLastCalledWith('/api/pull-requests?force=true')
+    expect(fetchMock).toHaveBeenLastCalledWith('http://localhost:3001/api/pull-requests?force=true')
   })
 
   it('muestra la hora de la última actualización', async () => {

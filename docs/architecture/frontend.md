@@ -9,6 +9,7 @@ La aplicación usa componentes de función en archivos `.jsx`, módulos ES y est
 El código se divide entre la composición general y las funcionalidades del dominio:
 
 - `src/main.jsx`: carga los estilos globales y monta React mediante `createRoot` y `StrictMode`.
+- `src/config.js`: centraliza y valida la configuración expuesta por Vite.
 - `src/app/App.jsx`: compone la pantalla, conecta el store con la interfaz y decide qué mostrar durante la carga, los errores y la ausencia de datos.
 - `src/features/mergeRequests/hooks/useMergeRequests.js`: contiene el store compartido, el acceso al backend y el polling.
 - `src/features/mergeRequests/components/`: contiene los componentes del tablero de merge requests.
@@ -59,7 +60,7 @@ React ejecuta los efectos dos veces durante el montaje de desarrollo por `Strict
 
 ## Acceso al backend
 
-`fetchMergeRequests()` solicita `GET /api/pull-requests`. Durante el desarrollo, Vite redirige las rutas `/api` a `http://localhost:3001`. En otros entornos, `VITE_API_BASE_URL` permite definir la base del backend; si no existe, se usa el mismo origen que sirvió el frontend.
+`fetchMergeRequests()` solicita `GET /api/pull-requests` sobre la URL base validada por `src/config.js`. `VITE_API_BASE_URL` debe ser una URL HTTP(S), se normaliza sin barra final y usa `http://localhost:3001` cuando no está definida. La lista de variables y su configuración se mantiene en la [guía de entorno local](../development/entorno-local.md).
 
 La actualización manual invoca `fetchMergeRequests(true)` y agrega `?force=true` para omitir la caché del backend. El polling usa la consulta normal y permite reutilizarla.
 

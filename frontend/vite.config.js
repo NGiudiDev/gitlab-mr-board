@@ -7,9 +7,4 @@ export default defineConfig({
     environment: 'happy-dom',
     setupFiles: ['./test/setup.js'],
   },
-  server: {
-    proxy: {
-      '/api': 'http://localhost:3001',
-    },
-  },
 })

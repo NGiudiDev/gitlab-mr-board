@@ -1,6 +1,6 @@
 import { useEffect, useSyncExternalStore } from 'react'
+import config from '../../../config.js'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
 const POLL_INTERVAL = 5 * 60 * 1000
 
 const INITIAL_STATE = {
@@ -44,7 +44,7 @@ let initialLoad = null
 async function fetchMergeRequests(force = false) {
   setState({ loading: true, error: null })
   try {
-    const url = `${API_BASE}/api/pull-requests${force ? '?force=true' : ''}`
+    const url = `${config.apiBaseUrl}/api/pull-requests${force ? '?force=true' : ''}`
     const response = await fetch(url)
     if (!response.ok) {
       const body = await response.json().catch(() => ({}))

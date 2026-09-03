@@ -10,7 +10,7 @@ npm ci
 npm run build
 ```
 
-Servir `frontend/dist/` como contenido estático. Definir `VITE_API_BASE_URL` antes del build si la API no comparte origen.
+Definir `VITE_API_BASE_URL` con la URL pública del backend antes del build y servir `frontend/dist/` como contenido estático. El valor queda incorporado en los archivos generados; el predeterminado `http://localhost:3001` se reserva para desarrollo local.
 
 ## Backend
 
