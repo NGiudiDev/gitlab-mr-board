@@ -75,7 +75,7 @@ describe('getAllMergeRequests', () => {
 
   it('marca las aprobaciones como pendientes sin la del líder', async () => {
     stubGitLab(baseFixture({
-      mergeRequestPages: { 101: [[buildMergeRequest({ iid: 7, labels: ['qa_approved'] })]], 202: [[]] },
+      mergeRequestPages: { 101: [[buildMergeRequest({ iid: 7, labels: [] })]], 202: [[]] },
       approvals: { '101-7': { approved_by: [{ user: { username: 'ana' } }, { user: { username: 'beto' } }] } },
       discussions: { '101-7': [[]] },
       pipelines: { '101-7': [{ status: 'success' }] },

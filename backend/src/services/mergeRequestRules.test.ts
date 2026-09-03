@@ -38,10 +38,10 @@ describe('computeMergeability', () => {
     expect(computeMergeability(mr, approved, resolvedThreads, successPipeline)).toBe('in_progress');
   });
 
-  it('clasifica como qa la etiqueta qa_pending, aun con bloqueos', () => {
+  it('prioriza los bloqueos técnicos sobre la etiqueta qa_pending', () => {
     const mr = buildMergeRequest({ labels: ['qa_pending'], has_conflicts: true });
 
-    expect(computeMergeability(mr, pendingApprovals, openThreads, pipeline('failed'))).toBe('qa');
+    expect(computeMergeability(mr, pendingApprovals, openThreads, pipeline('failed'))).toBe('mr_warning');
   });
 
   it('clasifica como mr_warning un MR con conflictos', () => {
@@ -75,18 +75,18 @@ describe('computeMergeability', () => {
   });
 
   it('clasifica como review las aprobaciones pendientes', () => {
-    const mr = buildMergeRequest({ labels: ['qa_approved'] });
+    const mr = buildMergeRequest({ labels: [] });
 
     expect(computeMergeability(mr, pendingApprovals, resolvedThreads, successPipeline)).toBe('review');
   });
 
-  it('clasifica como mr_warning cuando falta la etiqueta qa_approved', () => {
+  it('clasifica como unknown cuando no coincide ninguna regla', () => {
     const mr = buildMergeRequest({ labels: [] });
 
-    expect(computeMergeability(mr, approved, resolvedThreads, successPipeline)).toBe('mr_warning');
+    expect(computeMergeability(mr, approved, resolvedThreads, successPipeline)).toBe('unknown');
   });
 
-  it('clasifica como ready_to_merge cuando no queda ningún bloqueo', () => {
+  it('clasifica como ready_to_merge cuando tiene qa_approved', () => {
     const mr = buildMergeRequest({ labels: ['qa_approved'] });
 
     expect(computeMergeability(mr, approved, resolvedThreads, successPipeline)).toBe('ready_to_merge');
@@ -118,7 +118,7 @@ describe('computeMergeability', () => {
   it('tolera un MR sin etiquetas definidas', () => {
     const mr = buildMergeRequest({ labels: undefined });
 
-    expect(computeMergeability(mr, approved, resolvedThreads, successPipeline)).toBe('mr_warning');
+    expect(computeMergeability(mr, approved, resolvedThreads, successPipeline)).toBe('unknown');
   });
 });
 

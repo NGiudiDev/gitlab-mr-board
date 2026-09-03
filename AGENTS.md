@@ -76,6 +76,8 @@
 
 - **El estado compartido va al store** de `hooks/useMergeRequests.js`, que usa `useSyncExternalStore`. Un `useState` sirve para estado local del componente; si dos componentes deben verlo, va al store.
 
+- Al agregar o renombrar una clasificación de merge requests, mantener sincronizados el tipo `Mergeability`, las columnas del tablero y la fuente de verdad funcional en `docs/domains/merge-requests.md`.
+
 - **Los efectos se ejecutan dos veces en desarrollo** por `StrictMode`. Todo `useEffect` con suscripciones, timers o peticiones debe limpiar en su retorno y ser idempotente.
 
 - Nuevos componentes reciben **props explícitas con valores por omisión** y avisan al padre con callbacks `onAlgo`. No mutar props ni estado.

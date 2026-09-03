@@ -98,6 +98,18 @@ describe('columnas por estado', () => {
     )
   })
 
+  it('no muestra los merge requests con clasificación desconocida', async () => {
+    const user = userEvent.setup()
+    const { container } = renderBoard({
+      allProjects: ['equipo/tablero'],
+      mergeRequests: [buildMergeRequest({ title: 'Estado sin clasificar', mergeability: 'unknown' })],
+    })
+    await user.click(screen.getByRole('button'))
+
+    expect(container.textContent).not.toContain('Desconocidos')
+    expect(container.textContent).not.toContain('Estado sin clasificar')
+  })
+
   it('acumula en una misma columna los merge requests con igual clasificación', async () => {
     const user = userEvent.setup()
     const { container } = renderBoard({

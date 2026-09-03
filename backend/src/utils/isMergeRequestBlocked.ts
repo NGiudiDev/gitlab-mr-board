@@ -19,7 +19,9 @@ function isMergeRequestBlocked(
   pipeline: PipelineStatus,
 ): boolean {
   if (mr.has_conflicts) return true;
+
   if (BLOCKING_PIPELINE_STATUSES.includes(pipeline.status)) return true;
+
   return threads.status === 'open';
 }
 

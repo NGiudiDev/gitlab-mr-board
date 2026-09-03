@@ -24,11 +24,11 @@ function computeMergeability(
   if (labels.includes('backlog')) return 'backlog';
   if (mr.draft || mr.work_in_progress) return 'in_progress';
   if (hasMergeRequestWarning(mr, threads, pipeline)) return 'mr_warning';
-  if (!labels.includes('qa_approved')) return 'mr_warning';
+  if (labels.includes('qa_approved')) return 'ready_to_merge';
   if (approvals.status === 'pending') return 'review';
   if (labels.includes('qa_pending')) return 'qa';
 
-  return 'ready_to_merge';
+  return 'unknown';
 }
 
 /**

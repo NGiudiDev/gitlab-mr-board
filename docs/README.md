@@ -1,6 +1,6 @@
 # Documentación de GitLab MR Board
 
-Esta documentación explica la estructura, las decisiones, el desarrollo, la operación y las reglas funcionales del proyecto. El [README de la raíz](../README.md) ofrece la introducción breve.
+Esta documentación explica la estructura, las decisiones, el desarrollo, la operación y las reglas funcionales del proyecto. El [README de la raíz](https://github.com/NGiudiDev/gitlab-mr-board/blob/main/README.md) ofrece la introducción breve.
 
 ## Secciones
 
@@ -14,4 +14,4 @@ Esta documentación explica la estructura, las decisiones, el desarrollo, la ope
 
 Consultar [Entorno local](development/entorno-local.md) para instalar y ejecutar el proyecto. Para validar cambios, seguir la [Estrategia de pruebas](development/pruebas.md); para generar artefactos productivos, usar la guía de [Despliegue en producción](deployment/produccion.md).
 
-Las reglas para mantener código y documentación están en [`AGENTS.md`](../AGENTS.md).
+Las reglas para mantener código y documentación están en [`AGENTS.md`](https://github.com/NGiudiDev/gitlab-mr-board/blob/main/AGENTS.md).

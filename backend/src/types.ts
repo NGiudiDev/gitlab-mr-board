@@ -100,7 +100,8 @@ export type Mergeability =
   | 'qa'
   | 'mr_warning'
   | 'review'
-  | 'ready_to_merge';
+  | 'ready_to_merge'
+  | 'unknown';
 
 export interface MergeRequestReviewer {
   name: string;
