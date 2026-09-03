@@ -78,6 +78,37 @@ describe('MrCard', () => {
     expect(container.textContent).toContain('Beto Ruiz, Caro Díaz')
   })
 
+  it('muestra sólo a los reviewers que todavía no aprobaron', () => {
+    const { container } = renderCard({
+      mergeability: 'review',
+      reviewers: [
+        { name: 'Beto Ruiz', username: 'beto', avatar: null },
+        { name: 'Caro Díaz', username: 'caro', avatar: null },
+      ],
+      blockers: {
+        approvals: { status: 'pending', required: 2, given: 1, approvers: ['beto'] },
+      },
+    })
+
+    expect(container.textContent).toContain('Responsable:')
+    expect(container.textContent).toContain('Caro Díaz')
+    expect(container.textContent).not.toContain('Responsable:Beto Ruiz')
+  })
+
+  it('muestra al autor como responsable cuando todos los reviewers ya aprobaron', () => {
+    const { container } = renderCard({
+      mergeability: 'review',
+      author: 'Ana Pérez',
+      reviewers: [{ name: 'Beto Ruiz', username: 'beto', avatar: null }],
+      blockers: {
+        approvals: { status: 'pending', required: 2, given: 1, approvers: ['BETO'] },
+      },
+    })
+
+    expect(container.textContent).toContain('Responsable:')
+    expect(container.textContent).toContain('Responsable:Ana Pérez')
+  })
+
   it('no muestra responsable en code review sin reviewers asignados', () => {
     const { container } = renderCard({ mergeability: 'review', reviewers: [] })
 

@@ -18,4 +18,4 @@ El frontend muestra En progreso, Pendientes, Code Review, QA, Listas para mergea
 
 ## Responsable mostrado
 
-En En progreso, Pendientes, QA y Listas para mergear se muestra el autor como responsable. En Code Review se muestran los reviewers asignados; si no existen, no se presenta responsable. En Pausados no se muestra responsable.
+En En progreso, Pendientes, QA y Listas para mergear se muestra el autor como responsable. En Code Review se muestran como responsables únicamente los reviewers asignados que todavía no aprobaron; cuando todos los reviewers ya aprobaron, el responsable vuelve a ser el autor. Si no hay reviewers asignados, no se presenta responsable. En Pausados no se muestra responsable.

@@ -9,6 +9,14 @@ const COLOR_BY_MERGEABILITY = {
   backlog: 'border-l-text-muted',
 }
 
+/**
+ * Determina quién debe actuar sobre el MR según su etapa y las aprobaciones
+ * registradas. En revisión sólo conserva como responsables a quienes todavía
+ * no aprobaron; cuando ya aprobaron todos, devuelve el trabajo al autor.
+ *
+ * @param {object} mr Merge request enriquecido por el backend.
+ * @returns {string|null} Nombre visible de la persona responsable.
+ */
 function assigneeOf(mr) {
   const mergeability = mr.mergeability
   if (mergeability === 'in_progress' || mergeability === 'mr_warning'
@@ -17,8 +25,20 @@ function assigneeOf(mr) {
   }
   if (mergeability === 'review') {
     const reviewers = mr.reviewers || []
-    if (reviewers.length > 0) return reviewers.map((reviewer) => reviewer.name).join(', ')
-    return null
+    
+    if (reviewers.length === 0) return null
+
+    const approvers = new Set(
+      (mr.blockers.approvals.approvers || []).map((username) => username.toLowerCase()),
+    )
+    
+    const pendingReviewers = reviewers.filter(
+      (reviewer) => !approvers.has(reviewer.username.toLowerCase()),
+    )
+
+    if (pendingReviewers.length === 0) return mr.author
+    
+    return pendingReviewers.map((reviewer) => reviewer.name).join(', ')
   }
   return null
 }
