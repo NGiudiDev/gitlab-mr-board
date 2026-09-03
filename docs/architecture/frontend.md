@@ -36,9 +36,8 @@ App
 - `BoardColumn` representa una categoría mediante una lista semántica con scroll vertical.
 - `MrCard` resume el merge request, determina el responsable visible y enlaza a GitLab.
 - `BlockerBadge` presenta pipeline, discusiones, aprobaciones y conflictos con texto, icono y estilo semántico.
-- `FilterChips` implementa controles accesibles para seleccionar proyectos, pero actualmente no forma parte del árbol renderizado por `App`.
 
-Los componentes presentacionales reciben valores mediante props y notifican acciones mediante callbacks como `onRefresh` u `onToggle`. No mutan las props ni el estado recibido.
+Los componentes presentacionales reciben valores mediante props y notifican acciones mediante callbacks como `onRefresh`. No mutan las props ni el estado recibido.
 
 ## Estado compartido
 
