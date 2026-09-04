@@ -6,7 +6,7 @@ Fuente de verdad para ejecutar, escribir y validar los test. La elección de her
 
 - **Backend:** Vitest sobre Node.js.
 - **Frontend:** Vitest, React Testing Library y `happy-dom`.
-- **E2E:** Playwright Test sobre Chromium, pendiente de implementación.
+- **E2E:** Playwright Test sobre Chromium, en `e2e/`.
 
 Los test unitarios y de integración no acceden a GitLab. Los E2E recorren la aplicación completa contra proyectos reales dedicados a test y requieren `GITLAB_TOKEN`.
 
@@ -18,8 +18,10 @@ Los test unitarios y de integración no acceden a GitLab. Los E2E recorren la ap
 | `npm test` en `backend/` o `frontend/` | La suite de ese paquete |
 | `npm run test:watch` en un paquete | Su suite en modo interactivo |
 | `npm run typecheck` en `backend/` | Tipos de producción y de test |
+| `npm run test:e2e` en la raíz | Recorrido E2E contra GitLab real |
+| `npm run test:e2e:ui` en la raíz | El mismo recorrido en el modo interactivo de Playwright |
 
-Al incorporar Playwright, la raíz debe separar `test:unit` de `test:e2e` y dejar `test` apuntando al primero.
+`npm test` deja los E2E afuera a propósito: dependen de credenciales y de datos externos.
 
 ## Convenciones
 
@@ -50,13 +52,34 @@ La composición y el ciclo del store se detallan en la [arquitectura del fronten
 
 ## Test E2E
 
-Playwright debe iniciar frontend y backend mediante `webServer` y correr contra proyectos de GitLab exclusivos para test. La suite debe fallar con un mensaje claro antes de comenzar si falta `GITLAB_TOKEN` o la configuración de proyectos.
+El recorrido vive en `e2e/tablero.spec.js` y se configura en `playwright.config.js`. Antes de la primera ejecución hay que descargar el navegador una vez:
 
-El recorrido crítico inicial: abrir el tablero y esperar una respuesta real de GitLab, expandir un proyecto, verificar la columna y los bloqueadores de un merge request conocido, forzar una actualización y recorrer los controles principales con teclado.
+```bash
+npx playwright install chromium
+```
 
-Usar selectores accesibles como `getByRole()` y `getByLabel()`, con aserciones de espera automática; nunca localizar por clases de Tailwind. La configuración inicial ejecuta solo Chromium: Firefox y WebKit se agregan únicamente ante un requisito explícito. Conservar trazas, capturas y videos solo para fallos o reintentos.
+Los E2E corren contra GitLab real, así que necesitan estas variables. Copiar `.env.example` de la raíz como `.env` —`e2e/config.js` lo carga si existe, y lo que ya esté en el entorno tiene prioridad, así que en CI alcanza con los secretos—. Si falta alguna variable, la suite falla con el detalle antes de levantar los servidores.
 
-Los datos deben ser controlados y estables: la suite no crea, modifica, aprueba ni fusiona merge requests salvo que un caso futuro lo requiera con limpieza segura.
+| Variable | Obligatoria | Uso |
+|---|---:|---|
+| `GITLAB_TOKEN` | Sí | PAT con alcance `read_api` sobre los proyectos de test |
+| `E2E_PROJECT_IDS` | Sí | IDs de los proyectos dedicados a test, separados por comas |
+| `E2E_PROJECT_PATH` | Sí | Ruta `grupo/proyecto` de la sección que expande el recorrido |
+| `E2E_MR_TITLE` | Sí | Título exacto (mayúsculas incluidas) del merge request que se verifica |
+| `E2E_MR_COLUMN` | Sí | Columna donde debe aparecer ese merge request |
+| `E2E_GITLAB_BASE_URL` | No | Instancia de GitLab; por omisión `https://gitlab.com` |
+
+Usar proyectos creados para test, nunca los de trabajo real: el recorrido depende de que ese merge request siga abierto y en su columna.
+
+Playwright levanta ambos servicios con `webServer`, sin reutilizar procesos existentes: el backend en el puerto 3101 con `E2E_PROJECT_IDS` como `PROJECT_IDS`, y el build del frontend servido con `vite preview` en 4173, uno de los dos orígenes que acepta el CORS del backend.
+
+El recorrido crítico abre el tablero y espera una respuesta real de GitLab, expande el proyecto configurado, verifica la columna y los bloqueadores del merge request conocido, fuerza una actualización que omite la caché y recorre los controles principales con teclado hasta la vista personal.
+
+Para verlo correr: `npm run test:e2e:ui` abre el modo interactivo con watch y time-travel por paso, y `npm run test:e2e -- --headed` lo ejecuta en una ventana visible (`--debug` agrega el Inspector paso a paso). Las trazas de los reintentos se revisan después con `npx playwright show-trace`.
+
+Usar selectores accesibles como `getByRole()` y `getByLabel()`, con aserciones de espera automática; nunca localizar por clases de Tailwind. Los paneles de proyecto contraídos se ocultan con `display: none`, así que sus tarjetas quedan fuera del árbol de accesibilidad hasta expandirlos.
+
+Sólo se ejecuta Chromium: Firefox y WebKit se agregan únicamente ante un requisito explícito. Las trazas, capturas y videos se conservan solo para fallos o reintentos. La suite no crea, modifica, aprueba ni fusiona merge requests salvo que un caso futuro lo requiera con limpieza segura.
 
 ## Validación antes de entregar
 

@@ -98,6 +98,6 @@
 
 - La fuente de verdad es [`docs/development/test.md`](docs/development/test.md): herramientas, comandos, convenciones, cobertura esperada por paquete, E2E y checklist de validación antes de entregar. Seguirlo en cada cambio y actualizarlo cuando la estrategia cambie.
 
-- Ejecutar `npm test` desde la raíz antes de entregar, además de la validación manual del checklist.
+- Ejecutar `npm test` desde la raíz antes de entregar, además de la validación manual del checklist. Los E2E corren aparte con `npm run test:e2e` y necesitan credenciales de GitLab.
 
 - Verificar visualmente en el browser todo cambio de UI, en **tema oscuro** (el default del proyecto) y revisando la consola.
