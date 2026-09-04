@@ -133,8 +133,6 @@ export interface EnrichedMergeRequest {
   projectId: number;
   sourceBranch: string;
   targetBranch: string;
-  labels: string[];
-  isDraft: boolean;
   hasConflicts: boolean;
   reviewers: MergeRequestReviewer[];
   updatedAt: string;

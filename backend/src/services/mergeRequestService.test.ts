@@ -252,9 +252,8 @@ describe('getAllMergeRequests', () => {
     expect(mergeRequests[0]?.author).toBe('desconocido');
     expect(mergeRequests[0]?.authorUsername).toBeNull();
     expect(mergeRequests[0]?.authorAvatar).toBeNull();
-    expect(mergeRequests[0]?.labels).toEqual([]);
     expect(mergeRequests[0]?.reviewers).toEqual([]);
-    expect(mergeRequests[0]?.isDraft).toBe(true);
+    expect(mergeRequests[0]?.mergeability).toBe('in_progress');
   });
 
   it('envía el token en la cabecera y nunca en la URL', async () => {

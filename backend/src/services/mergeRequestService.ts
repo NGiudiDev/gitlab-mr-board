@@ -131,8 +131,6 @@ async function enrichMergeRequest(mergeRequest: GitLabMergeRequest): Promise<Enr
     projectId: mergeRequest.project_id,
     sourceBranch: mergeRequest.source_branch,
     targetBranch: mergeRequest.target_branch,
-    labels: mergeRequest.labels ?? [],
-    isDraft: Boolean(mergeRequest.draft || mergeRequest.work_in_progress),
     hasConflicts: Boolean(mergeRequest.has_conflicts),
     reviewers: (mergeRequest.reviewers ?? []).map(mapReviewer),
     updatedAt: mergeRequest.updated_at,

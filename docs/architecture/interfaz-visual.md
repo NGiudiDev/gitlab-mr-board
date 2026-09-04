@@ -14,7 +14,7 @@ El tablero usa tema oscuro y Tailwind CSS. Los tokens extendidos se definen en `
 | Pendiente | `draft` | Trabajo en curso |
 | Bloqueado | `conflict` | Error o conflicto |
 
-Las tarjetas muestran indicadores para pipeline, discusiones y aprobaciones, además de badges de conflicto, draft y hasta cuatro etiquetas. Las secciones se agrupan por repositorio y pueden colapsarse.
+Las tarjetas muestran badges de pipeline, discusiones, aprobaciones y conflictos, más el título, las ramas, los responsables y el autor. Las secciones se agrupan por repositorio y pueden colapsarse.
 
 Todo cambio visual debe revisarse en tema oscuro, con scroll horizontal y vertical, y en los estados de carga, error y vacío.
 

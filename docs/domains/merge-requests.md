@@ -1,6 +1,6 @@
 # Dominio de Merge Requests
 
-El sistema consulta los MRs abiertos de `PROJECT_IDS` y agrega aprobaciones, discusiones pendientes, último pipeline, conflictos, draft, etiquetas, autor y reviewers.
+El sistema consulta los MRs abiertos de `PROJECT_IDS` y agrega aprobaciones, discusiones pendientes, último pipeline, conflictos, autor y reviewers. Las etiquetas y el estado draft se leen de GitLab para clasificar, pero no forman parte del contrato: el tablero no los muestra.
 
 ## Clasificación
 

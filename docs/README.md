@@ -8,6 +8,6 @@ Esta documentación explica la estructura, las decisiones, el desarrollo, la ope
 - [Decisiones](decisions/README.md): motivos y consecuencias de las elecciones técnicas relevantes.
 - [Desarrollo](development/README.md): entorno local y estrategia de test.
 - [Despliegue](deployment/README.md): build y operación en producción.
-- [Dominios](domains/README.md): reglas funcionales de merge requests y propuestas del producto.
+- [Dominios](domains/README.md): reglas funcionales de merge requests y de la vista personal.
 
 Para empezar, instalar y ejecutar el proyecto siguiendo [Entorno local](development/entorno-local.md).

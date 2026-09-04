@@ -29,8 +29,6 @@ function buildMergeRequest(overrides = {}) {
     projectId: 101,
     sourceBranch: 'feature/filtro-autor',
     targetBranch: 'main',
-    labels: ['qa_approved'],
-    isDraft: false,
     hasConflicts: false,
     reviewers: [],
     updatedAt: '2026-08-28T10:00:00.000Z',
