@@ -20,8 +20,18 @@ Los test unitarios y de integración no acceden a GitLab. Los E2E recorren la ap
 | `npm run typecheck` en `backend/` | Tipos de producción y de test |
 | `npm run test:e2e` en la raíz | Recorrido E2E contra GitLab real |
 | `npm run test:e2e:ui` en la raíz | El mismo recorrido en el modo interactivo de Playwright |
+| `npm run test:coverage` en la raíz | Cobertura de ambos paquetes |
+| `npm run test:coverage` en `backend/` o `frontend/` | Cobertura de ese paquete |
 
 `npm test` deja los E2E afuera a propósito: dependen de credenciales y de datos externos.
+
+## Cobertura
+
+Cada paquete la calcula con el proveedor `v8` de Vitest sobre todos sus módulos de producción, incluidos los que todavía no tienen test. Quedan afuera los propios archivos de test, `backend/src/types.ts` —sólo declara tipos— y `frontend/src/main.jsx`, que únicamente monta la aplicación.
+
+El resumen sale por consola y el detalle navegable queda en `coverage/index.html` de cada paquete, junto con `lcov.info` para las herramientas que lo consuman. La tabla de consola omite los archivos con 100 % en todas las columnas: para verlos a todos, abrir el reporte HTML.
+
+No hay umbral mínimo configurado, en línea con la convención de no tratar la cobertura como único indicador.
 
 ## Convenciones
 

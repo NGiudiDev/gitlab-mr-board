@@ -15,7 +15,8 @@
     "dev": "tsx watch src/index.ts",
     "typecheck": "tsc --noEmit && tsc --project tsconfig.test.json",
     "test": "vitest run --passWithNoTests",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "cors": "2.8.6",
@@ -26,6 +27,7 @@
     "@types/cors": "2.8.19",
     "@types/express": "5.0.6",
     "@types/node": "22.20.1",
+    "@vitest/coverage-v8": "4.1.11",
     "tsx": "4.23.12",
     "typescript": "5.9.3",
     "vitest": "4.1.11"
