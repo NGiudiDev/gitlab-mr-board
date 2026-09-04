@@ -88,6 +88,7 @@ describe('caché de GET /api/pull-requests', () => {
         projectCount: TEST_PROJECT_IDS.length,
         totalMRs,
         allProjects: [],
+        people: [],
       },
     };
   }

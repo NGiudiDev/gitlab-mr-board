@@ -42,6 +42,54 @@ describe('getAllMergeRequests', () => {
     expect(meta.totalMRs).toBe(0);
     expect(meta.allProjects).toEqual(['equipo/tablero', 'equipo/api']);
     expect(Number.isNaN(Date.parse(meta.fetchedAt))).toBe(false);
+    expect(meta.people).toEqual([]);
+  });
+
+  it('publica a los responsables de cada merge request', async () => {
+    stubGitLab(baseFixture({
+      mergeRequestPages: {
+        101: [[buildMergeRequest({
+          iid: 7,
+          reviewers: [
+            { name: 'Beto Ruiz', username: 'beto', avatar_url: null },
+            { name: 'Caro Díaz', username: 'caro', avatar_url: null },
+          ],
+        })]],
+        202: [[]],
+      },
+      approvals: { '101-7': { approved_by: [{ user: { username: 'beto' } }] } },
+      discussions: { '101-7': [[]] },
+      pipelines: { '101-7': [{ status: 'success' }] },
+    }));
+
+    const { mergeRequests } = await getAllMergeRequests();
+
+    expect(mergeRequests[0]?.mergeability).toBe('review');
+    expect(mergeRequests[0]?.responsiblePeople).toEqual([{ name: 'Caro Díaz', username: 'caro' }]);
+  });
+
+  it('reúne en los metadatos a las personas de todos los proyectos', async () => {
+    stubGitLab(baseFixture({
+      mergeRequestPages: {
+        101: [[buildMergeRequest({
+          iid: 7,
+          reviewers: [{ name: 'Beto Ruiz', username: 'beto', avatar_url: null }],
+        })]],
+        202: [[buildMergeRequest({
+          project_id: 202,
+          iid: 8,
+          author: { name: 'Caro Díaz', username: 'caro', avatar_url: null },
+        })]],
+      },
+    }));
+
+    const { meta } = await getAllMergeRequests();
+
+    expect(meta.people).toEqual([
+      { name: 'Ana Pérez', username: 'ana' },
+      { name: 'Beto Ruiz', username: 'beto' },
+      { name: 'Caro Díaz', username: 'caro' },
+    ]);
   });
 
   it('enriquece un MR con aprobaciones, hilos y pipeline', async () => {

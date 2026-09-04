@@ -40,6 +40,8 @@
 
 ### Estructura y Organización
 
+- **Toda la lógica de negocio va en el backend**: clasificación, responsables y cualquier otra regla del dominio se calculan en `backend/src/services/` y se publican en el contrato. El frontend consume el resultado y sólo decide presentación: qué columnas muestra el tablero, agrupar, ordenar visualmente, formatear y filtrar por campos ya calculados. Si una regla necesita conocer el dominio para decidir, no pertenece al frontend.
+
 - **Separar responsabilidades por paquete**: `backend/` contiene la API y la integración con GitLab; `frontend/` contiene la aplicación React. Los scripts que coordinan ambos paquetes y la documentación compartida viven en la raíz.
 
 - **No crear archivos innecesarios**: preferir editar archivos existentes. Solo crear nuevos cuando la responsabilidad no encaja en ninguno existente.
@@ -76,11 +78,11 @@
 
 - **El estado compartido va al store** de `hooks/useMergeRequests.js`, que usa `useSyncExternalStore`. Un `useState` sirve para estado local del componente; si dos componentes deben verlo, va al store.
 
-- Al agregar o renombrar una clasificación de merge requests, mantener sincronizados el tipo `Mergeability`, las columnas del tablero y la fuente de verdad funcional en `docs/domains/merge-requests.md`.
+- Al agregar o renombrar una clasificación de merge requests, mantener sincronizados el tipo `Mergeability` del backend, las columnas de `mergeRequestColumns.js` y la fuente de verdad funcional en `docs/domains/merge-requests.md`.
 
-- Al modificar la asignación visible de responsables, cubrir las combinaciones de autor, reviewers y aprobadores en `MrCard.test.jsx` y actualizar `docs/domains/merge-requests.md`.
+- Al modificar la asignación de responsables, cambiar `computeResponsiblePeople` en el backend, cubrir las combinaciones de autor, reviewers y aprobadores en `mergeRequestRules.test.ts` y actualizar `docs/domains/merge-requests.md`. `MrCard.test.jsx` sólo verifica cómo se presenta `responsiblePeople`.
 
-- La vista por persona se define en `docs/domains/vista-personal.md`. Debe reutilizar una única regla de responsables basada en `username`; no duplicar esa lógica entre el filtrado y las tarjetas.
+- La vista por persona se define en `docs/domains/vista-personal.md`. Filtra por el `username` que el backend marcó responsable; no recalcular esa regla en el frontend ni duplicarla entre el filtrado y las tarjetas.
 
 - **Los efectos se ejecutan dos veces en desarrollo** por `StrictMode`. Todo `useEffect` con suscripciones, timers o peticiones debe limpiar en su retorno y ser idempotente.
 

@@ -109,6 +109,12 @@ export interface MergeRequestReviewer {
   avatar: string | null;
 }
 
+/** Identidad estable de una persona del equipo, sin datos de presentación. */
+export interface MergeRequestPerson {
+  name: string;
+  username: string;
+}
+
 export interface MergeRequestBlockers {
   approvals: ApprovalStatus;
   threads: ThreadStatus;
@@ -135,6 +141,7 @@ export interface EnrichedMergeRequest {
   createdAt: string;
   blockers: MergeRequestBlockers;
   mergeability: Mergeability;
+  responsiblePeople: MergeRequestPerson[];
 }
 
 export interface MergeRequestMetadata {
@@ -142,6 +149,8 @@ export interface MergeRequestMetadata {
   projectCount: number;
   totalMRs: number;
   allProjects: string[];
+  /** Personas que participan de los merge requests consultados, sin duplicados. */
+  people: MergeRequestPerson[];
 }
 
 export interface MergeRequestResponse {

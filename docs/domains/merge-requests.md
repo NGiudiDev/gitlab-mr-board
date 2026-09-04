@@ -14,8 +14,14 @@ Se aplica la primera regla coincidente:
 6. `qa`: tiene `qa_pending` y no presenta bloqueos técnicos ni aprobaciones pendientes.
 7. `unknown`: no coincide con ninguna condición anterior.
 
-El frontend muestra En progreso, Pendientes, Code Review, QA, Listas para mergear y Pausados, agrupadas por proyecto. Los MRs con clasificación `unknown` no se muestran en ninguna columna.
+## Columnas del tablero
 
-## Responsable mostrado
+El frontend define las columnas visibles y su orden en `mergeRequestColumns.js`: En progreso, Pendientes, Code Review, QA, Listas para mergear y Pausados. Agrupa por proyecto y reparte cada MR en la columna de su clasificación. Los MRs con clasificación `unknown` no tienen columna, así que no se muestran.
 
-En En progreso, Pendientes, QA y Listas para mergear se muestra el autor como responsable. En Code Review se muestran como responsables únicamente los reviewers asignados que todavía no aprobaron; cuando todos los reviewers ya aprobaron, el responsable vuelve a ser el autor. Si no hay reviewers asignados, no se presenta responsable. En Pausados no se muestra responsable.
+## Responsable
+
+El backend calcula los responsables de cada merge request y los publica en `responsiblePeople`, una lista de identidades con `name` y `username`. El frontend no reimplementa la regla: presenta esa lista en la tarjeta y la usa para filtrar la [vista personal](vista-personal.md).
+
+En En progreso, Pendientes, QA y Listas para mergear el responsable es el autor. En Code Review son responsables únicamente los reviewers asignados que todavía no aprobaron; cuando todos los reviewers ya aprobaron, la responsabilidad vuelve al autor. Si no hay reviewers asignados, el MR no tiene responsable. En Pausados y en `unknown` tampoco hay responsable.
+
+La comparación entre reviewers y aprobadores se hace por `username` sin distinguir mayúsculas de minúsculas. Un nombre visible nunca se usa para decidir si dos personas son la misma.

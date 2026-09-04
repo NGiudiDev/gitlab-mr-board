@@ -50,6 +50,7 @@ Cuando se incorpore Playwright, la raíz debe exponer comandos separados:
 La suite debe cubrir:
 
 - La matriz completa y el orden de prioridad de `computeMergeability()`.
+- Las combinaciones de autor, reviewers y aprobadores de `computeResponsiblePeople()`, y la lista de personas de `collectPeople()`.
 - La extracción de la ruta del proyecto.
 - La construcción de URLs, autenticación, errores y paginación del cliente de GitLab.
 - El límite de concurrencia y la liberación de la cola ante fallos.
@@ -70,7 +71,8 @@ Las pruebas de componentes y del store deben cubrir:
 - Expansión y contracción de proyectos.
 - Información y enlaces de tarjetas e indicadores.
 - Roles, nombres accesibles, estados dinámicos e interacción por teclado.
-- Cálculo de responsables, selección de persona, filtrado personal y conservación de la selección durante actualizaciones.
+- Presentación de los responsables y las columnas que informa el backend, sin recalcular sus reglas.
+- Selección de persona, filtrado personal y conservación de la selección durante actualizaciones.
 
 Las pruebas deben consultar el DOM como lo haría una persona usuaria. No deben afirmar props de componentes hijos ni el estado interno del store.
 

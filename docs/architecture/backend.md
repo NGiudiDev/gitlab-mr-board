@@ -14,7 +14,7 @@ La implementación separa el transporte HTTP, la lógica de negocio y la integra
 - `src/routes/`: define los contratos HTTP, valida entradas, administra la caché de la respuesta y traduce errores a estados HTTP.
 - `src/services/gitlabApi.ts`: encapsula autenticación, construcción de URLs, paginación y acceso limitado a la API v4 de GitLab.
 - `src/services/mergeRequestService.ts`: coordina las consultas, enriquece los merge requests y construye la respuesta del BFF.
-- `src/services/mergeRequestRules.ts`: contiene reglas puras de clasificación y normalización que no dependen de Express ni de la red.
+- `src/services/mergeRequestRules.ts`: contiene reglas puras de clasificación, responsabilidad y normalización que no dependen de Express ni de la red.
 - `src/utils/`: aloja utilidades reutilizables, como el limitador de concurrencia y las reglas de bloqueo técnico.
 - `src/types.ts`: centraliza los contratos recibidos desde GitLab, los modelos expuestos por el backend y los tipos internos compartidos entre capas.
 - `test/`: contiene configuración, fixtures y utilidades compartidas por las pruebas del paquete. Las convenciones se mantienen en la [estrategia de pruebas](../development/pruebas.md).
@@ -33,8 +33,8 @@ Una solicitud a `GET /api/pull-requests` atraviesa el siguiente flujo:
 2. El servicio consulta en paralelo los merge requests abiertos y la ruta de cada proyecto configurado.
 3. Cada merge request se enriquece en paralelo con aprobaciones, discusiones y el último pipeline.
 4. El cliente de GitLab limita a seis las operaciones concurrentes.
-5. Las reglas puras calculan la clasificación del merge request.
-6. Los resultados se ordenan por fecha de actualización descendente y se agregan los metadatos de la consulta.
+5. Las reglas puras calculan la clasificación del merge request y sus responsables.
+6. Los resultados se ordenan por fecha de actualización descendente y se agregan los metadatos de la consulta, incluidas las personas participantes.
 7. El router conserva la respuesta completa en memoria y la devuelve al frontend.
 
 No existe una base de datos. Cada proceso mantiene su propia caché y la pierde al reiniciarse.
@@ -77,9 +77,11 @@ Devuelve el estado del proceso y la cantidad de proyectos configurados. Sirve co
 
 ### `GET /api/pull-requests`
 
-Devuelve los merge requests consolidados en `mergeRequests` y un objeto `meta` con la fecha de consulta, cantidad de proyectos, total de resultados y nombres de todos los proyectos configurados.
+Devuelve los merge requests consolidados en `mergeRequests` y un objeto `meta` con la fecha de consulta, cantidad de proyectos, total de resultados, nombres de todos los proyectos configurados y las personas participantes en `people`.
 
-Cada merge request incluye el nombre y el `username` del autor. El nombre se presenta en la interfaz y `authorUsername` aporta la identidad estable necesaria para calcular y filtrar responsables en la [vista personal](../domains/vista-personal.md).
+Cada merge request incluye el nombre y el `username` del autor. El nombre se presenta en la interfaz y `authorUsername` aporta la identidad estable con la que se comparan las personas.
+
+El backend resuelve además la responsabilidad de cada merge request en `responsiblePeople` y publica en `meta.people` la lista de autores y reviewers sin duplicados. El frontend consume ambos campos tal como llegan: las reglas se documentan en el [dominio de merge requests](../domains/merge-requests.md#responsable) y su uso, en la [vista personal](../domains/vista-personal.md).
 
 El parámetro opcional `force=true` fuerza la actualización de la caché. Cualquier otro valor se trata como una solicitud normal.
 

@@ -12,7 +12,7 @@ La persona seleccionada se identifica por su `username` de GitLab. El nombre vis
 
 - Alternar entre **Vista general** y **Vista personal** desde la misma aplicación.
 - Elegir una persona mediante un control con etiqueta accesible.
-- Mostrar únicamente los MRs donde la persona seleccionada sea responsable según las reglas de este documento.
+- Mostrar únicamente los MRs donde la persona seleccionada sea responsable según la regla del [dominio de merge requests](merge-requests.md#responsable).
 - Reutilizar el tablero general sin alterar la agrupación por proyecto, las columnas, su orden ni las tarjetas.
 - Mantener la actualización manual, el polling, los estados de carga y los errores existentes.
 - Mostrar un estado vacío específico cuando la persona no tenga tareas pendientes.
@@ -21,24 +21,11 @@ La vista no incorpora autenticación de usuarios, una selección automática de 
 
 ## Reglas de responsabilidad
 
-La vista personal debe compartir una única regla de responsabilidad con las tarjetas del tablero general. No se debe mantener una segunda implementación para filtrar los MRs.
-
-Para una persona seleccionada:
-
-| Clasificación del MR | Personas responsables |
-|---|---|
-| `in_progress`, `mr_warning`, `qa`, `ready_to_merge` | Autor |
-| `review` con reviewers que aún no aprobaron | Reviewers pendientes |
-| `review` con todos los reviewers aprobados | Autor |
-| `review` sin reviewers asignados | Nadie |
-| `backlog` | Nadie |
-| `unknown` | No se muestra en el frontend |
-
-La comparación entre reviewers y aprobadores se realiza por `username` sin distinguir mayúsculas de minúsculas. Un nombre visible nunca se utiliza para decidir si dos personas son la misma.
+La regla que decide quién es responsable de un merge request es única, vive en el backend y se documenta en [Dominio de Merge Requests](merge-requests.md#responsable). La vista personal filtra por el campo `responsiblePeople` que ya viene resuelto en la respuesta; no reimplementa la regla ni mantiene una segunda versión para el filtrado.
 
 ## Selección de persona
 
-La lista de personas se construye a partir de autores y reviewers presentes en la respuesta consolidada. Cada opción muestra el nombre y el `username` cuando esté disponible para evitar ambigüedad.
+El backend reúne a los autores y reviewers presentes en la respuesta consolidada y publica la lista sin duplicados en `meta.people`, ordenada por nombre visible y desempatada por `username`. Cada opción muestra el nombre y el `username` para evitar ambigüedad.
 
 - Al entrar por primera vez en la vista personal no hay una persona seleccionada.
 - Mientras no exista selección, la interfaz solicita elegir una persona y no muestra columnas vacías.
@@ -61,11 +48,11 @@ La interfaz debe seguir funcionando con teclado, conservar foco visible y anunci
 
 ## Datos y contrato
 
-El filtrado puede realizarse en el frontend sobre la respuesta ya consolidada; no se requiere un endpoint nuevo en la primera versión. Esto conserva una sola consulta, la caché existente y el comportamiento del polling.
+El filtrado se realiza en el frontend sobre la respuesta ya consolidada; no se requiere un endpoint nuevo. Esto conserva una sola consulta, la caché existente y el comportamiento del polling.
 
-El contrato público del backend expone la identidad estable del autor mediante `authorUsername`, además de `author`. Los reviewers incluyen `username` y las aprobaciones incluyen `approvers`.
+El contrato público del backend expone la identidad estable del autor mediante `authorUsername`, además de `author`. Los reviewers incluyen `username` y las aprobaciones incluyen `approvers`. Sobre esos datos el backend calcula `responsiblePeople` por merge request y `meta.people` para el selector.
 
-La lógica de `responsibility.js` calcula responsables mediante una función pura reutilizada por `MrCard` y por el filtro personal. Devuelve identidades estructuradas para filtrar por `username` y presentar los nombres por separado.
+Como ambos campos llegan normalizados desde la misma fuente, el frontend compara los `username` por igualdad exacta en `personalView.js`, que sólo selecciona datos: no contiene reglas de negocio.
 
 ## Casos límite
 
@@ -79,8 +66,8 @@ La lógica de `responsibility.js` calcula responsables mediante una función pur
 
 ## Implementación
 
-- El backend agrega `authorUsername` al contrato consolidado.
-- `responsibility.js` centraliza la lista de personas, el cálculo de responsables y el filtrado personal.
+- El backend agrega `authorUsername`, `responsiblePeople` y `meta.people` al contrato consolidado.
+- `personalView.js` busca la persona seleccionada y filtra sus merge requests a partir de esos campos.
 - El store conserva `viewMode` y `selectedUsername` durante la sesión.
 - `ViewControls` permite alternar la vista y seleccionar una persona.
 - `MrBoard` recibe la colección completa en la vista general y la colección filtrada en la vista personal, sin cambiar su estructura.

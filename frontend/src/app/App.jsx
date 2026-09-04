@@ -5,8 +5,7 @@ import { useMergeRequests } from '../features/mergeRequests/hooks/useMergeReques
 import {
   findPersonByUsername,
   mergeRequestsForPerson,
-  peopleFromMergeRequests,
-} from '../features/mergeRequests/responsibility.js'
+} from '../features/mergeRequests/personalView.js'
 
 const PLACEHOLDER_CLASSES = 'text-center text-text-muted text-[13px] py-16 border border-dashed border-border rounded-lg bg-surface'
 
@@ -39,7 +38,7 @@ function App() {
     selectPerson,
     setViewMode,
   } = useMergeRequests()
-  const people = peopleFromMergeRequests(mergeRequests)
+  const people = meta?.people ?? []
   const selectedPerson = findPersonByUsername(people, selectedUsername)
     ?? (selectedUsername ? { name: `@${selectedUsername}`, username: selectedUsername } : null)
   const personalMergeRequests = mergeRequestsForPerson(mergeRequests, selectedUsername)

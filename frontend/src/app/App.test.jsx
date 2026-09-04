@@ -13,6 +13,7 @@ const MRS = [
     id: '202-1', title: 'Corregir cálculo de approvals', author: 'Beto Ruiz',
     authorUsername: 'beto', projectPath: 'equipo/api', mergeability: 'review',
     reviewers: [{ name: 'Caro Díaz', username: 'caro', avatar: null }],
+    responsiblePeople: [{ name: 'Caro Díaz', username: 'caro' }],
     blockers: { approvals: { status: 'pending', required: 2, given: 1, approvers: ['ana'] } },
   }),
 ]
