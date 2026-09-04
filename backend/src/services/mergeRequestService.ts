@@ -118,6 +118,7 @@ async function enrichMergeRequest(mergeRequest: GitLabMergeRequest): Promise<Enr
     title: mergeRequest.title,
     url: mergeRequest.web_url,
     author: mergeRequest.author?.name ?? 'desconocido',
+    authorUsername: mergeRequest.author?.username ?? null,
     authorAvatar: mergeRequest.author?.avatar_url ?? null,
     projectPath: extractProjectPath(mergeRequest),
     projectId: mergeRequest.project_id,

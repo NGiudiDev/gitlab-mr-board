@@ -9,6 +9,8 @@ const INITIAL_STATE = {
   loading: false,
   error: null,
   lastFetched: null,
+  viewMode: 'general',
+  selectedUsername: null,
 }
 
 /**
@@ -79,6 +81,16 @@ function stopPolling() {
   pollTimer = null
 }
 
+/** Cambia entre la vista general y la personal. */
+function setViewMode(viewMode) {
+  setState({ viewMode })
+}
+
+/** Conserva la identidad seleccionada durante la sesión actual. */
+function selectPerson(username) {
+  setState({ selectedUsername: username || null })
+}
+
 /** Deja el store como al arrancar la app. Sólo para pruebas. */
 function resetStore() {
   stopPolling()
@@ -103,12 +115,19 @@ function useMergeRequests() {
     }
   }, [])
 
-  return { ...snapshot, fetchMRs: fetchMergeRequests }
+  return {
+    ...snapshot,
+    fetchMRs: fetchMergeRequests,
+    selectPerson,
+    setViewMode,
+  }
 }
 
 export {
   fetchMergeRequests,
   getState,
   resetStore,
+  selectPerson,
+  setViewMode,
   useMergeRequests,
 }

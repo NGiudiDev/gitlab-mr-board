@@ -1,4 +1,5 @@
 import BlockerBadge from './BlockerBadge.jsx'
+import { responsiblePeopleOf } from '../responsibility.js'
 
 const COLOR_BY_MERGEABILITY = {
   ready_to_merge: 'border-l-ready',
@@ -9,40 +10,6 @@ const COLOR_BY_MERGEABILITY = {
   backlog: 'border-l-text-muted',
 }
 
-/**
- * Determina quién debe actuar sobre el MR según su etapa y las aprobaciones
- * registradas. En revisión sólo conserva como responsables a quienes todavía
- * no aprobaron; cuando ya aprobaron todos, devuelve el trabajo al autor.
- *
- * @param {object} mr Merge request enriquecido por el backend.
- * @returns {string|null} Nombre visible de la persona responsable.
- */
-function assigneeOf(mr) {
-  const mergeability = mr.mergeability
-  if (mergeability === 'in_progress' || mergeability === 'mr_warning'
-    || mergeability === 'ready_to_merge' || mergeability === 'qa') {
-    return mr.author
-  }
-  if (mergeability === 'review') {
-    const reviewers = mr.reviewers || []
-    
-    if (reviewers.length === 0) return null
-
-    const approvers = new Set(
-      (mr.blockers.approvals.approvers || []).map((username) => username.toLowerCase()),
-    )
-    
-    const pendingReviewers = reviewers.filter(
-      (reviewer) => !approvers.has(reviewer.username.toLowerCase()),
-    )
-
-    if (pendingReviewers.length === 0) return mr.author
-    
-    return pendingReviewers.map((reviewer) => reviewer.name).join(', ')
-  }
-  return null
-}
-
 function timeAgo(iso) {
   const diff = (Date.now() - new Date(iso).getTime()) / 1000
   if (diff < 3600) return `${Math.max(1, Math.round(diff / 60))}m`
@@ -51,7 +18,7 @@ function timeAgo(iso) {
 }
 
 function MrCard({ mr }) {
-  const assignee = assigneeOf(mr)
+  const assignee = responsiblePeopleOf(mr).map((person) => person.name).join(', ')
   const color = COLOR_BY_MERGEABILITY[mr.mergeability] || 'border-l-text-faint'
 
   return (

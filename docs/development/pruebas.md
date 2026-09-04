@@ -70,6 +70,7 @@ Las pruebas de componentes y del store deben cubrir:
 - Expansión y contracción de proyectos.
 - Información y enlaces de tarjetas e indicadores.
 - Roles, nombres accesibles, estados dinámicos e interacción por teclado.
+- Cálculo de responsables, selección de persona, filtrado personal y conservación de la selección durante actualizaciones.
 
 Las pruebas deben consultar el DOM como lo haría una persona usuaria. No deben afirmar props de componentes hijos ni el estado interno del store.
 

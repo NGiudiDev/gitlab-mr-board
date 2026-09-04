@@ -2,7 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, render } from '@testing-library/react'
 import { buildMergeRequest, buildResponse } from '../../../../test/fixtures/mergeRequests.js'
 import { jsonResponse, resetSharedState } from '../../../../test/sharedState.js'
-import { fetchMergeRequests, getState, useMergeRequests } from './useMergeRequests.js'
+import {
+  fetchMergeRequests,
+  getState,
+  selectPerson,
+  setViewMode,
+  useMergeRequests,
+} from './useMergeRequests.js'
 
 const POLL_INTERVAL_MS = 5 * 60 * 1000
 
@@ -124,6 +130,24 @@ describe('fetchMergeRequests', () => {
     await fetchMergeRequests(true)
 
     expect(getState().error).toBeNull()
+  })
+})
+
+describe('preferencias de vista de la sesión', () => {
+  it('cambia el modo y la persona seleccionada', () => {
+    setViewMode('personal')
+    selectPerson('ana')
+
+    expect(getState().viewMode).toBe('personal')
+    expect(getState().selectedUsername).toBe('ana')
+  })
+
+  it('conserva la selección al volver a la vista general', () => {
+    selectPerson('ana')
+    setViewMode('personal')
+    setViewMode('general')
+
+    expect(getState().selectedUsername).toBe('ana')
   })
 })
 

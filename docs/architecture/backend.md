@@ -79,6 +79,8 @@ Devuelve el estado del proceso y la cantidad de proyectos configurados. Sirve co
 
 Devuelve los merge requests consolidados en `mergeRequests` y un objeto `meta` con la fecha de consulta, cantidad de proyectos, total de resultados y nombres de todos los proyectos configurados.
 
+Cada merge request incluye el nombre y el `username` del autor. El nombre se presenta en la interfaz y `authorUsername` aporta la identidad estable necesaria para calcular y filtrar responsables en la [vista personal](../domains/vista-personal.md).
+
 El parámetro opcional `force=true` fuerza la actualización de la caché. Cualquier otro valor se trata como una solicitud normal.
 
 ## Configuración

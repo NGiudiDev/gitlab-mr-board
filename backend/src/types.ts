@@ -121,6 +121,7 @@ export interface EnrichedMergeRequest {
   title: string;
   url: string;
   author: string;
+  authorUsername: string | null;
   authorAvatar: string | null;
   projectPath: string;
   projectId: number;

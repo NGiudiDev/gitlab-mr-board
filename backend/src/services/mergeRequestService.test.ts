@@ -64,6 +64,7 @@ describe('getAllMergeRequests', () => {
 
     expect(mr?.id).toBe('101-7');
     expect(mr?.projectPath).toBe('equipo/tablero');
+    expect(mr?.authorUsername).toBe('ana');
     expect(mr?.reviewers).toEqual([{ name: 'Beto Ruiz', username: 'beto', avatar: null }]);
     expect(mr?.blockers.approvals).toMatchObject({
       status: 'approved', given: 2, required: 2, hasLeadApproval: true,
@@ -201,6 +202,7 @@ describe('getAllMergeRequests', () => {
     const { mergeRequests } = await getAllMergeRequests();
 
     expect(mergeRequests[0]?.author).toBe('desconocido');
+    expect(mergeRequests[0]?.authorUsername).toBeNull();
     expect(mergeRequests[0]?.authorAvatar).toBeNull();
     expect(mergeRequests[0]?.labels).toEqual([]);
     expect(mergeRequests[0]?.reviewers).toEqual([]);

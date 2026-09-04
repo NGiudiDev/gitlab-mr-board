@@ -1,14 +1,6 @@
 import { useState } from 'react'
+import { columnsOf } from '../mergeRequestColumns.js'
 import BoardColumn from './BoardColumn.jsx'
-
-const STATUS_ORDER = [
-  { id: 'in_progress', name: 'En progreso' },
-  { id: 'mr_warning', name: 'Pendientes' },
-  { id: 'review', name: 'Code Review' },
-  { id: 'qa', name: 'QA' },
-  { id: 'ready_to_merge', name: 'Listas para mergear' },
-  { id: 'backlog', name: 'Pausados' },
-]
 
 function repoDomId(repo) {
   return repo.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
@@ -25,13 +17,6 @@ function groupByRepo(mergeRequests, allProjects) {
   return Object.keys(byRepo)
     .sort()
     .map((repo) => ({ repo, mrs: byRepo[repo] }))
-}
-
-function columnsOf(mrs) {
-  return STATUS_ORDER.map((column) => ({
-    ...column,
-    mrs: mrs.filter((mr) => mr.mergeability === column.id),
-  }))
 }
 
 function MrBoard({ mergeRequests, allProjects = [] }) {
@@ -88,7 +73,7 @@ function MrBoard({ mergeRequests, allProjects = [] }) {
                   key={column.id}
                   title={column.name}
                   idPrefix={domId}
-                  mergeRequests={column.mrs}
+                  mergeRequests={column.mergeRequests}
                 />
               ))}
             </div>

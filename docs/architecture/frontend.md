@@ -25,6 +25,7 @@ Las funcionalidades nuevas deben seguir la estructura `src/features/<feature>/co
 ```text
 App
 ├── TopBar
+├── ViewControls
 └── MrBoard
     └── BoardColumn
         └── MrCard
@@ -32,10 +33,13 @@ App
 ```
 
 - `TopBar` presenta los totales, el estado de sincronización y la actualización manual.
-- `MrBoard` agrupa los merge requests por proyecto, mantiene el estado local de expansión y los distribuye según su clasificación.
+- `ViewControls` alterna entre la vista general y la personal y permite elegir una persona.
+- `MrBoard` agrupa los merge requests por proyecto, mantiene el estado local de expansión y los distribuye según su clasificación. Ambas vistas reutilizan este componente; la personal le entrega únicamente las tareas de la persona seleccionada.
 - `BoardColumn` representa una categoría mediante una lista semántica con scroll vertical.
-- `MrCard` resume el merge request, determina el responsable visible y enlaza a GitLab.
+- `MrCard` resume el merge request, presenta los responsables calculados y enlaza a GitLab.
 - `BlockerBadge` presenta pipeline, discusiones, aprobaciones y conflictos con texto, icono y estilo semántico.
+
+`mergeRequestColumns.js` define una sola vez las columnas compartidas. `responsibility.js` contiene las funciones puras que reúnen personas, calculan responsables y filtran tareas; la regla funcional se documenta en [Vista personal](../domains/vista-personal.md).
 
 Los componentes presentacionales reciben valores mediante props y notifican acciones mediante callbacks como `onRefresh`. No mutan las props ni el estado recibido.
 
@@ -48,6 +52,8 @@ Los componentes presentacionales reciben valores mediante props y notifican acci
 - `loading`: indica que existe una actualización en curso.
 - `error`: conserva el último error de la consulta.
 - `lastFetched`: fecha local de la última respuesta satisfactoria.
+- `viewMode`: vista `general` o `personal` activa.
+- `selectedUsername`: identidad elegida para la vista personal durante la sesión.
 
 No hay un provider: todos los consumidores del hook se suscriben a la misma instancia. El estado que deba observar más de un componente debe incorporarse al store; `useState` se reserva para estado local de interfaz, como las secciones expandidas de `MrBoard`.
 
@@ -85,7 +91,7 @@ Tailwind concentra los estilos de los componentes. Los colores, superficies, tip
 
 `src/assets/main.css` se limita a las capas de Tailwind, el modelo de caja global, el comportamiento general de enlaces, la reducción de movimiento y la apariencia de las barras de desplazamiento. No se debe agregar CSS personalizado cuando una utilidad o un token existente pueda expresar el mismo resultado.
 
-El tablero usa secciones verticales por proyecto. Cada sección despliega seis columnas horizontales en un contenedor desplazable y cada columna limita su altura para desplazar las tarjetas verticalmente.
+Ambas vistas usan secciones verticales por proyecto. Cada sección despliega seis columnas horizontales en un contenedor desplazable y cada columna limita su altura para desplazar las tarjetas verticalmente. La vista personal conserva exactamente esta estructura y sólo filtra los merge requests entregados al tablero.
 
 ## Accesibilidad
 
@@ -95,6 +101,8 @@ La interfaz apunta a WCAG 2.2 nivel AA y aplica estas decisiones:
 - Los estados de carga, vacío y error usan roles semánticos.
 - Los cambios asíncronos se anuncian mediante una región viva.
 - Los proyectos son secciones desplegables con `aria-expanded` y `aria-controls`.
+- El tipo de vista se expone mediante botones con `aria-pressed` y la persona mediante un `select` etiquetado.
+- Los cambios de persona y cantidad de tareas se anuncian en la región viva.
 - El panel de cada proyecto permanece en el DOM cuando está contraído para que la referencia de `aria-controls` siga siendo válida.
 - Las columnas usan encabezados y listas semánticas.
 - Los botones y enlaces tienen nombres accesibles y foco visible.

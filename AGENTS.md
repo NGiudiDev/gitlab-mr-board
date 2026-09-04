@@ -80,6 +80,8 @@
 
 - Al modificar la asignación visible de responsables, cubrir las combinaciones de autor, reviewers y aprobadores en `MrCard.test.jsx` y actualizar `docs/domains/merge-requests.md`.
 
+- La vista por persona se define en `docs/domains/vista-personal.md`. Debe reutilizar una única regla de responsables basada en `username`; no duplicar esa lógica entre el filtrado y las tarjetas.
+
 - **Los efectos se ejecutan dos veces en desarrollo** por `StrictMode`. Todo `useEffect` con suscripciones, timers o peticiones debe limpiar en su retorno y ser idempotente.
 
 - Nuevos componentes reciben **props explícitas con valores por omisión** y avisan al padre con callbacks `onAlgo`. No mutar props ni estado.

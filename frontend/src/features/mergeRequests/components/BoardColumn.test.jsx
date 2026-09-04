@@ -59,4 +59,5 @@ describe('BoardColumn', () => {
 
     expect(container.querySelector('ul').getAttribute('role')).toBe('list')
   })
+
 })

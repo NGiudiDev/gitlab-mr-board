@@ -11,7 +11,9 @@ const MRS = [
   }),
   buildMergeRequest({
     id: '202-1', title: 'Corregir cálculo de approvals', author: 'Beto Ruiz',
-    projectPath: 'equipo/api', mergeability: 'review',
+    authorUsername: 'beto', projectPath: 'equipo/api', mergeability: 'review',
+    reviewers: [{ name: 'Caro Díaz', username: 'caro', avatar: null }],
+    blockers: { approvals: { status: 'pending', required: 2, given: 1, approvers: ['ana'] } },
   }),
 ]
 
@@ -144,6 +146,84 @@ describe('estado vacío', () => {
     await renderApp()
 
     expect(boardStatus().textContent).toContain('No hay merge requests abiertos.')
+  })
+})
+
+describe('vista personal', () => {
+  function openPersonalView() {
+    fireEvent.click(screen.getByRole('button', { name: 'Personal' }))
+  }
+
+  function selectPerson(username) {
+    fireEvent.change(screen.getByRole('combobox', { name: 'Persona' }), {
+      target: { value: username },
+    })
+  }
+
+  it('solicita elegir una persona antes de mostrar columnas', async () => {
+    await renderApp()
+    openPersonalView()
+
+    expect(boardStatus().textContent).toContain('Elegí una persona')
+    expect(liveRegion().textContent).toBe('Vista personal. Elegí una persona.')
+  })
+
+  it('muestra sólo las tareas donde la persona es responsable', async () => {
+    await renderApp()
+    openPersonalView()
+    selectPerson('ana')
+
+    expect(container.textContent).toContain('Agregar filtro por autor')
+    expect(container.textContent).not.toContain('Corregir cálculo de approvals')
+    expect(screen.getByRole('heading', { level: 2 }).textContent).toBe('Tareas de Ana Pérez por estado')
+    expect(container.textContent).toContain('equipo/tablero')
+    expect(container.querySelectorAll('button[aria-expanded]')).toHaveLength(2)
+    expect(container.querySelectorAll('section[aria-labelledby^="columna-"]')).toHaveLength(12)
+    expect(container.textContent).toContain('1 MRs visibles')
+    expect(liveRegion().textContent).toBe('Vista personal de Ana Pérez. Se muestran 1 merge requests.')
+  })
+
+  it('incluye las revisiones pendientes de la persona seleccionada', async () => {
+    await renderApp()
+    openPersonalView()
+    selectPerson('caro')
+
+    expect(container.textContent).toContain('Corregir cálculo de approvals')
+    expect(container.textContent).not.toContain('Agregar filtro por autor')
+  })
+
+  it('muestra un estado vacío cuando la persona no tiene tareas', async () => {
+    await renderApp()
+    openPersonalView()
+    selectPerson('beto')
+
+    expect(boardStatus().textContent).toContain('No hay tareas pendientes para esta persona.')
+  })
+
+  it('conserva la persona y la vista durante una actualización manual', async () => {
+    await renderApp()
+    openPersonalView()
+    selectPerson('ana')
+
+    fireEvent.click(refreshButton())
+    await flush()
+
+    expect(screen.getByRole('button', { name: 'Personal' }).getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByRole('combobox', { name: 'Persona' }).value).toBe('ana')
+    expect(container.textContent).toContain('Agregar filtro por autor')
+  })
+
+  it('recupera el tablero general sin descartar la selección', async () => {
+    await renderApp()
+    openPersonalView()
+    selectPerson('ana')
+
+    fireEvent.click(screen.getByRole('button', { name: 'General' }))
+    expect(container.textContent).toContain('equipo/api')
+    expect(container.textContent).toContain('equipo/tablero')
+
+    openPersonalView()
+    expect(screen.getByRole('combobox', { name: 'Persona' }).value).toBe('ana')
   })
 })
 

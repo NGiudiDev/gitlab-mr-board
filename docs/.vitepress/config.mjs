@@ -45,6 +45,7 @@ const sidebar = [
     items: [
       { text: 'Merge Requests', link: '/domains/merge-requests' },
       { text: 'Columnas configurables', link: '/domains/columnas-configurables' },
+      { text: 'Vista personal', link: '/domains/vista-personal' },
     ],
   },
 ]

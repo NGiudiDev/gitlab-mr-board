@@ -18,6 +18,7 @@ function buildMergeRequest(overrides = {}) {
     title: 'Agregar filtro por autor',
     url: 'https://gitlab.example.com/equipo/tablero/-/merge_requests/1',
     author: 'Ana Pérez',
+    authorUsername: 'ana',
     authorAvatar: null,
     projectPath: 'equipo/tablero',
     projectId: 101,
