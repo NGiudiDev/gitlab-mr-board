@@ -91,7 +91,7 @@ function selectPerson(username) {
   setState({ selectedUsername: username || null })
 }
 
-/** Deja el store como al arrancar la app. Sólo para pruebas. */
+/** Deja el store como al arrancar la app. Sólo para test. */
 function resetStore() {
   stopPolling()
   consumers = 0

@@ -17,13 +17,11 @@ La implementación separa el transporte HTTP, la lógica de negocio y la integra
 - `src/services/mergeRequestRules.ts`: contiene reglas puras de clasificación, responsabilidad y normalización que no dependen de Express ni de la red.
 - `src/utils/`: aloja utilidades reutilizables, como el limitador de concurrencia y las reglas de bloqueo técnico.
 - `src/types.ts`: centraliza los contratos recibidos desde GitLab, los modelos expuestos por el backend y los tipos internos compartidos entre capas.
-- `test/`: contiene configuración, fixtures y utilidades compartidas por las pruebas del paquete. Las convenciones se mantienen en la [estrategia de pruebas](../development/pruebas.md).
+- `test/`: contiene configuración, fixtures y utilidades compartidas por los test del paquete. Las convenciones se mantienen en la [estrategia de test](../development/test.md).
 
 ## Construcción y arranque
 
-`createApp()` construye la aplicación sin abrir un puerto. `src/index.ts` es el único responsable de invocar `listen()`. Esta separación permite ejecutar pruebas de integración en memoria y reutilizar la aplicación en diferentes entornos de ejecución.
-
-Tanto `createApp()` como `createMergeRequestsRouter()` aceptan por inyección la fuente de merge requests y el reloj usado por la caché. Las pruebas unitarias y de integración pueden controlar sus dependencias sin consultar GitLab ni depender del tiempo real.
+`createApp()` construye la aplicación sin abrir un puerto y `src/index.ts` es el único responsable de invocar `listen()`, así que la aplicación puede ejecutarse en memoria o en distintos entornos. Tanto `createApp()` como `createMergeRequestsRouter()` reciben por inyección la fuente de merge requests y el reloj de la caché, lo que permite controlar sus dependencias sin consultar GitLab ni depender del tiempo real.
 
 ## Flujo de una consulta
 
@@ -58,8 +56,6 @@ El backend prioriza entregar una vista parcial antes que descartar toda la respu
 - Si falla la operación global de la ruta, el backend responde HTTP 502 con un mensaje contextual.
 - Los errores no controlados llegan al middleware global y producen HTTP 500.
 
-Las reglas de clasificación permanecen en funciones puras para que el orden de prioridades pueda probarse sin red ni estado compartido.
-
 ## Caché
 
 `createMergeRequestsRouter()` mantiene una única respuesta en memoria por instancia del router. Su duración se configura con `POLL_CACHE_TTL_MS`, cuyo valor predeterminado es 60 segundos.
@@ -73,7 +69,7 @@ Las reglas de clasificación permanecen en funciones puras para que el orden de 
 
 ### `GET /health`
 
-Devuelve el estado del proceso y la cantidad de proyectos configurados. Sirve como prueba de vida, pero no comprueba la conectividad ni las credenciales de GitLab.
+Devuelve el estado del proceso y la cantidad de proyectos configurados. Sirve como chequeo de vida, pero no comprueba la conectividad ni las credenciales de GitLab.
 
 ### `GET /api/pull-requests`
 

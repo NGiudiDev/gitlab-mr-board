@@ -17,7 +17,7 @@ El código se divide entre la composición general y las funcionalidades del dom
 - `src/features/mergeRequests/components/`: contiene los componentes del tablero de merge requests.
 - `src/features/mergeRequests/personalView.js`: selecciona los datos de la vista personal a partir del contrato del backend.
 - `src/assets/main.css`: incluye las directivas de Tailwind y los pocos estilos globales que no se expresan mediante utilidades.
-- `test/`: reúne la configuración, los fixtures y las utilidades compartidas según la [estrategia de pruebas](../development/pruebas.md).
+- `test/`: reúne la configuración, los fixtures y las utilidades compartidas según la [estrategia de test](../development/test.md).
 
 Las funcionalidades nuevas deben seguir la estructura `src/features/<feature>/components/` y `src/features/<feature>/hooks/`. `src/app/` se reserva para la composición de alto nivel y no debe absorber lógica propia de una feature.
 
@@ -42,7 +42,7 @@ App
 - `MrCard` resume el merge request, presenta los responsables que informa `responsiblePeople` y enlaza a GitLab.
 - `BlockerBadge` presenta pipeline, discusiones, aprobaciones y conflictos con texto, icono y estilo semántico.
 
-`mergeRequestColumns.js` define una sola vez las columnas compartidas y reparte cada merge request en la de su clasificación. `personalView.js` busca la persona seleccionada y filtra sus tareas por el `username` que el backend ya marcó como responsable. No calcula responsabilidades: esa regla vive en el backend y se documenta en el [dominio de merge requests](../domains/merge-requests.md#responsable).
+`mergeRequestColumns.js` define una sola vez las columnas compartidas y reparte cada merge request en la de su clasificación. `personalView.js` busca la persona seleccionada y filtra sus tareas por el `username` que el backend marcó como responsable, según el [dominio de merge requests](../domains/merge-requests.md#responsable).
 
 Los componentes presentacionales reciben valores mediante props y notifican acciones mediante callbacks como `onRefresh`. No mutan las props ni el estado recibido.
 
@@ -113,4 +113,4 @@ La interfaz apunta a WCAG 2.2 nivel AA y aplica estas decisiones:
 - Los badges combinan texto, iconos y color; ningún estado depende solo del color.
 - Las animaciones y transiciones se reducen cuando el sistema indica `prefers-reduced-motion`.
 
-La validación automatizada y manual de estos comportamientos se define en la [estrategia de pruebas](../development/pruebas.md).
+La validación automatizada y manual de estos comportamientos se define en la [estrategia de test](../development/test.md).

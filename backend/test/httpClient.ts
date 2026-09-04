@@ -5,7 +5,7 @@ import type { HttpTestResponse } from '../src/types.js';
 
 /**
  * Ejecuta una petición real contra la app en memoria usando `node:http`.
- * Se evita `fetch` a propósito: las pruebas lo reemplazan para simular GitLab.
+ * Se evita `fetch` a propósito: los test lo reemplazan para simular GitLab.
  */
 function requestApp(app: Express, path: string): Promise<HttpTestResponse> {
   return new Promise((resolve, reject) => {

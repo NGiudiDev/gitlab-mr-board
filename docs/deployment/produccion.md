@@ -22,12 +22,12 @@ npm prune --omit=dev
 npm run start:prod
 ```
 
-Proporcionar las variables de la [guía local](../development/entorno-local.md) y almacenar el PAT como secreto.
+Proporcionar las variables de entorno y almacenar el PAT como secreto.
 
 ## Operación
 
 - Publicar ambos servicios detrás de HTTPS.
 - Ajustar CORS en `backend/src/app.ts`; hoy solo permite los orígenes locales con puertos 5173 y 4173.
-- Usar `/health` como prueba de vida, sabiendo que no valida GitLab.
+- Usar `/health` como chequeo de vida, sabiendo que no valida GitLab.
 - Mantener una instancia o aceptar cachés independientes.
 - Verificar `/api/pull-requests` y que el navegador nunca reciba `GITLAB_TOKEN`.

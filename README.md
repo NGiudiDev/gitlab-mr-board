@@ -4,6 +4,6 @@ GitLab MR Board es un tablero web que reúne los Merge Requests abiertos de vari
 
 ## Documentación
 
-La documentación completa vive en [`docs/`](docs/README.md). Para comenzar, consultar la guía de [entorno local](docs/development/entorno-local.md); para validar o desplegar cambios, usar las guías de [pruebas](docs/development/pruebas.md) y [producción](docs/deployment/produccion.md).
+La documentación completa vive en [`docs/`](docs/README.md). Para comenzar, consultar la guía de [entorno local](docs/development/entorno-local.md); para validar o desplegar cambios, usar las guías de [test](docs/development/test.md) y [producción](docs/deployment/produccion.md).
 
 Las reglas para contribuir están en [`AGENTS.md`](AGENTS.md).

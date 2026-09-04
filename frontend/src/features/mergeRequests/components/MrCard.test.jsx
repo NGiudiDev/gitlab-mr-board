@@ -50,7 +50,7 @@ describe('MrCard', () => {
     expect(container.textContent).toContain('Sin conflictos')
   })
 
-  // La regla que decide quién es responsable vive en el backend y se prueba en
+  // La regla que decide quién es responsable vive en el backend y sus test viven en
   // `mergeRequestRules.test.ts`; acá sólo se verifica cómo se presenta.
   it('muestra a los responsables informados por el backend', () => {
     const { container } = renderCard({

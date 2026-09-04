@@ -9,9 +9,9 @@ export interface GitLabResponse<T> {
 }
 
 export interface MergeRequestsDependencies {
-  /** Fuente de datos de los merge requests; inyectable en las pruebas. */
+  /** Fuente de datos de los merge requests; inyectable en los test. */
   fetchMergeRequests?: () => Promise<MergeRequestResponse>;
-  /** Reloj de la caché; inyectable en las pruebas. */
+  /** Reloj de la caché; inyectable en los test. */
   now?: () => number;
 }
 
@@ -158,7 +158,7 @@ export interface MergeRequestResponse {
   meta: MergeRequestMetadata;
 }
 
-// Contratos usados exclusivamente por la infraestructura de pruebas.
+// Contratos usados exclusivamente por la infraestructura de test.
 export interface HttpTestResponse {
   status: number;
   body: string;

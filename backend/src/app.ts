@@ -13,8 +13,8 @@ const errorHandler: ErrorRequestHandler = (error, _request, response, _next) => 
 };
 
 /**
- * Construye la aplicación Express sin escuchar en un puerto, para que las
- * pruebas de integración la ejecuten en memoria.
+ * Construye la aplicación Express sin escuchar en un puerto, para que los
+ * test de integración la ejecuten en memoria.
  */
 function createApp(options: CreateAppOptions = {}): Express {
   const app = express();
