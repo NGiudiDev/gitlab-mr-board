@@ -37,7 +37,7 @@ El frontend usa esta variable, expuesta por Vite durante el build:
 
 `npm run dev` desde la raíz inicia ambos servicios en una sola terminal, en cualquier sistema operativo. Usa [concurrently](https://www.npmjs.com/package/concurrently): prefija cada línea con `backend` o `frontend` para saber quién la emitió, Ctrl+C detiene los dos, y `--kill-others-on-fail` baja el proceso restante si uno falla al arrancar —así un `.env` incompleto no deja el frontend corriendo contra un backend inexistente—. Los scripts `dev:backend` y `dev:frontend` permiten levantar uno solo.
 
-Dentro de `backend/`, `npm run dev` agrega recarga ante cambios con `tsx watch` y `npm start` lo ejecuta una sola vez. Los comandos de validación están en la [estrategia de pruebas](pruebas.md) y los builds productivos en la [guía de despliegue](../deployment/produccion.md).
+Dentro de `backend/`, `npm run dev` agrega recarga ante cambios con `tsx watch` y `npm start` lo ejecuta una sola vez. Los comandos de validación están en la [estrategia de test](test.md) y los builds productivos en la [guía de despliegue](../deployment/produccion.md).
 
 - Frontend: `http://localhost:5173`
 - Backend: `http://localhost:3001`

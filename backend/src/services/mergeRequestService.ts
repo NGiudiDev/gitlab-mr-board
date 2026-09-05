@@ -15,7 +15,12 @@ import type {
   ThreadStatus,
 } from '../types.js';
 import { fetchPaginatedWithLimit, fetchWithLimit } from './gitlabApi.js';
-import { computeMergeability, extractProjectPath } from './mergeRequestRules.js';
+import {
+  collectPeople,
+  computeMergeability,
+  computeResponsiblePeople,
+  extractProjectPath,
+} from './mergeRequestRules.js';
 
 /** Construye la ruta común de un merge request en la API de GitLab. */
 function mergeRequestPath(projectId: number, mergeRequestIid: number): string {
@@ -112,6 +117,8 @@ async function enrichMergeRequest(mergeRequest: GitLabMergeRequest): Promise<Enr
     fetchPipeline(mergeRequest.project_id, mergeRequest.iid),
   ]);
 
+  const mergeability = computeMergeability(mergeRequest, approvals, threads, pipeline);
+
   return {
     id: `${mergeRequest.project_id}-${mergeRequest.iid}`,
     iid: mergeRequest.iid,
@@ -124,14 +131,13 @@ async function enrichMergeRequest(mergeRequest: GitLabMergeRequest): Promise<Enr
     projectId: mergeRequest.project_id,
     sourceBranch: mergeRequest.source_branch,
     targetBranch: mergeRequest.target_branch,
-    labels: mergeRequest.labels ?? [],
-    isDraft: Boolean(mergeRequest.draft || mergeRequest.work_in_progress),
     hasConflicts: Boolean(mergeRequest.has_conflicts),
     reviewers: (mergeRequest.reviewers ?? []).map(mapReviewer),
     updatedAt: mergeRequest.updated_at,
     createdAt: mergeRequest.created_at,
     blockers: { approvals, threads, pipeline },
-    mergeability: computeMergeability(mergeRequest, approvals, threads, pipeline),
+    mergeability,
+    responsiblePeople: computeResponsiblePeople(mergeRequest, mergeability, approvals),
   };
 }
 
@@ -165,6 +171,7 @@ function buildMetadata(mergeRequests: EnrichedMergeRequest[], projectPaths: stri
     projectCount: config.projectIds.length,
     totalMRs: mergeRequests.length,
     allProjects: projectPaths,
+    people: collectPeople(mergeRequests),
   };
 }
 

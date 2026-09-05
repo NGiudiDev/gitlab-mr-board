@@ -5,8 +5,8 @@ import { getAllMergeRequests } from '../services/mergeRequestService.js';
 import type { MergeRequestResponse, MergeRequestsRouterOptions } from '../types.js';
 
 /**
- * Crea el router con una caché aislada y dependencias reemplazables para las
- * pruebas de integración.
+ * Crea el router con una caché aislada y dependencias reemplazables para los
+ * test de integración.
  */
 export function createMergeRequestsRouter(params: MergeRequestsRouterOptions = {}): Router {
   const {

@@ -51,27 +51,13 @@ describe('MrCard', () => {
     expect(container.textContent).toContain('Sin conflictos')
   })
 
-  it.each(['in_progress', 'mr_warning', 'ready_to_merge', 'qa'])('muestra al autor como responsable en %s', (mergeability) => {
-    const { container } = renderCard({ mergeability, author: 'Ana Pérez' })
-
-    expect(container.textContent).toContain('Responsable:')
-    expect(container.textContent).toContain('Ana Pérez')
-  })
-
-  // El código actual no asigna responsable en backlog, a diferencia de lo que
-  // dice docs/domains/merge-requests.md. La prueba fija el comportamiento real.
-  it('no muestra responsable en backlog', () => {
-    const { container } = renderCard({ mergeability: 'backlog' })
-
-    expect(container.textContent).not.toContain('Responsable:')
-  })
-
-  it('muestra a los reviewers como responsables en code review', () => {
+  // La regla que decide quién es responsable vive en el backend y sus test viven en
+  // `mergeRequestRules.test.ts`; acá sólo se verifica cómo se presenta.
+  it('muestra a los responsables informados por el backend', () => {
     const { container } = renderCard({
-      mergeability: 'review',
-      reviewers: [
-        { name: 'Beto Ruiz', username: 'beto', avatar: null },
-        { name: 'Caro Díaz', username: 'caro', avatar: null },
+      responsiblePeople: [
+        { name: 'Beto Ruiz', username: 'beto' },
+        { name: 'Caro Díaz', username: 'caro' },
       ],
     })
 
@@ -79,39 +65,8 @@ describe('MrCard', () => {
     expect(container.textContent).toContain('Beto Ruiz, Caro Díaz')
   })
 
-  it('muestra sólo a los reviewers que todavía no aprobaron', () => {
-    const { container } = renderCard({
-      mergeability: 'review',
-      reviewers: [
-        { name: 'Beto Ruiz', username: 'beto', avatar: null },
-        { name: 'Caro Díaz', username: 'caro', avatar: null },
-      ],
-      blockers: {
-        approvals: { status: 'pending', required: 2, given: 1, approvers: ['beto'] },
-      },
-    })
-
-    expect(container.textContent).toContain('Responsable:')
-    expect(container.textContent).toContain('Caro Díaz')
-    expect(container.textContent).not.toContain('Responsable:Beto Ruiz')
-  })
-
-  it('muestra al autor como responsable cuando todos los reviewers ya aprobaron', () => {
-    const { container } = renderCard({
-      mergeability: 'review',
-      author: 'Ana Pérez',
-      reviewers: [{ name: 'Beto Ruiz', username: 'beto', avatar: null }],
-      blockers: {
-        approvals: { status: 'pending', required: 2, given: 1, approvers: ['BETO'] },
-      },
-    })
-
-    expect(container.textContent).toContain('Responsable:')
-    expect(container.textContent).toContain('Responsable:Ana Pérez')
-  })
-
-  it('no muestra responsable en code review sin reviewers asignados', () => {
-    const { container } = renderCard({ mergeability: 'review', reviewers: [] })
+  it('omite el responsable cuando el backend no informa ninguno', () => {
+    const { container } = renderCard({ mergeability: 'backlog', responsiblePeople: [] })
 
     expect(container.textContent).not.toContain('Responsable:')
   })

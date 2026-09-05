@@ -2,6 +2,8 @@
 
 El frontend es una aplicación de página única construida con React 19, Vite y Tailwind CSS, según el [ADR 0005](../decisions/0005-frontend-en-react.md). Consume exclusivamente el contrato consolidado del backend; no accede directamente a GitLab ni conoce su token.
 
+La lógica de negocio vive en el backend. El frontend presenta lo que recibe resuelto —clasificación, responsables y personas— y sólo conserva decisiones de presentación: qué columnas mostrar y en qué orden, agrupar, ordenar visualmente, formatear y filtrar por lo que ya viene calculado.
+
 La aplicación usa componentes de función en archivos `.jsx`, módulos ES y estado compartido basado en las primitivas nativas de React. No incorpora un router, un provider global ni una biblioteca externa de gestión de estado.
 
 ## Organización del código
@@ -13,8 +15,9 @@ El código se divide entre la composición general y las funcionalidades del dom
 - `src/app/App.jsx`: compone la pantalla, conecta el store con la interfaz y decide qué mostrar durante la carga, los errores y la ausencia de datos.
 - `src/features/mergeRequests/hooks/useMergeRequests.js`: contiene el store compartido, el acceso al backend y el polling.
 - `src/features/mergeRequests/components/`: contiene los componentes del tablero de merge requests.
+- `src/features/mergeRequests/personalView.js`: selecciona los datos de la vista personal a partir del contrato del backend.
 - `src/assets/main.css`: incluye las directivas de Tailwind y los pocos estilos globales que no se expresan mediante utilidades.
-- `test/`: reúne la configuración, los fixtures y las utilidades compartidas según la [estrategia de pruebas](../development/pruebas.md).
+- `test/`: reúne la configuración, los fixtures y las utilidades compartidas según la [estrategia de test](../development/test.md).
 
 Las funcionalidades nuevas deben seguir la estructura `src/features/<feature>/components/` y `src/features/<feature>/hooks/`. `src/app/` se reserva para la composición de alto nivel y no debe absorber lógica propia de una feature.
 
@@ -36,10 +39,10 @@ App
 - `ViewControls` alterna entre la vista general y la personal y permite elegir una persona.
 - `MrBoard` agrupa los merge requests por proyecto, mantiene el estado local de expansión y los distribuye según su clasificación. Ambas vistas reutilizan este componente; la personal le entrega únicamente las tareas de la persona seleccionada.
 - `BoardColumn` representa una categoría mediante una lista semántica con scroll vertical.
-- `MrCard` resume el merge request, presenta los responsables calculados y enlaza a GitLab.
+- `MrCard` resume el merge request, presenta los responsables que informa `responsiblePeople` y enlaza a GitLab.
 - `BlockerBadge` presenta pipeline, discusiones, aprobaciones y conflictos con texto, icono y estilo semántico.
 
-`mergeRequestColumns.js` define una sola vez las columnas compartidas. `responsibility.js` contiene las funciones puras que reúnen personas, calculan responsables y filtran tareas; la regla funcional se documenta en [Vista personal](../domains/vista-personal.md).
+`mergeRequestColumns.js` define una sola vez las columnas compartidas y reparte cada merge request en la de su clasificación. `personalView.js` busca la persona seleccionada y filtra sus tareas por el `username` que el backend marcó como responsable, según el [dominio de merge requests](../domains/merge-requests.md#responsable).
 
 Los componentes presentacionales reciben valores mediante props y notifican acciones mediante callbacks como `onRefresh`. No mutan las props ni el estado recibido.
 
@@ -48,7 +51,7 @@ Los componentes presentacionales reciben valores mediante props y notifican acci
 `useMergeRequests.js` mantiene un store a nivel de módulo y lo conecta a React mediante `useSyncExternalStore`. El store es la única fuente de verdad para los datos remotos y contiene:
 
 - `mergeRequests`: resultados consolidados por el backend.
-- `meta`: fecha y totales de la consulta.
+- `meta`: fecha, totales y personas participantes.
 - `loading`: indica que existe una actualización en curso.
 - `error`: conserva el último error de la consulta.
 - `lastFetched`: fecha local de la última respuesta satisfactoria.
@@ -110,4 +113,4 @@ La interfaz apunta a WCAG 2.2 nivel AA y aplica estas decisiones:
 - Los badges combinan texto, iconos y color; ningún estado depende solo del color.
 - Las animaciones y transiciones se reducen cuando el sistema indica `prefers-reduced-motion`.
 
-La validación automatizada y manual de estos comportamientos se define en la [estrategia de pruebas](../development/pruebas.md).
+La validación automatizada y manual de estos comportamientos se define en la [estrategia de test](../development/test.md).

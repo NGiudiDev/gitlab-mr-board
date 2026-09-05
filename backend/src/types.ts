@@ -9,9 +9,9 @@ export interface GitLabResponse<T> {
 }
 
 export interface MergeRequestsDependencies {
-  /** Fuente de datos de los merge requests; inyectable en las pruebas. */
+  /** Fuente de datos de los merge requests; inyectable en los test. */
   fetchMergeRequests?: () => Promise<MergeRequestResponse>;
-  /** Reloj de la caché; inyectable en las pruebas. */
+  /** Reloj de la caché; inyectable en los test. */
   now?: () => number;
 }
 
@@ -109,6 +109,12 @@ export interface MergeRequestReviewer {
   avatar: string | null;
 }
 
+/** Identidad estable de una persona del equipo, sin datos de presentación. */
+export interface MergeRequestPerson {
+  name: string;
+  username: string;
+}
+
 export interface MergeRequestBlockers {
   approvals: ApprovalStatus;
   threads: ThreadStatus;
@@ -127,14 +133,13 @@ export interface EnrichedMergeRequest {
   projectId: number;
   sourceBranch: string;
   targetBranch: string;
-  labels: string[];
-  isDraft: boolean;
   hasConflicts: boolean;
   reviewers: MergeRequestReviewer[];
   updatedAt: string;
   createdAt: string;
   blockers: MergeRequestBlockers;
   mergeability: Mergeability;
+  responsiblePeople: MergeRequestPerson[];
 }
 
 export interface MergeRequestMetadata {
@@ -142,6 +147,8 @@ export interface MergeRequestMetadata {
   projectCount: number;
   totalMRs: number;
   allProjects: string[];
+  /** Personas que participan de los merge requests consultados, sin duplicados. */
+  people: MergeRequestPerson[];
 }
 
 export interface MergeRequestResponse {
@@ -149,7 +156,7 @@ export interface MergeRequestResponse {
   meta: MergeRequestMetadata;
 }
 
-// Contratos usados exclusivamente por la infraestructura de pruebas.
+// Contratos usados exclusivamente por la infraestructura de test.
 export interface HttpTestResponse {
   status: number;
   body: string;

@@ -1,4 +1,4 @@
-import { findPersonByUsername } from '../responsibility.js'
+import { findPersonByUsername } from '../personalView.js'
 
 const VIEW_OPTIONS = [
   { id: 'general', label: 'General' },

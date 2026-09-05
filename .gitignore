@@ -36,3 +36,12 @@ frontend/.vite/
 **/.vitepress/dist/
 **/.vitepress/cache/
 **/.vitepress/.temp/
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Coverage
+coverage/

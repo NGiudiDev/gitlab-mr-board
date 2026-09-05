@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import { buildMergeRequest } from '../../test/fixtures/gitlab.js';
 import type { ApprovalStatus, PipelineStatus, ThreadStatus } from '../types.js';
-import { computeMergeability, extractProjectPath } from './mergeRequestRules.js';
+import { 
+  collectPeople,
+  computeMergeability,
+  computeResponsiblePeople,
+  extractProjectPath
+} from './mergeRequestRules.js';
 
 const approved: ApprovalStatus = {
   status: 'approved', required: 2, given: 2, approvers: ['ana', 'lider'], hasLeadApproval: true,
@@ -120,6 +125,103 @@ describe('computeMergeability', () => {
     const mr = buildMergeRequest({ labels: undefined });
 
     expect(computeMergeability(mr, approved, resolvedThreads, successPipeline)).toBe('unknown');
+  });
+});
+
+describe('computeResponsiblePeople', () => {
+  const beto = { name: 'Beto Ruiz', username: 'beto', avatar_url: null };
+  const caro = { name: 'Caro Díaz', username: 'caro', avatar_url: null };
+  const ana = { name: 'Ana Pérez', username: 'ana' };
+
+  it.each(['in_progress', 'mr_warning', 'qa', 'ready_to_merge'] as const)(
+    'asigna el autor en %s',
+    (mergeability) => {
+      const mr = buildMergeRequest({ reviewers: [beto] });
+
+      expect(computeResponsiblePeople(mr, mergeability, pendingApprovals)).toEqual([ana]);
+    },
+  );
+
+  it.each(['backlog', 'unknown'] as const)('no asigna responsables en %s', (mergeability) => {
+    const mr = buildMergeRequest({ reviewers: [beto] });
+
+    expect(computeResponsiblePeople(mr, mergeability, pendingApprovals)).toEqual([]);
+  });
+
+  it('mantiene sólo los reviewers que todavía no aprobaron', () => {
+    const mr = buildMergeRequest({ reviewers: [beto, caro] });
+    const approvals: ApprovalStatus = { ...pendingApprovals, approvers: ['BETO'] };
+
+    expect(computeResponsiblePeople(mr, 'review', approvals)).toEqual([
+      { name: 'Caro Díaz', username: 'caro' },
+    ]);
+  });
+
+  it('devuelve la responsabilidad al autor cuando todos los reviewers aprobaron', () => {
+    const mr = buildMergeRequest({ reviewers: [beto, caro] });
+    const approvals: ApprovalStatus = { ...pendingApprovals, approvers: ['beto', 'caro'] };
+
+    expect(computeResponsiblePeople(mr, 'review', approvals)).toEqual([ana]);
+  });
+
+  it('no asigna responsable a una revisión sin reviewers', () => {
+    const mr = buildMergeRequest({ reviewers: [] });
+
+    expect(computeResponsiblePeople(mr, 'review', pendingApprovals)).toEqual([]);
+  });
+
+  it('no interpreta aprobaciones desconocidas como aprobaciones realizadas', () => {
+    const mr = buildMergeRequest({ reviewers: [beto] });
+    const unknownApprovals: ApprovalStatus = { status: 'unknown', required: 0, given: 0 };
+
+    expect(computeResponsiblePeople(mr, 'review', unknownApprovals)).toEqual([
+      { name: 'Beto Ruiz', username: 'beto' },
+    ]);
+  });
+
+  it('omite al autor cuando GitLab no informa su username', () => {
+    const mr = buildMergeRequest({ author: null });
+
+    expect(computeResponsiblePeople(mr, 'in_progress', pendingApprovals)).toEqual([]);
+  });
+});
+
+describe('collectPeople', () => {
+  function participants(
+    author: string,
+    authorUsername: string | null,
+    reviewers: Array<{ name: string; username: string }> = [],
+  ) {
+    return {
+      author,
+      authorUsername,
+      reviewers: reviewers.map((reviewer) => ({ ...reviewer, avatar: null })),
+    };
+  }
+
+  it('reúne y ordena autores y reviewers sin duplicar usernames', () => {
+    const people = collectPeople([
+      participants('Ana Pérez', 'Ana', [{ name: 'Beto Ruiz', username: 'beto' }]),
+      participants('Beto Ruiz', 'BETO', [{ name: 'Otra Ana', username: 'ana' }]),
+    ]);
+
+    expect(people).toEqual([
+      { name: 'Ana Pérez', username: 'Ana' },
+      { name: 'Beto Ruiz', username: 'beto' },
+    ]);
+  });
+
+  it('conserva personas distintas que comparten el nombre visible', () => {
+    const people = collectPeople([
+      participants('Alex', 'alex-uno'),
+      participants('Alex', 'alex-dos'),
+    ]);
+
+    expect(people.map((person) => person.username)).toEqual(['alex-dos', 'alex-uno']);
+  });
+
+  it('ignora a los autores sin username', () => {
+    expect(collectPeople([participants('desconocido', null)])).toEqual([]);
   });
 });
 

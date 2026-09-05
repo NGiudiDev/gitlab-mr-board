@@ -11,8 +11,13 @@ const DEFAULT_APPROVALS = {
   hasLeadApproval: true,
 }
 
+/**
+ * Los responsables los calcula el backend, así que el fixture no reproduce la
+ * regla: por omisión asigna al autor y cada prueba pasa `responsiblePeople`
+ * cuando necesita otra combinación.
+ */
 function buildMergeRequest(overrides = {}) {
-  return {
+  const mergeRequest = {
     id: '101-1',
     iid: 1,
     title: 'Agregar filtro por autor',
@@ -24,8 +29,6 @@ function buildMergeRequest(overrides = {}) {
     projectId: 101,
     sourceBranch: 'feature/filtro-autor',
     targetBranch: 'main',
-    labels: ['qa_approved'],
-    isDraft: false,
     hasConflicts: false,
     reviewers: [],
     updatedAt: '2026-08-28T10:00:00.000Z',
@@ -39,6 +42,31 @@ function buildMergeRequest(overrides = {}) {
       ...(overrides.blockers ?? {}),
     },
   }
+
+  return {
+    ...mergeRequest,
+    responsiblePeople: overrides.responsiblePeople ?? (mergeRequest.authorUsername
+      ? [{ name: mergeRequest.author, username: mergeRequest.authorUsername }]
+      : []),
+  }
+}
+
+/** Personas del selector, sin duplicar usernames, como las arma el backend. */
+function collectPeople(mergeRequests) {
+  const peopleByUsername = new Map()
+
+  mergeRequests.forEach((mr) => {
+    const author = mr.authorUsername
+      ? [{ name: mr.author, username: mr.authorUsername }]
+      : []
+    const participants = [...author, ...mr.reviewers]
+
+    participants.forEach(({ name, username }) => {
+      if (!peopleByUsername.has(username)) peopleByUsername.set(username, { name, username })
+    })
+  })
+
+  return [...peopleByUsername.values()]
 }
 
 function buildResponse(mergeRequests = [], meta = {}) {
@@ -52,6 +80,7 @@ function buildResponse(mergeRequests = [], meta = {}) {
       projectCount: allProjects.length,
       totalMRs: mergeRequests.length,
       allProjects,
+      people: collectPeople(mergeRequests),
       ...meta,
     },
   }

@@ -2,6 +2,7 @@
   "name": "gitlab-mr-board",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "GitLab MR Board - Backend + Frontend",
   "engines": {
     "node": ">=22.13.0",
@@ -15,11 +16,15 @@
     "lint:fix": "eslint . --fix",
     "test": "npm run test:unit",
     "test:unit": "npm run test --prefix backend && npm run test --prefix frontend",
+    "test:coverage": "npm run test:coverage --prefix backend && npm run test:coverage --prefix frontend",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs"
   },
   "devDependencies": {
+    "@playwright/test": "1.62.1",
     "@typescript-eslint/parser": "8.69.0",
     "concurrently": "^10.0.5",
     "eslint": "10.10.0",

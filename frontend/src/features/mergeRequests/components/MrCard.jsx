@@ -1,4 +1,3 @@
-import { responsiblePeopleOf } from '../responsibility.js'
 import BlockerBadge from './BlockerBadge.jsx'
 
 const COLOR_BY_MERGEABILITY = {
@@ -18,7 +17,7 @@ function timeAgo(iso) {
 }
 
 function MrCard({ mr }) {
-  const assignee = responsiblePeopleOf(mr).map((person) => person.name).join(', ')
+  const assignee = mr.responsiblePeople.map((person) => person.name).join(', ')
   const color = COLOR_BY_MERGEABILITY[mr.mergeability] || 'border-l-text-faint'
 
   return (

@@ -19,7 +19,7 @@ const sidebar = [
     items: [
       { text: 'ADR 0001: Backend for Frontend', link: '/decisions/0001-backend-for-frontend' },
       { text: 'ADR 0002: caché en memoria', link: '/decisions/0002-cache-en-memoria' },
-      { text: 'ADR 0003: estrategia de pruebas', link: '/decisions/0003-estrategia-de-pruebas' },
+      { text: 'ADR 0003: estrategia de test', link: '/decisions/0003-estrategia-de-test' },
       { text: 'ADR 0004: sitio de documentación', link: '/decisions/0004-sitio-de-documentacion' },
       { text: 'ADR 0005: frontend en React', link: '/decisions/0005-frontend-en-react' },
     ],
@@ -30,7 +30,7 @@ const sidebar = [
     items: [
       { text: 'Entorno local', link: '/development/entorno-local' },
       { text: 'Calidad de código', link: '/development/calidad-codigo' },
-      { text: 'Pruebas', link: '/development/pruebas' },
+      { text: 'Test', link: '/development/test' },
     ],
   },
   {
@@ -45,7 +45,6 @@ const sidebar = [
     link: '/domains/',
     items: [
       { text: 'Merge Requests', link: '/domains/merge-requests' },
-      { text: 'Columnas configurables', link: '/domains/columnas-configurables' },
       { text: 'Vista personal', link: '/domains/vista-personal' },
     ],
   },
