@@ -1,4 +1,5 @@
 import { useState } from 'react'
+
 import { columnsOf } from '../mergeRequestColumns.js'
 import BoardColumn from './BoardColumn.jsx'
 

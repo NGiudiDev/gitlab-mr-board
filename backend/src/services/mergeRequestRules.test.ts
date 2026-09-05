@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
+
 import { buildMergeRequest } from '../../test/fixtures/gitlab.js';
-import { computeMergeability, extractProjectPath } from './mergeRequestRules.js';
 import type { ApprovalStatus, PipelineStatus, ThreadStatus } from '../types.js';
+import { computeMergeability, extractProjectPath } from './mergeRequestRules.js';
 
 const approved: ApprovalStatus = {
   status: 'approved', required: 2, given: 2, approvers: ['ana', 'lider'], hasLeadApproval: true,

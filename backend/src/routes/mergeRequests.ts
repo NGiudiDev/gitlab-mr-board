@@ -1,4 +1,5 @@
 import express, { type Router } from 'express';
+
 import config from '../config.js';
 import { getAllMergeRequests } from '../services/mergeRequestService.js';
 import type { MergeRequestResponse, MergeRequestsRouterOptions } from '../types.js';
@@ -7,11 +8,14 @@ import type { MergeRequestResponse, MergeRequestsRouterOptions } from '../types.
  * Crea el router con una caché aislada y dependencias reemplazables para las
  * pruebas de integración.
  */
-export function createMergeRequestsRouter({
-  fetchMergeRequests = getAllMergeRequests,
-  now = () => Date.now(),
-}: MergeRequestsRouterOptions = {}): Router {
+export function createMergeRequestsRouter(params: MergeRequestsRouterOptions = {}): Router {
+  const {
+    fetchMergeRequests = getAllMergeRequests,
+    now = () => Date.now()
+  } = params;
+
   const router = express.Router();
+
   let cache: MergeRequestResponse | null = null;
   let cacheTimestamp = 0;
 

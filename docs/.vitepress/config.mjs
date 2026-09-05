@@ -29,6 +29,7 @@ const sidebar = [
     link: '/development/',
     items: [
       { text: 'Entorno local', link: '/development/entorno-local' },
+      { text: 'Calidad de código', link: '/development/calidad-codigo' },
       { text: 'Pruebas', link: '/development/pruebas' },
     ],
   },

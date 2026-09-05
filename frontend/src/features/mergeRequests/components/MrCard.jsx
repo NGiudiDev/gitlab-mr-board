@@ -1,5 +1,5 @@
-import BlockerBadge from './BlockerBadge.jsx'
 import { responsiblePeopleOf } from '../responsibility.js'
+import BlockerBadge from './BlockerBadge.jsx'
 
 const COLOR_BY_MERGEABILITY = {
   ready_to_merge: 'border-l-ready',

@@ -1,4 +1,5 @@
 import { useEffect, useSyncExternalStore } from 'react'
+
 import config from '../../../config.js'
 
 const POLL_INTERVAL = 5 * 60 * 1000

@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { TEST_TOKEN } from '../../test/constants.js';
 import { buildMergeRequest, createGitLabStub } from '../../test/fixtures/gitlab.js';
 import type { GitLabFixture } from '../types.js';

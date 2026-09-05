@@ -14,7 +14,9 @@ dist/
 npm-debug.log*
 
 # Editor / IDE
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
 .idea/
 *.swp
 *.swo
@@ -33,3 +35,4 @@ frontend/.vite/
 # VitePress
 **/.vitepress/dist/
 **/.vitepress/cache/
+**/.vitepress/.temp/

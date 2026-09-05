@@ -2,9 +2,9 @@
 
 ## Requisitos e instalación
 
-Se requieren Node.js 22+, npm 10+, acceso a GitLab, un PAT `read_api` e IDs de proyectos. Ejecutar `npm ci` en la raíz, `backend/` y `frontend/`, y copiar `backend/.env.example` como `backend/.env`.
+Se requieren Node.js 22.13+, npm 10+, acceso a GitLab, un PAT `read_api` e IDs de proyectos. Ejecutar `npm ci` en la raíz, `backend/` y `frontend/`, y copiar `backend/.env.example` como `backend/.env`.
 
-El mínimo de Node 22 permite usar las versiones vigentes de las herramientas de pruebas. Los tres `package.json` —raíz, `backend/` y `frontend/`— lo declaran mediante `engines`, así que `npm install` advierte con `EBADENGINE` si el runtime no lo cumple. No hay una comprobación propia del proyecto: con una versión menor el aviso llega en la instalación y, más adelante, desde la herramienta que no la soporte.
+El mínimo de Node 22.13 permite usar las versiones vigentes de las herramientas de pruebas y ESLint. Los tres `package.json` —raíz, `backend/` y `frontend/`— lo declaran mediante `engines`, así que `npm install` advierte con `EBADENGINE` si el runtime no lo cumple. No hay una comprobación propia del proyecto: con una versión menor el aviso llega en la instalación y, más adelante, desde la herramienta que no la soporte.
 
 Para comprobar el runtime efectivo en Windows:
 

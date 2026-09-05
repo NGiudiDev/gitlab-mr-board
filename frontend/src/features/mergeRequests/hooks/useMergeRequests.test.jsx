@@ -1,5 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, render } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
 import { buildMergeRequest, buildResponse } from '../../../../test/fixtures/mergeRequests.js'
 import { jsonResponse, resetSharedState } from '../../../../test/sharedState.js'
 import {

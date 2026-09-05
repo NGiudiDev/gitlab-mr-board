@@ -1,5 +1,3 @@
-import { hasMergeRequestWarning } from '../utils/isMergeRequestBlocked.js';
-
 import type {
   ApprovalStatus,
   GitLabMergeRequest,
@@ -7,18 +5,14 @@ import type {
   PipelineStatus,
   ThreadStatus,
 } from '../types.js';
+import { hasMergeRequestWarning } from '../utils/isMergeRequestBlocked.js';
 
 /**
  * Clasifica un MR aplicando la primera regla coincidente. El orden importa:
  * `backlog` y `draft` ganan sobre cualquier bloqueo técnico porque el equipo
  * no espera trabajo sobre esos MRs.
  */
-function computeMergeability(
-  mr: GitLabMergeRequest,
-  approvals: ApprovalStatus,
-  threads: ThreadStatus,
-  pipeline: PipelineStatus,
-): Mergeability {
+function computeMergeability(mr: GitLabMergeRequest, approvals: ApprovalStatus, threads: ThreadStatus, pipeline: PipelineStatus): Mergeability {
   const labels = (mr.labels ?? []).map((label) => label.toLowerCase());
 
   if (labels.includes('backlog')) return 'backlog';

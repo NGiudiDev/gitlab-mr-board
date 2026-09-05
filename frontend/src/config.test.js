@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+
 import { DEFAULT_API_BASE_URL, parseApiBaseUrl } from './config.js'
 
 describe('parseApiBaseUrl', () => {

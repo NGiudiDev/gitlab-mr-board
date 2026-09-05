@@ -44,7 +44,9 @@
 
 - **No crear archivos innecesarios**: preferir editar archivos existentes. Solo crear nuevos cuando la responsabilidad no encaja en ninguno existente.
 
-- El proyecto requiere **Node.js 22 o superior y npm 10 o superior**, declarado en `engines` en los tres `package.json`. Mantener estas versiones sincronizadas entre sí y con la documentación.
+- El proyecto requiere **Node.js 22.13 o superior y npm 10 o superior**, declarado en `engines` en los tres `package.json`. Mantener estas versiones sincronizadas entre sí y con la documentación.
+
+- Mantener los imports ordenados con ESLint. Ejecutar `npm run lint` para validar o `npm run lint:fix` para corregir; el orden de grupos y la integración con el editor se documentan en [`docs/development/calidad-codigo.md`](docs/development/calidad-codigo.md).
 
 ### Backend
 

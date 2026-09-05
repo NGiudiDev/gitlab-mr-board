@@ -1,5 +1,6 @@
 import cors from 'cors';
 import express, { type ErrorRequestHandler, type Express } from 'express';
+
 import config from './config.js';
 import { createMergeRequestsRouter } from './routes/mergeRequests.js';
 import type { CreateAppOptions } from './types.js';

@@ -13,11 +13,7 @@ const UNFINISHED_PIPELINE_STATUSES = ['running', 'pending'];
  * Indica si un MR tiene un bloqueo técnico que impide avanzar: conflictos con
  * la rama destino, un pipeline fallido o cancelado, o discusiones sin resolver.
  */
-function isMergeRequestBlocked(
-  mr: GitLabMergeRequest,
-  threads: ThreadStatus,
-  pipeline: PipelineStatus,
-): boolean {
+function isMergeRequestBlocked(mr: GitLabMergeRequest, threads: ThreadStatus, pipeline: PipelineStatus): boolean {
   if (mr.has_conflicts) return true;
 
   if (BLOCKING_PIPELINE_STATUSES.includes(pipeline.status)) return true;
@@ -30,11 +26,7 @@ function isMergeRequestBlocked(
  * terminar no es un bloqueo, pero tampoco permite avanzar a revisión: hasta
  * que dé un resultado el MR necesita la misma atención que uno bloqueado.
  */
-function hasMergeRequestWarning(
-  mr: GitLabMergeRequest,
-  threads: ThreadStatus,
-  pipeline: PipelineStatus,
-): boolean {
+function hasMergeRequestWarning(mr: GitLabMergeRequest, threads: ThreadStatus, pipeline: PipelineStatus): boolean {
   if (isMergeRequestBlocked(mr, threads, pipeline)) return true;
 
   return UNFINISHED_PIPELINE_STATUSES.includes(pipeline.status);

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+
 import { buildMergeRequest } from '../../../test/fixtures/mergeRequests.js'
 import {
   findPersonByUsername,
