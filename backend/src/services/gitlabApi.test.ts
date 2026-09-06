@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { TEST_BASE_URL, TEST_TOKEN } from '../../test/constants.js';
 import type { GitLabTestItem } from '../types.js';
+
+import { TEST_BASE_URL, TEST_TOKEN } from '../../test/constants.js';
+
 import { buildUrl, fetchJson, fetchPaginated } from './gitlabApi.js';
 
 function jsonResponse(body: unknown, headers: Record<string, string> = {}): Response {

@@ -1,9 +1,11 @@
 import cors from 'cors';
-import express, { type ErrorRequestHandler, type Express } from 'express';
+import express from 'express';
+
+import type { CreateAppOptions } from './types.js';
+import type { ErrorRequestHandler, Express } from 'express';
 
 import config from './config.js';
 import { createMergeRequestsRouter } from './routes/mergeRequests.js';
-import type { CreateAppOptions } from './types.js';
 
 const ALLOWED_ORIGINS = ['http://localhost:5173', 'http://localhost:4173'];
 

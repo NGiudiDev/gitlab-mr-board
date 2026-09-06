@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildMergeRequest } from '../../test/fixtures/gitlab.js';
 import type { PipelineStatus, ThreadStatus } from '../types.js';
+
+import { buildMergeRequest } from '../../test/fixtures/gitlab.js';
 import { hasMergeRequestWarning, isMergeRequestBlocked } from './isMergeRequestBlocked.js';
 
 const resolvedThreads: ThreadStatus = { status: 'resolved', unresolvedCount: 0 };

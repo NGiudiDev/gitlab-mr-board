@@ -1,9 +1,8 @@
 import http from 'node:http';
-import type { AddressInfo } from 'node:net';
-
-import type { Express } from 'express';
 
 import type { HttpTestResponse } from '../src/types.js';
+import type { Express } from 'express';
+import type { AddressInfo } from 'node:net';
 
 /**
  * Ejecuta una petición real contra la app en memoria usando `node:http`.

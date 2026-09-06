@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildMergeRequest } from '../../test/fixtures/gitlab.js';
 import type { ApprovalStatus, PipelineStatus, ThreadStatus } from '../types.js';
+
+import { buildMergeRequest } from '../../test/fixtures/gitlab.js';
 import { 
   collectPeople,
   computeMergeability,

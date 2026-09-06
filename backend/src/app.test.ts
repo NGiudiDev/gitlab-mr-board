@@ -1,10 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { MergeRequestResponse } from './types.js';
+
 import { TEST_PROJECT_IDS, TEST_TOKEN } from '../test/constants.js';
+
 import { buildMergeRequest, createGitLabStub } from '../test/fixtures/gitlab.js';
 import { requestApp } from '../test/httpClient.js';
 import { createApp } from './app.js';
-import type { MergeRequestResponse } from './types.js';
 
 beforeEach(() => {
   vi.spyOn(console, 'error').mockImplementation(() => {});

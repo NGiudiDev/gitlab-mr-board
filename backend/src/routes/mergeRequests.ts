@@ -1,8 +1,13 @@
-import express, { type Router } from 'express';
+// 2. Dependencias externas.
+import express from 'express';
 
+// 4. Imports exclusivos de tipos de TypeScript.
+import type { MergeRequestResponse, MergeRequestsRouterOptions } from '../types.js';
+import type { Router } from 'express';
+
+// 7. Imports relativos restantes.
 import config from '../config.js';
 import { getAllMergeRequests } from '../services/mergeRequestService.js';
-import type { MergeRequestResponse, MergeRequestsRouterOptions } from '../types.js';
 
 /**
  * Crea el router con una caché aislada y dependencias reemplazables para los

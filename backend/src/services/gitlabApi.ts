@@ -1,6 +1,8 @@
-import config from '../config.js';
 import type { GitLabResponse, QueryParams } from '../types.js';
+
 import RateLimiter from '../utils/rateLimiter.js';
+
+import config from '../config.js';
 
 const GITLAB_API_PATH = '/api/v4';
 const MAX_CONCURRENT_REQUESTS = 6;

@@ -2,7 +2,7 @@
 
 ## Orden automático de imports
 
-La raíz configura ESLint con `eslint-plugin-simple-import-sort` para ordenar imports y exports en el backend TypeScript, el frontend React y los archivos de configuración JavaScript. Esta responsabilidad no depende de un formateador.
+La raíz configura ESLint con `eslint-plugin-simple-import-sort` para ordenar imports y exports en el backend TypeScript, el frontend React y los archivos de configuración JavaScript. `@typescript-eslint/eslint-plugin` detecta los símbolos usados únicamente como tipos y `eslint-plugin-import-x` exige que sus especificadores estén en declaraciones independientes mediante `import type`. Esta responsabilidad no depende de un formateador.
 
 Las dependencias se instalan en la raíz y sus versiones exactas viven en `package.json` y `package-lock.json`. Para restaurarlas se usa `npm ci`.
 
@@ -11,10 +11,21 @@ El orden de grupos definido en `eslint.config.mjs` es:
 1. Módulos estándar de Node.js con el protocolo `node:`.
 2. Dependencias externas, incluidas las que tienen scope.
 3. Módulos internos identificados con el alias `@/`.
-4. Imports relativos, tanto del directorio padre como del actual.
-5. Hojas de estilo CSS, Less, SCSS y Sass.
+4. Imports exclusivos de tipos de TypeScript.
+5. Módulos de constantes ubicados en un archivo o directorio llamado `constants`.
+6. Utilidades ubicadas en un archivo o directorio llamado `utils`.
+7. Imports relativos restantes, tanto del directorio padre como del actual.
+8. Hojas de estilo CSS, Less, SCSS y Sass.
 
-ESLint agrega una línea en blanco entre grupos y ordena alfabéticamente los módulos dentro de cada uno. Los imports de tipos siguen el grupo definido por el origen del módulo; no forman un bloque separado.
+Cada expresión de `importGroups` tiene un comentario que identifica su posición y propósito. ESLint agrega una línea en blanco entre grupos y ordena alfabéticamente los módulos dentro de cada uno.
+
+Los imports que combinan valores y tipos se separan automáticamente:
+
+```ts
+import express from 'express'
+
+import type { Express } from 'express'
+```
 
 El resultado esperado sigue esta estructura:
 
@@ -27,6 +38,11 @@ import { describe, expect, it } from 'vitest'
 import config from '@/config.js'
 
 import type { MergeRequest } from '../types.js'
+
+import { DEFAULT_PAGE_SIZE } from '../constants.js'
+
+import { normalizeUsername } from '../utils/users.js'
+
 import { buildResponse } from './response.js'
 
 import './styles.css'

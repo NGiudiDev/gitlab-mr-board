@@ -1,4 +1,3 @@
-import config from '../config.js';
 import type {
   ApprovalStatus,
   EnrichedMergeRequest,
@@ -14,6 +13,8 @@ import type {
   PipelineStatus,
   ThreadStatus,
 } from '../types.js';
+
+import config from '../config.js';
 import { fetchPaginatedWithLimit, fetchWithLimit } from './gitlabApi.js';
 import {
   collectPeople,
