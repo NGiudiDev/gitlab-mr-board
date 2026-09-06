@@ -1,6 +1,8 @@
+// 1. Módulos estándar de Node.js.
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+// 2. Dependencias externas.
 import dotenv from 'dotenv';
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));

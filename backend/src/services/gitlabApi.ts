@@ -1,7 +1,10 @@
+// 4. Imports exclusivos de tipos de TypeScript.
 import type { GitLabResponse, QueryParams } from '../types.js';
 
+// 6. Utilidades.
 import RateLimiter from '../utils/rateLimiter.js';
 
+// 7. Imports relativos restantes.
 import config from '../config.js';
 
 const GITLAB_API_PATH = '/api/v4';

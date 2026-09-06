@@ -1,5 +1,7 @@
+// 2. Dependencias externas.
 import { useState } from 'react'
 
+// 7. Imports relativos restantes.
 import { columnsOf } from '../mergeRequestColumns.js'
 import BoardColumn from './BoardColumn.jsx'
 

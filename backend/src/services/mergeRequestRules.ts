@@ -1,3 +1,4 @@
+// 4. Imports exclusivos de tipos de TypeScript.
 import type {
   ApprovalStatus,
   EnrichedMergeRequest,
@@ -8,6 +9,7 @@ import type {
   ThreadStatus,
 } from '../types.js';
 
+// 6. Utilidades.
 import { hasMergeRequestWarning } from '../utils/isMergeRequestBlocked.js';
 
 /** Campos del contrato público que identifican a quienes participan del MR. */

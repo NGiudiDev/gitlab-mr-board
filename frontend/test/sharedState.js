@@ -1,3 +1,4 @@
+// 7. Imports relativos restantes.
 import { getState, resetStore } from '../src/features/mergeRequests/hooks/useMergeRequests.js'
 
 /**

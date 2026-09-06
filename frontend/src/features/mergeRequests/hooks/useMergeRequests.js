@@ -1,5 +1,7 @@
+// 2. Dependencias externas.
 import { useEffect, useSyncExternalStore } from 'react'
 
+// 7. Imports relativos restantes.
 import config from '../../../config.js'
 
 const POLL_INTERVAL = 5 * 60 * 1000

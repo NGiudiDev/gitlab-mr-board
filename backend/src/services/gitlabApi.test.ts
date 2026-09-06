@@ -1,9 +1,13 @@
+// 2. Dependencias externas.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+// 4. Imports exclusivos de tipos de TypeScript.
 import type { GitLabTestItem } from '../types.js';
 
+// 5. Módulos de constantes.
 import { TEST_BASE_URL, TEST_TOKEN } from '../../test/constants.js';
 
+// 7. Imports relativos restantes.
 import { buildUrl, fetchJson, fetchPaginated } from './gitlabApi.js';
 
 function jsonResponse(body: unknown, headers: Record<string, string> = {}): Response {

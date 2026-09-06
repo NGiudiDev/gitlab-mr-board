@@ -1,7 +1,9 @@
+// 2. Dependencias externas.
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
+// 7. Imports relativos restantes.
 import TopBar from './TopBar.jsx'
 
 function renderTopBar(props = {}) {

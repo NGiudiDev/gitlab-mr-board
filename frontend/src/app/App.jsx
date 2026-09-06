@@ -1,3 +1,4 @@
+// 7. Imports relativos restantes.
 import MrBoard from '../features/mergeRequests/components/MrBoard.jsx'
 import TopBar from '../features/mergeRequests/components/TopBar.jsx'
 import ViewControls from '../features/mergeRequests/components/ViewControls.jsx'

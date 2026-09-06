@@ -1,6 +1,8 @@
+// 2. Dependencias externas.
 import { render } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
+// 7. Imports relativos restantes.
 import BlockerBadge from './BlockerBadge.jsx'
 
 /** El badge es el elemento raíz del componente. */

@@ -1,5 +1,7 @@
+// 2. Dependencias externas.
 import { describe, expect, it } from 'vitest'
 
+// 7. Imports relativos restantes.
 import { DEFAULT_API_BASE_URL, parseApiBaseUrl } from './config.js'
 
 describe('parseApiBaseUrl', () => {

@@ -1,5 +1,7 @@
+// 1. Módulos estándar de Node.js.
 import http from 'node:http';
 
+// 4. Imports exclusivos de tipos de TypeScript.
 import type { HttpTestResponse } from '../src/types.js';
 import type { Express } from 'express';
 import type { AddressInfo } from 'node:net';

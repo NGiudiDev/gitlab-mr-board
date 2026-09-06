@@ -1,3 +1,4 @@
+// 2. Dependencias externas.
 import typescriptEslint from '@typescript-eslint/eslint-plugin'
 import typescriptParser from '@typescript-eslint/parser'
 import { importX } from 'eslint-plugin-import-x'

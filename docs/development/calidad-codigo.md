@@ -17,34 +17,44 @@ El orden de grupos definido en `eslint.config.mjs` es:
 7. Imports relativos restantes, tanto del directorio padre como del actual.
 8. Hojas de estilo CSS, Less, SCSS y Sass.
 
-Cada expresión de `importGroups` tiene un comentario que identifica su posición y propósito. ESLint agrega una línea en blanco entre grupos y ordena alfabéticamente los módulos dentro de cada uno.
+Cada expresión de `importGroups` tiene un comentario que identifica su posición y propósito. Los archivos de código repiten ese mismo comentario como encabezado de cada bloque presente; no incluyen comentarios para grupos vacíos. ESLint agrega una línea en blanco entre grupos y ordena alfabéticamente los módulos dentro de cada uno.
 
 Los imports que combinan valores y tipos se separan automáticamente:
 
 ```ts
+// 2. Dependencias externas.
 import express from 'express'
 
+// 4. Imports exclusivos de tipos de TypeScript.
 import type { Express } from 'express'
 ```
 
 El resultado esperado sigue esta estructura:
 
 ```ts
+// 1. Módulos estándar de Node.js.
 import path from 'node:path'
 
+// 2. Dependencias externas.
 import express from 'express'
 import { describe, expect, it } from 'vitest'
 
+// 3. Módulos internos con el alias `@/`.
 import config from '@/config.js'
 
+// 4. Imports exclusivos de tipos de TypeScript.
 import type { MergeRequest } from '../types.js'
 
+// 5. Módulos de constantes.
 import { DEFAULT_PAGE_SIZE } from '../constants.js'
 
+// 6. Utilidades.
 import { normalizeUsername } from '../utils/users.js'
 
+// 7. Imports relativos restantes.
 import { buildResponse } from './response.js'
 
+// 8. Hojas de estilo.
 import './styles.css'
 ```
 

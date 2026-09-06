@@ -1,3 +1,4 @@
+// 7. Imports relativos restantes.
 import { findPersonByUsername } from '../personalView.js'
 
 const VIEW_OPTIONS = [

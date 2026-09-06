@@ -1,9 +1,12 @@
+// 2. Dependencias externas.
 import cors from 'cors';
 import express from 'express';
 
+// 4. Imports exclusivos de tipos de TypeScript.
 import type { CreateAppOptions } from './types.js';
 import type { ErrorRequestHandler, Express } from 'express';
 
+// 7. Imports relativos restantes.
 import config from './config.js';
 import { createMergeRequestsRouter } from './routes/mergeRequests.js';
 

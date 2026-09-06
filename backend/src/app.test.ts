@@ -1,9 +1,13 @@
+// 2. Dependencias externas.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+// 4. Imports exclusivos de tipos de TypeScript.
 import type { MergeRequestResponse } from './types.js';
 
+// 5. Módulos de constantes.
 import { TEST_PROJECT_IDS, TEST_TOKEN } from '../test/constants.js';
 
+// 7. Imports relativos restantes.
 import { buildMergeRequest, createGitLabStub } from '../test/fixtures/gitlab.js';
 import { requestApp } from '../test/httpClient.js';
 import { createApp } from './app.js';

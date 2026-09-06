@@ -1,3 +1,4 @@
+// 4. Imports exclusivos de tipos de TypeScript.
 import type {
   ApprovalStatus,
   EnrichedMergeRequest,
@@ -14,6 +15,7 @@ import type {
   ThreadStatus,
 } from '../types.js';
 
+// 7. Imports relativos restantes.
 import config from '../config.js';
 import { fetchPaginatedWithLimit, fetchWithLimit } from './gitlabApi.js';
 import {

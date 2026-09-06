@@ -1,3 +1,4 @@
+// 4. Imports exclusivos de tipos de TypeScript.
 import type { QueueResolver } from '../types.js';
 
 class RateLimiter {

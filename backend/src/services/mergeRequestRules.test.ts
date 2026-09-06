@@ -1,7 +1,10 @@
+// 2. Dependencias externas.
 import { describe, expect, it } from 'vitest';
 
+// 4. Imports exclusivos de tipos de TypeScript.
 import type { ApprovalStatus, PipelineStatus, ThreadStatus } from '../types.js';
 
+// 7. Imports relativos restantes.
 import { buildMergeRequest } from '../../test/fixtures/gitlab.js';
 import { 
   collectPeople,
