@@ -40,14 +40,16 @@ function createGitLabSettingsRouter(
 
   router.put('/', async (request, response) => {
     const { id } = response.locals.user as AuthenticatedUser;
-    const { projectIds, accessToken } = (request.body ?? {}) as {
+    const { projectIds, gitlabUsername, accessToken } = (request.body ?? {}) as {
       projectIds?: unknown;
+      gitlabUsername?: unknown;
       accessToken?: string;
     };
 
     try {
       const settings = await gitlabSettingsService.save(id, {
         projectIds,
+        gitlabUsername,
         ...(accessToken === undefined ? {} : { accessToken }),
       });
 

@@ -50,7 +50,7 @@ La suite debe cubrir la matriz y el orden de prioridad de `computeMergeability()
 
 También debe cubrir la autenticación: derivación y verificación de contraseñas, el esquema y las operaciones de la base, el ciclo de la sesión —alta, registro, ingreso, vencimiento, cierre y bloqueo por intentos fallidos—, el cambio de la propia contraseña y las rutas `/api/auth/*` y `/api/users/*`, incluidos el 401 sin sesión, el 403 sin rol `admin` y el límite de registros.
 
-Y la configuración de GitLab: el ida y vuelta del cifrado, su fallo ante una clave distinta o un valor alterado, la validación de IDs y token, la conservación del token guardado, el aislamiento entre personas, las rutas `/api/gitlab-settings` y el 409 del tablero sin configuración. Ninguna respuesta ni log debe contener un access token en claro.
+Y la configuración de GitLab: el ida y vuelta del cifrado, su fallo ante una clave distinta o un valor alterado, la validación de IDs, nickname y token, la conservación del token guardado, el aislamiento entre personas, las rutas `/api/gitlab-settings`, el `meta.viewerUsername` del tablero y su 409 sin configuración. Ninguna respuesta ni log debe contener un access token en claro.
 
 Los test de integración construyen Express en memoria con `createApp()`, inyectan la fuente de datos y el reloj cuando corresponde y reemplazan `global.fetch` con respuestas controladas. Los contratos de esas piezas están en la [arquitectura del backend](../architecture/backend.md).
 
@@ -72,6 +72,8 @@ Deben cubrir además el portero de sesión: la verificación inicial, el ingreso
 
 Y la configuración de GitLab: la carga de lo guardado, el campo del token que arranca vacío y sólo se envía si se escribe, los errores de validación del backend, y el 409 del tablero con su acceso directo a «Mi cuenta».
 
+Y la vista personal según el rol: que un `admin` pueda elegir a quién mirar y que el resto vea directamente sus propias tareas, sin selector, con el aviso correspondiente cuando falta el nickname.
+
 Los dos stores viven a nivel de módulo: cada test debe reiniciarlos con `resetSharedState()` de `frontend/test/sharedState.js`, y las pruebas del tablero dan la sesión por abierta con `signInTestUser()`. Las actualizaciones asíncronas se esperan con `act()`. Con temporizadores falsos se usa `fireEvent`; `user-event` se reserva para test con reloj real.
 
 La composición y el ciclo del store se detallan en la [arquitectura del frontend](../architecture/frontend.md).
@@ -91,6 +93,7 @@ Los E2E corren contra GitLab real, así que necesitan estas variables. Copiar `.
 | `GITLAB_TOKEN` | Sí | PAT con alcance `read_api` sobre los proyectos de test; el recorrido lo carga en «Mi cuenta» |
 | `E2E_PROJECT_IDS` | Sí | IDs de los proyectos dedicados a test, separados por comas |
 | `E2E_PROJECT_PATH` | Sí | Ruta `grupo/proyecto` de la sección que expande el recorrido |
+| `E2E_GITLAB_USERNAME` | Sí | Nickname de GitLab que el recorrido carga en «Mi cuenta» |
 | `E2E_MR_TITLE` | Sí | Título exacto (mayúsculas incluidas) del merge request que se verifica |
 | `E2E_MR_COLUMN` | Sí | Columna donde debe aparecer ese merge request |
 | `E2E_DATABASE_URL` | Sí | Base de Neon dedicada a test; el usuario del recorrido se borra y se recrea en cada corrida |
@@ -102,7 +105,7 @@ Playwright levanta ambos servicios con `webServer`, sin reutilizar procesos exis
 
 Antes de levantarlos, `e2e/globalSetup.js` borra y vuelve a crear el usuario del recorrido con `npm run users`, para que cada corrida arranque siempre igual: la cascada se lleva sus sesiones y su configuración de GitLab. Sólo toca ese usuario, nunca el resto de la base. `E2E_DATABASE_URL` es obligatoria y nunca cae en `DATABASE_URL`, para que un descuido no toque la base de trabajo. Las credenciales se pueden cambiar con `E2E_USERNAME` y `E2E_PASSWORD`.
 
-El recorrido crítico ingresa con ese usuario, comprueba que el tablero reclame la configuración de GitLab, la carga en «Mi cuenta» con `GITLAB_TOKEN` y `E2E_PROJECT_IDS` y espera una respuesta real de GitLab; después expande el proyecto configurado, verifica la columna y los bloqueadores del merge request conocido, fuerza una actualización que omite la caché recorre los controles principales con teclado hasta la vista personal y cierra la sesión comprobando que recargar no devuelva el tablero.
+El recorrido crítico ingresa con ese usuario, comprueba que el tablero reclame la configuración de GitLab, la carga en «Mi cuenta» con `GITLAB_TOKEN`, `E2E_PROJECT_IDS` y `E2E_GITLAB_USERNAME` y espera una respuesta real de GitLab; después expande el proyecto configurado, verifica la columna y los bloqueadores del merge request conocido, fuerza una actualización que omite la caché recorre los controles principales con teclado hasta la vista personal y cierra la sesión comprobando que recargar no devuelva el tablero.
 
 Para verlo correr: `npm run test:e2e:ui` abre el modo interactivo con watch y time-travel por paso, y `npm run test:e2e -- --headed` lo ejecuta en una ventana visible (`--debug` agrega el Inspector paso a paso). Las trazas de los reintentos se revisan después con `npx playwright show-trace`.
 

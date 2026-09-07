@@ -8,11 +8,19 @@ const VIEW_OPTIONS = [
 
 const OPTION_CLASSES = 'px-3 py-1 text-[13px] rounded cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
 
+/**
+ * Controles de la vista del tablero.
+ *
+ * `canChoosePerson` decide si la vista personal deja elegir a quién mirar. Sin
+ * ese permiso la vista personal muestra siempre las tareas propias, así que el
+ * selector sobra.
+ */
 function ViewControls({
   viewMode = 'general',
   people = [],
   selectedUsername = '',
   selectedPersonName = '',
+  canChoosePerson = false,
   onViewChange = () => {},
   onPersonChange = () => {},
 }) {
@@ -44,7 +52,7 @@ function ViewControls({
         })}
       </div>
 
-      {viewMode === 'personal' ? (
+      {viewMode === 'personal' && canChoosePerson ? (
         <label className="flex items-center gap-2 text-[12px] font-semibold text-text-muted">
           Persona
           <select

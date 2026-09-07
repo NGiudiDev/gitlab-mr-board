@@ -28,7 +28,7 @@ describe('ViewControls', () => {
   })
 
   it('muestra un selector etiquetado con nombre y username', () => {
-    render(<ViewControls viewMode="personal" people={PEOPLE} />)
+    render(<ViewControls viewMode="personal" people={PEOPLE} canChoosePerson />)
 
     const select = screen.getByRole('combobox', { name: 'Persona' })
     expect(select.textContent).toContain('Ana Pérez (@ana)')
@@ -37,11 +37,23 @@ describe('ViewControls', () => {
 
   it('notifica la persona seleccionada', () => {
     const onPersonChange = vi.fn()
-    render(<ViewControls viewMode="personal" people={PEOPLE} onPersonChange={onPersonChange} />)
+    render(<ViewControls viewMode="personal" people={PEOPLE} canChoosePerson onPersonChange={onPersonChange} />)
 
     fireEvent.change(screen.getByRole('combobox', { name: 'Persona' }), { target: { value: 'beto' } })
 
     expect(onPersonChange).toHaveBeenCalledWith('beto')
+  })
+
+  it('no ofrece el selector a quien no puede elegir persona', () => {
+    render(<ViewControls viewMode="personal" people={PEOPLE} />)
+
+    expect(screen.queryByRole('combobox', { name: 'Persona' })).toBeNull()
+  })
+
+  it('tampoco lo ofrece en la vista general a quien sí puede elegir', () => {
+    render(<ViewControls viewMode="general" people={PEOPLE} canChoosePerson />)
+
+    expect(screen.queryByRole('combobox', { name: 'Persona' })).toBeNull()
   })
 
   it('conserva una selección que ya no aparece en los datos actuales', () => {
@@ -50,6 +62,7 @@ describe('ViewControls', () => {
         viewMode="personal"
         selectedUsername="ana"
         selectedPersonName="Ana Pérez"
+        canChoosePerson
       />,
     )
 

@@ -9,6 +9,7 @@ interface GitLabSettingsRow {
   user_id: string;
   project_ids: string[];
   encrypted_access_token: string;
+  gitlab_username: string | null;
   updated_at: Date | string;
 }
 
@@ -18,6 +19,7 @@ function toStoredSettings(row: GitLabSettingsRow): StoredGitLabSettings {
     userId: row.user_id,
     projectIds: row.project_ids,
     encryptedAccessToken: row.encrypted_access_token,
+    gitlabUsername: row.gitlab_username,
     updatedAt: toIsoString(row.updated_at),
   };
 }
@@ -47,13 +49,20 @@ function createGitLabSettingsRepository(database: Database): GitLabSettingsRepos
     // modificación son la misma operación.
     async save(settings: StoredGitLabSettings): Promise<void> {
       await database.query(
-        `INSERT INTO gitlab_settings (user_id, project_ids, encrypted_access_token, updated_at)
-         VALUES ($1, $2, $3, $4)
+        `INSERT INTO gitlab_settings (user_id, project_ids, encrypted_access_token, gitlab_username, updated_at)
+         VALUES ($1, $2, $3, $4, $5)
          ON CONFLICT (user_id) DO UPDATE SET
            project_ids = EXCLUDED.project_ids,
            encrypted_access_token = EXCLUDED.encrypted_access_token,
+           gitlab_username = EXCLUDED.gitlab_username,
            updated_at = EXCLUDED.updated_at`,
-        [settings.userId, settings.projectIds, settings.encryptedAccessToken, settings.updatedAt],
+        [
+          settings.userId,
+          settings.projectIds,
+          settings.encryptedAccessToken,
+          settings.gitlabUsername,
+          settings.updatedAt,
+        ],
       );
     },
 

@@ -174,6 +174,7 @@ async function fetchProjectMergeRequestsSafely(
 function buildMetadata(
   mergeRequests: EnrichedMergeRequest[],
   projectPaths: string[],
+  viewerUsername: string | null,
 ): MergeRequestMetadata {
   return {
     fetchedAt: new Date().toISOString(),
@@ -181,6 +182,7 @@ function buildMetadata(
     totalMRs: mergeRequests.length,
     allProjects: projectPaths,
     people: collectPeople(mergeRequests),
+    viewerUsername,
   };
 }
 
@@ -207,7 +209,7 @@ async function getAllMergeRequests(credentials: GitLabCredentials): Promise<Merg
 
   return {
     mergeRequests,
-    meta: buildMetadata(mergeRequests, projectPaths),
+    meta: buildMetadata(mergeRequests, projectPaths, credentials.gitlabUsername),
   };
 }
 

@@ -12,6 +12,7 @@ const ACCESS_TOKEN = 'glpat-token-de-prueba-no-real'
 const STORED_SETTINGS = {
   projectIds: ['101', '202'],
   tokenHint: 'real',
+  gitlabUsername: 'ana-gitlab',
 }
 
 let fetchMock
@@ -81,6 +82,18 @@ describe('carga de la configuración', () => {
     expect(screen.getByLabelText('IDs de los proyectos').value).toBe('101, 202')
   })
 
+  it('completa el nickname de GitLab ya configurado', async () => {
+    await renderForm()
+
+    expect(screen.getByLabelText('Nickname de GitLab').value).toBe('ana-gitlab')
+  })
+
+  it('exige el nickname de GitLab', async () => {
+    await renderForm()
+
+    expect(screen.getByLabelText('Nickname de GitLab').required).toBe(true)
+  })
+
   it('describe el token guardado sin mostrarlo', async () => {
     const container = await renderForm()
 
@@ -93,6 +106,7 @@ describe('carga de la configuración', () => {
     const container = await renderForm()
 
     expect(screen.getByLabelText('IDs de los proyectos').value).toBe('')
+    expect(screen.getByLabelText('Nickname de GitLab').value).toBe('')
     expect(container.textContent).toContain('alcance read_api')
   })
 
@@ -125,7 +139,11 @@ describe('guardado', () => {
     fillField('Access token', ACCESS_TOKEN)
     await submit()
 
-    expect(lastSavedBody()).toEqual({ projectIds: '303, 404', accessToken: ACCESS_TOKEN })
+    expect(lastSavedBody()).toEqual({
+      projectIds: '303, 404',
+      gitlabUsername: 'ana-gitlab',
+      accessToken: ACCESS_TOKEN,
+    })
   })
 
   it('omite el token cuando el campo queda vacío, para conservar el guardado', async () => {
@@ -134,7 +152,7 @@ describe('guardado', () => {
     fillField('IDs de los proyectos', '303')
     await submit()
 
-    expect(lastSavedBody()).toEqual({ projectIds: '303' })
+    expect(lastSavedBody()).toEqual({ projectIds: '303', gitlabUsername: 'ana-gitlab' })
   })
 
   it('vacía el campo del token después de guardarlo', async () => {

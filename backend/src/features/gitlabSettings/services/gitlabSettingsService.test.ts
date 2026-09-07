@@ -7,7 +7,7 @@ import type { AuthService } from '../../auth/types.js';
 import type { GitLabSettingsService } from '../types.js';
 
 // 5. Módulos de constantes.
-import { TEST_PASSWORD, TEST_TOKEN, TEST_USERNAME } from '../../../../test/constants.js';
+import { TEST_GITLAB_USERNAME, TEST_PASSWORD, TEST_TOKEN, TEST_USERNAME } from '../../../../test/constants.js';
 
 // 6. Utilidades.
 import { createSecretCipher } from '../utils/encryption.js';
@@ -57,6 +57,7 @@ describe('getSummary', () => {
 
   it('describe el token con sus últimos caracteres, sin revelarlo', async () => {
     const summary = await settingsService.save(userId, {
+      gitlabUsername: TEST_GITLAB_USERNAME,
       projectIds: ['101', '202'],
       accessToken: TEST_TOKEN,
     });
@@ -70,6 +71,7 @@ describe('getSummary', () => {
 describe('save', () => {
   it('acepta los IDs escritos como texto separado por comas', async () => {
     const summary = await settingsService.save(userId, {
+      gitlabUsername: TEST_GITLAB_USERNAME,
       projectIds: ' 101 , 202 ,,303 ',
       accessToken: TEST_TOKEN,
     });
@@ -79,6 +81,7 @@ describe('save', () => {
 
   it('descarta los IDs repetidos', async () => {
     const summary = await settingsService.save(userId, {
+      gitlabUsername: TEST_GITLAB_USERNAME,
       projectIds: '101,101,202',
       accessToken: TEST_TOKEN,
     });
@@ -87,12 +90,14 @@ describe('save', () => {
   });
 
   it('rechaza una lista vacía', async () => {
-    await expect(settingsService.save(userId, { projectIds: '  ', accessToken: TEST_TOKEN }))
+    await expect(settingsService.save(userId, {
+      gitlabUsername: TEST_GITLAB_USERNAME, projectIds: '  ', accessToken: TEST_TOKEN }))
       .rejects.toThrow(/al menos un ID/);
   });
 
   it('rechaza un ID que no es numérico', async () => {
     await expect(settingsService.save(userId, {
+      gitlabUsername: TEST_GITLAB_USERNAME,
       projectIds: 'grupo/proyecto',
       accessToken: TEST_TOKEN,
     })).rejects.toThrow(/sólo números/);
@@ -101,23 +106,53 @@ describe('save', () => {
   it('rechaza más proyectos de los permitidos', async () => {
     const projectIds = Array.from({ length: MAX_PROJECT_IDS + 1 }, (_, index) => String(index + 1));
 
-    await expect(settingsService.save(userId, { projectIds, accessToken: TEST_TOKEN }))
+    await expect(settingsService.save(userId, {
+      gitlabUsername: TEST_GITLAB_USERNAME, projectIds, accessToken: TEST_TOKEN }))
       .rejects.toThrow(new RegExp(`más de ${MAX_PROJECT_IDS} proyectos`));
   });
 
+  it('guarda el nickname de GitLab', async () => {
+    const summary = await settingsService.save(userId, {
+      gitlabUsername: '  ana-gitlab  ',
+      projectIds: '101',
+      accessToken: TEST_TOKEN,
+    });
+
+    expect(summary.gitlabUsername).toBe('ana-gitlab');
+  });
+
+  it('exige el nickname de GitLab', async () => {
+    await expect(settingsService.save(userId, { projectIds: '101', gitlabUsername: '  ', accessToken: TEST_TOKEN }))
+      .rejects.toThrow(/nickname de GitLab/);
+  });
+
+  it('rechaza un nickname con caracteres que GitLab no acepta', async () => {
+    await expect(settingsService.save(userId, { projectIds: '101', gitlabUsername: 'ana pérez', accessToken: TEST_TOKEN }))
+      .rejects.toThrow(/no es un nickname de GitLab/);
+  });
+
+  it('rechaza un nickname que no empieza con letra o número', async () => {
+    await expect(settingsService.save(userId, { projectIds: '101', gitlabUsername: '-ana', accessToken: TEST_TOKEN }))
+      .rejects.toThrow(/no es un nickname de GitLab/);
+  });
+
   it('exige el token en la primera configuración', async () => {
-    await expect(settingsService.save(userId, { projectIds: '101' }))
+    await expect(settingsService.save(userId, {
+      gitlabUsername: TEST_GITLAB_USERNAME, projectIds: '101' }))
       .rejects.toThrow(/access token/);
   });
 
   it('rechaza un token demasiado corto', async () => {
-    await expect(settingsService.save(userId, { projectIds: '101', accessToken: 'glpat-corto' }))
+    await expect(settingsService.save(userId, {
+      gitlabUsername: TEST_GITLAB_USERNAME, projectIds: '101', accessToken: 'glpat-corto' }))
       .rejects.toThrow(/al menos 20 caracteres/);
   });
 
   it('conserva el token guardado cuando sólo cambian los proyectos', async () => {
-    await settingsService.save(userId, { projectIds: '101', accessToken: TEST_TOKEN });
-    await settingsService.save(userId, { projectIds: '202' });
+    await settingsService.save(userId, {
+      gitlabUsername: TEST_GITLAB_USERNAME, projectIds: '101', accessToken: TEST_TOKEN });
+    await settingsService.save(userId, {
+      gitlabUsername: TEST_GITLAB_USERNAME, projectIds: '202' });
 
     expect(await settingsService.getCredentials(userId)).toMatchObject({
       accessToken: TEST_TOKEN,
@@ -126,7 +161,8 @@ describe('save', () => {
   });
 
   it('guarda el token cifrado y no en claro', async () => {
-    await settingsService.save(userId, { projectIds: '101', accessToken: TEST_TOKEN });
+    await settingsService.save(userId, {
+      gitlabUsername: TEST_GITLAB_USERNAME, projectIds: '101', accessToken: TEST_TOKEN });
 
     const { rows } = await database.query<{ encrypted_access_token: string }>(
       'SELECT encrypted_access_token FROM gitlab_settings WHERE user_id = $1',
@@ -138,7 +174,8 @@ describe('save', () => {
   });
 
   it('guarda los proyectos como arreglo de Postgres', async () => {
-    await settingsService.save(userId, { projectIds: '101,202', accessToken: TEST_TOKEN });
+    await settingsService.save(userId, {
+      gitlabUsername: TEST_GITLAB_USERNAME, projectIds: '101,202', accessToken: TEST_TOKEN });
 
     const { rows } = await database.query<{ project_ids: string[] }>(
       'SELECT project_ids FROM gitlab_settings WHERE user_id = $1',
@@ -149,8 +186,10 @@ describe('save', () => {
   });
 
   it('reemplaza la configuración anterior en lugar de duplicarla', async () => {
-    await settingsService.save(userId, { projectIds: '101', accessToken: TEST_TOKEN });
-    await settingsService.save(userId, { projectIds: '202', accessToken: TEST_TOKEN });
+    await settingsService.save(userId, {
+      gitlabUsername: TEST_GITLAB_USERNAME, projectIds: '101', accessToken: TEST_TOKEN });
+    await settingsService.save(userId, {
+      gitlabUsername: TEST_GITLAB_USERNAME, projectIds: '202', accessToken: TEST_TOKEN });
 
     const { rows } = await database.query<{ total: string | number }>(
       'SELECT COUNT(*) AS total FROM gitlab_settings WHERE user_id = $1',
@@ -162,8 +201,20 @@ describe('save', () => {
 });
 
 describe('getCredentials', () => {
+  it('incluye el nickname con el que se identifica la persona', async () => {
+    await settingsService.save(userId, {
+      gitlabUsername: TEST_GITLAB_USERNAME,
+      projectIds: '101',
+      accessToken: TEST_TOKEN,
+    });
+
+    expect((await settingsService.getCredentials(userId))?.gitlabUsername)
+      .toBe(TEST_GITLAB_USERNAME);
+  });
+
   it('devuelve el token descifrado para consultar GitLab', async () => {
-    await settingsService.save(userId, { projectIds: '101,202', accessToken: TEST_TOKEN });
+    await settingsService.save(userId, {
+      gitlabUsername: TEST_GITLAB_USERNAME, projectIds: '101,202', accessToken: TEST_TOKEN });
 
     expect(await settingsService.getCredentials(userId)).toMatchObject({
       accessToken: TEST_TOKEN,
@@ -177,14 +228,16 @@ describe('getCredentials', () => {
 
   it('devuelve null si la clave de cifrado ya no es la que cifró el token', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
-    await settingsService.save(userId, { projectIds: '101', accessToken: TEST_TOKEN });
+    await settingsService.save(userId, {
+      gitlabUsername: TEST_GITLAB_USERNAME, projectIds: '101', accessToken: TEST_TOKEN });
 
     expect(await createServiceWithOtherKey().getCredentials(userId)).toBeNull();
   });
 
   it('no filtra el token en el log del fallo de descifrado', async () => {
     const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
-    await settingsService.save(userId, { projectIds: '101', accessToken: TEST_TOKEN });
+    await settingsService.save(userId, {
+      gitlabUsername: TEST_GITLAB_USERNAME, projectIds: '101', accessToken: TEST_TOKEN });
 
     await createServiceWithOtherKey().getCredentials(userId);
 
@@ -194,7 +247,8 @@ describe('getCredentials', () => {
 
 describe('remove', () => {
   it('borra la configuración de la persona', async () => {
-    await settingsService.save(userId, { projectIds: '101', accessToken: TEST_TOKEN });
+    await settingsService.save(userId, {
+      gitlabUsername: TEST_GITLAB_USERNAME, projectIds: '101', accessToken: TEST_TOKEN });
 
     await settingsService.remove(userId);
 
@@ -209,13 +263,15 @@ describe('remove', () => {
 describe('aislamiento entre personas', () => {
   it('cada persona sólo ve su propia configuración', async () => {
     const otherUser = await authService.createUser({ username: 'bruno', password: TEST_PASSWORD });
-    await settingsService.save(userId, { projectIds: '101', accessToken: TEST_TOKEN });
+    await settingsService.save(userId, {
+      gitlabUsername: TEST_GITLAB_USERNAME, projectIds: '101', accessToken: TEST_TOKEN });
 
     expect(await settingsService.getSummary(otherUser.id)).toBeNull();
   });
 
   it('se borra en cascada al eliminar el usuario', async () => {
-    await settingsService.save(userId, { projectIds: '101', accessToken: TEST_TOKEN });
+    await settingsService.save(userId, {
+      gitlabUsername: TEST_GITLAB_USERNAME, projectIds: '101', accessToken: TEST_TOKEN });
 
     await database.query('DELETE FROM users WHERE id = $1', [userId]);
 

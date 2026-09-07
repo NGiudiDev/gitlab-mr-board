@@ -37,12 +37,17 @@ function announcementFor({
   total,
   viewMode,
   selectedPerson,
+  canChoosePerson,
 }) {
   if (loading) return 'Actualizando merge requests.'
   if (error) return `No se pudieron actualizar los datos: ${error}`
   if (needsGitlabSettings) return 'Falta configurar GitLab en «Mi cuenta».'
   if (!lastFetched) return ''
-  if (viewMode === 'personal' && !selectedPerson) return 'Vista personal. Elegí una persona.'
+  if (viewMode === 'personal' && !selectedPerson) {
+    return canChoosePerson
+      ? 'Vista personal. Elegí una persona.'
+      : 'Vista personal. Falta tu nickname de GitLab en «Mi cuenta».'
+  }
   if (viewMode === 'personal') {
     return `Vista personal de ${selectedPerson.name}. Se muestran ${total} merge requests.`
   }
@@ -53,7 +58,7 @@ function announcementFor({
  * Tablero de merge requests. Se monta sólo con la sesión abierta, así el
  * polling arranca recién cuando el backend va a aceptar las peticiones.
  */
-function Board({ onGoToAccount = () => {} }) {
+function Board({ canChoosePerson = false, onGoToAccount = () => {} }) {
   const {
     mergeRequests,
     meta,
@@ -68,9 +73,12 @@ function Board({ onGoToAccount = () => {} }) {
     setViewMode,
   } = useMergeRequests()
   const people = meta?.people ?? []
-  const selectedPerson = findPersonByUsername(people, selectedUsername)
-    ?? (selectedUsername ? { name: `@${selectedUsername}`, username: selectedUsername } : null)
-  const personalMergeRequests = mergeRequestsForPerson(mergeRequests, selectedUsername)
+  // Quien no puede elegir sólo ve lo suyo: la identidad sale del nickname de
+  // GitLab que configuró, no de la selección del tablero.
+  const personalUsername = canChoosePerson ? selectedUsername : meta?.viewerUsername ?? null
+  const selectedPerson = findPersonByUsername(people, personalUsername)
+    ?? (personalUsername ? { name: `@${personalUsername}`, username: personalUsername } : null)
+  const personalMergeRequests = mergeRequestsForPerson(mergeRequests, personalUsername)
   const visibleMergeRequests = viewMode === 'personal' ? personalMergeRequests : mergeRequests
   const visibleProjects = new Set(visibleMergeRequests.map((mr) => mr.projectPath)).size
   const visibleMeta = meta ? {
@@ -87,6 +95,7 @@ function Board({ onGoToAccount = () => {} }) {
     total: visibleMergeRequests.length,
     viewMode,
     selectedPerson,
+    canChoosePerson,
   })
 
   const failedWithoutData = error && mergeRequests.length === 0
@@ -118,6 +127,7 @@ function Board({ onGoToAccount = () => {} }) {
           people={people}
           selectedUsername={selectedUsername || ''}
           selectedPersonName={selectedPerson?.name || ''}
+          canChoosePerson={canChoosePerson}
           onViewChange={setViewMode}
           onPersonChange={selectPerson}
         />
@@ -153,10 +163,18 @@ function Board({ onGoToAccount = () => {} }) {
               <BoardStatus>Cargando merge requests...</BoardStatus>
             ) : mergeRequests.length === 0 ? (
               <BoardStatus>No hay merge requests abiertos.</BoardStatus>
-            ) : viewMode === 'personal' && !selectedUsername ? (
-              <BoardStatus>Elegí una persona para ver sus tareas pendientes.</BoardStatus>
+            ) : viewMode === 'personal' && !personalUsername ? (
+              <BoardStatus>
+                {canChoosePerson
+                  ? 'Elegí una persona para ver sus tareas pendientes.'
+                  : 'Configurá tu nickname de GitLab en «Mi cuenta» para ver tus tareas.'}
+              </BoardStatus>
             ) : viewMode === 'personal' && personalMergeRequests.length === 0 ? (
-              <BoardStatus>No hay tareas pendientes para esta persona.</BoardStatus>
+              <BoardStatus>
+                {canChoosePerson
+                  ? 'No hay tareas pendientes para esta persona.'
+                  : 'No tenés tareas pendientes.'}
+              </BoardStatus>
             ) : (
               <MrBoard
                 mergeRequests={visibleMergeRequests}
@@ -227,7 +245,8 @@ function ActiveSection({ view, user, submitting, onChangePassword, onGoToAccount
 
   if (view === 'users') return <UserAdmin currentUsername={user.username} />
 
-  return <Board onGoToAccount={onGoToAccount} />
+  // Sólo un admin puede mirar el tablero de otra persona; el resto ve el suyo.
+  return <Board canChoosePerson={user.role === 'admin'} onGoToAccount={onGoToAccount} />
 }
 
 /** Decide si mostrar el ingreso o el layout con la sección activa. */

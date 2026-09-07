@@ -6,7 +6,7 @@ import type { Database } from '../src/shared/types.js';
 import type { AuthenticatedTestApp } from './types.js';
 
 // 5. Módulos de constantes.
-import { TEST_DISPLAY_NAME, TEST_ENCRYPTION_KEY, TEST_PASSWORD, TEST_PROJECT_IDS, TEST_TOKEN, TEST_USERNAME } from './constants.js';
+import { TEST_DISPLAY_NAME, TEST_ENCRYPTION_KEY, TEST_GITLAB_USERNAME, TEST_PASSWORD, TEST_PROJECT_IDS, TEST_TOKEN, TEST_USERNAME } from './constants.js';
 
 // 6. Utilidades.
 import { createSecretCipher } from '../src/features/gitlabSettings/utils/encryption.js';
@@ -97,6 +97,7 @@ async function createAuthenticatedApp(
 
   await gitlabSettingsService.save(user.id, {
     projectIds: TEST_PROJECT_IDS,
+    gitlabUsername: TEST_GITLAB_USERNAME,
     accessToken: TEST_TOKEN,
   });
 

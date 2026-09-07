@@ -8,7 +8,9 @@ La configuración se carga en la sección **«Mi cuenta»**, junto al cambio de 
 
 En la misma base Postgres de la [autenticación](autenticacion.md) hay una tabla más:
 
-- **`gitlab_settings`**: `user_id` (clave primaria y foránea a `users`), `project_ids`, `encrypted_access_token`, `updated_at`. Se borra en cascada al eliminar el usuario.
+- **`gitlab_settings`**: `user_id` (clave primaria y foránea a `users`), `project_ids`, `gitlab_username`, `encrypted_access_token`, `updated_at`. Se borra en cascada al eliminar el usuario.
+
+`gitlab_username` se agregó después de la tabla, así que el esquema la crea con un `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`: `CREATE TABLE IF NOT EXISTS` no toca una tabla que ya existe. Es nullable porque las configuraciones anteriores al campo no lo tienen hasta que se guarden de nuevo.
 
 Cada persona tiene a lo sumo una configuración, así que el alta y la modificación son la misma operación: un `INSERT ... ON CONFLICT DO UPDATE`. Los IDs viven en una columna `TEXT[]`, porque son una lista corta que siempre se lee completa.
 
@@ -19,6 +21,13 @@ Cada persona tiene a lo sumo una configuración, así que el alta y la modificac
 - Al menos uno y como máximo 50.
 - Sólo números. Los IDs viajan dentro de la ruta de la API de GitLab, así que aceptar únicamente números evita además que un valor arbitrario altere la URL consultada. Una ruta `grupo/proyecto` se rechaza con HTTP 400.
 - Se aceptan escritos como lista o como texto separado por comas, espacios o punto y coma. Se descartan los repetidos y se conserva el orden ingresado.
+
+### Nickname de GitLab
+
+- El nombre de usuario de la persona en GitLab, sin la arroba.
+- **Obligatorio.** De él depende la [vista personal](vista-personal.md): sin nickname el tablero no puede saber cuáles de los merge requests son de quien mira.
+- Se aceptan letras, números, punto, guion y guion bajo, empezando con letra o número, que es lo que admite GitLab. Hasta 255 caracteres.
+- El tablero lo devuelve en `meta.viewerUsername` junto con los merge requests, para no obligar al frontend a pedir la configuración por separado.
 
 ### Access token
 
@@ -35,8 +44,8 @@ Todos exigen sesión y operan siempre sobre la configuración de quien la tiene 
 
 | Ruta | Uso |
 |---|---|
-| `GET /api/gitlab-settings` | Devuelve `{ settings }` con `projectIds` y `tokenHint`, o `null` si no hay nada configurado |
-| `PUT /api/gitlab-settings` | Recibe `{ projectIds, accessToken? }` y devuelve la configuración guardada |
+| `GET /api/gitlab-settings` | Devuelve `{ settings }` con `projectIds`, `gitlabUsername` y `tokenHint`, o `null` si no hay nada configurado |
+| `PUT /api/gitlab-settings` | Recibe `{ projectIds, gitlabUsername, accessToken? }` y devuelve la configuración guardada |
 | `DELETE /api/gitlab-settings` | Borra la configuración y responde 204 |
 
 Los datos inválidos responden **HTTP 400** con el motivo en español.

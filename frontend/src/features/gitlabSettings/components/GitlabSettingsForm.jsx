@@ -19,14 +19,16 @@ const HINT_CLASSES = 'mt-1 text-[12px] font-normal text-text-faint'
 function GitlabSettingsForm({ onSaved = () => {} }) {
   const { settings, loading, error, saving, save } = useGitlabSettings()
   const [projectIds, setProjectIds] = useState('')
+  const [gitlabUsername, setGitlabUsername] = useState('')
   const [accessToken, setAccessToken] = useState('')
   const [formError, setFormError] = useState(null)
   const [message, setMessage] = useState(null)
 
-  // La configuración llega después del primer render, así que el campo de
-  // proyectos se completa recién cuando el backend responde.
+  // La configuración llega después del primer render, así que los campos se
+  // completan recién cuando el backend responde.
   useEffect(() => {
     setProjectIds(settings?.projectIds.join(', ') ?? '')
+    setGitlabUsername(settings?.gitlabUsername ?? '')
   }, [settings])
 
   const hasStoredToken = Boolean(settings?.tokenHint)
@@ -36,7 +38,7 @@ function GitlabSettingsForm({ onSaved = () => {} }) {
     setFormError(null)
     setMessage(null)
 
-    const failure = await save({ projectIds, accessToken: accessToken.trim() })
+    const failure = await save({ projectIds, gitlabUsername, accessToken: accessToken.trim() })
 
     if (failure) {
       setFormError(failure)
@@ -93,6 +95,26 @@ function GitlabSettingsForm({ onSaved = () => {} }) {
             />
             <p id="gitlab-proyectos-ayuda" className={HINT_CLASSES}>
               Números separados por comas, por ejemplo 123, 456. Los encontrás en la portada de cada proyecto en GitLab.
+            </p>
+          </div>
+
+          <div className="mb-4">
+            <label className={LABEL_CLASSES} htmlFor="gitlab-nickname">
+              Nickname de GitLab
+            </label>
+            <input
+              id="gitlab-nickname"
+              type="text"
+              value={gitlabUsername}
+              onChange={(event) => setGitlabUsername(event.target.value)}
+              autoCapitalize="none"
+              spellCheck="false"
+              required
+              aria-describedby="gitlab-nickname-ayuda"
+              className={FIELD_CLASSES}
+            />
+            <p id="gitlab-nickname-ayuda" className={HINT_CLASSES}>
+              Tu nombre de usuario en GitLab, sin la arroba. Con él la vista personal sabe cuáles son tus tareas.
             </p>
           </div>
 

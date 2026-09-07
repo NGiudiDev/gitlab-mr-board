@@ -36,6 +36,12 @@ const SCHEMA_STATEMENTS = [
     encrypted_access_token TEXT NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL
   )`,
+
+  // `CREATE TABLE IF NOT EXISTS` no toca una tabla que ya existe, así que una
+  // columna agregada después necesita su propio `ALTER`. Es nullable porque las
+  // configuraciones anteriores a este campo no lo tienen hasta que se guarden
+  // de nuevo.
+  'ALTER TABLE gitlab_settings ADD COLUMN IF NOT EXISTS gitlab_username TEXT',
 ];
 
 // El driver habla el protocolo de Postgres sobre WebSocket. Node 22 ya trae la

@@ -80,17 +80,19 @@ function useGitlabSettings() {
   /**
    * Guarda los proyectos y, si se escribió uno nuevo, el access token.
    *
-   * @param {{ projectIds: string, accessToken?: string }} input Datos del formulario.
+   * @param {{ projectIds: string, gitlabUsername: string, accessToken?: string }} input Datos del formulario.
    * @returns {Promise<string | null>} El mensaje de error, o `null` si se guardó.
    */
-  async function save({ projectIds, accessToken }) {
+  async function save({ projectIds, gitlabUsername, accessToken }) {
     setSaving(true)
 
     try {
       const response = await requestSettings({
         method: 'PUT',
         // Sin token nuevo no se manda el campo: el backend conserva el guardado.
-        body: accessToken ? { projectIds, accessToken } : { projectIds },
+        body: accessToken
+          ? { projectIds, gitlabUsername, accessToken }
+          : { projectIds, gitlabUsername },
       })
 
       if (!response.ok) return await readErrorMessage(response)

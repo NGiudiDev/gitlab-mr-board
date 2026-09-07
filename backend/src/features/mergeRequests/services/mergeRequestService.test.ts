@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { GitLabFixture } from '../../../../test/types.js';
 
 // 5. Módulos de constantes.
-import { TEST_PROJECT_IDS, TEST_TOKEN } from '../../../../test/constants.js';
+import { TEST_GITLAB_USERNAME, TEST_PROJECT_IDS, TEST_TOKEN } from '../../../../test/constants.js';
 
 // 7. Imports relativos restantes.
 import { buildMergeRequest, createGitLabStub } from '../../../../test/fixtures/gitlab.js';
@@ -15,6 +15,7 @@ import { getAllMergeRequests } from './mergeRequestService.js';
 const TEST_CREDENTIALS = {
   accessToken: TEST_TOKEN,
   projectIds: TEST_PROJECT_IDS,
+  gitlabUsername: TEST_GITLAB_USERNAME,
   updatedAt: '2026-09-01T10:00:00.000Z',
 };
 

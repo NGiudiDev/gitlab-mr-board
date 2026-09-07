@@ -6,7 +6,7 @@ import type { AuthenticatedTestApp, HttpTestOptions } from '../../../../test/typ
 import type { GitLabSettingsSummary } from '../types.js';
 
 // 5. Módulos de constantes.
-import { TEST_PROJECT_IDS, TEST_TOKEN } from '../../../../test/constants.js';
+import { TEST_GITLAB_USERNAME, TEST_PROJECT_IDS, TEST_TOKEN } from '../../../../test/constants.js';
 
 // 7. Imports relativos restantes.
 import { createAuthenticatedApp } from '../../../../test/auth.js';
@@ -14,6 +14,7 @@ import { requestApp } from '../../../../test/httpClient.js';
 
 const ENDPOINT = '/api/gitlab-settings';
 const OTHER_TOKEN = 'glpat-otro-token-de-prueba';
+const OTHER_USERNAME = 'otro-nickname';
 
 let session: AuthenticatedTestApp;
 
@@ -43,6 +44,7 @@ describe('GET /api/gitlab-settings', () => {
     expect(response.status).toBe(200);
     expect(settings.projectIds).toEqual(TEST_PROJECT_IDS);
     expect(settings.tokenHint).toBe(TEST_TOKEN.slice(-4));
+    expect(settings.gitlabUsername).toBe(TEST_GITLAB_USERNAME);
     expect(response.body).not.toContain(TEST_TOKEN);
   });
 
@@ -59,7 +61,7 @@ describe('PUT /api/gitlab-settings', () => {
   it('rechaza con 401 la petición sin sesión', async () => {
     const response = await requestApp(session.app, ENDPOINT, {
       method: 'PUT',
-      body: { projectIds: '303', accessToken: OTHER_TOKEN },
+      body: { gitlabUsername: OTHER_USERNAME, projectIds: '303', accessToken: OTHER_TOKEN },
     });
 
     expect(response.status).toBe(401);
@@ -68,7 +70,7 @@ describe('PUT /api/gitlab-settings', () => {
   it('guarda los proyectos y el token de la persona', async () => {
     const response = await request({
       method: 'PUT',
-      body: { projectIds: '303, 404', accessToken: OTHER_TOKEN },
+      body: { gitlabUsername: OTHER_USERNAME, projectIds: '303, 404', accessToken: OTHER_TOKEN },
     });
 
     expect(response.status).toBe(200);
@@ -81,14 +83,14 @@ describe('PUT /api/gitlab-settings', () => {
   it('nunca devuelve el access token recibido', async () => {
     const response = await request({
       method: 'PUT',
-      body: { projectIds: '303', accessToken: OTHER_TOKEN },
+      body: { gitlabUsername: OTHER_USERNAME, projectIds: '303', accessToken: OTHER_TOKEN },
     });
 
     expect(response.body).not.toContain(OTHER_TOKEN);
   });
 
   it('conserva el token guardado cuando no se envía uno nuevo', async () => {
-    await request({ method: 'PUT', body: { projectIds: '303' } });
+    await request({ method: 'PUT', body: { gitlabUsername: OTHER_USERNAME, projectIds: '303' } });
 
     expect(await session.gitlabSettingsService.getCredentials(session.user.id))
       .toMatchObject({ accessToken: TEST_TOKEN, projectIds: ['303'] });
@@ -97,11 +99,21 @@ describe('PUT /api/gitlab-settings', () => {
   it('responde 400 con un ID de proyecto inválido', async () => {
     const response = await request({
       method: 'PUT',
-      body: { projectIds: 'grupo/proyecto', accessToken: OTHER_TOKEN },
+      body: { gitlabUsername: OTHER_USERNAME, projectIds: 'grupo/proyecto', accessToken: OTHER_TOKEN },
     });
 
     expect(response.status).toBe(400);
     expect(response.json<{ error: string }>().error).toMatch(/sólo números/);
+  });
+
+  it('responde 400 sin el nickname de GitLab', async () => {
+    const response = await request({
+      method: 'PUT',
+      body: { projectIds: '303', accessToken: OTHER_TOKEN },
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.json<{ error: string }>().error).toMatch(/nickname de GitLab/);
   });
 
   it('responde 400 sin proyectos', async () => {
@@ -113,7 +125,7 @@ describe('PUT /api/gitlab-settings', () => {
   it('responde 400 con un token demasiado corto', async () => {
     const response = await request({
       method: 'PUT',
-      body: { projectIds: '303', accessToken: 'corto' },
+      body: { gitlabUsername: OTHER_USERNAME, projectIds: '303', accessToken: 'corto' },
     });
 
     expect(response.status).toBe(400);
@@ -122,7 +134,7 @@ describe('PUT /api/gitlab-settings', () => {
   it('exige el token en la primera configuración', async () => {
     await session.gitlabSettingsService.remove(session.user.id);
 
-    const response = await request({ method: 'PUT', body: { projectIds: '303' } });
+    const response = await request({ method: 'PUT', body: { gitlabUsername: OTHER_USERNAME, projectIds: '303' } });
 
     expect(response.status).toBe(400);
     expect(response.json<{ error: string }>().error).toMatch(/access token/);
@@ -134,7 +146,7 @@ describe('PUT /api/gitlab-settings', () => {
       password: 'contrasena-de-prueba',
     });
 
-    await request({ method: 'PUT', body: { projectIds: '303', accessToken: OTHER_TOKEN } });
+    await request({ method: 'PUT', body: { gitlabUsername: OTHER_USERNAME, projectIds: '303', accessToken: OTHER_TOKEN } });
 
     expect(await session.gitlabSettingsService.getSummary(other.id)).toBeNull();
   });

@@ -7,7 +7,7 @@ import type { CreateAppOptions } from '../../../app.js';
 import type { MergeRequestResponse } from '../types.js';
 
 // 5. Módulos de constantes.
-import { TEST_PROJECT_IDS, TEST_TOKEN } from '../../../../test/constants.js';
+import { TEST_GITLAB_USERNAME, TEST_PROJECT_IDS, TEST_TOKEN } from '../../../../test/constants.js';
 
 // 7. Imports relativos restantes.
 import { createAuthenticatedApp } from '../../../../test/auth.js';
@@ -61,6 +61,20 @@ describe('GET /api/pull-requests', () => {
     expect(payload.meta.totalMRs).toBe(1);
     expect(payload.mergeRequests[0]?.mergeability).toBe('ready_to_merge');
     expect(response.body).not.toContain(TEST_TOKEN);
+  });
+
+  it('informa el nickname de quien mira, para armar la vista personal', async () => {
+    const stub = createGitLabStub({
+      projects: { 101: 'equipo/tablero', 202: 'equipo/api' },
+      mergeRequestPages: { 101: [[]], 202: [[]] },
+    });
+    vi.stubGlobal('fetch', stub.fetch);
+    const { get } = await createBoardClient();
+
+    const response = await get('/api/pull-requests');
+
+    expect(response.json<MergeRequestResponse>().meta.viewerUsername)
+      .toBe(TEST_GITLAB_USERNAME);
   });
 
   it('rechaza con 401 la petición sin sesión', async () => {
@@ -146,6 +160,7 @@ describe('caché de GET /api/pull-requests', () => {
         totalMRs,
         allProjects: [],
         people: [],
+        viewerUsername: null,
       },
     };
   }
@@ -222,7 +237,7 @@ describe('caché de GET /api/pull-requests', () => {
     });
 
     await get('/api/pull-requests');
-    gitlabSettingsService.save(user.id, { projectIds: ['303'] });
+    gitlabSettingsService.save(user.id, { projectIds: ['303'], gitlabUsername: 'otro' });
     const afterChange = await get('/api/pull-requests');
 
     expect(calls).toBe(2);

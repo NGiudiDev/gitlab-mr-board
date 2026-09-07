@@ -134,7 +134,7 @@ Configuración de GitLab de la propia cuenta: los IDs de los proyectos y el acce
 
 ### `GET /api/pull-requests`
 
-**Exige una sesión válida**: sin ella responde HTTP 401. Si la persona todavía no configuró GitLab responde HTTP 409 con el código `gitlab_settings_missing`. Devuelve los merge requests consolidados en `mergeRequests` y un objeto `meta` con la fecha de consulta, cantidad de proyectos, total de resultados, nombres de todos los proyectos configurados y las personas participantes en `people`.
+**Exige una sesión válida**: sin ella responde HTTP 401. Si la persona todavía no configuró GitLab responde HTTP 409 con el código `gitlab_settings_missing`. Devuelve los merge requests consolidados en `mergeRequests` y un objeto `meta` con la fecha de consulta, cantidad de proyectos, total de resultados, nombres de todos los proyectos configurados, las personas participantes en `people` y el nickname de GitLab de quien pregunta en `viewerUsername`.
 
 Cada merge request incluye el nombre y el `username` del autor. El nombre se presenta en la interfaz y `authorUsername` aporta la identidad estable con la que se comparan las personas.
 

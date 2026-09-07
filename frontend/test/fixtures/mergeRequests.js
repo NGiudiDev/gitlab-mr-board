@@ -81,6 +81,8 @@ function buildResponse(mergeRequests = [], meta = {}) {
       totalMRs: mergeRequests.length,
       allProjects,
       people: collectPeople(mergeRequests),
+      // Nickname de quien mira; el backend lo toma de su configuración de GitLab.
+      viewerUsername: null,
       ...meta,
     },
   }

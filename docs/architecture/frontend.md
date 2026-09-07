@@ -49,11 +49,11 @@ App
 - `LoginForm` pide usuario y contraseña, muestra el error que devuelve el backend y ofrece pasar al alta.
 - `RegisterForm` crea la cuenta: valida en el navegador las mismas reglas que el backend para avisar antes de enviar.
 - `SessionBar` identifica a quién pertenece la sesión y permite cerrarla.
-- `GitlabSettingsForm` resuelve los IDs de los proyectos y el access token que alimentan el tablero de esa persona. El campo del token arranca vacío en cada visita, porque el backend nunca lo devuelve: dejarlo así conserva el guardado.
+- `GitlabSettingsForm` resuelve los IDs de los proyectos, el nickname de GitLab y el access token que alimentan el tablero de esa persona. El campo del token arranca vacío en cada visita, porque el backend nunca lo devuelve: dejarlo así conserva el guardado.
 - `AccountPanel` resuelve el cambio de la propia contraseña.
 - `UserAdmin` lista los usuarios y permite dar de alta, habilitar y deshabilitar. No ofrece restablecer contraseñas: eso se hace por línea de comandos.
 - `TopBar` presenta los totales, el estado de sincronización y la actualización manual del tablero.
-- `ViewControls` alterna entre la vista general y la personal y permite elegir una persona.
+- `ViewControls` alterna entre la vista general y la personal. El selector de persona aparece sólo con `canChoosePerson`, que `App` activa para un `admin`: el resto ve siempre sus propias tareas, identificadas por `meta.viewerUsername`.
 - `MrBoard` agrupa los merge requests por proyecto, mantiene el estado local de expansión y los distribuye según su clasificación. Ambas vistas reutilizan este componente; la personal le entrega únicamente las tareas de la persona seleccionada.
 - `BoardColumn` representa una categoría mediante una lista semántica con scroll vertical.
 - `MrCard` resume el merge request, presenta los responsables que informa `responsiblePeople` y enlaza a GitLab.

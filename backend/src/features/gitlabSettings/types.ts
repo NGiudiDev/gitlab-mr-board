@@ -12,6 +12,8 @@ export interface StoredGitLabSettings {
   userId: string;
   projectIds: string[];
   encryptedAccessToken: string;
+  /** Nickname de GitLab de la persona; `null` en configuraciones anteriores al campo. */
+  gitlabUsername: string | null;
   updatedAt: string;
 }
 
@@ -20,12 +22,15 @@ export interface GitLabSettingsSummary {
   projectIds: string[];
   /** Últimos caracteres del token, para reconocer cuál está guardado. */
   tokenHint: string;
+  gitlabUsername: string | null;
 }
 
 /** Credenciales con las que se consulta GitLab en nombre de una persona. */
 export interface GitLabCredentials {
   accessToken: string;
   projectIds: string[];
+  /** Con quién se identifica esta persona dentro de GitLab. */
+  gitlabUsername: string | null;
   /** Cambia con cada guardado; identifica la versión vigente de la caché. */
   updatedAt: string;
 }
@@ -33,6 +38,8 @@ export interface GitLabCredentials {
 export interface SaveGitLabSettingsInput {
   /** Lista de IDs, o una cadena separada por comas tal como la escribe la persona. */
   projectIds: unknown;
+  /** Nickname de GitLab, tal como lo escribe la persona. */
+  gitlabUsername: unknown;
   /** Token nuevo. Si se omite, se conserva el que ya estaba guardado. */
   accessToken?: string | undefined;
 }

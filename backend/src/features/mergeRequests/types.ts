@@ -145,6 +145,11 @@ export interface MergeRequestMetadata {
   allProjects: string[];
   /** Personas que participan de los merge requests consultados, sin duplicados. */
   people: MergeRequestPerson[];
+  /**
+   * Nickname de GitLab de quien pide el tablero, o `null` si todavía no lo
+   * configuró. Es lo que permite armar la vista personal sin elegir a nadie.
+   */
+  viewerUsername: string | null;
 }
 
 export interface MergeRequestResponse {

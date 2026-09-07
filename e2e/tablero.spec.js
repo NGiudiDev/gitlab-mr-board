@@ -62,6 +62,7 @@ test.describe('Tablero de merge requests', () => {
       await expect(page.getByRole('heading', { level: 2, name: 'GitLab' })).toBeVisible();
 
       await page.getByLabel('IDs de los proyectos').fill(e2eConfig.projectIds);
+      await page.getByLabel('Nickname de GitLab').fill(e2eConfig.gitlabUsername);
       await page.getByLabel('Access token').fill(e2eConfig.gitlabToken);
       await page.getByRole('button', { name: 'Guardar configuración' }).click();
 

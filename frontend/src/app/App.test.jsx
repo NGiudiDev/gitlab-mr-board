@@ -25,6 +25,7 @@ const MRS = [
 const GITLAB_SETTINGS = {
   projectIds: ['101', '202'],
   tokenHint: 'real',
+  gitlabUsername: 'ana-gitlab',
 }
 
 let fetchMock
@@ -160,7 +161,57 @@ describe('estado vacío', () => {
   })
 })
 
-describe('vista personal', () => {
+describe('vista personal de quien no es administrador', () => {
+  /** Monta la app con el nickname de GitLab que informa el backend. */
+  async function renderWithViewer(viewerUsername) {
+    fetchMock.mockImplementation(async () => jsonResponse(buildResponse(MRS, { viewerUsername })))
+    await renderApp()
+    fireEvent.click(screen.getByRole('button', { name: 'Personal' }))
+  }
+
+  it('no ofrece elegir persona', async () => {
+    await renderWithViewer('ana')
+
+    expect(screen.queryByRole('combobox', { name: 'Persona' })).toBeNull()
+  })
+
+  it('muestra directamente las tareas propias, sin elegir a nadie', async () => {
+    await renderWithViewer('ana')
+
+    expect(container.textContent).toContain('Agregar filtro por autor')
+    expect(container.textContent).not.toContain('Corregir cálculo de approvals')
+    expect(screen.getByRole('heading', { level: 2 }).textContent).toBe('Tareas de Ana Pérez por estado')
+  })
+
+  it('avisa cuando no tiene tareas pendientes', async () => {
+    await renderWithViewer('beto')
+
+    expect(boardStatus().textContent).toContain('No tenés tareas pendientes.')
+  })
+
+  it('pide configurar el nickname cuando el backend no informa ninguno', async () => {
+    await renderWithViewer(null)
+
+    expect(boardStatus().textContent).toContain('Configurá tu nickname de GitLab')
+    expect(liveRegion().textContent).toBe('Vista personal. Falta tu nickname de GitLab en «Mi cuenta».')
+  })
+
+  it('sigue viendo el tablero general completo', async () => {
+    await renderWithViewer('ana')
+
+    fireEvent.click(screen.getByRole('button', { name: 'General' }))
+
+    expect(container.textContent).toContain('equipo/api')
+    expect(container.textContent).toContain('equipo/tablero')
+  })
+})
+
+describe('vista personal de un administrador', () => {
+  // Elegir a quién mirar es exclusivo de un admin: el resto ve sólo lo suyo.
+  beforeEach(() => {
+    signInTestUser({ ...TEST_USER, role: 'admin' })
+  })
+
   function openPersonalView() {
     fireEvent.click(screen.getByRole('button', { name: 'Personal' }))
   }
@@ -523,6 +574,7 @@ describe('navegación entre secciones', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Configurar en Mi cuenta' }))
     await flush()
     fireEvent.change(screen.getByLabelText('IDs de los proyectos'), { target: { value: '101' } })
+    fireEvent.change(screen.getByLabelText('Nickname de GitLab'), { target: { value: 'ana-gitlab' } })
     fireEvent.change(screen.getByLabelText('Access token'), { target: { value: 'glpat-token-de-prueba' } })
     fireEvent.click(screen.getByRole('button', { name: 'Guardar configuración' }))
     await flush()
