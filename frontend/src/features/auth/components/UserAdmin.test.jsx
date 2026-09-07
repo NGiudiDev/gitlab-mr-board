@@ -182,32 +182,10 @@ describe('acciones por usuario', () => {
     expect(ownToggle.getAttribute('title')).toContain('tu propia cuenta')
   })
 
-  it('restablece la contraseña con el valor ingresado', async () => {
+  it('no ofrece restablecer la contraseña desde la tabla', async () => {
     await renderUserAdmin()
-    vi.stubGlobal('prompt', vi.fn(() => 'contrasena-restablecida'))
-    fetchMock.mockClear()
-    fetchMock.mockResolvedValueOnce(jsonResponse(null, 204))
 
-    await userEvent.click(rowFor('beto').querySelectorAll('button')[1])
-    await flush()
-
-    expect(fetchMock.mock.calls[0]).toEqual(['http://localhost:3001/api/users/beto/password', {
-      credentials: 'include',
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: 'contrasena-restablecida' }),
-    }])
-    expect(screen.getByRole('status').textContent).toContain('restablecida')
-  })
-
-  it('no llama al backend si se cancela el restablecimiento', async () => {
-    await renderUserAdmin()
-    vi.stubGlobal('prompt', vi.fn(() => null))
-    fetchMock.mockClear()
-
-    await userEvent.click(rowFor('beto').querySelectorAll('button')[1])
-    await flush()
-
-    expect(fetchMock).not.toHaveBeenCalled()
+    expect(screen.queryByRole('button', { name: /Restablecer/ })).toBeNull()
+    expect(rowFor('beto').querySelectorAll('button')).toHaveLength(1)
   })
 })

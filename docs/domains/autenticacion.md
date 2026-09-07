@@ -16,7 +16,6 @@ El tablero exige una sesión iniciada. Los motivos y las alternativas descartada
 | `GET /api/pull-requests` | Sesión |
 | `GET` y `POST /api/users` | Sesión con rol `admin` |
 | `PATCH /api/users/:username/status` | Sesión con rol `admin` |
-| `PUT /api/users/:username/password` | Sesión con rol `admin` |
 
 Sin sesión válida, las rutas protegidas responden **HTTP 401** con `{ "error": "Iniciá sesión para ver el tablero." }`. Con sesión pero sin permisos, **HTTP 403**.
 
@@ -83,7 +82,7 @@ Con el registro abierto, cualquiera que alcance la URL puede crearse una cuenta 
 La barra superior navega entre el tablero y la configuración de la cuenta:
 
 - **«Mi cuenta»**, para cualquier usuario, cambia la propia contraseña indicando la actual como confirmación. Al aplicarse se cierran todas sus sesiones y la app vuelve al ingreso.
-- **«Usuarios»**, sólo para un `admin`, lista los usuarios con su rol, estado y último ingreso, y permite dar de alta, habilitar, deshabilitar y restablecer contraseñas.
+- **«Usuarios»**, sólo para un `admin`, lista los usuarios con su rol, estado y último ingreso, y permite dar de alta, habilitar y deshabilitar. Restablecer una contraseña ajena quedó fuera de la interfaz: se hace con `npm run users -- password <usuario>`.
 
 Deshabilitar la propia cuenta está impedido: dejaría el tablero sin ningún administrador si es el único, y en cualquier caso cerraría la sesión en curso.
 

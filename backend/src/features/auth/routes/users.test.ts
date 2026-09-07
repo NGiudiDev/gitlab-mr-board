@@ -211,43 +211,18 @@ describe('PATCH /api/users/:username/status', () => {
   });
 });
 
-describe('PUT /api/users/:username/password', () => {
-  it('restablece la contraseña y cierra las sesiones de esa persona', async () => {
-    const { request } = await createClient('admin');
-    await request('/api/users', { method: 'POST', body: { username: 'zoe', password: TEST_PASSWORD } });
-    const { token } = await session.authService.login({ username: 'zoe', password: TEST_PASSWORD });
-
-    const response = await request('/api/users/zoe/password', {
-      method: 'PUT',
-      body: { password: 'contrasena-restablecida' },
-    });
-
-    expect(response.status).toBe(204);
-    expect(await session.authService.authenticate(token)).toBeNull();
-    await expect(session.authService.login({ username: 'zoe', password: 'contrasena-restablecida' }))
-      .resolves.toBeDefined();
-  });
-
-  it('responde 400 cuando la contraseña nueva es demasiado corta', async () => {
+describe('restablecimiento de contraseñas ajenas', () => {
+  it('ya no se expone por HTTP: sólo queda en la línea de comandos', async () => {
     const { request } = await createClient('admin');
     await request('/api/users', { method: 'POST', body: { username: 'zoe', password: TEST_PASSWORD } });
 
     const response = await request('/api/users/zoe/password', {
-      method: 'PUT',
-      body: { password: 'corta' },
-    });
-
-    expect(response.status).toBe(400);
-  });
-
-  it('responde 404 cuando el usuario no existe', async () => {
-    const { request } = await createClient('admin');
-
-    const response = await request('/api/users/fantasma/password', {
       method: 'PUT',
       body: { password: 'contrasena-restablecida' },
     });
 
     expect(response.status).toBe(404);
+    await expect(session.authService.login({ username: 'zoe', password: TEST_PASSWORD }))
+      .resolves.toBeDefined();
   });
 });

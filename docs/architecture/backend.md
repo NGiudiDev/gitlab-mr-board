@@ -122,7 +122,9 @@ Administran la sesión y la propia cuenta. `register` crea un usuario y abre su 
 
 ### `/api/users/*`
 
-Administración de usuarios: listado, alta con rol, habilitación y restablecimiento de contraseñas. Exigen rol `admin`, no sólo sesión.
+Administración de usuarios: listado, alta con rol, habilitación y deshabilitación. Exigen rol `admin`, no sólo sesión.
+
+No hay ruta para restablecer la contraseña de otra persona: fijarle la contraseña a alguien equivale a poder entrar como esa persona, así que la operación quedó sólo en `npm run users -- password`, que exige acceso al servidor.
 
 La tabla completa de permisos y las reglas —vencimiento, estados, freno de fuerza bruta y límite de registros— están en el [dominio de autenticación](../domains/autenticacion.md).
 

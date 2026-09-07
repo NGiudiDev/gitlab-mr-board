@@ -102,7 +102,6 @@ function useUsers() {
     reload: load,
     createUser: (user) => submit('', { method: 'POST', body: user }),
     setStatus: (username, status) => submit(`/${username}/status`, { method: 'PATCH', body: { status } }),
-    resetPassword: (username, password) => submit(`/${username}/password`, { method: 'PUT', body: { password } }),
   }
 }
 

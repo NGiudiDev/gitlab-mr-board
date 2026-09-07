@@ -18,6 +18,10 @@ const VALID_STATUSES: UserStatus[] = ['active', 'disabled'];
  * Todas sus rutas exigen rol de administrador: el alta pública vive en
  * `/api/auth/register` y no permite elegir rol.
  *
+ * No expone el restablecimiento de contraseñas ajenas: fijarle la contraseña a
+ * otra persona equivale a poder entrar como ella, así que esa operación quedó
+ * sólo en la línea de comandos, que exige acceso al servidor.
+ *
  * @param authService Servicio de autenticación ya construido.
  * @returns Router para montar bajo `/api/users`.
  */
@@ -70,19 +74,6 @@ function createUsersRouter(authService: AuthService): Router {
       response.json({ user: await authService.setUserStatus(username, status as UserStatus) });
     } catch (error: unknown) {
       respondWithHttpError(response, error, 'al cambiar el estado de un usuario');
-    }
-  });
-
-  router.put('/:username/password', async (request, response) => {
-    const { username = '' } = request.params;
-    const { password } = (request.body ?? {}) as Partial<Record<string, string>>;
-
-    try {
-      await authService.changePassword(username, password ?? '');
-
-      response.status(204).end();
-    } catch (error: unknown) {
-      respondWithHttpError(response, error, 'al restablecer una contraseña');
     }
   });
 

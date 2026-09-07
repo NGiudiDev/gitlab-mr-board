@@ -107,12 +107,12 @@ function CreateUserForm({ submitting = false, onCreate = () => {} }) {
 }
 
 /**
- * Administración de usuarios: alta, habilitación y restablecimiento de
- * contraseñas. El backend valida el rol en cada ruta; esconder los controles
- * es sólo una cortesía de la interfaz.
+ * Administración de usuarios: alta, habilitación y deshabilitación. El backend
+ * valida el rol en cada ruta; esconder los controles es sólo una cortesía de la
+ * interfaz.
  */
 function UserAdmin({ currentUsername = '' }) {
-  const { users, loading, error, createUser, setStatus, resetPassword } = useUsers()
+  const { users, loading, error, createUser, setStatus } = useUsers()
   const [actionError, setActionError] = useState(null)
   const [message, setMessage] = useState(null)
   const [busyUsername, setBusyUsername] = useState(null)
@@ -152,19 +152,6 @@ function UserAdmin({ currentUsername = '' }) {
       nextStatus === 'disabled'
         ? `Usuario «${user.username}» deshabilitado.`
         : `Usuario «${user.username}» habilitado.`,
-    )
-  }
-
-  function handleResetPassword(user) {
-    // `prompt` alcanza para una acción de administración puntual y evita
-    // sostener el estado de un formulario por fila.
-    const password = window.prompt(`Contraseña nueva para «${user.username}» (mínimo 8 caracteres):`)
-    if (!password) return
-
-    runAction(
-      user.username,
-      () => resetPassword(user.username, password),
-      `Contraseña de «${user.username}» restablecida. Se cerraron sus sesiones.`,
     )
   }
 
@@ -222,25 +209,15 @@ function UserAdmin({ currentUsername = '' }) {
                     </td>
                     <td className="py-2 pr-4 text-text-muted">{formatDate(user.lastLoginAt)}</td>
                     <td className="py-2">
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleToggleStatus(user)}
-                          disabled={isCurrentUser || busyUsername === user.username}
-                          title={isCurrentUser ? 'No podés cambiar el estado de tu propia cuenta.' : undefined}
-                          className={ACTION_CLASSES}
-                        >
-                          {user.status === 'active' ? 'Deshabilitar' : 'Habilitar'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleResetPassword(user)}
-                          disabled={busyUsername === user.username}
-                          className={ACTION_CLASSES}
-                        >
-                          Restablecer contraseña
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleStatus(user)}
+                        disabled={isCurrentUser || busyUsername === user.username}
+                        title={isCurrentUser ? 'No podés cambiar el estado de tu propia cuenta.' : undefined}
+                        className={ACTION_CLASSES}
+                      >
+                        {user.status === 'active' ? 'Deshabilitar' : 'Habilitar'}
+                      </button>
                     </td>
                   </tr>
                 )
