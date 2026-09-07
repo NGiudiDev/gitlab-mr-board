@@ -1,6 +1,6 @@
 # Autenticación
 
-El tablero exige una sesión iniciada. Los motivos y las alternativas descartadas están en el [ADR 0006](../decisions/0006-login-local-con-sqlite.md) y el [ADR 0007](../decisions/0007-registro-abierto-y-gestion-de-usuarios.md); este documento describe el modelo y las reglas.
+El tablero exige una sesión iniciada. Los motivos y las alternativas descartadas están en el [ADR 0006](../decisions/0006-login-local-con-sqlite.md) y el [ADR 0007](../decisions/0007-registro-abierto-y-gestion-de-usuarios.md), y el [ADR 0009](../decisions/0009-neon-como-base-de-datos.md) explica por qué la base pasó de SQLite local a Neon; este documento describe el modelo y las reglas.
 
 ## Qué queda protegido
 
@@ -20,13 +20,15 @@ El tablero exige una sesión iniciada. Los motivos y las alternativas descartada
 
 Sin sesión válida, las rutas protegidas responden **HTTP 401** con `{ "error": "Iniciá sesión para ver el tablero." }`. Con sesión pero sin permisos, **HTTP 403**.
 
+Validar la sesión consulta la base, así que un fallo de esa consulta responde **HTTP 503** y no 401: confundir una base caída con una sesión inválida desloguearía a todo el equipo ante una interrupción pasajera.
+
 La separación de permisos se valida en el backend, ruta por ruta. Que la interfaz esconda un control es una cortesía, no la barrera.
 
 ## Modelo de datos
 
-La base SQLite vive en `DATABASE_PATH` (por omisión `backend/data/app.db`) y tiene tres tablas; las dos de la autenticación son:
+La base Postgres vive en Neon, en la instancia que indica `DATABASE_URL`, y tiene tres tablas; las dos de la autenticación son:
 
-- **`users`**: `id`, `username`, `display_name`, `password_hash`, `role`, `status`, `created_at`, `last_login_at`.
+- **`users`**: `id`, `username`, `display_name`, `password_hash`, `role`, `status`, `created_at`, `last_login_at`. Las dos marcas temporales son `TIMESTAMPTZ` y el dominio las expone como cadenas ISO.
 - **`sessions`**: `id`, `user_id`, `token_hash`, `created_at`, `expires_at`. Se borran en cascada al eliminar el usuario.
 
 La tercera, `gitlab_settings`, pertenece a la [configuración de GitLab](configuracion-gitlab.md).
@@ -99,7 +101,10 @@ npm run users --prefix backend -- create ana --name "Ana Pérez" --role admin
 | `password <usuario>` | Cambia la contraseña y cierra sus sesiones |
 | `disable <usuario>` | Corta el acceso, incluidas las sesiones abiertas |
 | `enable <usuario>` | Vuelve a habilitarlo |
+| `delete <usuario>` | Lo borra junto con sus sesiones y su configuración de GitLab; no falla si no existe |
 | `list` | Lista usuario, rol, estado y nombre visible |
+
+Borrar es la única operación que quita datos de forma irreversible. La interfaz no la ofrece: para cortar el acceso alcanza con deshabilitar, que además conserva el historial.
 
 La contraseña nunca se pasa por argumento: se pide por teclado, no se muestra al escribirla y se confirma dos veces. Así no queda en el historial de la terminal ni en la lista de procesos.
 

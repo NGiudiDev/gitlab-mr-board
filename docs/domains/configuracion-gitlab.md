@@ -6,11 +6,11 @@ La configuración se carga en la sección **«Mi cuenta»**, junto al cambio de 
 
 ## Modelo de datos
 
-En la misma base SQLite de la [autenticación](autenticacion.md) hay una tabla más:
+En la misma base Postgres de la [autenticación](autenticacion.md) hay una tabla más:
 
 - **`gitlab_settings`**: `user_id` (clave primaria y foránea a `users`), `project_ids`, `encrypted_access_token`, `updated_at`. Se borra en cascada al eliminar el usuario.
 
-Cada persona tiene a lo sumo una configuración, así que el alta y la modificación son la misma operación. Los IDs se guardan como una cadena separada por comas: es una lista corta que siempre se lee completa.
+Cada persona tiene a lo sumo una configuración, así que el alta y la modificación son la misma operación: un `INSERT ... ON CONFLICT DO UPDATE`. Los IDs viven en una columna `TEXT[]`, porque son una lista corta que siempre se lee completa.
 
 ## Reglas
 

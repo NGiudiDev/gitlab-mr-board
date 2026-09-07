@@ -7,8 +7,9 @@ import type { AuthService, UserRole, UserStatus } from '../types.js';
 
 // 7. Imports relativos restantes.
 import config from '../config.js';
-import { openAuthDatabase } from '../services/authRepository.js';
+import { createAuthRepository } from '../services/authRepository.js';
 import { createAuthService } from '../services/authService.js';
+import { applySchema, createNeonDatabase } from '../services/database.js';
 
 const USAGE = `Gestión de usuarios del tablero.
 
@@ -16,7 +17,10 @@ const USAGE = `Gestión de usuarios del tablero.
   npm run users --prefix backend -- password <usuario>
   npm run users --prefix backend -- disable <usuario>
   npm run users --prefix backend -- enable <usuario>
+  npm run users --prefix backend -- delete <usuario>
   npm run users --prefix backend -- list
+
+Borrar un usuario arrastra sus sesiones y su configuración de GitLab.
 
 La contraseña nunca se pasa por argumento: se pide por teclado y no se muestra.
 El tablero también permite registrarse y administrar usuarios desde la interfaz.`;
@@ -166,22 +170,36 @@ async function changePasswordCommand(authService: AuthService, args: string[]): 
 }
 
 /** Habilita o deshabilita el acceso de un usuario. */
-function setStatusCommand(authService: AuthService, args: string[], status: UserStatus): void {
+async function setStatusCommand(authService: AuthService, args: string[], status: UserStatus): Promise<void> {
   const username = args[0];
   if (!username) {
     throw new Error('Indicá el nombre de usuario. Ejemplo: disable ana');
   }
 
-  const user = authService.setUserStatus(username, status);
+  const user = await authService.setUserStatus(username, status);
 
   console.log(status === 'disabled'
     ? `Usuario «${user.username}» deshabilitado. Se cerraron sus sesiones abiertas.`
     : `Usuario «${user.username}» habilitado de nuevo.`);
 }
 
+/** Borra un usuario junto con sus sesiones y su configuración de GitLab. */
+async function deleteUserCommand(authService: AuthService, args: string[]): Promise<void> {
+  const username = args[0];
+  if (!username) {
+    throw new Error('Indicá el nombre de usuario. Ejemplo: delete ana');
+  }
+
+  const deleted = await authService.deleteUser(username);
+
+  console.log(deleted
+    ? `Usuario «${username}» borrado, junto con sus sesiones y su configuración de GitLab.`
+    : `No existía el usuario «${username}»; no había nada que borrar.`);
+}
+
 /** Lista los usuarios dados de alta. */
-function listUsersCommand(authService: AuthService): void {
-  const users = authService.listUsers();
+async function listUsersCommand(authService: AuthService): Promise<void> {
+  const users = await authService.listUsers();
 
   if (users.length === 0) {
     console.log('Todavía no hay usuarios. Creá el primero acá, o registrate en el tablero: el primer registro queda administrador.');
@@ -195,8 +213,13 @@ function listUsersCommand(authService: AuthService): void {
 
 async function main(): Promise<void> {
   const [command = '', ...args] = process.argv.slice(2);
+  const database = createNeonDatabase(config.databaseUrl);
+
+  // El script puede ser lo primero que corra contra una base recién creada.
+  await applySchema(database);
+
   const authService = createAuthService({
-    repository: openAuthDatabase(config.databasePath),
+    repository: createAuthRepository(database),
     sessionDurationDays: config.sessionDurationDays,
   });
 
@@ -212,19 +235,24 @@ async function main(): Promise<void> {
     }
 
     if (command === 'disable' || command === 'enable') {
-      setStatusCommand(authService, args, command === 'disable' ? 'disabled' : 'active');
+      await setStatusCommand(authService, args, command === 'disable' ? 'disabled' : 'active');
+      return;
+    }
+
+    if (command === 'delete') {
+      await deleteUserCommand(authService, args);
       return;
     }
 
     if (command === 'list') {
-      listUsersCommand(authService);
+      await listUsersCommand(authService);
       return;
     }
 
     console.log(USAGE);
     process.exitCode = command ? 1 : 0;
   } finally {
-    authService.close();
+    await authService.close();
   }
 }
 

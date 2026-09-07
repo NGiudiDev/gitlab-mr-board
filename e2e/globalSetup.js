@@ -1,5 +1,4 @@
 import { spawnSync } from 'node:child_process';
-import { rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import e2eConfig from './config.js';
@@ -7,43 +6,72 @@ import e2eConfig from './config.js';
 const repositoryRoot = fileURLToPath(new URL('..', import.meta.url));
 
 /**
- * Prepara la base de sesiones antes de levantar los servidores.
+ * Ejecuta un subcomando de la CLI de usuarios contra la base de los E2E.
  *
- * Se borra y se recrea en cada corrida para que el recorrido siempre arranque
- * con el mismo usuario y sin sesiones viejas. La contraseña se manda por la
- * entrada estándar: el script nunca la acepta por argumento.
+ * Se pasa por la CLI y no por la base directamente porque el driver es una
+ * dependencia de `backend/`, y `e2e/` corre desde la raíz.
+ *
+ * @param {string[]} args Subcomando y sus argumentos.
+ * @param {string} [input] Lo que se manda por la entrada estándar.
+ * @returns {import('node:child_process').SpawnSyncReturns<string>} El resultado.
  */
-export default function globalSetup() {
-  rmSync(e2eConfig.databasePath, { force: true });
-
-  const result = spawnSync(
+function runUsersCommand(args, input = '') {
+  return spawnSync(
     'npm',
-    [
-      'run', 'users', '--prefix', 'backend', '--',
-      'create', e2eConfig.username,
-      '--name', 'Usuario E2E',
-      // Administrador, para que el recorrido llegue a la pantalla de usuarios.
-      '--role', 'admin',
-    ],
+    ['run', 'users', '--prefix', 'backend', '--', ...args],
     {
       cwd: repositoryRoot,
-      input: `${e2eConfig.password}\n${e2eConfig.password}\n`,
+      input,
       encoding: 'utf8',
       // `npm` es un script, no un ejecutable: en Windows necesita la shell.
       shell: true,
       env: {
         ...process.env,
-        DATABASE_PATH: e2eConfig.databasePath,
+        DATABASE_URL: e2eConfig.databaseUrl,
         ENCRYPTION_KEY: e2eConfig.encryptionKey,
       },
     },
   );
+}
 
-  if (result.status !== 0) {
+/**
+ * Deja el usuario del recorrido recién creado y sin configurar.
+ *
+ * Antes alcanzaba con borrar el archivo de SQLite. Ahora la base es remota, así
+ * que se borra el usuario: la cascada se lleva sus sesiones y su configuración
+ * de GitLab, y el recorrido vuelve a arrancar desde «todavía no configuraste».
+ * Sólo se toca ese usuario, nunca el resto de la base.
+ *
+ * La contraseña se manda por la entrada estándar: el script nunca la acepta por
+ * argumento.
+ */
+export default function globalSetup() {
+  const removed = runUsersCommand(['delete', e2eConfig.username]);
+
+  if (removed.status !== 0) {
+    throw new Error([
+      'No se pudo limpiar el usuario de los test E2E.',
+      'Revisá E2E_DATABASE_URL y que la base esté disponible.',
+      removed.stdout,
+      removed.stderr,
+    ].filter(Boolean).join('\n'));
+  }
+
+  const created = runUsersCommand(
+    [
+      'create', e2eConfig.username,
+      '--name', 'Usuario E2E',
+      // Administrador, para que el recorrido llegue a la pantalla de usuarios.
+      '--role', 'admin',
+    ],
+    `${e2eConfig.password}\n${e2eConfig.password}\n`,
+  );
+
+  if (created.status !== 0) {
     throw new Error([
       'No se pudo crear el usuario de los test E2E.',
-      result.stdout,
-      result.stderr,
+      created.stdout,
+      created.stderr,
     ].filter(Boolean).join('\n'));
   }
 }

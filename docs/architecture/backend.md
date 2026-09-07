@@ -15,7 +15,7 @@ La implementación separa el transporte HTTP, la lógica de negocio y la integra
 - `src/services/gitlabApi.ts`: construye el cliente de GitLab para un access token concreto, y encapsula URLs, paginación y acceso limitado a la API v4.
 - `src/services/mergeRequestService.ts`: coordina las consultas, enriquece los merge requests y construye la respuesta del BFF.
 - `src/services/mergeRequestRules.ts`: contiene reglas puras de clasificación, responsabilidad y normalización que no dependen de Express ni de la red.
-- `src/services/database.ts`: abre la base SQLite con `node:sqlite` y aplica el esquema. Los repositorios comparten esa única conexión, porque las claves foráneas entre sus tablas sólo valen dentro de la misma base abierta.
+- `src/services/database.ts`: abre el pool contra Neon con `@neondatabase/serverless`, expone la interfaz mínima `Database` —`query` y `close`— y aplica el esquema. Los repositorios reciben esa interfaz y no el driver: es lo que permite ejecutarlos contra otro Postgres en los test. Comparten una única conexión, porque las claves foráneas entre sus tablas sólo valen dentro de la misma base.
 - `src/services/authRepository.ts`: expone el acceso a usuarios y sesiones sobre esa conexión.
 - `src/services/gitlabSettingsRepository.ts`: expone el acceso a la configuración de GitLab de cada usuario.
 - `src/services/gitlabSettingsService.ts`: valida los IDs de proyecto y el access token, y cifra y descifra el token con el cifrador inyectado.
@@ -27,7 +27,7 @@ La implementación separa el transporte HTTP, la lógica de negocio y la integra
 
 ## Construcción y arranque
 
-`createApp()` construye la aplicación sin abrir un puerto y `src/index.ts` es el único responsable de invocar `listen()`, así que la aplicación puede ejecutarse en memoria o en distintos entornos. Tanto `createApp()` como `createMergeRequestsRouter()` reciben por inyección la fuente de merge requests y el reloj de la caché, lo que permite controlar sus dependencias sin consultar GitLab ni depender del tiempo real. `createApp()` acepta además el servicio de autenticación y el de configuración de GitLab ya construidos; si le falta alguno, abre la base configurada en `DATABASE_PATH` y arma los dos sobre esa misma conexión.
+`createApp()` construye la aplicación sin abrir un puerto y `src/index.ts` es el único responsable de invocar `listen()`, así que la aplicación puede ejecutarse en memoria o en distintos entornos. Tanto `createApp()` como `createMergeRequestsRouter()` reciben por inyección la fuente de merge requests y el reloj de la caché, lo que permite controlar sus dependencias sin consultar GitLab ni depender del tiempo real. `createApp()` acepta además el servicio de autenticación y el de configuración de GitLab ya construidos; si le falta alguno, abre el pool de `DATABASE_URL` y arma los dos sobre esa misma conexión. Aplicar el esquema, en cambio, es responsabilidad de `src/index.ts`: la base es remota y hay que esperar a que esté lista antes de escuchar.
 
 ## Flujo de una consulta
 
@@ -42,7 +42,7 @@ Una solicitud a `GET /api/pull-requests` atraviesa el siguiente flujo:
 7. Los resultados se ordenan por fecha de actualización descendente y se agregan los metadatos de la consulta, incluidas las personas participantes.
 8. El router conserva la respuesta completa en memoria y la devuelve al frontend.
 
-Los merge requests no se guardan: cada proceso mantiene su propia caché y la pierde al reiniciarse. La persistencia del backend es la base SQLite, con los usuarios y las sesiones descritos en el [dominio de autenticación](../domains/autenticacion.md) y las credenciales de GitLab en la [configuración de GitLab](../domains/configuracion-gitlab.md).
+Los merge requests no se guardan: cada proceso mantiene su propia caché y la pierde al reiniciarse. La persistencia del backend es la base Postgres alojada en Neon ([ADR 0009](../decisions/0009-neon-como-base-de-datos.md)), con los usuarios y las sesiones descritos en el [dominio de autenticación](../domains/autenticacion.md) y las credenciales de GitLab en la [configuración de GitLab](../domains/configuracion-gitlab.md).
 
 ## Integración con GitLab
 
@@ -61,7 +61,8 @@ El backend prioriza entregar una vista parcial antes que descartar toda la respu
 - Si fallan las aprobaciones o las discusiones, su estado pasa a `unknown`.
 - Si falla la consulta del pipeline, su estado pasa a `none`.
 - Si falla la operación global de la ruta, el backend responde HTTP 502 con un mensaje contextual.
-- Los errores no controlados llegan al middleware global y producen HTTP 500.
+- Si falla la consulta a la base al validar la sesión o al leer la configuración, el backend responde HTTP 503 y no 401 ni 502: el problema no es de la sesión ni de GitLab.
+- Los errores no controlados llegan al middleware global y producen HTTP 500. Express 4 no captura promesas rechazadas, así que cada handler asíncrono maneja sus propios errores.
 
 ## Caché
 
@@ -105,6 +106,6 @@ El parámetro opcional `force=true` fuerza la actualización de la caché. Cualq
 
 ## Configuración
 
-`src/config.ts` carga `backend/.env`. `ENCRYPTION_KEY` es la única obligatoria; si falta, el proceso informa el problema y termina. Los valores opcionales controlan la URL de GitLab, el puerto, el TTL de la caché, las reglas de aprobación y la ubicación y duración de las sesiones. El access token y los proyectos no son configuración del proceso: los carga cada persona y se guardan en la base.
+`src/config.ts` carga `backend/.env`. `DATABASE_URL` y `ENCRYPTION_KEY` son obligatorias; si falta alguna, el proceso informa el problema y termina. Los valores opcionales controlan la URL de GitLab, el puerto, el TTL de la caché, las reglas de aprobación y la ubicación y duración de las sesiones. El access token y los proyectos no son configuración del proceso: los carga cada persona y se guardan en la base.
 
 La lista completa, sus valores predeterminados y el procedimiento de actualización se mantienen en la [guía de entorno local](../development/entorno-local.md).

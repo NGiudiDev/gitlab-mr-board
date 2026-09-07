@@ -7,7 +7,7 @@ import dotenv from 'dotenv';
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 const environmentFilePath = path.resolve(currentDirectory, '..', '.env');
-const requiredEnvironmentVariables = ['ENCRYPTION_KEY'] as const;
+const requiredEnvironmentVariables = ['DATABASE_URL', 'ENCRYPTION_KEY'] as const;
 
 dotenv.config({ path: environmentFilePath });
 
@@ -20,9 +20,10 @@ if (missingEnvironmentVariables.length > 0) {
   process.exit(1);
 }
 
+const databaseUrl = process.env.DATABASE_URL;
 const encryptionKey = process.env.ENCRYPTION_KEY;
 
-if (!encryptionKey) {
+if (!databaseUrl || !encryptionKey) {
   throw new Error('La configuración obligatoria no está disponible.');
 }
 
@@ -34,14 +35,6 @@ function parseIntegerOrDefault(value: string | undefined, defaultValue: number):
   return Number.parseInt(value ?? '', 10) || defaultValue;
 }
 
-/** Resuelve la ruta de la base SQLite, relativa a la carpeta del backend. */
-function resolveDatabasePath(value: string | undefined): string {
-  const configuredPath = value?.trim();
-  if (configuredPath === ':memory:') return configuredPath;
-
-  return path.resolve(currentDirectory, '..', configuredPath || 'data/app.db');
-}
-
 const config = {
   // La instancia de GitLab es una sola para todo el tablero; el token y los
   // proyectos, en cambio, los configura cada persona desde «Mi cuenta».
@@ -50,7 +43,9 @@ const config = {
   cacheTtlMs: parseIntegerOrDefault(process.env.POLL_CACHE_TTL_MS, 60_000),
   teamLeadUsername: process.env.TEAM_LEAD_USERNAME || 'NGiudi',
   minApprovals: parseIntegerOrDefault(process.env.MIN_APPROVALS, 2),
-  databasePath: resolveDatabasePath(process.env.DATABASE_PATH),
+  // Cadena de conexión de Neon. Conviene la del pooler: el backend abre un
+  // pool propio y las conexiones directas de Postgres son un recurso escaso.
+  databaseUrl,
   sessionDurationDays: parseIntegerOrDefault(process.env.SESSION_DURATION_DAYS, 7),
   // La cookie de sesión sólo puede exigir HTTPS donde efectivamente lo hay.
   cookieSecure: (process.env.COOKIE_SECURE || String(process.env.NODE_ENV === 'production')) === 'true',

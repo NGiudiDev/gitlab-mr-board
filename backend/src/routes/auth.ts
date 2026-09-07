@@ -67,8 +67,19 @@ function respondWithAuthError(response: Response, error: unknown, context: strin
  * @returns Middleware de Express que responde 401 si no hay sesión.
  */
 function createRequireSession(authService: AuthService): RequestHandler {
-  return (request, response, next) => {
-    const user = authService.authenticate(readSessionToken(request.headers.cookie));
+  return async (request, response, next) => {
+    // Validar la sesión ahora consulta una base remota, así que un fallo de red
+    // no debe confundirse con una sesión inválida: eso desloguearía a todo el
+    // mundo ante una caída pasajera de la base.
+    let user: AuthenticatedUser | null;
+
+    try {
+      user = await authService.authenticate(readSessionToken(request.headers.cookie));
+    } catch (error: unknown) {
+      console.error('Error al validar la sesión:', error);
+      response.status(503).json({ error: 'No se pudo validar tu sesión. Probá de nuevo.' });
+      return;
+    }
 
     if (!user) {
       response.status(401).json({ error: 'Iniciá sesión para ver el tablero.' });
@@ -161,8 +172,13 @@ function createAuthRouter(authService: AuthService): Router {
     }
   });
 
-  router.post('/logout', (request, response) => {
-    authService.logout(readSessionToken(request.headers.cookie));
+  router.post('/logout', async (request, response) => {
+    try {
+      await authService.logout(readSessionToken(request.headers.cookie));
+    } catch (error: unknown) {
+      // La cookie se limpia igual: dejarla viva sería peor, y el token vence solo.
+      console.error('Error al cerrar la sesión:', error);
+    }
 
     response.clearCookie(SESSION_COOKIE_NAME, sessionCookieOptions());
     response.status(204).end();

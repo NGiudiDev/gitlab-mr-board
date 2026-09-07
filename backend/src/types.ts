@@ -7,6 +7,24 @@ export type QueryValue = string | number | boolean | null | undefined;
 export type QueryParams = Record<string, QueryValue>;
 export type QueueResolver = () => void;
 
+/** Resultado de una consulta SQL, con la misma forma para todos los drivers. */
+export interface SqlResult<T> {
+  rows: T[];
+  /** Filas afectadas por un `INSERT`, `UPDATE` o `DELETE`. */
+  rowCount: number;
+}
+
+/**
+ * Acceso a Postgres, reducido a lo que necesitan los repositorios.
+ *
+ * Mantenerlo mínimo es lo que permite que los test corran contra PGlite —un
+ * Postgres en memoria— sin que el código de producción sepa de esa diferencia.
+ */
+export interface Database {
+  query: <T>(text: string, params?: unknown[]) => Promise<SqlResult<T>>;
+  close: () => Promise<void>;
+}
+
 export interface GitLabResponse<T> {
   data: T;
   headers: Headers;
@@ -179,7 +197,7 @@ export interface MergeRequestResponse {
 export type UserRole = 'user' | 'admin';
 export type UserStatus = 'active' | 'disabled';
 
-/** Fila de `users` tal como se guarda en SQLite. */
+/** Fila de `users` tal como se guarda en Postgres. */
 export interface StoredUser {
   id: string;
   username: string;
@@ -237,20 +255,22 @@ export interface LoginResult {
 
 /** Acceso persistente a usuarios y sesiones. */
 export interface AuthRepository {
-  insertUser: (user: StoredUser) => void;
-  findUserById: (id: string) => StoredUser | null;
-  findUserByUsername: (username: string) => StoredUser | null;
-  listUsers: () => StoredUser[];
-  countUsers: () => number;
-  updateLastLogin: (userId: string, lastLoginAt: string) => void;
-  updatePasswordHash: (userId: string, passwordHash: string) => void;
-  updateStatus: (userId: string, status: UserStatus) => void;
-  insertSession: (session: StoredSession) => void;
-  findSessionByTokenHash: (tokenHash: string) => StoredSession | null;
-  deleteSession: (sessionId: string) => void;
-  deleteSessionsOfUser: (userId: string) => void;
-  deleteExpiredSessions: (nowIso: string) => number;
-  close: () => void;
+  insertUser: (user: StoredUser) => Promise<void>;
+  findUserById: (id: string) => Promise<StoredUser | null>;
+  findUserByUsername: (username: string) => Promise<StoredUser | null>;
+  listUsers: () => Promise<StoredUser[]>;
+  countUsers: () => Promise<number>;
+  updateLastLogin: (userId: string, lastLoginAt: string) => Promise<void>;
+  updatePasswordHash: (userId: string, passwordHash: string) => Promise<void>;
+  updateStatus: (userId: string, status: UserStatus) => Promise<void>;
+  /** Devuelve si borró algo; sesiones y configuración caen en cascada. */
+  deleteUser: (userId: string) => Promise<boolean>;
+  insertSession: (session: StoredSession) => Promise<void>;
+  findSessionByTokenHash: (tokenHash: string) => Promise<StoredSession | null>;
+  deleteSession: (sessionId: string) => Promise<void>;
+  deleteSessionsOfUser: (userId: string) => Promise<void>;
+  deleteExpiredSessions: (nowIso: string) => Promise<number>;
+  close: () => Promise<void>;
 }
 
 export interface AuthServiceOptions {
@@ -264,17 +284,19 @@ export interface AuthService {
   createUser: (input: CreateUserInput) => Promise<AuthenticatedUser>;
   register: (input: RegisterUserInput) => Promise<LoginResult>;
   login: (credentials: { username: string; password: string }) => Promise<LoginResult>;
-  authenticate: (token: string | undefined) => AuthenticatedUser | null;
-  logout: (token: string | undefined) => void;
+  authenticate: (token: string | undefined) => Promise<AuthenticatedUser | null>;
+  logout: (token: string | undefined) => Promise<void>;
   changePassword: (username: string, newPassword: string) => Promise<void>;
   changeOwnPassword: (
     username: string,
     currentPassword: string,
     newPassword: string,
   ) => Promise<void>;
-  setUserStatus: (username: string, status: UserStatus) => UserSummary;
-  listUsers: () => UserSummary[];
-  close: () => void;
+  setUserStatus: (username: string, status: UserStatus) => Promise<UserSummary>;
+  /** Devuelve si el usuario existía; borrarlo arrastra sesiones y configuración. */
+  deleteUser: (username: string) => Promise<boolean>;
+  listUsers: () => Promise<UserSummary[]>;
+  close: () => Promise<void>;
 }
 
 // Contratos de la configuración de GitLab de cada persona.
@@ -318,9 +340,9 @@ export interface SaveGitLabSettingsInput {
 
 /** Acceso persistente a la configuración de GitLab. */
 export interface GitLabSettingsRepository {
-  findByUserId: (userId: string) => StoredGitLabSettings | null;
-  save: (settings: StoredGitLabSettings) => void;
-  deleteByUserId: (userId: string) => void;
+  findByUserId: (userId: string) => Promise<StoredGitLabSettings | null>;
+  save: (settings: StoredGitLabSettings) => Promise<void>;
+  deleteByUserId: (userId: string) => Promise<void>;
 }
 
 export interface GitLabSettingsServiceOptions {
@@ -332,11 +354,11 @@ export interface GitLabSettingsServiceOptions {
 }
 
 export interface GitLabSettingsService {
-  getSummary: (userId: string) => GitLabSettingsSummary | null;
+  getSummary: (userId: string) => Promise<GitLabSettingsSummary | null>;
   /** Devuelve el token descifrado; sólo para uso interno del backend. */
-  getCredentials: (userId: string) => GitLabCredentials | null;
-  save: (userId: string, input: SaveGitLabSettingsInput) => GitLabSettingsSummary;
-  remove: (userId: string) => void;
+  getCredentials: (userId: string) => Promise<GitLabCredentials | null>;
+  save: (userId: string, input: SaveGitLabSettingsInput) => Promise<GitLabSettingsSummary>;
+  remove: (userId: string) => Promise<void>;
 }
 
 // Contratos usados exclusivamente por la infraestructura de test.

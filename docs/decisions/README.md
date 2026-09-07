@@ -8,5 +8,6 @@
 - [ADR 0006: resolver el login con usuarios locales en SQLite](0006-login-local-con-sqlite.md)
 - [ADR 0007: abrir el registro y administrar usuarios desde la interfaz](0007-registro-abierto-y-gestion-de-usuarios.md)
 - [ADR 0008: guardar las credenciales de GitLab por usuario y cifradas](0008-credenciales-de-gitlab-por-usuario.md)
+- [ADR 0009: reemplazar SQLite local por Neon](0009-neon-como-base-de-datos.md)
 
 Una decisión posterior se registra en un ADR nuevo en lugar de reescribir uno aceptado.

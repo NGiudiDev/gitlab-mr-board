@@ -2,8 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // 4. Imports exclusivos de tipos de TypeScript.
-import type { AuthService, GitLabSettingsService } from '../types.js';
-import type { DatabaseSync } from 'node:sqlite';
+import type { AuthService, Database, GitLabSettingsService } from '../types.js';
 
 // 5. Módulos de constantes.
 import { TEST_PASSWORD, TEST_TOKEN, TEST_USERNAME } from '../../test/constants.js';
@@ -12,7 +11,8 @@ import { TEST_PASSWORD, TEST_TOKEN, TEST_USERNAME } from '../../test/constants.j
 import { createSecretCipher } from '../utils/encryption.js';
 
 // 7. Imports relativos restantes.
-import { createTestDatabase, createTestGitLabSettingsService } from '../../test/auth.js';
+import { createTestGitLabSettingsService } from '../../test/auth.js';
+import { createTestDatabase } from '../../test/database.js';
 import { createAuthRepository } from './authRepository.js';
 import { createAuthService } from './authService.js';
 import { createGitLabSettingsRepository } from './gitlabSettingsRepository.js';
@@ -21,7 +21,7 @@ import { createGitLabSettingsService } from './gitlabSettingsService.js';
 const OTHER_KEY = 'otra-clave-de-cifrado-para-los-test';
 const MAX_PROJECT_IDS = 50;
 
-let database: DatabaseSync;
+let database: Database;
 let authService: AuthService;
 let settingsService: GitLabSettingsService;
 let userId: string;
@@ -35,7 +35,7 @@ function createServiceWithOtherKey(): GitLabSettingsService {
 }
 
 beforeEach(async () => {
-  database = createTestDatabase();
+  database = await createTestDatabase();
   authService = createAuthService({ repository: createAuthRepository(database) });
   settingsService = createTestGitLabSettingsService(database);
 
@@ -43,18 +43,18 @@ beforeEach(async () => {
   userId = user.id;
 });
 
-afterEach(() => {
+afterEach(async () => {
   vi.restoreAllMocks();
-  database.close();
+  await database.close();
 });
 
 describe('getSummary', () => {
-  it('devuelve null si la persona no configuró nada', () => {
-    expect(settingsService.getSummary(userId)).toBeNull();
+  it('devuelve null si la persona no configuró nada', async () => {
+    expect(await settingsService.getSummary(userId)).toBeNull();
   });
 
-  it('describe el token con sus últimos caracteres, sin revelarlo', () => {
-    const summary = settingsService.save(userId, {
+  it('describe el token con sus últimos caracteres, sin revelarlo', async () => {
+    const summary = await settingsService.save(userId, {
       projectIds: ['101', '202'],
       accessToken: TEST_TOKEN,
     });
@@ -66,8 +66,8 @@ describe('getSummary', () => {
 });
 
 describe('save', () => {
-  it('acepta los IDs escritos como texto separado por comas', () => {
-    const summary = settingsService.save(userId, {
+  it('acepta los IDs escritos como texto separado por comas', async () => {
+    const summary = await settingsService.save(userId, {
       projectIds: ' 101 , 202 ,,303 ',
       accessToken: TEST_TOKEN,
     });
@@ -75,8 +75,8 @@ describe('save', () => {
     expect(summary.projectIds).toEqual(['101', '202', '303']);
   });
 
-  it('descarta los IDs repetidos', () => {
-    const summary = settingsService.save(userId, {
+  it('descarta los IDs repetidos', async () => {
+    const summary = await settingsService.save(userId, {
       projectIds: '101,101,202',
       accessToken: TEST_TOKEN,
     });
@@ -84,118 +84,139 @@ describe('save', () => {
     expect(summary.projectIds).toEqual(['101', '202']);
   });
 
-  it('rechaza una lista vacía', () => {
-    expect(() => settingsService.save(userId, { projectIds: '  ', accessToken: TEST_TOKEN }))
-      .toThrow(/al menos un ID/);
+  it('rechaza una lista vacía', async () => {
+    await expect(settingsService.save(userId, { projectIds: '  ', accessToken: TEST_TOKEN }))
+      .rejects.toThrow(/al menos un ID/);
   });
 
-  it('rechaza un ID que no es numérico', () => {
-    expect(() => settingsService.save(userId, {
+  it('rechaza un ID que no es numérico', async () => {
+    await expect(settingsService.save(userId, {
       projectIds: 'grupo/proyecto',
       accessToken: TEST_TOKEN,
-    })).toThrow(/sólo números/);
+    })).rejects.toThrow(/sólo números/);
   });
 
-  it('rechaza más proyectos de los permitidos', () => {
+  it('rechaza más proyectos de los permitidos', async () => {
     const projectIds = Array.from({ length: MAX_PROJECT_IDS + 1 }, (_, index) => String(index + 1));
 
-    expect(() => settingsService.save(userId, { projectIds, accessToken: TEST_TOKEN }))
-      .toThrow(new RegExp(`más de ${MAX_PROJECT_IDS} proyectos`));
+    await expect(settingsService.save(userId, { projectIds, accessToken: TEST_TOKEN }))
+      .rejects.toThrow(new RegExp(`más de ${MAX_PROJECT_IDS} proyectos`));
   });
 
-  it('exige el token en la primera configuración', () => {
-    expect(() => settingsService.save(userId, { projectIds: '101' }))
-      .toThrow(/access token/);
+  it('exige el token en la primera configuración', async () => {
+    await expect(settingsService.save(userId, { projectIds: '101' }))
+      .rejects.toThrow(/access token/);
   });
 
-  it('rechaza un token demasiado corto', () => {
-    expect(() => settingsService.save(userId, { projectIds: '101', accessToken: 'glpat-corto' }))
-      .toThrow(/al menos 20 caracteres/);
+  it('rechaza un token demasiado corto', async () => {
+    await expect(settingsService.save(userId, { projectIds: '101', accessToken: 'glpat-corto' }))
+      .rejects.toThrow(/al menos 20 caracteres/);
   });
 
-  it('conserva el token guardado cuando sólo cambian los proyectos', () => {
-    settingsService.save(userId, { projectIds: '101', accessToken: TEST_TOKEN });
-    settingsService.save(userId, { projectIds: '202' });
+  it('conserva el token guardado cuando sólo cambian los proyectos', async () => {
+    await settingsService.save(userId, { projectIds: '101', accessToken: TEST_TOKEN });
+    await settingsService.save(userId, { projectIds: '202' });
 
-    expect(settingsService.getCredentials(userId)).toMatchObject({
+    expect(await settingsService.getCredentials(userId)).toMatchObject({
       accessToken: TEST_TOKEN,
       projectIds: ['202'],
     });
   });
 
-  it('guarda el token cifrado y no en claro', () => {
-    settingsService.save(userId, { projectIds: '101', accessToken: TEST_TOKEN });
+  it('guarda el token cifrado y no en claro', async () => {
+    await settingsService.save(userId, { projectIds: '101', accessToken: TEST_TOKEN });
 
-    const row = database
-      .prepare('SELECT encrypted_access_token FROM gitlab_settings WHERE user_id = ?')
-      .get(userId) as unknown as { encrypted_access_token: string };
+    const { rows } = await database.query<{ encrypted_access_token: string }>(
+      'SELECT encrypted_access_token FROM gitlab_settings WHERE user_id = $1',
+      [userId],
+    );
 
-    expect(row.encrypted_access_token).not.toContain(TEST_TOKEN);
-    expect(row.encrypted_access_token.startsWith('v1.')).toBe(true);
+    expect(rows[0]?.encrypted_access_token).not.toContain(TEST_TOKEN);
+    expect(rows[0]?.encrypted_access_token.startsWith('v1.')).toBe(true);
   });
 
-  it('reemplaza la configuración anterior en lugar de duplicarla', () => {
-    settingsService.save(userId, { projectIds: '101', accessToken: TEST_TOKEN });
-    settingsService.save(userId, { projectIds: '202', accessToken: TEST_TOKEN });
+  it('guarda los proyectos como arreglo de Postgres', async () => {
+    await settingsService.save(userId, { projectIds: '101,202', accessToken: TEST_TOKEN });
 
-    const row = database
-      .prepare('SELECT COUNT(*) AS total FROM gitlab_settings WHERE user_id = ?')
-      .get(userId) as unknown as { total: number };
+    const { rows } = await database.query<{ project_ids: string[] }>(
+      'SELECT project_ids FROM gitlab_settings WHERE user_id = $1',
+      [userId],
+    );
 
-    expect(Number(row.total)).toBe(1);
+    expect(rows[0]?.project_ids).toEqual(['101', '202']);
+  });
+
+  it('reemplaza la configuración anterior en lugar de duplicarla', async () => {
+    await settingsService.save(userId, { projectIds: '101', accessToken: TEST_TOKEN });
+    await settingsService.save(userId, { projectIds: '202', accessToken: TEST_TOKEN });
+
+    const { rows } = await database.query<{ total: string | number }>(
+      'SELECT COUNT(*) AS total FROM gitlab_settings WHERE user_id = $1',
+      [userId],
+    );
+
+    expect(Number(rows[0]?.total)).toBe(1);
   });
 });
 
 describe('getCredentials', () => {
-  it('devuelve el token descifrado para consultar GitLab', () => {
-    settingsService.save(userId, { projectIds: '101,202', accessToken: TEST_TOKEN });
+  it('devuelve el token descifrado para consultar GitLab', async () => {
+    await settingsService.save(userId, { projectIds: '101,202', accessToken: TEST_TOKEN });
 
-    expect(settingsService.getCredentials(userId)).toMatchObject({
+    expect(await settingsService.getCredentials(userId)).toMatchObject({
       accessToken: TEST_TOKEN,
       projectIds: ['101', '202'],
     });
   });
 
-  it('devuelve null si la persona no configuró nada', () => {
-    expect(settingsService.getCredentials(userId)).toBeNull();
+  it('devuelve null si la persona no configuró nada', async () => {
+    expect(await settingsService.getCredentials(userId)).toBeNull();
   });
 
-  it('devuelve null si la clave de cifrado ya no es la que cifró el token', () => {
+  it('devuelve null si la clave de cifrado ya no es la que cifró el token', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
-    settingsService.save(userId, { projectIds: '101', accessToken: TEST_TOKEN });
+    await settingsService.save(userId, { projectIds: '101', accessToken: TEST_TOKEN });
 
-    expect(createServiceWithOtherKey().getCredentials(userId)).toBeNull();
+    expect(await createServiceWithOtherKey().getCredentials(userId)).toBeNull();
   });
 
-  it('no filtra el token en el log del fallo de descifrado', () => {
+  it('no filtra el token en el log del fallo de descifrado', async () => {
     const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
-    settingsService.save(userId, { projectIds: '101', accessToken: TEST_TOKEN });
+    await settingsService.save(userId, { projectIds: '101', accessToken: TEST_TOKEN });
 
-    createServiceWithOtherKey().getCredentials(userId);
+    await createServiceWithOtherKey().getCredentials(userId);
 
     expect(logged.mock.calls.flat().map(String).join(' ')).not.toContain(TEST_TOKEN);
   });
 });
 
 describe('remove', () => {
-  it('borra la configuración de la persona', () => {
-    settingsService.save(userId, { projectIds: '101', accessToken: TEST_TOKEN });
+  it('borra la configuración de la persona', async () => {
+    await settingsService.save(userId, { projectIds: '101', accessToken: TEST_TOKEN });
 
-    settingsService.remove(userId);
+    await settingsService.remove(userId);
 
-    expect(settingsService.getSummary(userId)).toBeNull();
+    expect(await settingsService.getSummary(userId)).toBeNull();
   });
 
-  it('no falla si no había nada configurado', () => {
-    expect(() => settingsService.remove(userId)).not.toThrow();
+  it('no falla si no había nada configurado', async () => {
+    await expect(settingsService.remove(userId)).resolves.toBeUndefined();
   });
 });
 
 describe('aislamiento entre personas', () => {
   it('cada persona sólo ve su propia configuración', async () => {
     const otherUser = await authService.createUser({ username: 'bruno', password: TEST_PASSWORD });
-    settingsService.save(userId, { projectIds: '101', accessToken: TEST_TOKEN });
+    await settingsService.save(userId, { projectIds: '101', accessToken: TEST_TOKEN });
 
-    expect(settingsService.getSummary(otherUser.id)).toBeNull();
+    expect(await settingsService.getSummary(otherUser.id)).toBeNull();
+  });
+
+  it('se borra en cascada al eliminar el usuario', async () => {
+    await settingsService.save(userId, { projectIds: '101', accessToken: TEST_TOKEN });
+
+    await database.query('DELETE FROM users WHERE id = $1', [userId]);
+
+    expect(await settingsService.getSummary(userId)).toBeNull();
   });
 });

@@ -3,7 +3,7 @@ import cors from 'cors';
 import express from 'express';
 
 // 4. Imports exclusivos de tipos de TypeScript.
-import type { AuthService, CreateAppOptions, GitLabSettingsService } from './types.js';
+import type { AuthService, CreateAppOptions, Database, GitLabSettingsService } from './types.js';
 import type { ErrorRequestHandler, Express } from 'express';
 
 // 6. Utilidades.
@@ -17,7 +17,7 @@ import { createMergeRequestsRouter } from './routes/mergeRequests.js';
 import { createUsersRouter } from './routes/users.js';
 import { createAuthRepository } from './services/authRepository.js';
 import { createAuthService } from './services/authService.js';
-import { openDatabase } from './services/database.js';
+import { createNeonDatabase } from './services/database.js';
 import { createGitLabSettingsRepository } from './services/gitlabSettingsRepository.js';
 import { createGitLabSettingsService } from './services/gitlabSettingsService.js';
 
@@ -30,12 +30,37 @@ const errorHandler: ErrorRequestHandler = (error, _request, response, _next) => 
 };
 
 /**
+ * Arma sobre una base ya abierta los dos servicios que necesita la aplicación.
+ *
+ * Comparten la conexión: las claves foráneas entre sus tablas sólo valen dentro
+ * de la misma base, y un pool por servicio duplicaría las conexiones contra
+ * Neon sin ningún beneficio.
+ *
+ * @param database Base devuelta por `createNeonDatabase`, o su equivalente en
+ * memoria para los test.
+ * @returns Servicio de autenticación y de configuración de GitLab.
+ */
+function createServices(database: Database): {
+  authService: AuthService;
+  gitlabSettingsService: GitLabSettingsService;
+} {
+  return {
+    authService: createAuthService({
+      repository: createAuthRepository(database),
+      sessionDurationDays: config.sessionDurationDays,
+    }),
+    gitlabSettingsService: createGitLabSettingsService({
+      repository: createGitLabSettingsRepository(database),
+      cipher: createSecretCipher(config.encryptionKey),
+    }),
+  };
+}
+
+/**
  * Completa con la base configurada los servicios que no vinieron inyectados.
  *
- * Los dos repositorios comparten una única conexión: las claves foráneas entre
- * sus tablas sólo valen dentro de la misma base abierta. La base se abre
- * únicamente si falta construir alguno, para que un test que inyecta ambos no
- * toque el disco.
+ * El pool de Neon es perezoso, así que construirlo no abre ninguna conexión: un
+ * test que inyecta los dos servicios nunca toca la red.
  *
  * @param options Servicios ya construidos, si los hay.
  * @returns Los dos servicios que necesita la aplicación.
@@ -51,17 +76,11 @@ function resolveServices(options: CreateAppOptions): {
     };
   }
 
-  const database = openDatabase(config.databasePath);
+  const configured = createServices(createNeonDatabase(config.databaseUrl));
 
   return {
-    authService: options.authService ?? createAuthService({
-      repository: createAuthRepository(database),
-      sessionDurationDays: config.sessionDurationDays,
-    }),
-    gitlabSettingsService: options.gitlabSettingsService ?? createGitLabSettingsService({
-      repository: createGitLabSettingsRepository(database),
-      cipher: createSecretCipher(config.encryptionKey),
-    }),
+    authService: options.authService ?? configured.authService,
+    gitlabSettingsService: options.gitlabSettingsService ?? configured.gitlabSettingsService,
   };
 }
 
@@ -92,4 +111,4 @@ function createApp(options: CreateAppOptions = {}): Express {
   return app;
 }
 
-export { createApp };
+export { createApp, createServices };

@@ -8,7 +8,9 @@ Fuente de verdad para ejecutar, escribir y validar los test. La elección de her
 - **Frontend:** Vitest, React Testing Library y `happy-dom`.
 - **E2E:** Playwright Test sobre Chromium, en `e2e/`.
 
-Los test unitarios y de integración no acceden a GitLab. Los E2E recorren la aplicación completa contra proyectos reales dedicados a test y requieren `GITLAB_TOKEN`.
+Los test unitarios y de integración no acceden a GitLab **ni a Neon**: la persistencia se ejecuta contra PGlite, un Postgres compilado a WebAssembly que corre en memoria dentro del proceso de Vitest ([ADR 0009](../decisions/0009-neon-como-base-de-datos.md)). El SQL de los repositorios se prueba de verdad y `npm test` sigue sin necesitar red, Docker ni credenciales.
+
+Los E2E recorren la aplicación completa contra proyectos reales dedicados a test y una base de Neon aparte; requieren `GITLAB_TOKEN` y `E2E_DATABASE_URL`.
 
 ## Comandos
 
@@ -52,9 +54,11 @@ Y la configuración de GitLab: el ida y vuelta del cifrado, su fallo ante una cl
 
 Los test de integración construyen Express en memoria con `createApp()`, inyectan la fuente de datos y el reloj cuando corresponde y reemplazan `global.fetch` con respuestas controladas. Los contratos de esas piezas están en la [arquitectura del backend](../architecture/backend.md).
 
-Los test que necesitan persistencia abren la base con `:memory:`, de modo que cada uno arranca vacío y ninguno toca el archivo real. `backend/test/auth.ts` arma la app con una sesión ya iniciada —del rol que pida el test— y devuelve la cookie que hay que reenviar, junto con el usuario y el servicio de configuración; `createEmptyAuthService()` sirve para probar el alta del primer usuario.
+Los test que necesitan persistencia piden una base con `createTestDatabase()` de `backend/test/database.ts`. Arrancar PGlite cuesta alrededor de un segundo, así que **la instancia es una sola por archivo de test** y cada llamada vacía las tablas: pedir dos bases dentro del mismo test no da dos bases independientes, sino la misma recién vaciada. Por ese arranque, `testTimeout` está en 30 segundos. `backend/test/auth.ts` arma la app con una sesión ya iniciada —del rol que pida el test— y devuelve la cookie que hay que reenviar, junto con el usuario y el servicio de configuración; `createEmptyAuthService()` sirve para probar el alta del primer usuario.
 
 Ese mismo helper deja la configuración de GitLab ya guardada, porque casi todos los test del tablero la dan por hecha: para probar lo contrario alcanza con `gitlabSettingsService.remove(user.id)`. Los dos repositorios comparten una sola base en memoria, ya que la clave foránea de `gitlab_settings` exige que el usuario viva en la misma.
+
+Toda la capa de datos es asíncrona, así que los test la esperan: un `expect(servicio.metodo())` sin `await` compara contra una promesa y falla con «expected Promise{…}».
 
 `backend/tsconfig.json` excluye los test del build y `backend/tsconfig.test.json` los incluye en la validación de tipos.
 
@@ -89,13 +93,14 @@ Los E2E corren contra GitLab real, así que necesitan estas variables. Copiar `.
 | `E2E_PROJECT_PATH` | Sí | Ruta `grupo/proyecto` de la sección que expande el recorrido |
 | `E2E_MR_TITLE` | Sí | Título exacto (mayúsculas incluidas) del merge request que se verifica |
 | `E2E_MR_COLUMN` | Sí | Columna donde debe aparecer ese merge request |
+| `E2E_DATABASE_URL` | Sí | Base de Neon dedicada a test; el usuario del recorrido se borra y se recrea en cada corrida |
 | `E2E_GITLAB_BASE_URL` | No | Instancia de GitLab; por omisión `https://gitlab.com` |
 
 Usar proyectos creados para test, nunca los de trabajo real: el recorrido depende de que ese merge request siga abierto y en su columna.
 
 Playwright levanta ambos servicios con `webServer`, sin reutilizar procesos existentes: el backend en el puerto 3101 con una `ENCRYPTION_KEY` fija —la base es descartable—, y el build del frontend servido con `vite preview` en 4173, uno de los dos orígenes que acepta el CORS del backend.
 
-Antes de levantarlos, `e2e/globalSetup.js` borra `backend/data/e2e.db` y crea allí el usuario del recorrido, para que cada corrida arranque siempre igual. Las credenciales se pueden cambiar con `E2E_USERNAME` y `E2E_PASSWORD`; sirven sólo para esa base descartable.
+Antes de levantarlos, `e2e/globalSetup.js` borra y vuelve a crear el usuario del recorrido con `npm run users`, para que cada corrida arranque siempre igual: la cascada se lleva sus sesiones y su configuración de GitLab. Sólo toca ese usuario, nunca el resto de la base. `E2E_DATABASE_URL` es obligatoria y nunca cae en `DATABASE_URL`, para que un descuido no toque la base de trabajo. Las credenciales se pueden cambiar con `E2E_USERNAME` y `E2E_PASSWORD`.
 
 El recorrido crítico ingresa con ese usuario, comprueba que el tablero reclame la configuración de GitLab, la carga en «Mi cuenta» con `GITLAB_TOKEN` y `E2E_PROJECT_IDS` y espera una respuesta real de GitLab; después expande el proyecto configurado, verifica la columna y los bloqueadores del merge request conocido, fuerza una actualización que omite la caché recorre los controles principales con teclado hasta la vista personal y cierra la sesión comprobando que recargar no devuelva el tablero.
 

@@ -43,13 +43,17 @@ function createGitLabSettingsRouter(
 
   router.use(createRequireSession(authService));
 
-  router.get('/', (_request, response) => {
+  router.get('/', async (_request, response) => {
     const { id } = response.locals.user as AuthenticatedUser;
 
-    response.json({ settings: gitlabSettingsService.getSummary(id) });
+    try {
+      response.json({ settings: await gitlabSettingsService.getSummary(id) });
+    } catch (error: unknown) {
+      respondWithSettingsError(response, error);
+    }
   });
 
-  router.put('/', (request, response) => {
+  router.put('/', async (request, response) => {
     const { id } = response.locals.user as AuthenticatedUser;
     const { projectIds, accessToken } = (request.body ?? {}) as {
       projectIds?: unknown;
@@ -57,7 +61,7 @@ function createGitLabSettingsRouter(
     };
 
     try {
-      const settings = gitlabSettingsService.save(id, {
+      const settings = await gitlabSettingsService.save(id, {
         projectIds,
         ...(accessToken === undefined ? {} : { accessToken }),
       });
@@ -68,11 +72,15 @@ function createGitLabSettingsRouter(
     }
   });
 
-  router.delete('/', (_request, response) => {
+  router.delete('/', async (_request, response) => {
     const { id } = response.locals.user as AuthenticatedUser;
 
-    gitlabSettingsService.remove(id);
-    response.status(204).end();
+    try {
+      await gitlabSettingsService.remove(id);
+      response.status(204).end();
+    } catch (error: unknown) {
+      respondWithSettingsError(response, error);
+    }
   });
 
   return router;

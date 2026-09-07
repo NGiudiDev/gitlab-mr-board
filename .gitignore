@@ -46,5 +46,6 @@ playwright/.cache/
 # Coverage
 coverage/
 
-# Base de datos local de usuarios y sesiones
+# Base SQLite anterior a la migración a Neon. Se conserva ignorada para no
+# subir por accidente una copia con credenciales de instalaciones viejas.
 backend/data/

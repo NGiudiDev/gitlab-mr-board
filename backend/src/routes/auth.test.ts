@@ -37,8 +37,8 @@ beforeEach(async () => {
   authService = await createTestAuthService();
 });
 
-afterEach(() => {
-  authService.close();
+afterEach(async () => {
+  await authService.close();
   vi.restoreAllMocks();
 });
 
@@ -52,14 +52,14 @@ describe('POST /api/auth/register', () => {
   }
 
   it('crea el usuario, lo deja administrador si es el primero y abre la sesión', async () => {
-    const empty = createEmptyAuthService();
+    const empty = await createEmptyAuthService();
 
     const response = await register(empty, { username: 'zoe', password: TEST_PASSWORD });
 
     expect(response.status).toBe(201);
     expect(response.json<LoginResponseBody>().user).toMatchObject({ username: 'zoe', role: 'admin' });
     expect(readSetCookie(response, SESSION_COOKIE_NAME)).not.toBeNull();
-    empty.close();
+    await empty.close();
   });
 
   it('da rol user cuando ya hay alguien registrado', async () => {
@@ -94,7 +94,7 @@ describe('POST /api/auth/register', () => {
   });
 
   it('corta con 429 después de varios registros seguidos del mismo origen', async () => {
-    const empty = createEmptyAuthService();
+    const empty = await createEmptyAuthService();
     // El límite se cuenta por router, así que la app se reutiliza entre altas.
     const app = createApp({ authService: empty });
     const send = (username: string) => requestApp(app, '/api/auth/register', {
@@ -107,7 +107,7 @@ describe('POST /api/auth/register', () => {
     }
 
     expect((await send('seis')).status).toBe(429);
-    empty.close();
+    await empty.close();
   });
 });
 
@@ -162,7 +162,7 @@ describe('POST /api/auth/login', () => {
   });
 
   it('responde 403 cuando el usuario está deshabilitado', async () => {
-    authService.setUserStatus(TEST_USERNAME, 'disabled');
+    await authService.setUserStatus(TEST_USERNAME, 'disabled');
 
     const response = await login(TEST_USERNAME, TEST_PASSWORD);
 

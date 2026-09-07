@@ -27,6 +27,7 @@ const REQUIRED_VARIABLES = {
   E2E_PROJECT_PATH: 'Ruta `grupo/proyecto` de la sección que expande el recorrido',
   E2E_MR_TITLE: 'Título exacto del merge request abierto que verifica el recorrido',
   E2E_MR_COLUMN: 'Columna del tablero donde debe aparecer ese merge request',
+  E2E_DATABASE_URL: 'Cadena de conexión de una base Neon dedicada a test; el usuario del recorrido se borra y se recrea en cada corrida',
 };
 
 // El backend sólo acepta CORS desde 5173 y 4173. La suite usa 4173 —el puerto
@@ -72,7 +73,8 @@ const e2eConfig = {
   mergeRequestColumn: process.env.E2E_MR_COLUMN.trim(),
   username: process.env.E2E_USERNAME?.trim() || DEFAULT_USERNAME,
   password: process.env.E2E_PASSWORD?.trim() || DEFAULT_PASSWORD,
-  databasePath: fileURLToPath(new URL('../backend/data/e2e.db', import.meta.url)),
+  // Nunca cae en DATABASE_URL: un descuido no debe tocar la base de trabajo.
+  databaseUrl: process.env.E2E_DATABASE_URL.trim(),
   encryptionKey: ENCRYPTION_KEY,
   backendUrl: `http://localhost:${BACKEND_PORT}`,
   frontendUrl: `http://localhost:${FRONTEND_PORT}`,

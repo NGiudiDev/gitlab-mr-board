@@ -46,7 +46,7 @@ describe('GET /api/gitlab-settings', () => {
   });
 
   it('devuelve null si la persona todavía no configuró nada', async () => {
-    session.gitlabSettingsService.remove(session.user.id);
+    await session.gitlabSettingsService.remove(session.user.id);
 
     const response = await request();
 
@@ -73,7 +73,7 @@ describe('PUT /api/gitlab-settings', () => {
     expect(response.status).toBe(200);
     expect(response.json<{ settings: GitLabSettingsSummary }>().settings.projectIds)
       .toEqual(['303', '404']);
-    expect(session.gitlabSettingsService.getCredentials(session.user.id))
+    expect(await session.gitlabSettingsService.getCredentials(session.user.id))
       .toMatchObject({ accessToken: OTHER_TOKEN, projectIds: ['303', '404'] });
   });
 
@@ -89,7 +89,7 @@ describe('PUT /api/gitlab-settings', () => {
   it('conserva el token guardado cuando no se envía uno nuevo', async () => {
     await request({ method: 'PUT', body: { projectIds: '303' } });
 
-    expect(session.gitlabSettingsService.getCredentials(session.user.id))
+    expect(await session.gitlabSettingsService.getCredentials(session.user.id))
       .toMatchObject({ accessToken: TEST_TOKEN, projectIds: ['303'] });
   });
 
@@ -119,7 +119,7 @@ describe('PUT /api/gitlab-settings', () => {
   });
 
   it('exige el token en la primera configuración', async () => {
-    session.gitlabSettingsService.remove(session.user.id);
+    await session.gitlabSettingsService.remove(session.user.id);
 
     const response = await request({ method: 'PUT', body: { projectIds: '303' } });
 
@@ -135,7 +135,7 @@ describe('PUT /api/gitlab-settings', () => {
 
     await request({ method: 'PUT', body: { projectIds: '303', accessToken: OTHER_TOKEN } });
 
-    expect(session.gitlabSettingsService.getSummary(other.id)).toBeNull();
+    expect(await session.gitlabSettingsService.getSummary(other.id)).toBeNull();
   });
 });
 
@@ -150,6 +150,6 @@ describe('DELETE /api/gitlab-settings', () => {
     const response = await request({ method: 'DELETE' });
 
     expect(response.status).toBe(204);
-    expect(session.gitlabSettingsService.getSummary(session.user.id)).toBeNull();
+    expect(await session.gitlabSettingsService.getSummary(session.user.id)).toBeNull();
   });
 });

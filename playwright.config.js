@@ -37,7 +37,7 @@ export default defineConfig({
       env: {
         GITLAB_BASE_URL: e2eConfig.gitlabBaseUrl,
         PORT: String(e2eConfig.backendPort),
-        DATABASE_PATH: e2eConfig.databasePath,
+        DATABASE_URL: e2eConfig.databaseUrl,
         ENCRYPTION_KEY: e2eConfig.encryptionKey,
       },
     },

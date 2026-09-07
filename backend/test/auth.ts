@@ -4,10 +4,10 @@ import type {
   AuthRepository,
   AuthService,
   CreateAppOptions,
+  Database,
   GitLabSettingsService,
   UserRole,
 } from '../src/types.js';
-import type { DatabaseSync } from 'node:sqlite';
 
 // 5. Módulos de constantes.
 import {
@@ -27,23 +27,18 @@ import { createApp } from '../src/app.js';
 import { SESSION_COOKIE_NAME } from '../src/routes/auth.js';
 import { createAuthRepository } from '../src/services/authRepository.js';
 import { createAuthService } from '../src/services/authService.js';
-import { IN_MEMORY_LOCATION, openDatabase } from '../src/services/database.js';
 import { createGitLabSettingsRepository } from '../src/services/gitlabSettingsRepository.js';
 import { createGitLabSettingsService } from '../src/services/gitlabSettingsService.js';
-
-/** Abre una base en memoria, aislada por test. */
-function createTestDatabase(): DatabaseSync {
-  return openDatabase(IN_MEMORY_LOCATION);
-}
+import { createTestDatabase } from './database.js';
 
 /** Abre un repositorio de autenticación en memoria, aislado por test. */
-function createTestRepository(): AuthRepository {
-  return createAuthRepository(createTestDatabase());
+async function createTestRepository(): Promise<AuthRepository> {
+  return createAuthRepository(await createTestDatabase());
 }
 
 /** Crea un servicio de autenticación sobre una base vacía. */
-function createEmptyAuthService(): AuthService {
-  return createAuthService({ repository: createTestRepository() });
+async function createEmptyAuthService(): Promise<AuthService> {
+  return createAuthService({ repository: await createTestRepository() });
 }
 
 /**
@@ -52,7 +47,7 @@ function createEmptyAuthService(): AuthService {
  * @param database Base compartida con el servicio de autenticación.
  * @returns Servicio listo para guardar y leer configuraciones.
  */
-function createTestGitLabSettingsService(database: DatabaseSync): GitLabSettingsService {
+function createTestGitLabSettingsService(database: Database): GitLabSettingsService {
   return createGitLabSettingsService({
     repository: createGitLabSettingsRepository(database),
     cipher: createSecretCipher(TEST_ENCRYPTION_KEY),
@@ -66,7 +61,7 @@ function createTestGitLabSettingsService(database: DatabaseSync): GitLabSettings
  * @returns Servicio listo para iniciar sesión con `TEST_USERNAME`.
  */
 async function createTestAuthService(role: UserRole = 'user'): Promise<AuthService> {
-  const authService = createEmptyAuthService();
+  const authService = await createEmptyAuthService();
 
   await authService.createUser({
     username: TEST_USERNAME,
@@ -95,7 +90,7 @@ async function createAuthenticatedApp(
 ): Promise<AuthenticatedTestApp> {
   // Ambos repositorios comparten la conexión: la clave foránea de
   // `gitlab_settings` exige que el usuario viva en la misma base.
-  const database = createTestDatabase();
+  const database = await createTestDatabase();
   const authService = createAuthService({ repository: createAuthRepository(database) });
   const gitlabSettingsService = createTestGitLabSettingsService(database);
 
@@ -111,7 +106,7 @@ async function createAuthenticatedApp(
     password: TEST_PASSWORD,
   });
 
-  gitlabSettingsService.save(user.id, {
+  await gitlabSettingsService.save(user.id, {
     projectIds: TEST_PROJECT_IDS,
     accessToken: TEST_TOKEN,
   });

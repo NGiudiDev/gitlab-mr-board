@@ -5,9 +5,9 @@ import { afterEach, describe, expect, it } from 'vitest';
 import type { AuthRepository, AuthService } from '../types.js';
 
 // 7. Imports relativos restantes.
-import { openAuthDatabase } from './authRepository.js';
+import { createTestDatabase } from '../../test/database.js';
+import { createAuthRepository } from './authRepository.js';
 import { AuthError, createAuthService, normalizeUsername } from './authService.js';
-import { IN_MEMORY_LOCATION } from './database.js';
 
 const PASSWORD = 'contrasena-de-prueba';
 const START_DATE = new Date('2026-09-01T10:00:00.000Z');
@@ -22,8 +22,8 @@ interface TestContext {
 }
 
 /** Arma el servicio sobre una base en memoria y con el reloj bajo control. */
-function createContext(sessionDurationDays?: number): TestContext {
-  const repository = openAuthDatabase(IN_MEMORY_LOCATION);
+async function createContext(sessionDurationDays?: number): Promise<TestContext> {
+  const repository = createAuthRepository(await createTestDatabase());
   openRepositories.push(repository);
 
   let currentTime = START_DATE.getTime();
@@ -41,14 +41,14 @@ function createContext(sessionDurationDays?: number): TestContext {
 
 /** Contexto con el usuario `ana` ya dado de alta. */
 async function createContextWithUser(sessionDurationDays?: number): Promise<TestContext> {
-  const context = createContext(sessionDurationDays);
+  const context = await createContext(sessionDurationDays);
   await context.authService.createUser({ username: 'ana', password: PASSWORD, displayName: 'Ana Prueba' });
 
   return context;
 }
 
-afterEach(() => {
-  while (openRepositories.length > 0) openRepositories.pop()?.close();
+afterEach(async () => {
+  while (openRepositories.length > 0) await openRepositories.pop()?.close();
 });
 
 describe('normalizeUsername', () => {
@@ -59,7 +59,7 @@ describe('normalizeUsername', () => {
 
 describe('createUser', () => {
   it('da de alta un usuario activo con rol user', async () => {
-    const { authService, repository } = createContext();
+    const { authService, repository } = await createContext();
 
     const user = await authService.createUser({ username: 'Ana', password: PASSWORD });
 
@@ -69,11 +69,11 @@ describe('createUser', () => {
       displayName: 'ana',
       role: 'user',
     });
-    expect(repository.findUserByUsername('ana')?.status).toBe('active');
+    expect((await repository.findUserByUsername('ana'))?.status).toBe('active');
   });
 
   it('conserva el nombre visible y el rol indicados', async () => {
-    const { authService } = createContext();
+    const { authService } = await createContext();
 
     const user = await authService.createUser({
       username: 'lider',
@@ -87,7 +87,7 @@ describe('createUser', () => {
   });
 
   it('nunca expone el hash de la contraseña', async () => {
-    const { authService } = createContext();
+    const { authService } = await createContext();
 
     const user = await authService.createUser({ username: 'ana', password: PASSWORD });
 
@@ -95,14 +95,14 @@ describe('createUser', () => {
   });
 
   it('rechaza un nombre de usuario con caracteres no permitidos', async () => {
-    const { authService } = createContext();
+    const { authService } = await createContext();
 
     await expect(authService.createUser({ username: 'ana perez', password: PASSWORD }))
       .rejects.toThrow(AuthError);
   });
 
   it('rechaza un nombre de usuario demasiado corto', async () => {
-    const { authService } = createContext();
+    const { authService } = await createContext();
 
     await expect(authService.createUser({ username: 'an', password: PASSWORD }))
       .rejects.toThrow(/entre 3 y 32 caracteres/);
@@ -116,7 +116,7 @@ describe('createUser', () => {
   });
 
   it('rechaza una contraseña más corta que el mínimo', async () => {
-    const { authService } = createContext();
+    const { authService } = await createContext();
 
     await expect(authService.createUser({ username: 'ana', password: 'corta' }))
       .rejects.toMatchObject({ status: 400 });
@@ -125,7 +125,7 @@ describe('createUser', () => {
 
 describe('register', () => {
   it('deja administrador al primer usuario del sistema', async () => {
-    const { authService } = createContext();
+    const { authService } = await createContext();
 
     const result = await authService.register({ username: 'ana', password: PASSWORD });
 
@@ -141,15 +141,15 @@ describe('register', () => {
   });
 
   it('abre la sesión en el mismo paso', async () => {
-    const { authService } = createContext();
+    const { authService } = await createContext();
 
     const { token, user } = await authService.register({ username: 'ana', password: PASSWORD });
 
-    expect(authService.authenticate(token)?.username).toBe(user.username);
+    expect((await authService.authenticate(token))?.username).toBe(user.username);
   });
 
   it('conserva el nombre visible indicado', async () => {
-    const { authService } = createContext();
+    const { authService } = await createContext();
 
     const result = await authService.register({
       username: 'ana',
@@ -168,7 +168,7 @@ describe('register', () => {
   });
 
   it('aplica las mismas reglas de nombre y contraseña que el alta administrada', async () => {
-    const { authService } = createContext();
+    const { authService } = await createContext();
 
     await expect(authService.register({ username: 'an', password: PASSWORD }))
       .rejects.toMatchObject({ status: 400 });
@@ -218,8 +218,8 @@ describe('login', () => {
 
     const { token } = await authService.login({ username: 'ana', password: PASSWORD });
 
-    expect(repository.findSessionByTokenHash(token)).toBeNull();
-    expect(authService.authenticate(token)).not.toBeNull();
+    expect(await repository.findSessionByTokenHash(token)).toBeNull();
+    expect(await authService.authenticate(token)).not.toBeNull();
   });
 
   it('registra el último ingreso', async () => {
@@ -227,7 +227,7 @@ describe('login', () => {
 
     await authService.login({ username: 'ana', password: PASSWORD });
 
-    expect(repository.findUserByUsername('ana')?.lastLoginAt).toBe(START_DATE.toISOString());
+    expect((await repository.findUserByUsername('ana'))?.lastLoginAt).toBe(START_DATE.toISOString());
   });
 
   it('rechaza la contraseña incorrecta con el mismo mensaje que un usuario inexistente', async () => {
@@ -287,8 +287,8 @@ describe('login', () => {
     advance(2 * 24 * 60 * 60 * 1000);
     await authService.login({ username: 'ana', password: PASSWORD });
 
-    expect(repository.listUsers()).toHaveLength(1);
-    expect(authService.authenticate(token)).toBeNull();
+    expect(await repository.listUsers()).toHaveLength(1);
+    expect(await authService.authenticate(token)).toBeNull();
   });
 });
 
@@ -297,15 +297,15 @@ describe('authenticate', () => {
     const { authService } = await createContextWithUser();
     const { token } = await authService.login({ username: 'ana', password: PASSWORD });
 
-    expect(authService.authenticate(token)?.username).toBe('ana');
+    expect((await authService.authenticate(token))?.username).toBe('ana');
   });
 
   it('devuelve null sin token o con un token desconocido', async () => {
     const { authService } = await createContextWithUser();
 
-    expect(authService.authenticate(undefined)).toBeNull();
-    expect(authService.authenticate('')).toBeNull();
-    expect(authService.authenticate('token-inventado')).toBeNull();
+    expect(await authService.authenticate(undefined)).toBeNull();
+    expect(await authService.authenticate('')).toBeNull();
+    expect(await authService.authenticate('token-inventado')).toBeNull();
   });
 
   it('descarta la sesión vencida en lugar de dejarla en la base', async () => {
@@ -314,17 +314,17 @@ describe('authenticate', () => {
 
     advance(24 * 60 * 60 * 1000 + 1);
 
-    expect(authService.authenticate(token)).toBeNull();
-    expect(repository.findUserByUsername('ana')).not.toBeNull();
+    expect(await authService.authenticate(token)).toBeNull();
+    expect(await repository.findUserByUsername('ana')).not.toBeNull();
   });
 
   it('deja de aceptar la sesión de un usuario deshabilitado', async () => {
     const { authService } = await createContextWithUser();
     const { token } = await authService.login({ username: 'ana', password: PASSWORD });
 
-    authService.setUserStatus('ana', 'disabled');
+    await authService.setUserStatus('ana', 'disabled');
 
-    expect(authService.authenticate(token)).toBeNull();
+    expect(await authService.authenticate(token)).toBeNull();
   });
 });
 
@@ -343,7 +343,7 @@ describe('changeOwnPassword', () => {
 
     await authService.changeOwnPassword('ana', PASSWORD, 'contrasena-nueva');
 
-    expect(authService.authenticate(token)).toBeNull();
+    expect(await authService.authenticate(token)).toBeNull();
   });
 
   it('rechaza el cambio si la contraseña actual no coincide', async () => {
@@ -373,7 +373,7 @@ describe('setUserStatus', () => {
   it('deshabilita al usuario y le impide volver a ingresar', async () => {
     const { authService } = await createContextWithUser();
 
-    const user = authService.setUserStatus('ANA', 'disabled');
+    const user = await authService.setUserStatus('ANA', 'disabled');
 
     expect(user.username).toBe('ana');
     await expect(authService.login({ username: 'ana', password: PASSWORD }))
@@ -382,9 +382,9 @@ describe('setUserStatus', () => {
 
   it('vuelve a habilitar al usuario', async () => {
     const { authService } = await createContextWithUser();
-    authService.setUserStatus('ana', 'disabled');
+    await authService.setUserStatus('ana', 'disabled');
 
-    authService.setUserStatus('ana', 'active');
+    await authService.setUserStatus('ana', 'active');
 
     await expect(authService.login({ username: 'ana', password: PASSWORD })).resolves.toBeDefined();
   });
@@ -392,7 +392,7 @@ describe('setUserStatus', () => {
   it('falla cuando el usuario no existe', async () => {
     const { authService } = await createContextWithUser();
 
-    expect(() => authService.setUserStatus('zoe', 'disabled')).toThrow(AuthError);
+    await expect(authService.setUserStatus('zoe', 'disabled')).rejects.toThrow(AuthError);
   });
 });
 
@@ -401,16 +401,16 @@ describe('logout', () => {
     const { authService } = await createContextWithUser();
     const { token } = await authService.login({ username: 'ana', password: PASSWORD });
 
-    authService.logout(token);
+    await authService.logout(token);
 
-    expect(authService.authenticate(token)).toBeNull();
+    expect(await authService.authenticate(token)).toBeNull();
   });
 
   it('no falla con un token ausente o desconocido', async () => {
     const { authService } = await createContextWithUser();
 
-    expect(() => authService.logout(undefined)).not.toThrow();
-    expect(() => authService.logout('token-inventado')).not.toThrow();
+    await expect(authService.logout(undefined)).resolves.toBeUndefined();
+    await expect(authService.logout('token-inventado')).resolves.toBeUndefined();
   });
 });
 
@@ -421,7 +421,7 @@ describe('changePassword', () => {
 
     await authService.changePassword('ANA', 'contrasena-nueva');
 
-    expect(authService.authenticate(token)).toBeNull();
+    expect(await authService.authenticate(token)).toBeNull();
     await expect(authService.login({ username: 'ana', password: 'contrasena-nueva' })).resolves.toBeDefined();
     await expect(authService.login({ username: 'ana', password: PASSWORD })).rejects.toThrow();
   });
@@ -445,7 +445,7 @@ describe('listUsers', () => {
     const { authService } = await createContextWithUser();
     await authService.createUser({ username: 'zoe', password: PASSWORD });
 
-    const users = authService.listUsers();
+    const users = await authService.listUsers();
 
     expect(users.map((user) => user.username)).toEqual(['ana', 'zoe']);
     expect(JSON.stringify(users)).not.toContain('scrypt');
@@ -455,7 +455,7 @@ describe('listUsers', () => {
     const { authService } = await createContextWithUser();
     await authService.login({ username: 'ana', password: PASSWORD });
 
-    const [user] = authService.listUsers();
+    const [user] = await authService.listUsers();
 
     expect(user).toEqual({
       id: expect.any(String),

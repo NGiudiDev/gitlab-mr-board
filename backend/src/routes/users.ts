@@ -25,8 +25,12 @@ function createUsersRouter(authService: AuthService): Router {
 
   router.use(createRequireAdmin(authService));
 
-  router.get('/', (_request, response) => {
-    response.json({ users: authService.listUsers() });
+  router.get('/', async (_request, response) => {
+    try {
+      response.json({ users: await authService.listUsers() });
+    } catch (error: unknown) {
+      respondWithAuthError(response, error, 'al listar los usuarios');
+    }
   });
 
   router.post('/', async (request, response) => {
@@ -46,7 +50,7 @@ function createUsersRouter(authService: AuthService): Router {
     }
   });
 
-  router.patch('/:username/status', (request, response) => {
+  router.patch('/:username/status', async (request, response) => {
     const { username = '' } = request.params;
     const { status } = (request.body ?? {}) as Partial<Record<string, string>>;
     const currentUser = response.locals.user as AuthenticatedUser;
@@ -62,7 +66,7 @@ function createUsersRouter(authService: AuthService): Router {
         throw new AuthError('No podés cambiar el estado de tu propio usuario.', 409);
       }
 
-      response.json({ user: authService.setUserStatus(username, status as UserStatus) });
+      response.json({ user: await authService.setUserStatus(username, status as UserStatus) });
     } catch (error: unknown) {
       respondWithAuthError(response, error, 'al cambiar el estado de un usuario');
     }

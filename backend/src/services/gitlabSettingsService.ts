@@ -116,14 +116,14 @@ function createGitLabSettingsService(options: GitLabSettingsServiceOptions): Git
     };
   }
 
-  function getSummary(userId: string): GitLabSettingsSummary | null {
-    const settings = repository.findByUserId(userId);
+  async function getSummary(userId: string): Promise<GitLabSettingsSummary | null> {
+    const settings = await repository.findByUserId(userId);
 
     return settings ? toSummary(settings) : null;
   }
 
-  function getCredentials(userId: string): GitLabCredentials | null {
-    const settings = repository.findByUserId(userId);
+  async function getCredentials(userId: string): Promise<GitLabCredentials | null> {
+    const settings = await repository.findByUserId(userId);
     if (!settings) return null;
 
     const accessToken = decryptAccessToken(settings);
@@ -147,9 +147,12 @@ function createGitLabSettingsService(options: GitLabSettingsServiceOptions): Git
    * @returns La configuración guardada, sin el token.
    * @throws {GitLabSettingsError} 400 si los datos no son válidos.
    */
-  function save(userId: string, input: SaveGitLabSettingsInput): GitLabSettingsSummary {
+  async function save(
+    userId: string,
+    input: SaveGitLabSettingsInput,
+  ): Promise<GitLabSettingsSummary> {
     const projectIds = parseProjectIds(input.projectIds);
-    const existingSettings = repository.findByUserId(userId);
+    const existingSettings = await repository.findByUserId(userId);
     const receivedToken = input.accessToken?.trim() ?? '';
 
     if (!receivedToken && !existingSettings) {
@@ -167,13 +170,13 @@ function createGitLabSettingsService(options: GitLabSettingsServiceOptions): Git
       updatedAt: now().toISOString(),
     };
 
-    repository.save(settings);
+    await repository.save(settings);
 
     return toSummary(settings);
   }
 
-  function remove(userId: string): void {
-    repository.deleteByUserId(userId);
+  async function remove(userId: string): Promise<void> {
+    await repository.deleteByUserId(userId);
   }
 
   return { getCredentials, getSummary, remove, save };

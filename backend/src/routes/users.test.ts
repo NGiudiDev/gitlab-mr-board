@@ -45,8 +45,8 @@ beforeEach(() => {
   vi.spyOn(console, 'error').mockImplementation(() => {});
 });
 
-afterEach(() => {
-  session?.authService.close();
+afterEach(async () => {
+  await session?.authService.close();
   vi.restoreAllMocks();
 });
 
@@ -158,7 +158,7 @@ describe('PATCH /api/users/:username/status', () => {
 
     expect(response.status).toBe(200);
     expect(response.json<UserResponseBody>().user.status).toBe('disabled');
-    expect(session.authService.authenticate(token)).toBeNull();
+    expect(await session.authService.authenticate(token)).toBeNull();
   });
 
   it('vuelve a habilitar a un usuario', async () => {
@@ -222,7 +222,7 @@ describe('PUT /api/users/:username/password', () => {
     });
 
     expect(response.status).toBe(204);
-    expect(session.authService.authenticate(token)).toBeNull();
+    expect(await session.authService.authenticate(token)).toBeNull();
     await expect(session.authService.login({ username: 'zoe', password: 'contrasena-restablecida' }))
       .resolves.toBeDefined();
   });

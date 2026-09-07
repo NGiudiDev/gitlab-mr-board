@@ -6,6 +6,10 @@ export default defineConfig({
     environment: 'node',
     include: ['src/**/*.test.ts'],
     setupFiles: ['./test/setup.ts'],
+    // El primer test de cada archivo que use la base paga el arranque de
+    // PGlite —compilar el WebAssembly de Postgres—, que con varios workers en
+    // paralelo supera holgadamente los 5 segundos por omisión.
+    testTimeout: 30_000,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],

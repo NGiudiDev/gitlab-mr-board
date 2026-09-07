@@ -1,67 +1,63 @@
 // 4. Imports exclusivos de tipos de TypeScript.
-import type { GitLabSettingsRepository, StoredGitLabSettings } from '../types.js';
-import type { DatabaseSync } from 'node:sqlite';
+import type { Database, GitLabSettingsRepository, StoredGitLabSettings } from '../types.js';
 
-const PROJECT_ID_SEPARATOR = ',';
+// 7. Imports relativos restantes.
+import { toIsoString } from './database.js';
 
 interface GitLabSettingsRow {
   user_id: string;
-  project_ids: string;
+  project_ids: string[];
   encrypted_access_token: string;
-  updated_at: string;
+  updated_at: Date | string;
 }
 
 /** Traduce una fila de `gitlab_settings` al contrato del dominio. */
 function toStoredSettings(row: GitLabSettingsRow): StoredGitLabSettings {
   return {
     userId: row.user_id,
-    projectIds: row.project_ids.split(PROJECT_ID_SEPARATOR).filter(Boolean),
+    projectIds: row.project_ids,
     encryptedAccessToken: row.encrypted_access_token,
-    updatedAt: row.updated_at,
+    updatedAt: toIsoString(row.updated_at),
   };
 }
 
 /**
- * Arma el acceso a la configuración de GitLab sobre una conexión ya abierta.
+ * Arma el acceso a la configuración de GitLab sobre una base ya abierta.
  *
- * Los IDs se guardan como una cadena separada por comas: son una lista corta
- * que siempre se lee completa, así que una tabla aparte no aportaría nada.
+ * Los IDs se guardan en una columna `TEXT[]`: es una lista corta que siempre se
+ * lee completa, así que una tabla aparte no aportaría nada.
  *
- * @param database Conexión devuelta por `openDatabase`.
- * @returns Repositorio con sentencias preparadas y listo para usar.
+ * @param database Base devuelta por `createNeonDatabase`, o su equivalente en
+ * memoria para los test.
+ * @returns Repositorio listo para usar.
  */
-function createGitLabSettingsRepository(database: DatabaseSync): GitLabSettingsRepository {
-  const findStatement = database.prepare('SELECT * FROM gitlab_settings WHERE user_id = ?');
-  const deleteStatement = database.prepare('DELETE FROM gitlab_settings WHERE user_id = ?');
-
-  // Cada persona tiene una sola configuración, así que el alta y la
-  // modificación son la misma operación.
-  const saveStatement = database.prepare(
-    `INSERT INTO gitlab_settings (user_id, project_ids, encrypted_access_token, updated_at)
-     VALUES (?, ?, ?, ?)
-     ON CONFLICT(user_id) DO UPDATE SET
-       project_ids = excluded.project_ids,
-       encrypted_access_token = excluded.encrypted_access_token,
-       updated_at = excluded.updated_at`,
-  );
-
+function createGitLabSettingsRepository(database: Database): GitLabSettingsRepository {
   return {
-    findByUserId(userId: string): StoredGitLabSettings | null {
-      const row = findStatement.get(userId) as unknown as GitLabSettingsRow | undefined;
-      return row ? toStoredSettings(row) : null;
+    async findByUserId(userId: string): Promise<StoredGitLabSettings | null> {
+      const { rows } = await database.query<GitLabSettingsRow>(
+        'SELECT * FROM gitlab_settings WHERE user_id = $1',
+        [userId],
+      );
+
+      return rows[0] ? toStoredSettings(rows[0]) : null;
     },
 
-    save(settings: StoredGitLabSettings): void {
-      saveStatement.run(
-        settings.userId,
-        settings.projectIds.join(PROJECT_ID_SEPARATOR),
-        settings.encryptedAccessToken,
-        settings.updatedAt,
+    // Cada persona tiene una sola configuración, así que el alta y la
+    // modificación son la misma operación.
+    async save(settings: StoredGitLabSettings): Promise<void> {
+      await database.query(
+        `INSERT INTO gitlab_settings (user_id, project_ids, encrypted_access_token, updated_at)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (user_id) DO UPDATE SET
+           project_ids = EXCLUDED.project_ids,
+           encrypted_access_token = EXCLUDED.encrypted_access_token,
+           updated_at = EXCLUDED.updated_at`,
+        [settings.userId, settings.projectIds, settings.encryptedAccessToken, settings.updatedAt],
       );
     },
 
-    deleteByUserId(userId: string): void {
-      deleteStatement.run(userId);
+    async deleteByUserId(userId: string): Promise<void> {
+      await database.query('DELETE FROM gitlab_settings WHERE user_id = $1', [userId]);
     },
   };
 }

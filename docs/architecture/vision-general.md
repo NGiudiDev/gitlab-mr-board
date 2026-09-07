@@ -19,4 +19,4 @@ El frontend solicita una vista consolidada mediante `GET /api/pull-requests`. El
 6. El backend normaliza y clasifica los MRs.
 7. React agrupa el resultado por proyecto y lo muestra en columnas.
 
-La caché vive en memoria, por usuario, y los token sólo pertenecen al backend. La única persistencia es una base SQLite local con los usuarios y las sesiones ([autenticación](../domains/autenticacion.md)) y los proyectos y access token de cada persona, con el token cifrado ([configuración de GitLab](../domains/configuracion-gitlab.md)). Los detalles de cada paquete están en [Backend](backend.md) y [Frontend](frontend.md).
+La caché vive en memoria, por usuario, y los token sólo pertenecen al backend. La única persistencia es una base Postgres alojada en Neon ([ADR 0009](../decisions/0009-neon-como-base-de-datos.md)) con los usuarios y las sesiones ([autenticación](../domains/autenticacion.md)) y los proyectos y access token de cada persona, con el token cifrado ([configuración de GitLab](../domains/configuracion-gitlab.md)). Los detalles de cada paquete están en [Backend](backend.md) y [Frontend](frontend.md).

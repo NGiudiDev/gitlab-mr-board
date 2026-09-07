@@ -67,7 +67,18 @@ export function createMergeRequestsRouter(params: MergeRequestsRouterOptions): R
 
   router.get('/pull-requests', async (request, response) => {
     const { id: userId } = response.locals.user as AuthenticatedUser;
-    const credentials = gitlabSettingsService.getCredentials(userId);
+
+    // La configuración vive en una base remota: si no se puede leer, el
+    // problema es de la base y no de GitLab ni de la configuración.
+    let credentials: GitLabCredentials | null;
+
+    try {
+      credentials = await gitlabSettingsService.getCredentials(userId);
+    } catch (error: unknown) {
+      console.error('Error al leer la configuración de GitLab:', error);
+      response.status(503).json({ error: 'No se pudo leer tu configuración de GitLab.' });
+      return;
+    }
 
     if (!credentials) {
       response.status(409).json({

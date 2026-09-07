@@ -129,7 +129,7 @@ function createAuthService(options: AuthServiceOptions): AuthService {
       );
     }
 
-    if (repository.findUserByUsername(username)) {
+    if (await repository.findUserByUsername(username)) {
       throw new AuthError(`Ya existe un usuario con el nombre «${username}».`, 409);
     }
 
@@ -146,7 +146,7 @@ function createAuthService(options: AuthServiceOptions): AuthService {
       lastLoginAt: null,
     };
 
-    repository.insertUser(user);
+    await repository.insertUser(user);
 
     return user;
   }
@@ -161,20 +161,20 @@ function createAuthService(options: AuthServiceOptions): AuthService {
    * @param user Usuario al que pertenece la sesión.
    * @returns Identidad, token en claro y fecha de vencimiento.
    */
-  function createSessionFor(user: StoredUser): LoginResult {
+  async function createSessionFor(user: StoredUser): Promise<LoginResult> {
     const currentDate = now();
     const expiresAt = new Date(currentDate.getTime() + sessionDurationDays * MILLISECONDS_PER_DAY);
     const token = randomBytes(TOKEN_BYTES).toString('base64url');
 
-    repository.deleteExpiredSessions(currentDate.toISOString());
-    repository.insertSession({
+    await repository.deleteExpiredSessions(currentDate.toISOString());
+    await repository.insertSession({
       id: randomUUID(),
       userId: user.id,
       tokenHash: hashToken(token),
       createdAt: currentDate.toISOString(),
       expiresAt: expiresAt.toISOString(),
     });
-    repository.updateLastLogin(user.id, currentDate.toISOString());
+    await repository.updateLastLogin(user.id, currentDate.toISOString());
 
     return { user: toAuthenticatedUser(user), token, expiresAt };
   }
@@ -182,11 +182,11 @@ function createAuthService(options: AuthServiceOptions): AuthService {
   async function register(input: RegisterUserInput): Promise<LoginResult> {
     // El primer usuario del sistema queda administrador: sin eso nadie podría
     // entrar a la pantalla de usuarios sin pasar por la línea de comandos.
-    const role = repository.countUsers() === 0 ? 'admin' : 'user';
+    const role = await repository.countUsers() === 0 ? 'admin' : 'user';
     const user = await insertNewUser({ ...input, role });
 
     // Se abre la sesión en el mismo paso: quien se registra ya probó quién es.
-    return createSessionFor(user);
+    return await createSessionFor(user);
   }
 
   async function login(credentials: { username: string; password: string }): Promise<LoginResult> {
@@ -203,7 +203,7 @@ function createAuthService(options: AuthServiceOptions): AuthService {
       throw new AuthError(`Demasiados intentos fallidos. Probá de nuevo en ${minutes} minutos.`, 429);
     }
 
-    const user = repository.findUserByUsername(username);
+    const user = await repository.findUserByUsername(username);
     const passwordMatches = await matchesStoredPassword(password, user);
 
     if (!user || !passwordMatches) {
@@ -217,45 +217,45 @@ function createAuthService(options: AuthServiceOptions): AuthService {
 
     failedAttemptsByUsername.delete(username);
 
-    return createSessionFor(user);
+    return await createSessionFor(user);
   }
 
-  function authenticate(token: string | undefined): AuthenticatedUser | null {
+  async function authenticate(token: string | undefined): Promise<AuthenticatedUser | null> {
     if (!token) return null;
 
-    const session = repository.findSessionByTokenHash(hashToken(token));
+    const session = await repository.findSessionByTokenHash(hashToken(token));
     if (!session) return null;
 
     if (new Date(session.expiresAt).getTime() <= now().getTime()) {
-      repository.deleteSession(session.id);
+      await repository.deleteSession(session.id);
       return null;
     }
 
-    const user = repository.findUserById(session.userId);
+    const user = await repository.findUserById(session.userId);
     if (!user || user.status !== 'active') return null;
 
     return toAuthenticatedUser(user);
   }
 
-  function logout(token: string | undefined): void {
+  async function logout(token: string | undefined): Promise<void> {
     if (!token) return;
 
-    const session = repository.findSessionByTokenHash(hashToken(token));
-    if (session) repository.deleteSession(session.id);
+    const session = await repository.findSessionByTokenHash(hashToken(token));
+    if (session) await repository.deleteSession(session.id);
   }
 
   async function changePassword(username: string, newPassword: string): Promise<void> {
-    const user = repository.findUserByUsername(normalizeUsername(username));
+    const user = await repository.findUserByUsername(normalizeUsername(username));
     if (!user) {
       throw new AuthError(`No existe el usuario «${username}».`, 404);
     }
 
     const passwordHash = await hashNewPassword(newPassword);
 
-    repository.updatePasswordHash(user.id, passwordHash);
+    await repository.updatePasswordHash(user.id, passwordHash);
     // Cambiar la contraseña invalida lo emitido antes: es la única forma de
     // cortar el acceso de una sesión ya robada.
-    repository.deleteSessionsOfUser(user.id);
+    await repository.deleteSessionsOfUser(user.id);
     failedAttemptsByUsername.delete(user.username);
   }
 
@@ -273,7 +273,7 @@ function createAuthService(options: AuthServiceOptions): AuthService {
     currentPassword: string,
     newPassword: string,
   ): Promise<void> {
-    const user = repository.findUserByUsername(normalizeUsername(username));
+    const user = await repository.findUserByUsername(normalizeUsername(username));
     if (!user) {
       throw new AuthError(`No existe el usuario «${username}».`, 404);
     }
@@ -296,20 +296,40 @@ function createAuthService(options: AuthServiceOptions): AuthService {
    * @returns El usuario con su estado ya aplicado.
    * @throws {AuthError} 404 si el usuario no existe.
    */
-  function setUserStatus(username: string, status: UserStatus): UserSummary {
-    const user = repository.findUserByUsername(normalizeUsername(username));
+  async function setUserStatus(username: string, status: UserStatus): Promise<UserSummary> {
+    const user = await repository.findUserByUsername(normalizeUsername(username));
     if (!user) {
       throw new AuthError(`No existe el usuario «${username}».`, 404);
     }
 
-    repository.updateStatus(user.id, status);
-    if (status === 'disabled') repository.deleteSessionsOfUser(user.id);
+    await repository.updateStatus(user.id, status);
+    if (status === 'disabled') await repository.deleteSessionsOfUser(user.id);
 
     return toUserSummary({ ...user, status });
   }
 
-  function listUsers(): UserSummary[] {
-    return repository.listUsers().map(toUserSummary);
+  /**
+   * Borra un usuario y, en cascada, sus sesiones y su configuración de GitLab.
+   *
+   * No falla si el usuario no existe: quien la usa —la línea de comandos y la
+   * preparación de los E2E— quiere dejar la base en un estado, no comprobar
+   * que estuviera.
+   *
+   * @param username Nombre del usuario a borrar.
+   * @returns `true` si existía y se borró.
+   */
+  async function deleteUser(username: string): Promise<boolean> {
+    const normalizedUsername = normalizeUsername(username);
+    const user = await repository.findUserByUsername(normalizedUsername);
+    if (!user) return false;
+
+    failedAttemptsByUsername.delete(normalizedUsername);
+
+    return await repository.deleteUser(user.id);
+  }
+
+  async function listUsers(): Promise<UserSummary[]> {
+    return (await repository.listUsers()).map(toUserSummary);
   }
 
   return {
@@ -318,6 +338,7 @@ function createAuthService(options: AuthServiceOptions): AuthService {
     changePassword,
     close: () => repository.close(),
     createUser,
+    deleteUser,
     listUsers,
     login,
     logout,

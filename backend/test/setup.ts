@@ -11,8 +11,9 @@ process.env.PORT = '0';
 process.env.POLL_CACHE_TTL_MS = '60000';
 process.env.TEAM_LEAD_USERNAME = 'lider';
 process.env.MIN_APPROVALS = '2';
-// Cada suite abre su propia base en memoria: los test nunca tocan el archivo real.
-process.env.DATABASE_PATH = ':memory:';
+// Cada test abre su propio Postgres en memoria con PGlite, así que esta cadena
+// nunca se usa para conectarse: sólo evita que `config.ts` aborte el arranque.
+process.env.DATABASE_URL = 'postgres://no-se-usa-en-los-test/tablero';
 process.env.SESSION_DURATION_DAYS = '7';
 process.env.COOKIE_SECURE = 'false';
 process.env.ENCRYPTION_KEY = 'clave-de-cifrado-solo-para-los-test';
