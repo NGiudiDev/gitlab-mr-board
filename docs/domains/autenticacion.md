@@ -73,12 +73,12 @@ Que el primer registro quede administrador es lo que permite que una instalació
 Con el registro abierto, cualquiera que alcance la URL puede crearse una cuenta y ver los merge requests del equipo. Es aceptable mientras el tablero no esté publicado en internet. Para cerrarlo, el cambio es dar de alta con `status: 'disabled'` y habilitar desde la pantalla de usuarios.
 :::
 
-## Pantalla de cuenta
+## Pantallas de configuración
 
-Desde «Mi cuenta», en la barra de sesión:
+La barra superior navega entre el tablero y la configuración de la cuenta:
 
-- **Cualquier usuario** puede cambiar su propia contraseña, indicando la actual como confirmación. Al aplicarse se cierran todas sus sesiones y la app vuelve al ingreso.
-- **Un `admin`** ve además la tabla de usuarios, con su rol, estado y último ingreso, y puede dar de alta, habilitar, deshabilitar y restablecer contraseñas.
+- **«Mi cuenta»**, para cualquier usuario, cambia la propia contraseña indicando la actual como confirmación. Al aplicarse se cierran todas sus sesiones y la app vuelve al ingreso.
+- **«Usuarios»**, sólo para un `admin`, lista los usuarios con su rol, estado y último ingreso, y permite dar de alta, habilitar, deshabilitar y restablecer contraseñas.
 
 Deshabilitar la propia cuenta está impedido: dejaría el tablero sin ningún administrador si es el único, y en cualquier caso cerraría la sesión en curso.
 
@@ -108,7 +108,7 @@ El estado de la sesión vive en el store `features/auth/hooks/useSession.js`, co
 
 1. Al abrir la app se consulta `GET /api/auth/me`. Mientras tanto se muestra «Verificando tu sesión...», para no hacer parpadear el formulario.
 2. Sin sesión se presenta `LoginForm`, que ofrece cambiar a `RegisterForm`. Con sesión, el tablero. El tablero recién se monta autenticado, así que el polling no dispara peticiones que el backend vaya a rechazar.
-3. `SessionBar` muestra quién está conectado, alterna entre el tablero y `AccountPanel`, y ofrece cerrar sesión. Al cerrarla se descartan también los datos del tablero.
+3. `SessionBar` muestra quién está conectado y ofrece cerrar sesión; al cerrarla se descartan también los datos del tablero. La barra del layout navega entre el tablero, `AccountPanel` y `UserAdmin`, según la [arquitectura del frontend](../architecture/frontend.md#navegación-entre-secciones).
 4. Si el tablero recibe un 401, el store da la sesión por terminada y la app vuelve al login con el aviso correspondiente.
 
 La lista de usuarios es lo único que no vive en un store compartido: la consume una sola pantalla, así que `useUsers` la mantiene en estado local.

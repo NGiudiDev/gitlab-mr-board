@@ -12,7 +12,8 @@ El código se divide entre la composición general y las funcionalidades del dom
 
 - `src/main.jsx`: carga los estilos globales y monta React mediante `createRoot` y `StrictMode`.
 - `src/config.js`: centraliza y valida la configuración expuesta por Vite.
-- `src/app/App.jsx`: decide si mostrar el ingreso, el tablero o la pantalla de cuenta según la sesión, compone la pantalla y resuelve qué presentar durante la carga, los errores y la ausencia de datos.
+- `src/app/App.jsx`: decide si mostrar el ingreso o el layout según la sesión, conserva la sección activa y resuelve qué presentar durante la carga, los errores y la ausencia de datos.
+- `src/app/AppShell.jsx`: define el layout —barra superior, navegación entre secciones y contenido— y declara en `SECTIONS` las secciones navegables.
 - `src/features/auth/`: contiene el store de la sesión, el hook de la lista de usuarios y los componentes de ingreso, alta y administración, descritos en el [dominio de autenticación](../domains/autenticacion.md).
 - `src/features/mergeRequests/hooks/useMergeRequests.js`: contiene el store compartido, el acceso al backend y el polling.
 - `src/features/mergeRequests/components/`: contiene los componentes del tablero de merge requests.
@@ -24,29 +25,31 @@ Las funcionalidades nuevas deben seguir la estructura `src/features/<feature>/co
 
 ## Composición de componentes
 
-`App` consume `useSession()`, monta el tablero sólo con la sesión abierta y alterna entre el tablero y la pantalla de cuenta; `Board` consume `useMergeRequests()` y distribuye datos y callbacks mediante props explícitas. El árbol principal es:
+`App` consume `useSession()`, monta el tablero sólo con la sesión abierta y resuelve qué sección presentar; `AppShell` aporta el layout y la navegación; `Board` consume `useMergeRequests()` y distribuye datos y callbacks mediante props explícitas. El árbol principal es:
 
 ```text
 App
-├── LoginForm / RegisterForm     (sin sesión)
-└── SessionBar                   (con sesión)
-    ├── Board                    (vista «tablero»)
-    │   ├── TopBar
+└── AppShell
+    ├── SessionBar                   (con sesión)
+    ├── LoginForm / RegisterForm     (sin sesión)
+    ├── Board                        (sección «Tablero»)
     │   ├── ViewControls
+    │   ├── TopBar
     │   └── MrBoard
     │       └── BoardColumn
     │           └── MrCard
     │               └── BlockerBadge
-    └── AccountPanel             (vista «mi cuenta»)
-        └── UserAdmin            (sólo con rol admin)
+    ├── AccountPanel                 (sección «Mi cuenta»)
+    └── UserAdmin                    (sección «Usuarios», sólo con rol admin)
 ```
 
+- `AppShell` presenta la barra superior con el nombre del tablero, la navegación entre secciones y la sesión, y envuelve el contenido en el único `main` de la aplicación. La barra aparece sólo con la sesión abierta, porque el ingreso y el alta son pantallas completas con su propio encabezado principal.
 - `LoginForm` pide usuario y contraseña, muestra el error que devuelve el backend y ofrece pasar al alta.
 - `RegisterForm` crea la cuenta: valida en el navegador las mismas reglas que el backend para avisar antes de enviar.
-- `SessionBar` identifica a quién pertenece la sesión, alterna entre el tablero y la cuenta, y permite cerrarla.
-- `AccountPanel` reúne el cambio de la propia contraseña y, para un `admin`, `UserAdmin`.
+- `SessionBar` identifica a quién pertenece la sesión y permite cerrarla.
+- `AccountPanel` resuelve el cambio de la propia contraseña.
 - `UserAdmin` lista los usuarios y permite dar de alta, habilitar, deshabilitar y restablecer contraseñas.
-- `TopBar` presenta los totales, el estado de sincronización y la actualización manual.
+- `TopBar` presenta los totales, el estado de sincronización y la actualización manual del tablero.
 - `ViewControls` alterna entre la vista general y la personal y permite elegir una persona.
 - `MrBoard` agrupa los merge requests por proyecto, mantiene el estado local de expansión y los distribuye según su clasificación. Ambas vistas reutilizan este componente; la personal le entrega únicamente las tareas de la persona seleccionada.
 - `BoardColumn` representa una categoría mediante una lista semántica con scroll vertical.
@@ -56,6 +59,14 @@ App
 `mergeRequestColumns.js` define una sola vez las columnas compartidas y reparte cada merge request en la de su clasificación. `personalView.js` busca la persona seleccionada y filtra sus tareas por el `username` que el backend marcó como responsable, según el [dominio de merge requests](../domains/merge-requests.md#responsable).
 
 Los componentes presentacionales reciben valores mediante props y notifican acciones mediante callbacks como `onRefresh`. No mutan las props ni el estado recibido.
+
+## Navegación entre secciones
+
+No hay router: la sección activa es estado local de `App`, porque nadie más la observa. `AppShell` declara las secciones en `SECTIONS` —`board`, `account` y `users`— y `App` resuelve el contenido con el mismo `id`, así que agregar una sección es sumarla a esa lista y contemplarla en `ActiveSection`.
+
+`sectionsFor(user)` decide qué secciones ofrece la barra: `users` sólo aparece con rol `admin`. Si la sección activa deja de estar disponible, `App` cae en el tablero en lugar de dejar la pantalla vacía. Esconder la sección es una cortesía de la interfaz: el backend valida el rol ruta por ruta, según el [dominio de autenticación](../domains/autenticacion.md).
+
+Al cerrar la sesión la app vuelve al tablero, para que la próxima no empiece donde quedó la anterior.
 
 ## Estado compartido
 
@@ -113,7 +124,8 @@ Ambas vistas usan secciones verticales por proyecto. Cada sección despliega sei
 
 La interfaz apunta a WCAG 2.2 nivel AA y aplica estas decisiones:
 
-- `App` incluye un enlace para saltar al contenido principal.
+- `AppShell` incluye un enlace para saltar al contenido principal y presenta la aplicación con un único `main` y un único `h1`.
+- La navegación es un `nav` etiquetado y la sección activa se marca con `aria-current="page"`, además del contraste y el peso tipográfico.
 - Los estados de carga, vacío y error usan roles semánticos.
 - Los cambios asíncronos se anuncian mediante una región viva.
 - Los proyectos son secciones desplegables con `aria-expanded` y `aria-controls`.

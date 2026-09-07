@@ -30,23 +30,3 @@ describe('SessionBar', () => {
     expect(container.innerHTML).toBe('')
   })
 })
-
-describe('SessionBar: navegación', () => {
-  it('ofrece ir a la cuenta desde el tablero', async () => {
-    const onChangeView = vi.fn()
-    render(<SessionBar user={TEST_USER} view="board" onChangeView={onChangeView} />)
-
-    await userEvent.click(screen.getByRole('button', { name: 'Mi cuenta' }))
-
-    expect(onChangeView).toHaveBeenCalledWith('account')
-  })
-
-  it('ofrece volver al tablero desde la cuenta', async () => {
-    const onChangeView = vi.fn()
-    render(<SessionBar user={TEST_USER} view="account" onChangeView={onChangeView} />)
-
-    await userEvent.click(screen.getByRole('button', { name: 'Volver al tablero' }))
-
-    expect(onChangeView).toHaveBeenCalledWith('board')
-  })
-})

@@ -1,19 +1,15 @@
-const BUTTON_CLASSES = 'px-2.5 py-1 rounded-md border border-control text-text-primary hover:border-accent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
-
 /**
- * Muestra quién tiene la sesión abierta, permite ir a la pantalla de cuenta y
- * cerrar la sesión.
+ * Muestra quién tiene la sesión abierta y permite cerrarla.
  *
- * Va sobre la barra del tablero para que la identidad esté siempre visible,
- * requisito de la vista personal.
+ * Vive en la barra superior del layout para que la identidad esté siempre
+ * visible, requisito de la vista personal. La navegación entre secciones es
+ * responsabilidad de `AppShell`.
  */
-function SessionBar({ user = null, view = 'board', onChangeView = () => {}, onLogout = () => {} }) {
+function SessionBar({ user = null, onLogout = () => {} }) {
   if (!user) return null
 
-  const showingBoard = view === 'board'
-
   return (
-    <div className="flex items-center justify-end gap-3 mb-2 text-[12px] text-text-muted">
+    <div className="flex items-center gap-3 text-[12px] text-text-muted">
       <span>
         Sesión de <span className="text-text-primary font-semibold">{user.displayName}</span>
         {' '}
@@ -21,12 +17,9 @@ function SessionBar({ user = null, view = 'board', onChangeView = () => {}, onLo
       </span>
       <button
         type="button"
-        onClick={() => onChangeView(showingBoard ? 'account' : 'board')}
-        className={BUTTON_CLASSES}
+        onClick={onLogout}
+        className="px-2.5 py-1 rounded-md border border-control text-text-primary hover:border-accent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
-        {showingBoard ? 'Mi cuenta' : 'Volver al tablero'}
-      </button>
-      <button type="button" onClick={onLogout} className={BUTTON_CLASSES}>
         Cerrar sesión
       </button>
     </div>

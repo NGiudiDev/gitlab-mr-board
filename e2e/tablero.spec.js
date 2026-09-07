@@ -102,14 +102,18 @@ test.describe('Tablero de merge requests', () => {
       await page.keyboard.press('Tab');
       expect(await focusedAccessibleName(page)).toContain('Saltar al contenido principal');
 
+      // La barra del layout va primero: tablero, cuenta, usuarios y la sesión.
+      await page.keyboard.press('Tab');
+      expect(await focusedAccessibleName(page)).toContain('Tablero');
+
       await page.keyboard.press('Tab');
       expect(await focusedAccessibleName(page)).toContain('Mi cuenta');
 
       await page.keyboard.press('Tab');
-      expect(await focusedAccessibleName(page)).toContain('Cerrar sesión');
+      expect(await focusedAccessibleName(page)).toContain('Usuarios');
 
       await page.keyboard.press('Tab');
-      expect(await focusedAccessibleName(page)).toContain('Refrescar ahora');
+      expect(await focusedAccessibleName(page)).toContain('Cerrar sesión');
 
       await page.keyboard.press('Tab');
       expect(await focusedAccessibleName(page)).toContain('General');
@@ -135,15 +139,16 @@ test.describe('Tablero de merge requests', () => {
       await expect(project).toBeVisible();
     });
 
-    await test.step('administra usuarios desde la pantalla de cuenta', async () => {
+    await test.step('navega entre la cuenta, los usuarios y el tablero', async () => {
       await page.getByRole('button', { name: 'Mi cuenta' }).click();
-
       await expect(page.getByRole('heading', { level: 2, name: 'Mi contraseña' })).toBeVisible();
+
       // El usuario del recorrido es administrador, así que ve la tabla de usuarios.
+      await page.getByRole('button', { name: 'Usuarios' }).click();
       await expect(page.getByRole('heading', { level: 2, name: 'Usuarios' })).toBeVisible();
       await expect(page.getByRole('rowheader', { name: `@${e2eConfig.username}` })).toBeVisible();
 
-      await page.getByRole('button', { name: 'Volver al tablero' }).click();
+      await page.getByRole('button', { name: 'Tablero' }).click();
       await expect(page.getByRole('button', { name: 'Refrescar ahora' })).toBeEnabled();
     });
 

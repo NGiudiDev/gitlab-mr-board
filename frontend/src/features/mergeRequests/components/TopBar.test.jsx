@@ -16,10 +16,10 @@ function status() {
 }
 
 describe('TopBar', () => {
-  it('muestra el título del tablero como encabezado principal', () => {
+  it('no repite el título de la aplicación, que ya presenta el layout', () => {
     renderTopBar()
 
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Tablero de MRs')
+    expect(screen.queryByRole('heading')).toBeNull()
   })
 
   it('resume los proyectos y merge requests cuando hay metadatos', () => {

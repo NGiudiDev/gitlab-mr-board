@@ -438,7 +438,7 @@ describe('alta de cuenta desde el tablero', () => {
   })
 })
 
-describe('pantalla de cuenta', () => {
+describe('navegación entre secciones', () => {
   function routeApi(users = []) {
     return vi.fn(async (url) => {
       const path = String(url)
@@ -448,40 +448,64 @@ describe('pantalla de cuenta', () => {
     })
   }
 
+  /** Abre una sección desde la barra de navegación del layout. */
+  async function openSection(label) {
+    fireEvent.click(screen.getByRole('button', { name: label }))
+    await flush()
+  }
+
   it('abre la cuenta y vuelve al tablero', async () => {
     fetchMock.mockImplementation(routeApi())
     await renderApp()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Mi cuenta' }))
-    await flush()
+    await openSection('Mi cuenta')
 
     expect(screen.getByRole('heading', { level: 2, name: 'Mi contraseña' })).toBeDefined()
     expect(container.textContent).not.toContain('equipo/tablero')
 
-    fireEvent.click(screen.getByRole('button', { name: 'Volver al tablero' }))
-    await flush()
+    await openSection('Tablero')
 
     expect(container.textContent).toContain('equipo/tablero')
   })
 
-  it('no ofrece la administración de usuarios a quien no es admin', async () => {
+  it('no ofrece la sección de usuarios a quien no es admin', async () => {
     fetchMock.mockImplementation(routeApi())
     await renderApp()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Mi cuenta' }))
-    await flush()
-
-    expect(screen.queryByRole('heading', { level: 2, name: 'Usuarios' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Usuarios' })).toBeNull()
   })
 
-  it('ofrece la administración de usuarios a un admin', async () => {
+  it('abre la administración de usuarios para un admin', async () => {
     fetchMock.mockImplementation(routeApi())
     signInTestUser({ ...TEST_USER, role: 'admin' })
     await renderApp()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Mi cuenta' }))
-    await flush()
+    await openSection('Usuarios')
 
     expect(screen.getByRole('heading', { level: 2, name: 'Usuarios' })).toBeDefined()
+    expect(container.textContent).not.toContain('equipo/tablero')
+  })
+
+  it('mantiene la sección activa marcada en la barra', async () => {
+    fetchMock.mockImplementation(routeApi())
+    await renderApp()
+
+    await openSection('Mi cuenta')
+
+    expect(screen.getByRole('button', { name: 'Mi cuenta' }).getAttribute('aria-current')).toBe('page')
+    expect(screen.getByRole('button', { name: 'Tablero' }).getAttribute('aria-current')).toBeNull()
+  })
+
+  it('vuelve al tablero al abrir una sesión nueva', async () => {
+    fetchMock.mockImplementation(routeApi())
+    await renderApp()
+    await openSection('Mi cuenta')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
+    await flush()
+    signInTestUser()
+    await flush()
+
+    expect(container.textContent).toContain('equipo/tablero')
   })
 })

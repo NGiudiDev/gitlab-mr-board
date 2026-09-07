@@ -70,6 +70,8 @@
 
 - Organizar cada funcionalidad en `frontend/src/features/<feature>/`, con `components/` y `hooks/`. Reservar `frontend/src/app/` para la composición general.
 
+- **El layout y la navegación viven en `frontend/src/app/AppShell.jsx`**: la barra superior, el único `main` y el listado `SECTIONS` de secciones navegables. Al agregar una sección, sumarla a esa lista, contemplarla en `ActiveSection` de `App.jsx` y actualizar [`docs/architecture/frontend.md`](docs/architecture/frontend.md#navegación-entre-secciones). No hay router: la sección activa es estado local de `App`.
+
 - Centralizar las variables de entorno en `frontend/src/config.js`. Al agregar una, actualizar `frontend/.env.example` y `docs/development/entorno-local.md`.
 
 - Usar **React 19 con componentes de función** en archivos `.jsx` ([ADR 0005](docs/decisions/0005-frontend-en-react.md)), con **una responsabilidad por componente**: si crece demasiado, extraer subcomponentes dentro de su feature.

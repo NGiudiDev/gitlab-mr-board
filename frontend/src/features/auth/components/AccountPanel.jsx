@@ -1,14 +1,17 @@
 // 2. Dependencias externas.
 import { useState } from 'react'
 
-// 7. Imports relativos restantes.
-import UserAdmin from './UserAdmin.jsx'
-
 const FIELD_CLASSES = 'block w-full mt-1 rounded-md border border-control bg-surface-raised px-3 py-2 text-[13px] font-normal text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
 const LABEL_CLASSES = 'block text-[12px] font-semibold text-text-muted mb-3'
 
-/** Cambio de la propia contraseña, pidiendo la actual como confirmación. */
-function OwnPasswordForm({ submitting = false, onSubmit = () => {} }) {
+/**
+ * Pantalla de cuenta: el cambio de la propia contraseña, pidiendo la actual
+ * como confirmación. La administración de usuarios es su propia sección.
+ *
+ * El estado de las contraseñas es local: sólo lo necesita esta pantalla y no
+ * debe sobrevivir al envío.
+ */
+function AccountPanel({ user = null, submitting = false, onChangePassword = () => {} }) {
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmation, setConfirmation] = useState('')
@@ -23,11 +26,13 @@ function OwnPasswordForm({ submitting = false, onSubmit = () => {} }) {
     }
 
     setError(null)
-    setError(await onSubmit({ currentPassword, newPassword }))
+    setError(await onChangePassword({ currentPassword, newPassword }))
   }
 
+  if (!user) return null
+
   return (
-    <section aria-labelledby="contrasena-heading" className="mb-6 rounded-lg border border-border bg-surface p-5">
+    <section aria-labelledby="contrasena-heading" className="max-w-xl rounded-lg border border-border bg-surface p-5">
       <h2 id="contrasena-heading" className="text-base font-semibold text-text-primary mb-1">
         Mi contraseña
       </h2>
@@ -92,21 +97,6 @@ function OwnPasswordForm({ submitting = false, onSubmit = () => {} }) {
         </button>
       </form>
     </section>
-  )
-}
-
-/**
- * Pantalla de cuenta: la contraseña propia para cualquiera, y la
- * administración de usuarios para quien tenga rol de administrador.
- */
-function AccountPanel({ user = null, submitting = false, onChangePassword = () => {} }) {
-  if (!user) return null
-
-  return (
-    <>
-      <OwnPasswordForm submitting={submitting} onSubmit={onChangePassword} />
-      {user.role === 'admin' ? <UserAdmin currentUsername={user.username} /> : null}
-    </>
   )
 }
 

@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import AccountPanel from '../features/auth/components/AccountPanel.jsx'
 import LoginForm from '../features/auth/components/LoginForm.jsx'
 import RegisterForm from '../features/auth/components/RegisterForm.jsx'
-import SessionBar from '../features/auth/components/SessionBar.jsx'
+import UserAdmin from '../features/auth/components/UserAdmin.jsx'
 import { useSession } from '../features/auth/hooks/useSession.js'
 import MrBoard from '../features/mergeRequests/components/MrBoard.jsx'
 import TopBar from '../features/mergeRequests/components/TopBar.jsx'
@@ -15,6 +15,7 @@ import {
   findPersonByUsername,
   mergeRequestsForPerson,
 } from '../features/mergeRequests/personalView.js'
+import AppShell, { sectionsFor } from './AppShell.jsx'
 
 const PLACEHOLDER_CLASSES = 'text-center text-text-muted text-[13px] py-16 border border-dashed border-border rounded-lg bg-surface'
 
@@ -76,22 +77,26 @@ function Board() {
 
   return (
     <>
-      <TopBar
-        meta={visibleMeta}
-        loading={loading}
-        error={error}
-        lastFetched={lastFetched}
-        onRefresh={() => fetchMRs(true)}
-      />
+      {/* Una sola fila reúne los controles de la vista y el estado de la
+          sincronización, para que el tablero empiece lo más arriba posible. */}
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-x-5 gap-y-3 border-b border-border-soft pb-3">
+        <ViewControls
+          viewMode={viewMode}
+          people={people}
+          selectedUsername={selectedUsername || ''}
+          selectedPersonName={selectedPerson?.name || ''}
+          onViewChange={setViewMode}
+          onPersonChange={selectPerson}
+        />
 
-      <ViewControls
-        viewMode={viewMode}
-        people={people}
-        selectedUsername={selectedUsername || ''}
-        selectedPersonName={selectedPerson?.name || ''}
-        onViewChange={setViewMode}
-        onPersonChange={selectPerson}
-      />
+        <TopBar
+          meta={visibleMeta}
+          loading={loading}
+          error={error}
+          lastFetched={lastFetched}
+          onRefresh={() => fetchMRs(true)}
+        />
+      </div>
 
       {failedWithoutData ? (
         <div role="alert" className={PLACEHOLDER_CLASSES}>
@@ -165,7 +170,24 @@ function AnonymousView({ error, notice, submitting, onLogin, onRegister }) {
   )
 }
 
-/** Decide si mostrar el ingreso, el tablero o la cuenta según la sesión. */
+/** Presenta la sección elegida en la barra de navegación. */
+function ActiveSection({ view, user, submitting, onChangePassword }) {
+  if (view === 'account') {
+    return (
+      <AccountPanel
+        user={user}
+        submitting={submitting}
+        onChangePassword={onChangePassword}
+      />
+    )
+  }
+
+  if (view === 'users') return <UserAdmin currentUsername={user.username} />
+
+  return <Board />
+}
+
+/** Decide si mostrar el ingreso o el layout con la sección activa. */
 function App() {
   const {
     user,
@@ -180,6 +202,10 @@ function App() {
   } = useSession()
   const [view, setView] = useState('board')
   const isAuthenticated = status === 'authenticated'
+  // Una sección que el usuario actual no tiene habilitada —la de usuarios si no
+  // es admin— cae en el tablero en lugar de dejar la pantalla vacía.
+  const availableSections = sectionsFor(user)
+  const activeView = availableSections.some((section) => section.id === view) ? view : 'board'
 
   // Al terminar la sesión, la próxima empieza en el tablero y no donde quedó
   // la anterior.
@@ -194,42 +220,31 @@ function App() {
   }
 
   return (
-    <>
-      <a href="#contenido-principal" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-accent focus:px-4 focus:py-2 focus:font-semibold focus:text-bg">
-        Saltar al contenido principal
-      </a>
-      <main id="contenido-principal" className="px-5 py-5 max-w-[1600px] mx-auto" tabIndex={-1}>
-        {status === 'checking' ? (
-          <BoardStatus>Verificando tu sesión...</BoardStatus>
-        ) : isAuthenticated ? (
-          <>
-            <SessionBar
-              user={user}
-              view={view}
-              onChangeView={setView}
-              onLogout={handleLogout}
-            />
-            {view === 'board' ? (
-              <Board />
-            ) : (
-              <AccountPanel
-                user={user}
-                submitting={submitting}
-                onChangePassword={changeOwnPassword}
-              />
-            )}
-          </>
-        ) : (
-          <AnonymousView
-            error={error}
-            notice={notice}
-            submitting={submitting}
-            onLogin={login}
-            onRegister={register}
-          />
-        )}
-      </main>
-    </>
+    <AppShell
+      user={isAuthenticated ? user : null}
+      view={activeView}
+      onChangeView={setView}
+      onLogout={handleLogout}
+    >
+      {status === 'checking' ? (
+        <BoardStatus>Verificando tu sesión...</BoardStatus>
+      ) : isAuthenticated ? (
+        <ActiveSection
+          view={activeView}
+          user={user}
+          submitting={submitting}
+          onChangePassword={changeOwnPassword}
+        />
+      ) : (
+        <AnonymousView
+          error={error}
+          notice={notice}
+          submitting={submitting}
+          onLogin={login}
+          onRegister={register}
+        />
+      )}
+    </AppShell>
   )
 }
 

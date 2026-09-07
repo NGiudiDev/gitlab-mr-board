@@ -1,13 +1,11 @@
 // 2. Dependencias externas.
 import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 // 7. Imports relativos restantes.
-import { jsonResponse, TEST_USER } from '../../../../test/sharedState.js'
+import { TEST_USER } from '../../../../test/sharedState.js'
 import AccountPanel from './AccountPanel.jsx'
-
-const ADMIN_USER = { ...TEST_USER, role: 'admin' }
 
 /** Deja que se resuelvan las promesas pendientes y React vuelva a renderizar. */
 async function flush() {
@@ -26,15 +24,6 @@ async function submitPasswordChange({ confirmation = 'contrasena-nueva' } = {}) 
   await userEvent.click(screen.getByRole('button', { name: /Cambiar contraseña|Guardando/ }))
   await flush()
 }
-
-beforeEach(() => {
-  vi.stubGlobal('fetch', vi.fn(async () => jsonResponse({ users: [] })))
-})
-
-afterEach(() => {
-  vi.unstubAllGlobals()
-  vi.restoreAllMocks()
-})
 
 describe('AccountPanel', () => {
   it('no muestra nada sin usuario', () => {
@@ -55,17 +44,10 @@ describe('AccountPanel', () => {
     expect(container.textContent).toContain('se cierran todas tus sesiones')
   })
 
-  it('esconde la administración de usuarios a quien no es admin', () => {
-    render(<AccountPanel user={TEST_USER} />)
+  it('deja la administración de usuarios fuera de la pantalla de cuenta', () => {
+    render(<AccountPanel user={{ ...TEST_USER, role: 'admin' }} />)
 
-    expect(screen.queryByRole('heading', { level: 2, name: 'Usuarios' })).toBeNull()
-  })
-
-  it('muestra la administración de usuarios a un admin', async () => {
-    render(<AccountPanel user={ADMIN_USER} />)
-    await flush()
-
-    expect(screen.getByRole('heading', { level: 2, name: 'Usuarios' })).toBeDefined()
+    expect(screen.queryByRole('heading', { name: 'Usuarios' })).toBeNull()
   })
 
   it('envía la contraseña actual y la nueva', async () => {

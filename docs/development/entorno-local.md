@@ -38,7 +38,7 @@ El frontend usa esta variable, expuesta por Vite durante el build:
 
 ## Primer usuario
 
-El tablero exige sesión. En una instalación nueva alcanza con abrir el frontend y usar «Crear una cuenta»: **el primer usuario registrado queda administrador**, así que puede administrar al resto desde «Mi cuenta».
+El tablero exige sesión. En una instalación nueva alcanza con abrir el frontend y usar «Crear una cuenta»: **el primer usuario registrado queda administrador**, así que puede administrar al resto desde «Usuarios».
 
 Si preferís crearlo por línea de comandos, desde la raíz:
 
