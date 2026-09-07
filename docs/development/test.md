@@ -29,7 +29,7 @@ Los E2E recorren la aplicación completa contra proyectos reales dedicados a tes
 
 ## Cobertura
 
-Cada paquete la calcula con el proveedor `v8` de Vitest sobre todos sus módulos de producción, incluidos los que todavía no tienen test. Quedan afuera los propios archivos de test, `backend/src/types.ts` —sólo declara tipos— y `frontend/src/main.jsx`, que únicamente monta la aplicación.
+Cada paquete la calcula con el proveedor `v8` de Vitest sobre todos sus módulos de producción, incluidos los que todavía no tienen test. Quedan afuera los propios archivos de test, los `types.ts` de cada feature del backend —sólo declaran tipos— y `frontend/src/main.jsx`, que únicamente monta la aplicación.
 
 El resumen sale por consola y el detalle navegable queda en `coverage/index.html` de cada paquete, junto con `lcov.info` para las herramientas que lo consuman. La tabla de consola omite los archivos con 100 % en todas las columnas: para verlos a todos, abrir el reporte HTML.
 
@@ -37,7 +37,7 @@ No hay umbral mínimo configurado, en línea con la convención de no tratar la 
 
 ## Convenciones
 
-- Ubicar cada test junto al módulo cubierto con el sufijo `.test.ts`, `.test.js` o `.test.jsx`, según el tipo de archivo.
+- Ubicar cada test junto al módulo cubierto con el sufijo `.test.ts`, `.test.js` o `.test.jsx`, según el tipo de archivo. En el backend eso significa dentro de la feature: los del tablero viven en `features/mergeRequests/` y `src/app.test.ts` cubre sólo la composición.
 - Reservar `test/` dentro de cada paquete para configuración, fixtures y utilidades compartidas.
 - Priorizar reglas de negocio y comportamiento observable; evitar snapshots extensos y aserciones sobre clases de Tailwind.
 - Mantener cada test independiente y ejecutable en cualquier orden.

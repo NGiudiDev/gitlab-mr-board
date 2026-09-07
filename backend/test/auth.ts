@@ -1,34 +1,23 @@
 // 4. Imports exclusivos de tipos de TypeScript.
-import type {
-  AuthenticatedTestApp,
-  AuthRepository,
-  AuthService,
-  CreateAppOptions,
-  Database,
-  GitLabSettingsService,
-  UserRole,
-} from '../src/types.js';
+import type { CreateAppOptions } from '../src/app.js';
+import type { AuthRepository, AuthService, UserRole } from '../src/features/auth/types.js';
+import type { GitLabSettingsService } from '../src/features/gitlabSettings/types.js';
+import type { Database } from '../src/shared/types.js';
+import type { AuthenticatedTestApp } from './types.js';
 
 // 5. Módulos de constantes.
-import {
-  TEST_DISPLAY_NAME,
-  TEST_ENCRYPTION_KEY,
-  TEST_PASSWORD,
-  TEST_PROJECT_IDS,
-  TEST_TOKEN,
-  TEST_USERNAME,
-} from './constants.js';
+import { TEST_DISPLAY_NAME, TEST_ENCRYPTION_KEY, TEST_PASSWORD, TEST_PROJECT_IDS, TEST_TOKEN, TEST_USERNAME } from './constants.js';
 
 // 6. Utilidades.
-import { createSecretCipher } from '../src/utils/encryption.js';
+import { createSecretCipher } from '../src/features/gitlabSettings/utils/encryption.js';
 
 // 7. Imports relativos restantes.
 import { createApp } from '../src/app.js';
-import { SESSION_COOKIE_NAME } from '../src/routes/auth.js';
-import { createAuthRepository } from '../src/services/authRepository.js';
-import { createAuthService } from '../src/services/authService.js';
-import { createGitLabSettingsRepository } from '../src/services/gitlabSettingsRepository.js';
-import { createGitLabSettingsService } from '../src/services/gitlabSettingsService.js';
+import { SESSION_COOKIE_NAME } from '../src/features/auth/routes/auth.js';
+import { createAuthRepository } from '../src/features/auth/services/authRepository.js';
+import { createAuthService } from '../src/features/auth/services/authService.js';
+import { createGitLabSettingsRepository } from '../src/features/gitlabSettings/services/gitlabSettingsRepository.js';
+import { createGitLabSettingsService } from '../src/features/gitlabSettings/services/gitlabSettingsService.js';
 import { createTestDatabase } from './database.js';
 
 /** Abre un repositorio de autenticación en memoria, aislado por test. */

@@ -3,13 +3,13 @@ import readline from 'node:readline';
 import { Writable } from 'node:stream';
 
 // 4. Imports exclusivos de tipos de TypeScript.
-import type { AuthService, UserRole, UserStatus } from '../types.js';
+import type { AuthService, UserRole, UserStatus } from '../features/auth/types.js';
 
 // 7. Imports relativos restantes.
 import config from '../config.js';
-import { createAuthRepository } from '../services/authRepository.js';
-import { createAuthService } from '../services/authService.js';
-import { applySchema, createNeonDatabase } from '../services/database.js';
+import { createAuthRepository } from '../features/auth/services/authRepository.js';
+import { createAuthService } from '../features/auth/services/authService.js';
+import { applySchema, createNeonDatabase } from '../shared/database.js';
 
 const USAGE = `Gestión de usuarios del tablero.
 

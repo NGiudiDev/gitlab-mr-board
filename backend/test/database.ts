@@ -2,10 +2,10 @@
 import { PGlite } from '@electric-sql/pglite';
 
 // 4. Imports exclusivos de tipos de TypeScript.
-import type { Database } from '../src/types.js';
+import type { Database } from '../src/shared/types.js';
 
 // 7. Imports relativos restantes.
-import { applySchema } from '../src/services/database.js';
+import { applySchema } from '../src/shared/database.js';
 
 // Arrancar PGlite cuesta alrededor de un segundo, así que se reutiliza una
 // única instancia. Vitest aísla el registro de módulos por archivo de test, con

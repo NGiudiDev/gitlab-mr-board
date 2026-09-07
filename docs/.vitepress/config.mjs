@@ -26,6 +26,7 @@ const sidebar = [
       { text: 'ADR 0007: registro y gestión de usuarios', link: '/decisions/0007-registro-abierto-y-gestion-de-usuarios' },
       { text: 'ADR 0008: credenciales de GitLab por usuario', link: '/decisions/0008-credenciales-de-gitlab-por-usuario' },
       { text: 'ADR 0009: Neon como base de datos', link: '/decisions/0009-neon-como-base-de-datos' },
+      { text: 'ADR 0010: backend por features', link: '/decisions/0010-backend-por-features' },
     ],
   },
   {

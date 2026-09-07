@@ -36,7 +36,7 @@
 
 ### Estructura y Organización
 
-- **Toda la lógica de negocio va en el backend**: clasificación, responsables y demás reglas del dominio se calculan en `backend/src/services/` y se publican en el contrato. El frontend sólo decide presentación —columnas, agrupación, orden, formato y filtros sobre campos ya calculados. Si una regla necesita conocer el dominio, no pertenece al frontend.
+- **Toda la lógica de negocio va en el backend**: clasificación, responsables y demás reglas del dominio se calculan en los `services/` de la feature correspondiente y se publican en el contrato. El frontend sólo decide presentación —columnas, agrupación, orden, formato y filtros sobre campos ya calculados. Si una regla necesita conocer el dominio, no pertenece al frontend.
 
 - **Separar responsabilidades por paquete**: `backend/` para la API y la integración con GitLab, `frontend/` para la aplicación React. Los scripts que coordinan ambos y la documentación compartida viven en la raíz.
 
@@ -48,11 +48,15 @@
 
 ### Backend
 
-- Mantener la arquitectura por capas: rutas HTTP en `backend/src/routes/`, lógica de negocio y acceso a GitLab en `backend/src/services/`, utilidades en `backend/src/utils/`.
+- **El backend se organiza por feature primero y por capa después**, igual que el frontend ([ADR 0010](docs/decisions/0010-backend-por-features.md)): `backend/src/features/<feature>/{routes,services,utils}/` más un `types.ts` propio. Dentro de cada feature se mantiene la separación: rutas HTTP en `routes/`, lógica de negocio y acceso a la base y a GitLab en `services/`, piezas auxiliares en `utils/`. Al agregar una feature, crear su carpeta y montar su router desde `app.ts`.
+
+- **`backend/src/shared/` es sólo para lo que usan varias features**: el acceso a Postgres, sus tipos y `HttpError`. Lo que usa una sola feature vive dentro de ella aunque parezca genérico, y se mueve a `shared/` recién cuando una segunda lo necesite. No hay barrels: `app.ts` importa cada router por su ruta completa.
+
+- **Cada feature declara sus tipos en su propio `types.ts`**; no hay un archivo central. Los contratos que sólo usan los test viven en `backend/test/types.ts`, fuera del código que se despliega.
 
 - Mantener separado el armado de Express (`backend/src/app.ts`) del arranque del servidor (`backend/src/index.ts`), para poder probar la aplicación en memoria e inyectar sus dependencias.
 
-- Mantener puras las reglas de `backend/src/services/mergeRequestRules.ts` e inyectar sus dependencias (fuente de datos, reloj) en lugar de acoplarlas al módulo.
+- Mantener puras las reglas de `features/mergeRequests/services/mergeRequestRules.ts` e inyectar sus dependencias (fuente de datos, reloj) en lugar de acoplarlas al módulo.
 
 - Centralizar la lectura y validación de variables de entorno en `backend/src/config.ts`. Al agregar una variable, actualizar `backend/.env.example` y la tabla de `docs/development/entorno-local.md`. **El token y los proyectos de GitLab no son configuración del proceso**: los guarda cada usuario en la base y viven en `services/gitlabSettingsService.ts`.
 
@@ -60,9 +64,9 @@
 
 - Las rutas validan sus parámetros y devuelven el error HTTP que corresponda (400, 404, 500, etc.). Al agregar un endpoint, documentarlo; si requiere un router nuevo, montarlo desde `backend/src/app.ts`. **Todo lo que cuelgue de `/api` exige sesión**: el middleware está montado en `createApp()` y una ruta pública nueva debe justificarse.
 
-- La autenticación vive en `services/authRepository.ts` (acceso a la base), `services/authService.ts` (reglas), `routes/auth.ts` (sesión y cuenta propia) y `routes/users.ts` (administración), con las reglas documentadas en [`docs/domains/autenticacion.md`](docs/domains/autenticacion.md) ([ADR 0006](docs/decisions/0006-login-local-con-sqlite.md) y [ADR 0007](docs/decisions/0007-registro-abierto-y-gestion-de-usuarios.md)). No guardar credenciales fuera de esas capas, no devolver el hash de una contraseña ni el token de sesión en ninguna respuesta, y mantener el repositorio inyectable para poder correrlo contra la base en memoria de los test.
+- La autenticación vive en la feature `auth`: `services/authRepository.ts` (acceso a la base), `services/authService.ts` (reglas), `routes/auth.ts` (sesión y cuenta propia) y `routes/users.ts` (administración), con las reglas documentadas en [`docs/domains/autenticacion.md`](docs/domains/autenticacion.md) ([ADR 0006](docs/decisions/0006-login-local-con-sqlite.md) y [ADR 0007](docs/decisions/0007-registro-abierto-y-gestion-de-usuarios.md)). No guardar credenciales fuera de esas capas, no devolver el hash de una contraseña ni el token de sesión en ninguna respuesta, y mantener el repositorio inyectable para poder correrlo contra la base en memoria de los test.
 
-- **Las credenciales de GitLab son de cada usuario y se guardan cifradas** en `services/gitlabSettingsRepository.ts` y `services/gitlabSettingsService.ts`, con el cifrador de `utils/encryption.ts` inyectado ([`docs/domains/configuracion-gitlab.md`](docs/domains/configuracion-gitlab.md), [ADR 0008](docs/decisions/0008-credenciales-de-gitlab-por-usuario.md)). El access token **nunca** vuelve al navegador: las respuestas sólo llevan sus últimos caracteres. Toda consulta a GitLab se hace con un cliente construido a partir del token de quien pregunta, y cualquier caché de esos datos es por usuario.
+- **Las credenciales de GitLab son de cada usuario y se guardan cifradas** en la feature `gitlabSettings`, con el cifrador de su `utils/encryption.ts` inyectado ([`docs/domains/configuracion-gitlab.md`](docs/domains/configuracion-gitlab.md), [ADR 0008](docs/decisions/0008-credenciales-de-gitlab-por-usuario.md)). El access token **nunca** vuelve al navegador: las respuestas sólo llevan sus últimos caracteres. Toda consulta a GitLab se hace con un cliente construido a partir del token de quien pregunta, y cualquier caché de esos datos es por usuario.
 
 - **La base es Postgres en Neon** ([ADR 0009](docs/decisions/0009-neon-como-base-de-datos.md)), así que toda la capa de datos es asíncrona. El pool se abre una sola vez en `services/database.ts` y los repositorios comparten esa conexión, porque las claves foráneas entre sus tablas sólo valen dentro de la misma base. Los repositorios reciben la interfaz mínima `Database` y nunca el driver: eso es lo que permite correrlos contra PGlite en los test.
 

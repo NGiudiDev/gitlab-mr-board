@@ -3,23 +3,34 @@ import cors from 'cors';
 import express from 'express';
 
 // 4. Imports exclusivos de tipos de TypeScript.
-import type { AuthService, CreateAppOptions, Database, GitLabSettingsService } from './types.js';
+import type { AuthService } from './features/auth/types.js';
+import type { GitLabSettingsService } from './features/gitlabSettings/types.js';
+import type { MergeRequestsDependencies } from './features/mergeRequests/types.js';
+import type { Database } from './shared/types.js';
 import type { ErrorRequestHandler, Express } from 'express';
 
 // 6. Utilidades.
-import { createSecretCipher } from './utils/encryption.js';
+import { createSecretCipher } from './features/gitlabSettings/utils/encryption.js';
 
 // 7. Imports relativos restantes.
 import config from './config.js';
-import { createAuthRouter, createRequireSession } from './routes/auth.js';
-import { createGitLabSettingsRouter } from './routes/gitlabSettings.js';
-import { createMergeRequestsRouter } from './routes/mergeRequests.js';
-import { createUsersRouter } from './routes/users.js';
-import { createAuthRepository } from './services/authRepository.js';
-import { createAuthService } from './services/authService.js';
-import { createNeonDatabase } from './services/database.js';
-import { createGitLabSettingsRepository } from './services/gitlabSettingsRepository.js';
-import { createGitLabSettingsService } from './services/gitlabSettingsService.js';
+import { createAuthRouter, createRequireSession } from './features/auth/routes/auth.js';
+import { createUsersRouter } from './features/auth/routes/users.js';
+import { createAuthRepository } from './features/auth/services/authRepository.js';
+import { createAuthService } from './features/auth/services/authService.js';
+import { createGitLabSettingsRouter } from './features/gitlabSettings/routes/gitlabSettings.js';
+import { createGitLabSettingsRepository } from './features/gitlabSettings/services/gitlabSettingsRepository.js';
+import { createGitLabSettingsService } from './features/gitlabSettings/services/gitlabSettingsService.js';
+import { createMergeRequestsRouter } from './features/mergeRequests/routes/mergeRequests.js';
+import { createNeonDatabase } from './shared/database.js';
+
+/** Dependencias que un test puede reemplazar al construir la aplicación. */
+interface CreateAppOptions extends MergeRequestsDependencies {
+  /** Servicio de autenticación; inyectable para aislar la base en los test. */
+  authService?: AuthService;
+  /** Configuración de GitLab; inyectable para aislar la base en los test. */
+  gitlabSettingsService?: GitLabSettingsService;
+}
 
 const ALLOWED_ORIGINS = ['http://localhost:5173', 'http://localhost:4173'];
 
@@ -89,6 +100,7 @@ function resolveServices(options: CreateAppOptions): {
  * test de integración la ejecuten en memoria.
  */
 function createApp(options: CreateAppOptions = {}): Express {
+  const { fetchMergeRequests, now } = options;
   const { authService, gitlabSettingsService } = resolveServices(options);
   const app = express();
 
@@ -104,11 +116,15 @@ function createApp(options: CreateAppOptions = {}): Express {
   app.use('/api/auth', createAuthRouter(authService));
   app.use('/api/users', createUsersRouter(authService));
   app.use('/api/gitlab-settings', createGitLabSettingsRouter(authService, gitlabSettingsService));
-  app.use('/api', createRequireSession(authService), createMergeRequestsRouter({ ...options, gitlabSettingsService }));
-
+  app.use(
+    '/api',
+    createRequireSession(authService),
+    createMergeRequestsRouter({ fetchMergeRequests, now, gitlabSettingsService }),
+  );
   app.use(errorHandler);
 
   return app;
 }
 
 export { createApp, createServices };
+export type { CreateAppOptions };

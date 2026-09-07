@@ -1,11 +1,6 @@
 // 4. Imports exclusivos de tipos de TypeScript.
-import type {
-  DiscussionFixture,
-  FixtureOr,
-  GitLabFixture,
-  GitLabMergeRequest,
-  GitLabStub,
-} from '../../src/types.js';
+import type { GitLabMergeRequest } from '../../src/features/mergeRequests/types.js';
+import type { DiscussionFixture, FixtureOr, GitLabFixture, GitLabStub } from '../types.js';
 
 const AVATAR = 'https://gitlab.example.com/uploads/avatar.png';
 

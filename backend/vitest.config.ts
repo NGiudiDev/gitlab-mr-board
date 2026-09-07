@@ -18,7 +18,7 @@ export default defineConfig({
       include: ['src/**/*.ts'],
       // `src/scripts/` son herramientas de operación por línea de comandos, no
       // código servido por la API.
-      exclude: ['src/**/*.test.ts', 'src/types.ts', 'src/scripts/**'],
+      exclude: ['src/**/*.test.ts', 'src/**/types.ts', 'src/scripts/**'],
     },
   },
 });

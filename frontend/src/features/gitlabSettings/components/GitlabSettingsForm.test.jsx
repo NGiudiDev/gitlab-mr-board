@@ -12,7 +12,6 @@ const ACCESS_TOKEN = 'glpat-token-de-prueba-no-real'
 const STORED_SETTINGS = {
   projectIds: ['101', '202'],
   tokenHint: 'real',
-  updatedAt: '2026-08-28T10:00:00.000Z',
 }
 
 let fetchMock

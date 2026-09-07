@@ -2,7 +2,7 @@
 import http from 'node:http';
 
 // 4. Imports exclusivos de tipos de TypeScript.
-import type { HttpTestOptions, HttpTestResponse } from '../src/types.js';
+import type { HttpTestOptions, HttpTestResponse } from './types.js';
 import type { Express } from 'express';
 import type { AddressInfo } from 'node:net';
 

@@ -35,7 +35,7 @@ Todos exigen sesión y operan siempre sobre la configuración de quien la tiene 
 
 | Ruta | Uso |
 |---|---|
-| `GET /api/gitlab-settings` | Devuelve `{ settings }` con `projectIds`, `tokenHint` y `updatedAt`, o `null` si no hay nada configurado |
+| `GET /api/gitlab-settings` | Devuelve `{ settings }` con `projectIds` y `tokenHint`, o `null` si no hay nada configurado |
 | `PUT /api/gitlab-settings` | Recibe `{ projectIds, accessToken? }` y devuelve la configuración guardada |
 | `DELETE /api/gitlab-settings` | Borra la configuración y responde 204 |
 

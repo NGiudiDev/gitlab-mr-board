@@ -1,7 +1,7 @@
 // 7. Imports relativos restantes.
 import { createApp, createServices } from './app.js';
 import config from './config.js';
-import { applySchema, createNeonDatabase } from './services/database.js';
+import { applySchema, createNeonDatabase } from './shared/database.js';
 
 /**
  * Abre la base, deja el esquema aplicado y recién entonces atiende pedidos.

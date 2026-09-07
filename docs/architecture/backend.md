@@ -4,26 +4,62 @@ El backend es un **Backend for Frontend (BFF)** construido con Node.js, Express 
 
 Usa ES modules y la resolución `NodeNext`. Por ese motivo, los imports relativos de los archivos `.ts` incluyen la extensión `.js` que tendrán después de la compilación.
 
-## Responsabilidades por capa
+## Organización del código
 
-La implementación separa el transporte HTTP, la lógica de negocio y la integración externa:
+`src/` se organiza **por feature primero y por capa después**, con el mismo criterio que el frontend ([ADR 0010](../decisions/0010-backend-por-features.md)):
 
-- `src/index.ts`: crea la aplicación e inicia el servidor en el puerto configurado. No contiene rutas ni lógica de negocio.
-- `src/app.ts`: construye Express mediante `createApp()`, configura CORS y JSON, registra el health check, monta los routers —exigiendo sesión en `/api` y rol `admin` en `/api/users`— y centraliza los errores no controlados.
+```text
+src/
+  app.ts, index.ts, config.ts     Composición, arranque y configuración
+  features/
+    auth/                          routes/ services/ utils/ types.ts
+    gitlabSettings/                routes/ services/ utils/ types.ts
+    mergeRequests/                 routes/ services/ utils/ types.ts
+  shared/                          database.ts httpError.ts types.ts
+  scripts/                         Herramientas de línea de comandos
+```
+
+Dentro de cada feature se mantiene la separación de capas: `routes/` define los contratos HTTP, valida entradas y permisos y traduce errores a estados HTTP; `services/` concentra la lógica de negocio y el acceso a la base y a GitLab; `utils/` guarda las piezas auxiliares que sólo usa esa feature; `types.ts` declara sus contratos.
+
+En `shared/` va únicamente lo que usan varias features. Lo que usa una sola vive dentro de ella, aunque parezca genérico: el limitador de concurrencia pertenece a `mergeRequests` y el cifrador de secretos a `gitlabSettings`.
+
+### Composición y entradas
+
+- `src/index.ts`: abre la base, aplica el esquema y recién entonces inicia el servidor en el puerto configurado. No contiene rutas ni lógica de negocio.
+- `src/app.ts`: construye Express mediante `createApp()`, configura CORS y JSON, registra el health check, monta los routers de cada feature —exigiendo sesión en `/api` y rol `admin` en `/api/users`— y centraliza los errores no controlados. Importa cada router por su ruta completa: no hay barrels.
 - `src/config.ts`: carga `backend/.env`, valida las variables obligatorias y expone la configuración normalizada.
-- `src/routes/`: define los contratos HTTP, valida entradas y permisos, administra la caché de la respuesta y traduce errores a estados HTTP. `auth.ts` publica además los middlewares `createRequireSession` y `createRequireAdmin`, que el resto de los routers reutiliza.
-- `src/services/gitlabApi.ts`: construye el cliente de GitLab para un access token concreto, y encapsula URLs, paginación y acceso limitado a la API v4.
-- `src/services/mergeRequestService.ts`: coordina las consultas, enriquece los merge requests y construye la respuesta del BFF.
-- `src/services/mergeRequestRules.ts`: contiene reglas puras de clasificación, responsabilidad y normalización que no dependen de Express ni de la red.
-- `src/services/database.ts`: abre el pool contra Neon con `@neondatabase/serverless`, expone la interfaz mínima `Database` —`query` y `close`— y aplica el esquema. Los repositorios reciben esa interfaz y no el driver: es lo que permite ejecutarlos contra otro Postgres en los test. Comparten una única conexión, porque las claves foráneas entre sus tablas sólo valen dentro de la misma base.
-- `src/services/authRepository.ts`: expone el acceso a usuarios y sesiones sobre esa conexión.
-- `src/services/gitlabSettingsRepository.ts`: expone el acceso a la configuración de GitLab de cada usuario.
-- `src/services/gitlabSettingsService.ts`: valida los IDs de proyecto y el access token, y cifra y descifra el token con el cifrador inyectado.
-- `src/services/authService.ts`: concentra las reglas de alta, registro, ingreso, vencimiento de sesión, cambio de contraseña y freno de fuerza bruta, con el repositorio y el reloj inyectados.
-- `src/scripts/users.ts`: herramienta de línea de comandos para administrar usuarios. No forma parte de la API.
-- `src/utils/`: aloja utilidades reutilizables, como el limitador de concurrencia, las reglas de bloqueo técnico, la derivación de contraseñas, el cifrado de secretos y la lectura de cookies.
-- `src/types.ts`: centraliza los contratos recibidos desde GitLab, los modelos expuestos por el backend y los tipos internos compartidos entre capas.
-- `test/`: contiene configuración, fixtures y utilidades compartidas por los test del paquete. Las convenciones se mantienen en la [estrategia de test](../development/test.md).
+- `src/scripts/users.ts`: herramienta de línea de comandos para administrar usuarios. Es un punto de entrada más, como `index.ts`, y no forma parte de la API.
+
+### Feature `auth`
+
+- `routes/auth.ts`: sesión y cuenta propia. Publica además los middlewares `createRequireSession` y `createRequireAdmin`, que reutilizan las otras features.
+- `routes/users.ts`: administración de usuarios, sólo para rol `admin`.
+- `services/authRepository.ts`: acceso a usuarios y sesiones.
+- `services/authService.ts`: reglas de alta, registro, ingreso, vencimiento de sesión, cambio de contraseña, borrado y freno de fuerza bruta, con el repositorio y el reloj inyectados.
+- `utils/`: derivación de contraseñas y lectura de cookies.
+
+### Feature `gitlabSettings`
+
+- `routes/gitlabSettings.ts`: lectura, guardado y borrado de la configuración propia.
+- `services/gitlabSettingsRepository.ts`: acceso a la configuración de cada usuario.
+- `services/gitlabSettingsService.ts`: valida los IDs de proyecto y el access token, y cifra y descifra el token con el cifrador inyectado.
+- `utils/encryption.ts`: cifrado simétrico de secretos.
+
+### Feature `mergeRequests`
+
+- `routes/mergeRequests.ts`: contrato de `GET /api/pull-requests` y la caché por usuario.
+- `services/gitlabApi.ts`: construye el cliente de GitLab para un access token concreto, y encapsula URLs, paginación y acceso limitado a la API v4.
+- `services/mergeRequestService.ts`: coordina las consultas, enriquece los merge requests y construye la respuesta del BFF.
+- `services/mergeRequestRules.ts`: reglas puras de clasificación, responsabilidad y normalización que no dependen de Express ni de la red.
+- `utils/`: limitador de concurrencia y reglas de bloqueo técnico.
+
+### `shared/`
+
+- `database.ts`: abre el pool contra Neon con `@neondatabase/serverless`, expone la interfaz mínima `Database` —`query` y `close`— y aplica el esquema. Los repositorios reciben esa interfaz y no el driver: es lo que permite ejecutarlos contra otro Postgres en los test. Comparten una única conexión, porque las claves foráneas entre sus tablas sólo valen dentro de la misma base.
+- `httpError.ts`: `HttpError` —un error de negocio que ya sabe con qué código responder— y `respondWithHttpError`, que lo traduce a una respuesta y registra el resto como error interno.
+- `types.ts`: los contratos de infraestructura que comparten las features.
+
+`test/` contiene configuración, fixtures, utilidades y los contratos que sólo usan los test. Las convenciones se mantienen en la [estrategia de test](../development/test.md).
 
 ## Construcción y arranque
 
