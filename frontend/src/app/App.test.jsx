@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 // 7. Imports relativos restantes.
 import { buildMergeRequest, buildResponse } from '../../test/fixtures/mergeRequests.js'
-import { jsonResponse, resetSharedState } from '../../test/sharedState.js'
+import { jsonResponse, resetSharedState, signInTestUser, TEST_USER } from '../../test/sharedState.js'
 import App from './App.jsx'
 
 const MRS = [
@@ -59,6 +59,7 @@ beforeEach(() => {
   fetchMock = vi.fn(async () => jsonResponse(buildResponse(MRS)))
   vi.stubGlobal('fetch', fetchMock)
   resetSharedState()
+  signInTestUser()
 })
 
 afterEach(() => {
@@ -72,7 +73,7 @@ describe('carga inicial', () => {
   it('consulta el backend al abrir el tablero', async () => {
     await renderApp()
 
-    expect(fetchMock).toHaveBeenCalledWith('http://localhost:3001/api/pull-requests')
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:3001/api/pull-requests', { credentials: 'include' })
   })
 
   it('muestra el tablero con los proyectos recibidos', async () => {
@@ -238,7 +239,7 @@ describe('actualización manual', () => {
     fireEvent.click(refreshButton())
     await flush()
 
-    expect(fetchMock).toHaveBeenLastCalledWith('http://localhost:3001/api/pull-requests?force=true')
+    expect(fetchMock).toHaveBeenLastCalledWith('http://localhost:3001/api/pull-requests?force=true', { credentials: 'include' })
   })
 
   it('muestra la hora de la última actualización', async () => {
@@ -246,5 +247,241 @@ describe('actualización manual', () => {
 
     expect(container.textContent).toContain('Última actualización:')
     expect(container.textContent).toContain('Próxima actualización automática en 5 min')
+  })
+})
+
+describe('portero de sesión', () => {
+  /** Responde como el backend: la sesión por un lado y el tablero por otro. */
+  function routeApi(responses = {}) {
+    const {
+      me = jsonResponse({ user: TEST_USER }),
+      login = jsonResponse({ user: TEST_USER }),
+      logout = jsonResponse(null, 204),
+      register = jsonResponse({ user: TEST_USER }, 201),
+      users = jsonResponse({ users: [] }),
+      board = jsonResponse(buildResponse(MRS)),
+    } = responses
+
+    return vi.fn(async (url) => {
+      const path = String(url)
+      if (path.endsWith('/api/auth/me')) return me
+      if (path.endsWith('/api/auth/login')) return login
+      if (path.endsWith('/api/auth/logout')) return logout
+      if (path.endsWith('/api/auth/register')) return register
+      if (path.includes('/api/users')) return users
+      return board
+    })
+  }
+
+  function loginForm() {
+    return screen.queryByRole('button', { name: /Ingresar|Ingresando/ })
+  }
+
+  /** Completa y envía el formulario de ingreso. */
+  function submitCredentials(username = 'ana', password = 'contrasena-de-prueba') {
+    fireEvent.change(screen.getByLabelText('Usuario'), { target: { value: username } })
+    fireEvent.change(screen.getByLabelText('Contraseña'), { target: { value: password } })
+    fireEvent.click(loginForm())
+  }
+
+  beforeEach(() => {
+    // Deshace la sesión que precargan las pruebas del tablero.
+    resetSharedState()
+  })
+
+  it('avisa que está verificando la sesión antes de decidir qué mostrar', async () => {
+    fetchMock.mockImplementation(() => new Promise(() => {}))
+    container = render(<App />).container
+
+    expect(container.textContent).toContain('Verificando tu sesión...')
+    expect(loginForm()).toBeNull()
+  })
+
+  it('muestra el login cuando no hay sesión abierta', async () => {
+    fetchMock.mockImplementation(routeApi({ me: jsonResponse({ error: 'Iniciá sesión.' }, 401) }))
+    await renderApp()
+
+    expect(loginForm()).not.toBeNull()
+    expect(container.textContent).not.toContain('Tablero de MRs · ')
+  })
+
+  it('no consulta el tablero mientras no haya sesión', async () => {
+    fetchMock.mockImplementation(routeApi({ me: jsonResponse({ error: 'Iniciá sesión.' }, 401) }))
+    await renderApp()
+
+    const boardCalls = fetchMock.mock.calls.filter(([url]) => String(url).includes('/api/pull-requests'))
+    expect(boardCalls).toHaveLength(0)
+  })
+
+  it('muestra el tablero después de ingresar', async () => {
+    fetchMock.mockImplementation(routeApi({ me: jsonResponse({ error: 'Iniciá sesión.' }, 401) }))
+    await renderApp()
+
+    submitCredentials()
+    await flush()
+
+    expect(loginForm()).toBeNull()
+    expect(container.textContent).toContain('equipo/tablero')
+    expect(container.textContent).toContain('Ana Pérez')
+  })
+
+  it('vuelve al login con el mensaje del backend si las credenciales no sirven', async () => {
+    fetchMock.mockImplementation(routeApi({
+      me: jsonResponse({ error: 'Iniciá sesión.' }, 401),
+      login: jsonResponse({ error: 'Usuario o contraseña incorrectos.' }, 401),
+    }))
+    await renderApp()
+
+    submitCredentials('ana', 'incorrecta')
+    await flush()
+
+    expect(screen.getByRole('alert').textContent).toBe('Usuario o contraseña incorrectos.')
+    expect(loginForm()).not.toBeNull()
+  })
+
+  it('cierra la sesión y descarta los datos del tablero', async () => {
+    fetchMock.mockImplementation(routeApi())
+    signInTestUser()
+    await renderApp()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
+    await flush()
+
+    expect(loginForm()).not.toBeNull()
+    expect(container.textContent).not.toContain('equipo/tablero')
+  })
+
+  it('devuelve al login cuando el tablero responde 401', async () => {
+    fetchMock.mockImplementation(routeApi({ board: jsonResponse({ error: 'Iniciá sesión.' }, 401) }))
+    signInTestUser()
+    await renderApp()
+
+    expect(loginForm()).not.toBeNull()
+    expect(screen.getByRole('alert').textContent).toBe('Tu sesión expiró. Volvé a ingresar.')
+  })
+})
+
+describe('alta de cuenta desde el tablero', () => {
+  /** Responde como el backend, con el alta y la lista de usuarios incluidas. */
+  function routeApi(responses = {}) {
+    const {
+      me = jsonResponse({ error: 'Iniciá sesión.' }, 401),
+      register = jsonResponse({ user: TEST_USER }, 201),
+      users = jsonResponse({ users: [] }),
+      board = jsonResponse(buildResponse(MRS)),
+    } = responses
+
+    return vi.fn(async (url) => {
+      const path = String(url)
+      if (path.endsWith('/api/auth/me')) return me
+      if (path.endsWith('/api/auth/register')) return register
+      if (path.includes('/api/users')) return users
+      return board
+    })
+  }
+
+  /** Completa el formulario de alta y lo envía. */
+  function submitRegistration() {
+    fireEvent.change(screen.getByLabelText('Usuario'), { target: { value: 'ana' } })
+    fireEvent.change(screen.getByLabelText('Contraseña'), { target: { value: 'contrasena-de-prueba' } })
+    fireEvent.change(screen.getByLabelText('Repetí la contraseña'), { target: { value: 'contrasena-de-prueba' } })
+    fireEvent.click(screen.getByRole('button', { name: /Crear cuenta|Creando/ }))
+  }
+
+  beforeEach(() => {
+    resetSharedState()
+  })
+
+  it('ofrece el alta desde el formulario de ingreso', async () => {
+    fetchMock.mockImplementation(routeApi())
+    await renderApp()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Crear una cuenta' }))
+
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Crear una cuenta')
+  })
+
+  it('vuelve al ingreso desde el alta', async () => {
+    fetchMock.mockImplementation(routeApi())
+    await renderApp()
+    fireEvent.click(screen.getByRole('button', { name: 'Crear una cuenta' }))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ingresar' }))
+
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Tablero de MRs')
+  })
+
+  it('crea la cuenta y entra directo al tablero', async () => {
+    fetchMock.mockImplementation(routeApi())
+    await renderApp()
+    fireEvent.click(screen.getByRole('button', { name: 'Crear una cuenta' }))
+
+    submitRegistration()
+    await flush()
+
+    expect(container.textContent).toContain('equipo/tablero')
+    expect(screen.queryByRole('button', { name: /Crear cuenta/ })).toBeNull()
+  })
+
+  it('muestra el error del backend sin salir del alta', async () => {
+    fetchMock.mockImplementation(routeApi({
+      register: jsonResponse({ error: 'Ya existe un usuario con el nombre «ana».' }, 409),
+    }))
+    await renderApp()
+    fireEvent.click(screen.getByRole('button', { name: 'Crear una cuenta' }))
+
+    submitRegistration()
+    await flush()
+
+    expect(screen.getByRole('alert').textContent).toBe('Ya existe un usuario con el nombre «ana».')
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Crear una cuenta')
+  })
+})
+
+describe('pantalla de cuenta', () => {
+  function routeApi(users = []) {
+    return vi.fn(async (url) => {
+      const path = String(url)
+      if (path.endsWith('/api/auth/me')) return jsonResponse({ user: TEST_USER })
+      if (path.includes('/api/users')) return jsonResponse({ users })
+      return jsonResponse(buildResponse(MRS))
+    })
+  }
+
+  it('abre la cuenta y vuelve al tablero', async () => {
+    fetchMock.mockImplementation(routeApi())
+    await renderApp()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mi cuenta' }))
+    await flush()
+
+    expect(screen.getByRole('heading', { level: 2, name: 'Mi contraseña' })).toBeDefined()
+    expect(container.textContent).not.toContain('equipo/tablero')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Volver al tablero' }))
+    await flush()
+
+    expect(container.textContent).toContain('equipo/tablero')
+  })
+
+  it('no ofrece la administración de usuarios a quien no es admin', async () => {
+    fetchMock.mockImplementation(routeApi())
+    await renderApp()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mi cuenta' }))
+    await flush()
+
+    expect(screen.queryByRole('heading', { level: 2, name: 'Usuarios' })).toBeNull()
+  })
+
+  it('ofrece la administración de usuarios a un admin', async () => {
+    fetchMock.mockImplementation(routeApi())
+    signInTestUser({ ...TEST_USER, role: 'admin' })
+    await renderApp()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mi cuenta' }))
+    await flush()
+
+    expect(screen.getByRole('heading', { level: 2, name: 'Usuarios' })).toBeDefined()
   })
 })

@@ -4,7 +4,7 @@
 
 Se requieren Node.js 22.13+, npm 10+, acceso a GitLab, un PAT `read_api` e IDs de proyectos. Ejecutar `npm ci` en la raíz, `backend/` y `frontend/`, y copiar `backend/.env.example` como `backend/.env`.
 
-El mínimo de Node 22.13 permite usar las versiones vigentes de las herramientas de pruebas y ESLint. Los tres `package.json` —raíz, `backend/` y `frontend/`— lo declaran mediante `engines`, así que `npm install` advierte con `EBADENGINE` si el runtime no lo cumple. No hay una comprobación propia del proyecto: con una versión menor el aviso llega en la instalación y, más adelante, desde la herramienta que no la soporte.
+El mínimo de Node 22.13 es un requisito duro: desde esa versión `node:sqlite` —la base del login— está disponible sin flags. Además permite usar las versiones vigentes de las herramientas de pruebas y ESLint. Los tres `package.json` —raíz, `backend/` y `frontend/`— lo declaran mediante `engines`, así que `npm install` advierte con `EBADENGINE` si el runtime no lo cumple. No hay una comprobación propia del proyecto: con una versión menor el aviso llega en la instalación y, más adelante, desde la herramienta que no la soporte.
 
 Para comprobar el runtime efectivo en Windows:
 
@@ -24,6 +24,9 @@ Después de actualizar Node.js hay que abrir una terminal nueva y ejecutar nueva
 | `POLL_CACHE_TTL_MS` | No | `60000` | TTL en milisegundos |
 | `TEAM_LEAD_USERNAME` | No | `NGiudi` | Aprobación del líder |
 | `MIN_APPROVALS` | No | `2` | Mínimo de aprobaciones |
+| `DATABASE_PATH` | No | `data/app.db` | Base SQLite de usuarios y sesiones, relativa a `backend/` |
+| `SESSION_DURATION_DAYS` | No | `7` | Días que dura una sesión |
+| `COOKIE_SECURE` | No | `true` con `NODE_ENV=production` | Exige HTTPS en la cookie de sesión |
 
 El frontend usa esta variable, expuesta por Vite durante el build:
 
@@ -32,6 +35,18 @@ El frontend usa esta variable, expuesta por Vite durante el build:
 | `VITE_API_BASE_URL` | No | `http://localhost:3001` | URL base HTTP(S) del backend |
 
 `frontend/src/config.js` valida el valor y elimina la barra final. `frontend/.env.example` contiene la configuración recomendada para desarrollo local. Vite solo expone al navegador variables con el prefijo `VITE_`; nunca colocar secretos en ellas.
+
+## Primer usuario
+
+El tablero exige sesión. En una instalación nueva alcanza con abrir el frontend y usar «Crear una cuenta»: **el primer usuario registrado queda administrador**, así que puede administrar al resto desde «Mi cuenta».
+
+Si preferís crearlo por línea de comandos, desde la raíz:
+
+```bash
+npm run users --prefix backend -- create ana --name "Ana Pérez" --role admin
+```
+
+La contraseña se pide por teclado. La base se crea sola en `DATABASE_PATH` y está en `.gitignore`: borrar ese archivo equivale a empezar de cero. Los tres caminos de alta, los subcomandos y las reglas de contraseñas están en el [dominio de autenticación](../domains/autenticacion.md).
 
 ## Ejecución
 
@@ -43,7 +58,7 @@ Dentro de `backend/`, `npm run dev` agrega recarga ante cambios con `tsx watch` 
 - Backend: `http://localhost:3001`
 - Salud: `http://localhost:3001/health`
 
-Si el backend no inicia, revisar las variables obligatorias. Un HTTP 502 indica un error al consultar GitLab; comprobar token, permisos, URL e IDs.
+Si el backend no inicia, revisar las variables obligatorias. Un HTTP 502 indica un error al consultar GitLab; comprobar token, permisos, URL e IDs. Un HTTP 401 significa que falta la sesión y un 403 que falta el rol `admin`. Si nadie puede entrar, `npm run users` es el camino de recuperación.
 
 ## Sitio de documentación
 

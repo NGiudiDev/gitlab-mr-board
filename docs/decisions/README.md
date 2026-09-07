@@ -5,5 +5,7 @@
 - [ADR 0003: adoptar Vitest y una pirámide de test](0003-estrategia-de-test.md)
 - [ADR 0004: generar un sitio de documentación con VitePress](0004-sitio-de-documentacion.md)
 - [ADR 0005: migrar el frontend de Vue a React](0005-frontend-en-react.md)
+- [ADR 0006: resolver el login con usuarios locales en SQLite](0006-login-local-con-sqlite.md)
+- [ADR 0007: abrir el registro y administrar usuarios desde la interfaz](0007-registro-abierto-y-gestion-de-usuarios.md)
 
 Una decisión posterior se registra en un ADR nuevo en lugar de reescribir uno aceptado.

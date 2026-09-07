@@ -6,6 +6,8 @@ import e2eConfig from './e2e/config.js';
 // paralelo y mantiene el orden del recorrido.
 export default defineConfig({
   testDir: './e2e',
+  // Crea la base de sesiones y el usuario antes de levantar los servidores.
+  globalSetup: './e2e/globalSetup.js',
   fullyParallel: false,
   workers: 1,
   forbidOnly: Boolean(process.env.CI),
@@ -37,6 +39,7 @@ export default defineConfig({
         GITLAB_BASE_URL: e2eConfig.gitlabBaseUrl,
         PROJECT_IDS: e2eConfig.projectIds,
         PORT: String(e2eConfig.backendPort),
+        DATABASE_PATH: e2eConfig.databasePath,
       },
     },
     {

@@ -12,7 +12,8 @@ El código se divide entre la composición general y las funcionalidades del dom
 
 - `src/main.jsx`: carga los estilos globales y monta React mediante `createRoot` y `StrictMode`.
 - `src/config.js`: centraliza y valida la configuración expuesta por Vite.
-- `src/app/App.jsx`: compone la pantalla, conecta el store con la interfaz y decide qué mostrar durante la carga, los errores y la ausencia de datos.
+- `src/app/App.jsx`: decide si mostrar el ingreso, el tablero o la pantalla de cuenta según la sesión, compone la pantalla y resuelve qué presentar durante la carga, los errores y la ausencia de datos.
+- `src/features/auth/`: contiene el store de la sesión, el hook de la lista de usuarios y los componentes de ingreso, alta y administración, descritos en el [dominio de autenticación](../domains/autenticacion.md).
 - `src/features/mergeRequests/hooks/useMergeRequests.js`: contiene el store compartido, el acceso al backend y el polling.
 - `src/features/mergeRequests/components/`: contiene los componentes del tablero de merge requests.
 - `src/features/mergeRequests/personalView.js`: selecciona los datos de la vista personal a partir del contrato del backend.
@@ -23,18 +24,28 @@ Las funcionalidades nuevas deben seguir la estructura `src/features/<feature>/co
 
 ## Composición de componentes
 
-`App` consume `useMergeRequests()` y distribuye datos y callbacks mediante props explícitas. El árbol principal es:
+`App` consume `useSession()`, monta el tablero sólo con la sesión abierta y alterna entre el tablero y la pantalla de cuenta; `Board` consume `useMergeRequests()` y distribuye datos y callbacks mediante props explícitas. El árbol principal es:
 
 ```text
 App
-├── TopBar
-├── ViewControls
-└── MrBoard
-    └── BoardColumn
-        └── MrCard
-            └── BlockerBadge
+├── LoginForm / RegisterForm     (sin sesión)
+└── SessionBar                   (con sesión)
+    ├── Board                    (vista «tablero»)
+    │   ├── TopBar
+    │   ├── ViewControls
+    │   └── MrBoard
+    │       └── BoardColumn
+    │           └── MrCard
+    │               └── BlockerBadge
+    └── AccountPanel             (vista «mi cuenta»)
+        └── UserAdmin            (sólo con rol admin)
 ```
 
+- `LoginForm` pide usuario y contraseña, muestra el error que devuelve el backend y ofrece pasar al alta.
+- `RegisterForm` crea la cuenta: valida en el navegador las mismas reglas que el backend para avisar antes de enviar.
+- `SessionBar` identifica a quién pertenece la sesión, alterna entre el tablero y la cuenta, y permite cerrarla.
+- `AccountPanel` reúne el cambio de la propia contraseña y, para un `admin`, `UserAdmin`.
+- `UserAdmin` lista los usuarios y permite dar de alta, habilitar, deshabilitar y restablecer contraseñas.
 - `TopBar` presenta los totales, el estado de sincronización y la actualización manual.
 - `ViewControls` alterna entre la vista general y la personal y permite elegir una persona.
 - `MrBoard` agrupa los merge requests por proyecto, mantiene el estado local de expansión y los distribuye según su clasificación. Ambas vistas reutilizan este componente; la personal le entrega únicamente las tareas de la persona seleccionada.
@@ -59,6 +70,8 @@ Los componentes presentacionales reciben valores mediante props y notifican acci
 - `selectedUsername`: identidad elegida para la vista personal durante la sesión.
 
 No hay un provider: todos los consumidores del hook se suscriben a la misma instancia. El estado que deba observar más de un componente debe incorporarse al store; `useState` se reserva para estado local de interfaz, como las secciones expandidas de `MrBoard`.
+
+`features/auth/hooks/useSession.js` mantiene un segundo store con el mismo patrón, porque la sesión también la observan varios componentes. La lista de usuarios, en cambio, la consume una sola pantalla: `useUsers` la resuelve con estado local.
 
 ### Ciclo de suscripción y polling
 

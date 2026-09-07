@@ -10,3 +10,7 @@ process.env.PORT = '0';
 process.env.POLL_CACHE_TTL_MS = '60000';
 process.env.TEAM_LEAD_USERNAME = 'lider';
 process.env.MIN_APPROVALS = '2';
+// Cada suite abre su propia base en memoria: los test nunca tocan el archivo real.
+process.env.DATABASE_PATH = ':memory:';
+process.env.SESSION_DURATION_DAYS = '7';
+process.env.COOKIE_SECURE = 'false';

@@ -43,12 +43,18 @@ test.describe('Tablero de merge requests', () => {
       name: exactCardName(e2eConfig.mergeRequestTitle),
     });
 
-    await test.step('abre el tablero y espera los datos de GitLab', async () => {
-      const boardResponse = waitForBoardResponse(page);
+    await test.step('ingresa con el usuario de test y espera los datos de GitLab', async () => {
       await page.goto('/');
+      await expect(page.getByRole('heading', { name: 'Tablero de MRs', level: 1 })).toBeVisible();
+
+      await page.getByLabel('Usuario').fill(e2eConfig.username);
+      await page.getByLabel('Contraseña').fill(e2eConfig.password);
+
+      const boardResponse = waitForBoardResponse(page);
+      await page.getByRole('button', { name: 'Ingresar' }).click();
       await boardResponse;
 
-      await expect(page.getByRole('heading', { name: 'Tablero de MRs', level: 1 })).toBeVisible();
+      await expect(page.getByText(`@${e2eConfig.username}`)).toBeVisible();
       await expect(page.getByRole('button', { name: 'Refrescar ahora' })).toBeEnabled();
     });
 
@@ -97,6 +103,12 @@ test.describe('Tablero de merge requests', () => {
       expect(await focusedAccessibleName(page)).toContain('Saltar al contenido principal');
 
       await page.keyboard.press('Tab');
+      expect(await focusedAccessibleName(page)).toContain('Mi cuenta');
+
+      await page.keyboard.press('Tab');
+      expect(await focusedAccessibleName(page)).toContain('Cerrar sesión');
+
+      await page.keyboard.press('Tab');
       expect(await focusedAccessibleName(page)).toContain('Refrescar ahora');
 
       await page.keyboard.press('Tab');
@@ -121,6 +133,29 @@ test.describe('Tablero de merge requests', () => {
       await page.getByRole('button', { name: 'General' }).click();
       await expect(personalButton).toHaveAttribute('aria-pressed', 'false');
       await expect(project).toBeVisible();
+    });
+
+    await test.step('administra usuarios desde la pantalla de cuenta', async () => {
+      await page.getByRole('button', { name: 'Mi cuenta' }).click();
+
+      await expect(page.getByRole('heading', { level: 2, name: 'Mi contraseña' })).toBeVisible();
+      // El usuario del recorrido es administrador, así que ve la tabla de usuarios.
+      await expect(page.getByRole('heading', { level: 2, name: 'Usuarios' })).toBeVisible();
+      await expect(page.getByRole('rowheader', { name: `@${e2eConfig.username}` })).toBeVisible();
+
+      await page.getByRole('button', { name: 'Volver al tablero' }).click();
+      await expect(page.getByRole('button', { name: 'Refrescar ahora' })).toBeEnabled();
+    });
+
+    await test.step('cierra la sesión y vuelve al formulario de ingreso', async () => {
+      await page.getByRole('button', { name: 'Cerrar sesión' }).click();
+
+      await expect(page.getByRole('button', { name: 'Ingresar' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Refrescar ahora' })).toHaveCount(0);
+
+      // La cookie quedó invalidada: recargar no devuelve el tablero.
+      await page.reload();
+      await expect(page.getByRole('button', { name: 'Ingresar' })).toBeVisible();
     });
   });
 });

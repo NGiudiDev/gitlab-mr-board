@@ -63,13 +63,13 @@ describe('fetchMergeRequests', () => {
   it('consulta el endpoint sin parámetros por defecto', async () => {
     await fetchMergeRequests()
 
-    expect(fetchMock).toHaveBeenCalledWith('http://localhost:3001/api/pull-requests')
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:3001/api/pull-requests', { credentials: 'include' })
   })
 
   it('agrega force=true para omitir la caché del backend', async () => {
     await fetchMergeRequests(true)
 
-    expect(fetchMock).toHaveBeenCalledWith('http://localhost:3001/api/pull-requests?force=true')
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:3001/api/pull-requests?force=true', { credentials: 'include' })
   })
 
   it('marca la carga mientras la petición está en curso', async () => {
@@ -191,7 +191,7 @@ describe('ciclo de vida del componente', () => {
     await flush()
     await act(async () => { await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS) })
 
-    expect(fetchMock).toHaveBeenLastCalledWith('http://localhost:3001/api/pull-requests')
+    expect(fetchMock).toHaveBeenLastCalledWith('http://localhost:3001/api/pull-requests', { credentials: 'include' })
     unmount()
   })
 

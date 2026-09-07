@@ -9,19 +9,22 @@ Usa ES modules y la resolución `NodeNext`. Por ese motivo, los imports relativo
 La implementación separa el transporte HTTP, la lógica de negocio y la integración externa:
 
 - `src/index.ts`: crea la aplicación e inicia el servidor en el puerto configurado. No contiene rutas ni lógica de negocio.
-- `src/app.ts`: construye Express mediante `createApp()`, configura CORS y JSON, registra el health check, monta los routers y centraliza los errores no controlados.
+- `src/app.ts`: construye Express mediante `createApp()`, configura CORS y JSON, registra el health check, monta los routers —exigiendo sesión en `/api` y rol `admin` en `/api/users`— y centraliza los errores no controlados.
 - `src/config.ts`: carga `backend/.env`, valida las variables obligatorias y expone la configuración normalizada.
-- `src/routes/`: define los contratos HTTP, valida entradas, administra la caché de la respuesta y traduce errores a estados HTTP.
+- `src/routes/`: define los contratos HTTP, valida entradas y permisos, administra la caché de la respuesta y traduce errores a estados HTTP. `auth.ts` publica además los middlewares `createRequireSession` y `createRequireAdmin`, que el resto de los routers reutiliza.
 - `src/services/gitlabApi.ts`: encapsula autenticación, construcción de URLs, paginación y acceso limitado a la API v4 de GitLab.
 - `src/services/mergeRequestService.ts`: coordina las consultas, enriquece los merge requests y construye la respuesta del BFF.
 - `src/services/mergeRequestRules.ts`: contiene reglas puras de clasificación, responsabilidad y normalización que no dependen de Express ni de la red.
-- `src/utils/`: aloja utilidades reutilizables, como el limitador de concurrencia y las reglas de bloqueo técnico.
+- `src/services/authRepository.ts`: abre la base SQLite con `node:sqlite`, aplica el esquema y expone el acceso a usuarios y sesiones.
+- `src/services/authService.ts`: concentra las reglas de alta, registro, ingreso, vencimiento de sesión, cambio de contraseña y freno de fuerza bruta, con el repositorio y el reloj inyectados.
+- `src/scripts/users.ts`: herramienta de línea de comandos para administrar usuarios. No forma parte de la API.
+- `src/utils/`: aloja utilidades reutilizables, como el limitador de concurrencia, las reglas de bloqueo técnico, la derivación de contraseñas y la lectura de cookies.
 - `src/types.ts`: centraliza los contratos recibidos desde GitLab, los modelos expuestos por el backend y los tipos internos compartidos entre capas.
 - `test/`: contiene configuración, fixtures y utilidades compartidas por los test del paquete. Las convenciones se mantienen en la [estrategia de test](../development/test.md).
 
 ## Construcción y arranque
 
-`createApp()` construye la aplicación sin abrir un puerto y `src/index.ts` es el único responsable de invocar `listen()`, así que la aplicación puede ejecutarse en memoria o en distintos entornos. Tanto `createApp()` como `createMergeRequestsRouter()` reciben por inyección la fuente de merge requests y el reloj de la caché, lo que permite controlar sus dependencias sin consultar GitLab ni depender del tiempo real.
+`createApp()` construye la aplicación sin abrir un puerto y `src/index.ts` es el único responsable de invocar `listen()`, así que la aplicación puede ejecutarse en memoria o en distintos entornos. Tanto `createApp()` como `createMergeRequestsRouter()` reciben por inyección la fuente de merge requests y el reloj de la caché, lo que permite controlar sus dependencias sin consultar GitLab ni depender del tiempo real. `createApp()` acepta además un servicio de autenticación ya construido; si no se lo pasan, abre la base configurada en `DATABASE_PATH`.
 
 ## Flujo de una consulta
 
@@ -35,7 +38,7 @@ Una solicitud a `GET /api/pull-requests` atraviesa el siguiente flujo:
 6. Los resultados se ordenan por fecha de actualización descendente y se agregan los metadatos de la consulta, incluidas las personas participantes.
 7. El router conserva la respuesta completa en memoria y la devuelve al frontend.
 
-No existe una base de datos. Cada proceso mantiene su propia caché y la pierde al reiniciarse.
+Los merge requests no se guardan: cada proceso mantiene su propia caché y la pierde al reiniciarse. La única persistencia del backend es la base SQLite de usuarios y sesiones, descrita en el [dominio de autenticación](../domains/autenticacion.md).
 
 ## Integración con GitLab
 
@@ -71,9 +74,19 @@ El backend prioriza entregar una vista parcial antes que descartar toda la respu
 
 Devuelve el estado del proceso y la cantidad de proyectos configurados. Sirve como chequeo de vida, pero no comprueba la conectividad ni las credenciales de GitLab.
 
+### `/api/auth/*`
+
+Administran la sesión y la propia cuenta. `register` crea un usuario y abre su sesión; `login` recibe `{ username, password }` y responde con el usuario, entregando el token en una cookie `HttpOnly`; `logout` la invalida; `me` devuelve el usuario de la sesión vigente; `password` cambia la contraseña propia exigiendo la actual.
+
+### `/api/users/*`
+
+Administración de usuarios: listado, alta con rol, habilitación y restablecimiento de contraseñas. Exigen rol `admin`, no sólo sesión.
+
+La tabla completa de permisos y las reglas —vencimiento, estados, freno de fuerza bruta y límite de registros— están en el [dominio de autenticación](../domains/autenticacion.md).
+
 ### `GET /api/pull-requests`
 
-Devuelve los merge requests consolidados en `mergeRequests` y un objeto `meta` con la fecha de consulta, cantidad de proyectos, total de resultados, nombres de todos los proyectos configurados y las personas participantes en `people`.
+**Exige una sesión válida**: sin ella responde HTTP 401. Devuelve los merge requests consolidados en `mergeRequests` y un objeto `meta` con la fecha de consulta, cantidad de proyectos, total de resultados, nombres de todos los proyectos configurados y las personas participantes en `people`.
 
 Cada merge request incluye el nombre y el `username` del autor. El nombre se presenta en la interfaz y `authorUsername` aporta la identidad estable con la que se comparan las personas.
 
@@ -83,6 +96,6 @@ El parámetro opcional `force=true` fuerza la actualización de la caché. Cualq
 
 ## Configuración
 
-`src/config.ts` carga `backend/.env`. `GITLAB_TOKEN` y `PROJECT_IDS` son obligatorias; si falta alguna, el proceso informa el problema y termina. Los valores opcionales controlan la URL de GitLab, el puerto, el TTL de la caché y las reglas de aprobación.
+`src/config.ts` carga `backend/.env`. `GITLAB_TOKEN` y `PROJECT_IDS` son obligatorias; si falta alguna, el proceso informa el problema y termina. Los valores opcionales controlan la URL de GitLab, el puerto, el TTL de la caché, las reglas de aprobación y la ubicación y duración de las sesiones.
 
 La lista completa, sus valores predeterminados y el procedimiento de actualización se mantienen en la [guía de entorno local](../development/entorno-local.md).

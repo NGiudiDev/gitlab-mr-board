@@ -11,11 +11,12 @@ El frontend solicita una vista consolidada mediante `GET /api/pull-requests`. El
 
 ## Flujo principal
 
-1. El frontend consulta `/api/pull-requests`.
-2. La ruta devuelve la caché vigente o solicita datos nuevos.
-3. El servicio consulta los proyectos y detalles de MRs en paralelo.
-4. Un limitador restringe las solicitudes concurrentes a GitLab.
-5. El backend normaliza y clasifica los MRs.
-6. React agrupa el resultado por proyecto y lo muestra en columnas.
+1. El usuario ingresa con su cuenta del tablero y el backend le entrega una cookie de sesión.
+2. El frontend consulta `/api/pull-requests` con esa cookie.
+3. La ruta verifica la sesión y devuelve la caché vigente o solicita datos nuevos.
+4. El servicio consulta los proyectos y detalles de MRs en paralelo.
+5. Un limitador restringe las solicitudes concurrentes a GitLab.
+6. El backend normaliza y clasifica los MRs.
+7. React agrupa el resultado por proyecto y lo muestra en columnas.
 
-La caché vive en memoria, el token solo pertenece al backend y no hay base de datos ni autenticación propia. Los detalles de cada paquete están en [Backend](backend.md) y [Frontend](frontend.md).
+La caché vive en memoria y el token solo pertenece al backend. La única persistencia es una base SQLite local con los usuarios y las sesiones, descrita en el [dominio de autenticación](../domains/autenticacion.md). Los detalles de cada paquete están en [Backend](backend.md) y [Frontend](frontend.md).

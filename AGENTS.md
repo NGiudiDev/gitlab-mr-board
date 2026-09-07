@@ -58,7 +58,11 @@
 
 - Usar **TypeScript estricto y ES modules**, con extensión `.js` en los imports relativos para ser compatibles con la salida `NodeNext`.
 
-- Las rutas validan sus parámetros y devuelven el error HTTP que corresponda (400, 404, 500, etc.). Al agregar un endpoint, documentarlo; si requiere un router nuevo, montarlo desde `backend/src/app.ts`.
+- Las rutas validan sus parámetros y devuelven el error HTTP que corresponda (400, 404, 500, etc.). Al agregar un endpoint, documentarlo; si requiere un router nuevo, montarlo desde `backend/src/app.ts`. **Todo lo que cuelgue de `/api` exige sesión**: el middleware está montado en `createApp()` y una ruta pública nueva debe justificarse.
+
+- La autenticación vive en `services/authRepository.ts` (SQLite), `services/authService.ts` (reglas), `routes/auth.ts` (sesión y cuenta propia) y `routes/users.ts` (administración), con las reglas documentadas en [`docs/domains/autenticacion.md`](docs/domains/autenticacion.md) ([ADR 0006](docs/decisions/0006-login-local-con-sqlite.md) y [ADR 0007](docs/decisions/0007-registro-abierto-y-gestion-de-usuarios.md)). No guardar credenciales fuera de esas capas, no devolver el hash de una contraseña ni el token de sesión en ninguna respuesta, y mantener el repositorio inyectable para poder abrirlo con `:memory:` en los test.
+
+- **Los permisos se validan en el backend, ruta por ruta**: `createRequireSession` para lo que exige sesión y `createRequireAdmin` para lo que exige rol `admin`. Esconder un control en el frontend no es una barrera. Al agregar una operación de administración, montarla bajo `/api/users` y cubrir en los test el 401 sin sesión y el 403 sin rol.
 
 - Respetar el **rate limiter** existente al llamar a la API de GitLab.
 
@@ -72,7 +76,7 @@
 
 - Estilos con **Tailwind CSS** — nada de CSS custom salvo para lo que Tailwind no cubra.
 
-- **El estado compartido va al store** de `hooks/useMergeRequests.js` (`useSyncExternalStore`); `useState` queda para estado local del componente.
+- **El estado compartido va al store** de `hooks/useMergeRequests.js` para el tablero y `features/auth/hooks/useSession.js` para la sesión, ambos con `useSyncExternalStore`; `useState` queda para estado local del componente. Toda petición al backend viaja con `credentials: 'include'`.
 
 - Al agregar o renombrar una clasificación, mantener sincronizados el tipo `Mergeability` del backend, las columnas de `mergeRequestColumns.js` y `docs/domains/merge-requests.md`. Al cambiar la asignación de responsables, modificar `computeResponsiblePeople`, cubrir las combinaciones en `mergeRequestRules.test.ts` y actualizar ese mismo documento.
 

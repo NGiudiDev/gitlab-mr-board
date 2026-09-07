@@ -16,7 +16,8 @@
     "typecheck": "tsc --noEmit && tsc --project tsconfig.test.json",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "users": "tsx src/scripts/users.ts"
   },
   "dependencies": {
     "cors": "2.8.6",

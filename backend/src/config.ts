@@ -35,6 +35,14 @@ function parseIntegerOrDefault(value: string | undefined, defaultValue: number):
   return Number.parseInt(value ?? '', 10) || defaultValue;
 }
 
+/** Resuelve la ruta de la base SQLite, relativa a la carpeta del backend. */
+function resolveDatabasePath(value: string | undefined): string {
+  const configuredPath = value?.trim();
+  if (configuredPath === ':memory:') return configuredPath;
+
+  return path.resolve(currentDirectory, '..', configuredPath || 'data/app.db');
+}
+
 /** Convierte la lista separada por comas en IDs limpios y no vacíos. */
 function parseProjectIds(value: string): string[] {
   return value
@@ -51,6 +59,10 @@ const config = {
   cacheTtlMs: parseIntegerOrDefault(process.env.POLL_CACHE_TTL_MS, 60_000),
   teamLeadUsername: process.env.TEAM_LEAD_USERNAME || 'NGiudi',
   minApprovals: parseIntegerOrDefault(process.env.MIN_APPROVALS, 2),
+  databasePath: resolveDatabasePath(process.env.DATABASE_PATH),
+  sessionDurationDays: parseIntegerOrDefault(process.env.SESSION_DURATION_DAYS, 7),
+  // La cookie de sesión sólo puede exigir HTTPS donde efectivamente lo hay.
+  cookieSecure: (process.env.COOKIE_SECURE || String(process.env.NODE_ENV === 'production')) === 'true',
 };
 
 export default config;

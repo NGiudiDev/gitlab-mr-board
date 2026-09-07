@@ -34,6 +34,11 @@ const REQUIRED_VARIABLES = {
 const FRONTEND_PORT = 4173;
 const BACKEND_PORT = 3101;
 
+// El tablero exige sesión. La suite usa una base descartable y un usuario
+// propio, que se recrean en cada corrida desde `globalSetup.js`.
+const DEFAULT_USERNAME = 'e2e';
+const DEFAULT_PASSWORD = 'contrasena-de-test-e2e';
+
 /** Lee una variable obligatoria y acumula las que falten. */
 function readRequiredVariables() {
   const missing = Object.keys(REQUIRED_VARIABLES).filter((name) => !process.env[name]?.trim());
@@ -61,6 +66,9 @@ const e2eConfig = {
   projectPath: process.env.E2E_PROJECT_PATH.trim(),
   mergeRequestTitle: process.env.E2E_MR_TITLE.trim(),
   mergeRequestColumn: process.env.E2E_MR_COLUMN.trim(),
+  username: process.env.E2E_USERNAME?.trim() || DEFAULT_USERNAME,
+  password: process.env.E2E_PASSWORD?.trim() || DEFAULT_PASSWORD,
+  databasePath: fileURLToPath(new URL('../backend/data/e2e.db', import.meta.url)),
   backendUrl: `http://localhost:${BACKEND_PORT}`,
   frontendUrl: `http://localhost:${FRONTEND_PORT}`,
   frontendPort: FRONTEND_PORT,

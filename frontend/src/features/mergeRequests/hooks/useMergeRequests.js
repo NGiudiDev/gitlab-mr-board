@@ -3,6 +3,7 @@ import { useEffect, useSyncExternalStore } from 'react'
 
 // 7. Imports relativos restantes.
 import config from '../../../config.js'
+import { expireSession } from '../../auth/hooks/useSession.js'
 
 const POLL_INTERVAL = 5 * 60 * 1000
 
@@ -50,7 +51,14 @@ async function fetchMergeRequests(force = false) {
   setState({ loading: true, error: null })
   try {
     const url = `${config.apiBaseUrl}/api/pull-requests${force ? '?force=true' : ''}`
-    const response = await fetch(url)
+    // El tablero exige sesión, y la cookie sólo viaja con `credentials`.
+    const response = await fetch(url, { credentials: 'include' })
+    if (response.status === 401) {
+      // La sesión venció: el error lo comunica la pantalla de login, no el tablero.
+      expireSession()
+      setState({ mergeRequests: [], meta: null, error: null, lastFetched: null })
+      return
+    }
     if (!response.ok) {
       const body = await response.json().catch(() => ({}))
       throw new Error(body.error || `Error ${response.status}`)
@@ -94,7 +102,7 @@ function selectPerson(username) {
   setState({ selectedUsername: username || null })
 }
 
-/** Deja el store como al arrancar la app. Sólo para test. */
+/** Deja el store como al arrancar la app: se usa al cerrar sesión y en los test. */
 function resetStore() {
   stopPolling()
   consumers = 0

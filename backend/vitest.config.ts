@@ -12,7 +12,9 @@ export default defineConfig({
       // Incluye los módulos sin test para que la cobertura refleje todo el
       // código de producción, no sólo el que ya está cubierto.
       include: ['src/**/*.ts'],
-      exclude: ['src/**/*.test.ts', 'src/types.ts'],
+      // `src/scripts/` son herramientas de operación por línea de comandos, no
+      // código servido por la API.
+      exclude: ['src/**/*.test.ts', 'src/types.ts', 'src/scripts/**'],
     },
   },
 });
