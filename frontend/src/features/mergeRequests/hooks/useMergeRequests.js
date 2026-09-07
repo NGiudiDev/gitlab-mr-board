@@ -13,6 +13,8 @@ const INITIAL_STATE = {
   loading: false,
   error: null,
   lastFetched: null,
+  /** El backend avisó que todavía falta configurar GitLab en «Mi cuenta». */
+  needsGitlabSettings: false,
   viewMode: 'general',
   selectedUsername: null,
 }
@@ -59,12 +61,28 @@ async function fetchMergeRequests(force = false) {
       setState({ mergeRequests: [], meta: null, error: null, lastFetched: null })
       return
     }
+    if (response.status === 409) {
+      // Falta la configuración de GitLab: no es un fallo, es un paso pendiente.
+      setState({
+        mergeRequests: [],
+        meta: null,
+        error: null,
+        lastFetched: null,
+        needsGitlabSettings: true,
+      })
+      return
+    }
     if (!response.ok) {
       const body = await response.json().catch(() => ({}))
       throw new Error(body.error || `Error ${response.status}`)
     }
     const data = await response.json()
-    setState({ mergeRequests: data.mergeRequests, meta: data.meta, lastFetched: new Date() })
+    setState({
+      mergeRequests: data.mergeRequests,
+      meta: data.meta,
+      lastFetched: new Date(),
+      needsGitlabSettings: false,
+    })
   } catch (err) {
     setState({ error: err.message })
   } finally {

@@ -21,6 +21,13 @@ const MRS = [
   }),
 ]
 
+/** Configuración de GitLab que el backend devuelve para el usuario de prueba. */
+const GITLAB_SETTINGS = {
+  projectIds: ['101', '202'],
+  tokenHint: 'real',
+  updatedAt: '2026-08-28T10:00:00.000Z',
+}
+
 let fetchMock
 let container
 
@@ -444,6 +451,7 @@ describe('navegación entre secciones', () => {
       const path = String(url)
       if (path.endsWith('/api/auth/me')) return jsonResponse({ user: TEST_USER })
       if (path.includes('/api/users')) return jsonResponse({ users })
+      if (path.includes('/api/gitlab-settings')) return jsonResponse({ settings: GITLAB_SETTINGS })
       return jsonResponse(buildResponse(MRS))
     })
   }
@@ -467,6 +475,64 @@ describe('navegación entre secciones', () => {
 
     expect(container.textContent).toContain('equipo/tablero')
   })
+
+  it('reúne en la cuenta la configuración de GitLab y la contraseña', async () => {
+    fetchMock.mockImplementation(routeApi())
+    await renderApp()
+
+    await openSection('Mi cuenta')
+
+    expect(screen.getByRole('heading', { level: 2, name: 'GitLab' })).toBeDefined()
+    expect(screen.getByRole('heading', { level: 2, name: 'Mi contraseña' })).toBeDefined()
+    expect(screen.getByLabelText('IDs de los proyectos').value).toBe('101, 202')
+  });
+
+  it('lleva a la cuenta cuando falta configurar GitLab', async () => {
+    fetchMock.mockImplementation(async (url) => {
+      const path = String(url)
+      if (path.endsWith('/api/auth/me')) return jsonResponse({ user: TEST_USER })
+      if (path.includes('/api/gitlab-settings')) return jsonResponse({ settings: null })
+      return jsonResponse(
+        { error: 'Configurá tus datos de GitLab.', code: 'gitlab_settings_missing' },
+        409,
+      )
+    })
+    await renderApp()
+
+    expect(container.textContent).toContain('Todavía no configuraste GitLab')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Configurar en Mi cuenta' }))
+    await flush()
+
+    expect(screen.getByRole('heading', { level: 2, name: 'GitLab' })).toBeDefined()
+  });
+
+  it('actualiza el tablero apenas se guarda la configuración de GitLab', async () => {
+    let configured = false
+    fetchMock.mockImplementation(async (url, options) => {
+      const path = String(url)
+      if (path.endsWith('/api/auth/me')) return jsonResponse({ user: TEST_USER })
+      if (path.includes('/api/gitlab-settings')) {
+        if (options?.method === 'PUT') configured = true
+        return jsonResponse({ settings: configured ? GITLAB_SETTINGS : null })
+      }
+      if (configured) return jsonResponse(buildResponse(MRS))
+      return jsonResponse({ code: 'gitlab_settings_missing' }, 409)
+    })
+    await renderApp()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Configurar en Mi cuenta' }))
+    await flush()
+    fireEvent.change(screen.getByLabelText('IDs de los proyectos'), { target: { value: '101' } })
+    fireEvent.change(screen.getByLabelText('Access token'), { target: { value: 'glpat-token-de-prueba' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar configuración' }))
+    await flush()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Tablero' }))
+    await flush()
+
+    expect(container.textContent).toContain('equipo/tablero')
+  });
 
   it('no ofrece la sección de usuarios a quien no es admin', async () => {
     fetchMock.mockImplementation(routeApi())

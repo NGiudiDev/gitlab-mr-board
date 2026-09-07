@@ -7,7 +7,7 @@ import dotenv from 'dotenv';
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 const environmentFilePath = path.resolve(currentDirectory, '..', '.env');
-const requiredEnvironmentVariables = ['GITLAB_TOKEN', 'PROJECT_IDS'] as const;
+const requiredEnvironmentVariables = ['ENCRYPTION_KEY'] as const;
 
 dotenv.config({ path: environmentFilePath });
 
@@ -20,10 +20,9 @@ if (missingEnvironmentVariables.length > 0) {
   process.exit(1);
 }
 
-const gitlabToken = process.env.GITLAB_TOKEN;
-const projectIds = process.env.PROJECT_IDS;
+const encryptionKey = process.env.ENCRYPTION_KEY;
 
-if (!gitlabToken || !projectIds) {
+if (!encryptionKey) {
   throw new Error('La configuración obligatoria no está disponible.');
 }
 
@@ -43,18 +42,10 @@ function resolveDatabasePath(value: string | undefined): string {
   return path.resolve(currentDirectory, '..', configuredPath || 'data/app.db');
 }
 
-/** Convierte la lista separada por comas en IDs limpios y no vacíos. */
-function parseProjectIds(value: string): string[] {
-  return value
-    .split(',')
-    .map((projectId) => projectId.trim())
-    .filter(Boolean);
-}
-
 const config = {
-  gitlabToken,
+  // La instancia de GitLab es una sola para todo el tablero; el token y los
+  // proyectos, en cambio, los configura cada persona desde «Mi cuenta».
   gitlabBaseUrl: (process.env.GITLAB_BASE_URL || 'https://gitlab.com').replace(/\/+$/, ''),
-  projectIds: parseProjectIds(projectIds),
   port: parseIntegerOrDefault(process.env.PORT, 3001),
   cacheTtlMs: parseIntegerOrDefault(process.env.POLL_CACHE_TTL_MS, 60_000),
   teamLeadUsername: process.env.TEAM_LEAD_USERNAME || 'NGiudi',
@@ -63,6 +54,9 @@ const config = {
   sessionDurationDays: parseIntegerOrDefault(process.env.SESSION_DURATION_DAYS, 7),
   // La cookie de sesión sólo puede exigir HTTPS donde efectivamente lo hay.
   cookieSecure: (process.env.COOKIE_SECURE || String(process.env.NODE_ENV === 'production')) === 'true',
+  // Cifra los access token de GitLab guardados en la base. Cambiarla vuelve
+  // ilegibles los tokens ya guardados: hay que cargarlos de nuevo.
+  encryptionKey,
 };
 
 export default config;

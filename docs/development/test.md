@@ -48,9 +48,13 @@ La suite debe cubrir la matriz y el orden de prioridad de `computeMergeability()
 
 También debe cubrir la autenticación: derivación y verificación de contraseñas, el esquema y las operaciones de la base, el ciclo de la sesión —alta, registro, ingreso, vencimiento, cierre y bloqueo por intentos fallidos—, el cambio de la propia contraseña y las rutas `/api/auth/*` y `/api/users/*`, incluidos el 401 sin sesión, el 403 sin rol `admin` y el límite de registros.
 
+Y la configuración de GitLab: el ida y vuelta del cifrado, su fallo ante una clave distinta o un valor alterado, la validación de IDs y token, la conservación del token guardado, el aislamiento entre personas, las rutas `/api/gitlab-settings` y el 409 del tablero sin configuración. Ninguna respuesta ni log debe contener un access token en claro.
+
 Los test de integración construyen Express en memoria con `createApp()`, inyectan la fuente de datos y el reloj cuando corresponde y reemplazan `global.fetch` con respuestas controladas. Los contratos de esas piezas están en la [arquitectura del backend](../architecture/backend.md).
 
-Los test de autenticación abren la base con `:memory:`, de modo que cada uno arranca vacío y ninguno toca el archivo real. `backend/test/auth.ts` arma la app con una sesión ya iniciada —del rol que pida el test— y devuelve la cookie que hay que reenviar; `createEmptyAuthService()` sirve para probar el alta del primer usuario.
+Los test que necesitan persistencia abren la base con `:memory:`, de modo que cada uno arranca vacío y ninguno toca el archivo real. `backend/test/auth.ts` arma la app con una sesión ya iniciada —del rol que pida el test— y devuelve la cookie que hay que reenviar, junto con el usuario y el servicio de configuración; `createEmptyAuthService()` sirve para probar el alta del primer usuario.
+
+Ese mismo helper deja la configuración de GitLab ya guardada, porque casi todos los test del tablero la dan por hecha: para probar lo contrario alcanza con `gitlabSettingsService.remove(user.id)`. Los dos repositorios comparten una sola base en memoria, ya que la clave foránea de `gitlab_settings` exige que el usuario viva en la misma.
 
 `backend/tsconfig.json` excluye los test del build y `backend/tsconfig.test.json` los incluye en la validación de tipos.
 
@@ -61,6 +65,8 @@ Los test de componentes y del store deben cubrir la carga inicial, la actualizac
 Deben consultar el DOM como lo haría una persona usuaria, sin afirmar props de componentes hijos ni estado interno del store.
 
 Deben cubrir además el portero de sesión: la verificación inicial, el ingreso, el alta de cuenta, el cambio de la propia contraseña, la administración de usuarios visible sólo para un `admin`, el cierre de sesión y la vuelta al login cuando el backend responde 401.
+
+Y la configuración de GitLab: la carga de lo guardado, el campo del token que arranca vacío y sólo se envía si se escribe, los errores de validación del backend, y el 409 del tablero con su acceso directo a «Mi cuenta».
 
 Los dos stores viven a nivel de módulo: cada test debe reiniciarlos con `resetSharedState()` de `frontend/test/sharedState.js`, y las pruebas del tablero dan la sesión por abierta con `signInTestUser()`. Las actualizaciones asíncronas se esperan con `act()`. Con temporizadores falsos se usa `fireEvent`; `user-event` se reserva para test con reloj real.
 
@@ -78,7 +84,7 @@ Los E2E corren contra GitLab real, así que necesitan estas variables. Copiar `.
 
 | Variable | Obligatoria | Uso |
 |---|---:|---|
-| `GITLAB_TOKEN` | Sí | PAT con alcance `read_api` sobre los proyectos de test |
+| `GITLAB_TOKEN` | Sí | PAT con alcance `read_api` sobre los proyectos de test; el recorrido lo carga en «Mi cuenta» |
 | `E2E_PROJECT_IDS` | Sí | IDs de los proyectos dedicados a test, separados por comas |
 | `E2E_PROJECT_PATH` | Sí | Ruta `grupo/proyecto` de la sección que expande el recorrido |
 | `E2E_MR_TITLE` | Sí | Título exacto (mayúsculas incluidas) del merge request que se verifica |
@@ -87,11 +93,11 @@ Los E2E corren contra GitLab real, así que necesitan estas variables. Copiar `.
 
 Usar proyectos creados para test, nunca los de trabajo real: el recorrido depende de que ese merge request siga abierto y en su columna.
 
-Playwright levanta ambos servicios con `webServer`, sin reutilizar procesos existentes: el backend en el puerto 3101 con `E2E_PROJECT_IDS` como `PROJECT_IDS`, y el build del frontend servido con `vite preview` en 4173, uno de los dos orígenes que acepta el CORS del backend.
+Playwright levanta ambos servicios con `webServer`, sin reutilizar procesos existentes: el backend en el puerto 3101 con una `ENCRYPTION_KEY` fija —la base es descartable—, y el build del frontend servido con `vite preview` en 4173, uno de los dos orígenes que acepta el CORS del backend.
 
 Antes de levantarlos, `e2e/globalSetup.js` borra `backend/data/e2e.db` y crea allí el usuario del recorrido, para que cada corrida arranque siempre igual. Las credenciales se pueden cambiar con `E2E_USERNAME` y `E2E_PASSWORD`; sirven sólo para esa base descartable.
 
-El recorrido crítico ingresa con ese usuario y espera una respuesta real de GitLab, expande el proyecto configurado, verifica la columna y los bloqueadores del merge request conocido, fuerza una actualización que omite la caché recorre los controles principales con teclado hasta la vista personal y cierra la sesión comprobando que recargar no devuelva el tablero.
+El recorrido crítico ingresa con ese usuario, comprueba que el tablero reclame la configuración de GitLab, la carga en «Mi cuenta» con `GITLAB_TOKEN` y `E2E_PROJECT_IDS` y espera una respuesta real de GitLab; después expande el proyecto configurado, verifica la columna y los bloqueadores del merge request conocido, fuerza una actualización que omite la caché recorre los controles principales con teclado hasta la vista personal y cierra la sesión comprobando que recargar no devuelva el tablero.
 
 Para verlo correr: `npm run test:e2e:ui` abre el modo interactivo con watch y time-travel por paso, y `npm run test:e2e -- --headed` lo ejecuta en una ventana visible (`--debug` agrega el Inspector paso a paso). Las trazas de los reintentos se revisan después con `npx playwright show-trace`.
 

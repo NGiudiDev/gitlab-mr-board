@@ -5,11 +5,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { GitLabFixture } from '../types.js';
 
 // 5. Módulos de constantes.
-import { TEST_TOKEN } from '../../test/constants.js';
+import { TEST_PROJECT_IDS, TEST_TOKEN } from '../../test/constants.js';
 
 // 7. Imports relativos restantes.
 import { buildMergeRequest, createGitLabStub } from '../../test/fixtures/gitlab.js';
 import { getAllMergeRequests } from './mergeRequestService.js';
+
+/** Credenciales de la persona que consulta; los proyectos son 101 y 202. */
+const TEST_CREDENTIALS = {
+  accessToken: TEST_TOKEN,
+  projectIds: TEST_PROJECT_IDS,
+  updatedAt: '2026-09-01T10:00:00.000Z',
+};
 
 /** Fixture base: los dos proyectos configurados (101 y 202) sin MRs abiertos. */
 function baseFixture(overrides: GitLabFixture = {}): GitLabFixture {
@@ -42,7 +49,7 @@ describe('getAllMergeRequests', () => {
   it('devuelve metadatos con los proyectos configurados', async () => {
     stubGitLab(baseFixture());
 
-    const { meta, mergeRequests } = await getAllMergeRequests();
+    const { meta, mergeRequests } = await getAllMergeRequests(TEST_CREDENTIALS);
 
     expect(mergeRequests).toEqual([]);
     expect(meta.projectCount).toBe(2);
@@ -69,7 +76,7 @@ describe('getAllMergeRequests', () => {
       pipelines: { '101-7': [{ status: 'success' }] },
     }));
 
-    const { mergeRequests } = await getAllMergeRequests();
+    const { mergeRequests } = await getAllMergeRequests(TEST_CREDENTIALS);
 
     expect(mergeRequests[0]?.mergeability).toBe('review');
     expect(mergeRequests[0]?.responsiblePeople).toEqual([{ name: 'Caro Díaz', username: 'caro' }]);
@@ -90,7 +97,7 @@ describe('getAllMergeRequests', () => {
       },
     }));
 
-    const { meta } = await getAllMergeRequests();
+    const { meta } = await getAllMergeRequests(TEST_CREDENTIALS);
 
     expect(meta.people).toEqual([
       { name: 'Ana Pérez', username: 'ana' },
@@ -114,7 +121,7 @@ describe('getAllMergeRequests', () => {
       pipelines: { '101-7': [{ status: 'success', web_url: 'https://gitlab.example.com/pipe/9' }] },
     }));
 
-    const { mergeRequests } = await getAllMergeRequests();
+    const { mergeRequests } = await getAllMergeRequests(TEST_CREDENTIALS);
     const [mr] = mergeRequests;
 
     expect(mr?.id).toBe('101-7');
@@ -137,7 +144,7 @@ describe('getAllMergeRequests', () => {
       pipelines: { '101-7': [{ status: 'success' }] },
     }));
 
-    const { mergeRequests } = await getAllMergeRequests();
+    const { mergeRequests } = await getAllMergeRequests(TEST_CREDENTIALS);
 
     expect(mergeRequests[0]?.blockers.approvals.hasLeadApproval).toBe(false);
     expect(mergeRequests[0]?.mergeability).toBe('review');
@@ -157,7 +164,7 @@ describe('getAllMergeRequests', () => {
       pipelines: { '101-7': [{ status: 'success' }] },
     }));
 
-    const { mergeRequests } = await getAllMergeRequests();
+    const { mergeRequests } = await getAllMergeRequests(TEST_CREDENTIALS);
 
     expect(mergeRequests[0]?.blockers.threads).toEqual({ status: 'open', unresolvedCount: 2 });
     expect(mergeRequests[0]?.mergeability).toBe('mr_warning');
@@ -174,7 +181,7 @@ describe('getAllMergeRequests', () => {
       },
     }));
 
-    const { mergeRequests } = await getAllMergeRequests();
+    const { mergeRequests } = await getAllMergeRequests(TEST_CREDENTIALS);
 
     expect(mergeRequests.map((mr) => mr.iid)).toEqual([2, 3, 1]);
   });
@@ -190,7 +197,7 @@ describe('getAllMergeRequests', () => {
       },
     }));
 
-    const { mergeRequests, meta } = await getAllMergeRequests();
+    const { mergeRequests, meta } = await getAllMergeRequests(TEST_CREDENTIALS);
 
     expect(meta.totalMRs).toBe(2);
     expect(mergeRequests.map((mr) => mr.iid)).toEqual([1, 2]);
@@ -201,7 +208,7 @@ describe('getAllMergeRequests', () => {
       mergeRequestPages: { 101: 500, 202: [[buildMergeRequest({ project_id: 202, iid: 4 })]] },
     }));
 
-    const { mergeRequests, meta } = await getAllMergeRequests();
+    const { mergeRequests, meta } = await getAllMergeRequests(TEST_CREDENTIALS);
 
     expect(mergeRequests.map((mr) => mr.iid)).toEqual([4]);
     expect(meta.totalMRs).toBe(1);
@@ -210,7 +217,7 @@ describe('getAllMergeRequests', () => {
   it('usa un nombre de respaldo cuando no puede leer el proyecto', async () => {
     stubGitLab(baseFixture({ projects: { 101: 404, 202: 'equipo/api' } }));
 
-    const { meta } = await getAllMergeRequests();
+    const { meta } = await getAllMergeRequests(TEST_CREDENTIALS);
 
     expect(meta.allProjects).toEqual(['project-101', 'equipo/api']);
   });
@@ -223,7 +230,7 @@ describe('getAllMergeRequests', () => {
       pipelines: { '101-7': 404 },
     }));
 
-    const { mergeRequests } = await getAllMergeRequests();
+    const { mergeRequests } = await getAllMergeRequests(TEST_CREDENTIALS);
 
     expect(mergeRequests[0]?.blockers.approvals).toEqual({
       status: 'unknown', required: 0, given: 0,
@@ -239,7 +246,7 @@ describe('getAllMergeRequests', () => {
       pipelines: { '101-7': [] },
     }));
 
-    const { mergeRequests } = await getAllMergeRequests();
+    const { mergeRequests } = await getAllMergeRequests(TEST_CREDENTIALS);
 
     expect(mergeRequests[0]?.blockers.pipeline).toEqual({ status: 'none', pipelineUrl: null });
   });
@@ -254,7 +261,7 @@ describe('getAllMergeRequests', () => {
       },
     }));
 
-    const { mergeRequests } = await getAllMergeRequests();
+    const { mergeRequests } = await getAllMergeRequests(TEST_CREDENTIALS);
 
     expect(mergeRequests[0]?.author).toBe('desconocido');
     expect(mergeRequests[0]?.authorUsername).toBeNull();
@@ -268,7 +275,7 @@ describe('getAllMergeRequests', () => {
       mergeRequestPages: { 101: [[buildMergeRequest({ iid: 7 })]], 202: [[]] },
     }));
 
-    await getAllMergeRequests();
+    await getAllMergeRequests(TEST_CREDENTIALS);
 
     expect(stub.requestedUrls.length).toBeGreaterThan(0);
     expect(stub.requestedUrls.some((url) => url.includes(TEST_TOKEN))).toBe(false);
@@ -278,7 +285,7 @@ describe('getAllMergeRequests', () => {
   it('no incluye el token en la respuesta ni en los logs de error', async () => {
     stubGitLab(baseFixture({ mergeRequestPages: { 101: 401, 202: [[]] } }));
 
-    const result = await getAllMergeRequests();
+    const result = await getAllMergeRequests(TEST_CREDENTIALS);
     const loggedText = vi.mocked(console.error).mock.calls.flat().map(String).join(' ');
 
     expect(JSON.stringify(result)).not.toContain(TEST_TOKEN);

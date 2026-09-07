@@ -8,7 +8,9 @@ import type { GitLabTestItem } from '../types.js';
 import { TEST_BASE_URL, TEST_TOKEN } from '../../test/constants.js';
 
 // 7. Imports relativos restantes.
-import { buildUrl, fetchJson, fetchPaginated } from './gitlabApi.js';
+import { buildUrl, createGitLabClient } from './gitlabApi.js';
+
+const client = createGitLabClient(TEST_TOKEN);
 
 function jsonResponse(body: unknown, headers: Record<string, string> = {}): Response {
   return new Response(JSON.stringify(body), {
@@ -47,44 +49,56 @@ describe('buildUrl', () => {
   });
 });
 
-describe('fetchJson', () => {
-  it('envía el token en la cabecera PRIVATE-TOKEN', async () => {
+describe('fetchWithLimit', () => {
+  it('envía en PRIVATE-TOKEN el token con el que se creó el cliente', async () => {
     const fetchMock = vi.fn(async () => jsonResponse({ id: 1 }));
     vi.stubGlobal('fetch', fetchMock);
 
-    const { data } = await fetchJson<GitLabTestItem>('/projects/101');
+    const { data } = await client.fetchWithLimit<GitLabTestItem>('/projects/101');
 
     expect(data).toEqual({ id: 1 });
     const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect((init.headers as Record<string, string>)['PRIVATE-TOKEN']).toBe(TEST_TOKEN);
   });
 
+  it('cada cliente usa su propio token', async () => {
+    const fetchMock = vi.fn(async () => jsonResponse({ id: 1 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await createGitLabClient('token-de-otra-persona').fetchWithLimit('/projects/101');
+
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect((init.headers as Record<string, string>)['PRIVATE-TOKEN']).toBe('token-de-otra-persona');
+  });
+
   it('traduce un 401 a un mensaje sobre el alcance del token', async () => {
     vi.stubGlobal('fetch', async () => new Response('no autorizado', { status: 401 }));
 
-    await expect(fetchJson('/projects/101')).rejects.toThrow(/read_api/);
+    await expect(client.fetchWithLimit('/projects/101')).rejects.toThrow(/read_api/);
   });
 
   it('traduce un 404 indicando el recurso solicitado', async () => {
     vi.stubGlobal('fetch', async () => new Response('no existe', { status: 404 }));
 
-    await expect(fetchJson('/projects/999')).rejects.toThrow('Recurso no encontrado: /projects/999');
+    await expect(client.fetchWithLimit('/projects/999'))
+      .rejects.toThrow('Recurso no encontrado: /projects/999');
   });
 
   it('incluye el código y un extracto del cuerpo en otros errores', async () => {
     vi.stubGlobal('fetch', async () => new Response('detalle del fallo', { status: 500 }));
 
-    await expect(fetchJson('/projects/101')).rejects.toThrow('Error de la API de GitLab 500: detalle del fallo');
+    await expect(client.fetchWithLimit('/projects/101'))
+      .rejects.toThrow('Error de la API de GitLab 500: detalle del fallo');
   });
 
   it('no expone el token en el mensaje de error', async () => {
     vi.stubGlobal('fetch', async () => new Response('detalle', { status: 500 }));
 
-    await expect(fetchJson('/projects/101')).rejects.not.toThrow(new RegExp(TEST_TOKEN));
+    await expect(client.fetchWithLimit('/projects/101')).rejects.not.toThrow(new RegExp(TEST_TOKEN));
   });
 });
 
-describe('fetchPaginated', () => {
+describe('fetchPaginatedWithLimit', () => {
   it('recorre las páginas hasta que no hay x-next-page', async () => {
     const fetchMock = vi.fn(async (url: string) => {
       const page = new URL(url).searchParams.get('page');
@@ -93,7 +107,7 @@ describe('fetchPaginated', () => {
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    const items = await fetchPaginated<GitLabTestItem>('/projects/101/merge_requests');
+    const items = await client.fetchPaginatedWithLimit<GitLabTestItem>('/projects/101/merge_requests');
 
     expect(items).toEqual([{ id: 1 }, { id: 2 }]);
     expect(fetchMock).toHaveBeenCalledTimes(2);
@@ -103,7 +117,7 @@ describe('fetchPaginated', () => {
     const fetchMock = vi.fn(async () => jsonResponse([]));
     vi.stubGlobal('fetch', fetchMock);
 
-    await fetchPaginated('/projects/101/merge_requests');
+    await client.fetchPaginatedWithLimit('/projects/101/merge_requests');
 
     const [url] = fetchMock.mock.calls[0] as unknown as [string];
     expect(new URL(url).searchParams.get('per_page')).toBe('100');
@@ -116,7 +130,7 @@ describe('fetchPaginated', () => {
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    await fetchPaginated('/projects/101/merge_requests', { state: 'opened' });
+    await client.fetchPaginatedWithLimit('/projects/101/merge_requests', { state: 'opened' });
 
     const urls = fetchMock.mock.calls.map(([url]) => new URL(url as string));
     expect(urls.every((url) => url.searchParams.get('state') === 'opened')).toBe(true);
@@ -129,7 +143,7 @@ describe('fetchPaginated', () => {
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    const items = await fetchPaginated<GitLabTestItem>('/projects/101/merge_requests');
+    const items = await client.fetchPaginatedWithLimit<GitLabTestItem>('/projects/101/merge_requests');
 
     expect(fetchMock).toHaveBeenCalledTimes(10);
     expect(items).toHaveLength(10);
@@ -143,6 +157,6 @@ describe('fetchPaginated', () => {
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    await expect(fetchPaginated('/projects/101/merge_requests')).rejects.toThrow(/500/);
+    await expect(client.fetchPaginatedWithLimit('/projects/101/merge_requests')).rejects.toThrow(/500/);
   });
 });

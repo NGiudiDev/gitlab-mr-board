@@ -5,8 +5,9 @@ import { afterEach, describe, expect, it } from 'vitest';
 import type { AuthRepository, AuthService } from '../types.js';
 
 // 7. Imports relativos restantes.
-import { IN_MEMORY_LOCATION, openAuthDatabase } from './authRepository.js';
+import { openAuthDatabase } from './authRepository.js';
 import { AuthError, createAuthService, normalizeUsername } from './authService.js';
+import { IN_MEMORY_LOCATION } from './database.js';
 
 const PASSWORD = 'contrasena-de-prueba';
 const START_DATE = new Date('2026-09-01T10:00:00.000Z');

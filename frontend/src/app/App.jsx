@@ -7,10 +7,15 @@ import LoginForm from '../features/auth/components/LoginForm.jsx'
 import RegisterForm from '../features/auth/components/RegisterForm.jsx'
 import UserAdmin from '../features/auth/components/UserAdmin.jsx'
 import { useSession } from '../features/auth/hooks/useSession.js'
+import GitlabSettingsForm from '../features/gitlabSettings/components/GitlabSettingsForm.jsx'
 import MrBoard from '../features/mergeRequests/components/MrBoard.jsx'
 import TopBar from '../features/mergeRequests/components/TopBar.jsx'
 import ViewControls from '../features/mergeRequests/components/ViewControls.jsx'
-import { resetStore, useMergeRequests } from '../features/mergeRequests/hooks/useMergeRequests.js'
+import {
+  fetchMergeRequests,
+  resetStore,
+  useMergeRequests,
+} from '../features/mergeRequests/hooks/useMergeRequests.js'
 import {
   findPersonByUsername,
   mergeRequestsForPerson,
@@ -24,9 +29,18 @@ function BoardStatus({ children }) {
   return <div role="status" className={PLACEHOLDER_CLASSES}>{children}</div>
 }
 
-function announcementFor({ loading, error, lastFetched, total, viewMode, selectedPerson }) {
+function announcementFor({
+  loading,
+  error,
+  lastFetched,
+  needsGitlabSettings,
+  total,
+  viewMode,
+  selectedPerson,
+}) {
   if (loading) return 'Actualizando merge requests.'
   if (error) return `No se pudieron actualizar los datos: ${error}`
+  if (needsGitlabSettings) return 'Falta configurar GitLab en «Mi cuenta».'
   if (!lastFetched) return ''
   if (viewMode === 'personal' && !selectedPerson) return 'Vista personal. Elegí una persona.'
   if (viewMode === 'personal') {
@@ -39,13 +53,14 @@ function announcementFor({ loading, error, lastFetched, total, viewMode, selecte
  * Tablero de merge requests. Se monta sólo con la sesión abierta, así el
  * polling arranca recién cuando el backend va a aceptar las peticiones.
  */
-function Board() {
+function Board({ onGoToAccount = () => {} }) {
   const {
     mergeRequests,
     meta,
     loading,
     error,
     lastFetched,
+    needsGitlabSettings,
     viewMode,
     selectedUsername,
     fetchMRs,
@@ -68,12 +83,30 @@ function Board() {
     loading,
     error,
     lastFetched,
+    needsGitlabSettings,
     total: visibleMergeRequests.length,
     viewMode,
     selectedPerson,
   })
 
   const failedWithoutData = error && mergeRequests.length === 0
+
+  // Sin configuración no hay nada que consultar: los controles del tablero
+  // sobran y lo único útil es llevar a la pantalla donde se completa.
+  if (needsGitlabSettings) {
+    return (
+      <div role="status" className={PLACEHOLDER_CLASSES}>
+        <p className="mb-3">Todavía no configuraste GitLab.</p>
+        <button
+          type="button"
+          onClick={onGoToAccount}
+          className="rounded-md bg-accent px-3 py-2 text-[13px] font-semibold text-bg cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        >
+          Configurar en Mi cuenta
+        </button>
+      </div>
+    )
+  }
 
   return (
     <>
@@ -170,21 +203,31 @@ function AnonymousView({ error, notice, submitting, onLogin, onRegister }) {
   )
 }
 
-/** Presenta la sección elegida en la barra de navegación. */
-function ActiveSection({ view, user, submitting, onChangePassword }) {
+/**
+ * Presenta la sección elegida en la barra de navegación.
+ *
+ * «Mi cuenta» reúne los datos propios: la contraseña y la configuración de
+ * GitLab con la que el backend arma el tablero de esta persona.
+ */
+function ActiveSection({ view, user, submitting, onChangePassword, onGoToAccount }) {
   if (view === 'account') {
     return (
-      <AccountPanel
-        user={user}
-        submitting={submitting}
-        onChangePassword={onChangePassword}
-      />
+      <div className="flex flex-col gap-5">
+        {/* Al guardar se actualiza el store, así que el tablero ya no reclama
+            la configuración cuando se vuelve a él. */}
+        <GitlabSettingsForm onSaved={() => fetchMergeRequests(true)} />
+        <AccountPanel
+          user={user}
+          submitting={submitting}
+          onChangePassword={onChangePassword}
+        />
+      </div>
     )
   }
 
   if (view === 'users') return <UserAdmin currentUsername={user.username} />
 
-  return <Board />
+  return <Board onGoToAccount={onGoToAccount} />
 }
 
 /** Decide si mostrar el ingreso o el layout con la sección activa. */
@@ -234,6 +277,7 @@ function App() {
           user={user}
           submitting={submitting}
           onChangePassword={changeOwnPassword}
+          onGoToAccount={() => setView('account')}
         />
       ) : (
         <AnonymousView

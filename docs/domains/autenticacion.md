@@ -12,6 +12,7 @@ El tablero exige una sesión iniciada. Los motivos y las alternativas descartada
 | `POST /api/auth/logout` | Público; sin sesión no hace nada y responde 204 |
 | `GET /api/auth/me` | Sesión |
 | `PUT /api/auth/password` | Sesión |
+| `GET`, `PUT` y `DELETE /api/gitlab-settings` | Sesión; siempre sobre la configuración propia |
 | `GET /api/pull-requests` | Sesión |
 | `GET` y `POST /api/users` | Sesión con rol `admin` |
 | `PATCH /api/users/:username/status` | Sesión con rol `admin` |
@@ -23,10 +24,12 @@ La separación de permisos se valida en el backend, ruta por ruta. Que la interf
 
 ## Modelo de datos
 
-La base SQLite vive en `DATABASE_PATH` (por omisión `backend/data/app.db`) y tiene dos tablas:
+La base SQLite vive en `DATABASE_PATH` (por omisión `backend/data/app.db`) y tiene tres tablas; las dos de la autenticación son:
 
 - **`users`**: `id`, `username`, `display_name`, `password_hash`, `role`, `status`, `created_at`, `last_login_at`.
 - **`sessions`**: `id`, `user_id`, `token_hash`, `created_at`, `expires_at`. Se borran en cascada al eliminar el usuario.
+
+La tercera, `gitlab_settings`, pertenece a la [configuración de GitLab](configuracion-gitlab.md).
 
 El esquema se aplica en cada arranque con sentencias `IF NOT EXISTS`, así que no hay una herramienta de migraciones.
 

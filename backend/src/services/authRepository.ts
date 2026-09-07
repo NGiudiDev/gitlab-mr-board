@@ -1,37 +1,9 @@
-// 1. Módulos estándar de Node.js.
-import { mkdirSync } from 'node:fs';
-import path from 'node:path';
-import { DatabaseSync } from 'node:sqlite';
-
 // 4. Imports exclusivos de tipos de TypeScript.
 import type { AuthRepository, StoredSession, StoredUser, UserRole, UserStatus } from '../types.js';
+import type { DatabaseSync } from 'node:sqlite';
 
-const IN_MEMORY_LOCATION = ':memory:';
-
-// El esquema se aplica en cada arranque: `IF NOT EXISTS` lo vuelve idempotente
-// y evita sumar una herramienta de migraciones para dos tablas.
-const SCHEMA = `
-  CREATE TABLE IF NOT EXISTS users (
-    id TEXT PRIMARY KEY,
-    username TEXT NOT NULL UNIQUE,
-    display_name TEXT NOT NULL,
-    password_hash TEXT NOT NULL,
-    role TEXT NOT NULL CHECK (role IN ('user', 'admin')),
-    status TEXT NOT NULL CHECK (status IN ('active', 'disabled')),
-    created_at TEXT NOT NULL,
-    last_login_at TEXT
-  );
-
-  CREATE TABLE IF NOT EXISTS sessions (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    token_hash TEXT NOT NULL UNIQUE,
-    created_at TEXT NOT NULL,
-    expires_at TEXT NOT NULL
-  );
-
-  CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
-`;
+// 7. Imports relativos restantes.
+import { openDatabase } from './database.js';
 
 interface UserRow {
   id: string;
@@ -78,34 +50,12 @@ function toStoredSession(row: SessionRow): StoredSession {
 }
 
 /**
- * Crea el directorio contenedor de la base para que el primer arranque no
- * falle en una instalación limpia.
+ * Arma el acceso a usuarios y sesiones sobre una conexión ya abierta.
  *
- * @param location Ruta del archivo SQLite, o `:memory:`.
- */
-function ensureDirectory(location: string): void {
-  if (location === IN_MEMORY_LOCATION) return;
-
-  mkdirSync(path.dirname(path.resolve(location)), { recursive: true });
-}
-
-/**
- * Abre la base SQLite local y devuelve el acceso a usuarios y sesiones.
- *
- * @param location Ruta del archivo, o `:memory:` para los test.
+ * @param database Conexión devuelta por `openDatabase`.
  * @returns Repositorio con sentencias preparadas y listo para usar.
- * @throws {Error} Si el archivo no se puede abrir o el esquema no se aplica.
  */
-function openAuthDatabase(location: string): AuthRepository {
-  ensureDirectory(location);
-
-  const database = new DatabaseSync(location);
-
-  // `ON DELETE CASCADE` sólo actúa con las claves foráneas habilitadas, y SQLite
-  // las deja apagadas por compatibilidad.
-  database.exec('PRAGMA foreign_keys = ON');
-  database.exec(SCHEMA);
-
+function createAuthRepository(database: DatabaseSync): AuthRepository {
   const insertUserStatement = database.prepare(
     `INSERT INTO users (id, username, display_name, password_hash, role, status, created_at, last_login_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -204,4 +154,17 @@ function openAuthDatabase(location: string): AuthRepository {
   };
 }
 
-export { IN_MEMORY_LOCATION, openAuthDatabase };
+/**
+ * Abre la base configurada y devuelve sólo el repositorio de autenticación.
+ *
+ * Atajo para la línea de comandos y los test, que no necesitan compartir la
+ * conexión con los demás repositorios.
+ *
+ * @param location Ruta del archivo, o `:memory:` para los test.
+ * @returns Repositorio de usuarios y sesiones.
+ */
+function openAuthDatabase(location: string): AuthRepository {
+  return createAuthRepository(openDatabase(location));
+}
+
+export { createAuthRepository, openAuthDatabase };

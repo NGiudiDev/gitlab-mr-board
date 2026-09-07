@@ -15,6 +15,7 @@ El código se divide entre la composición general y las funcionalidades del dom
 - `src/app/App.jsx`: decide si mostrar el ingreso o el layout según la sesión, conserva la sección activa y resuelve qué presentar durante la carga, los errores y la ausencia de datos.
 - `src/app/AppShell.jsx`: define el layout —barra superior, navegación entre secciones y contenido— y declara en `SECTIONS` las secciones navegables.
 - `src/features/auth/`: contiene el store de la sesión, el hook de la lista de usuarios y los componentes de ingreso, alta y administración, descritos en el [dominio de autenticación](../domains/autenticacion.md).
+- `src/features/gitlabSettings/`: contiene el formulario de la configuración de GitLab y su hook, descritos en la [configuración de GitLab](../domains/configuracion-gitlab.md).
 - `src/features/mergeRequests/hooks/useMergeRequests.js`: contiene el store compartido, el acceso al backend y el polling.
 - `src/features/mergeRequests/components/`: contiene los componentes del tablero de merge requests.
 - `src/features/mergeRequests/personalView.js`: selecciona los datos de la vista personal a partir del contrato del backend.
@@ -39,6 +40,7 @@ App
     │       └── BoardColumn
     │           └── MrCard
     │               └── BlockerBadge
+    ├── GitlabSettingsForm           (sección «Mi cuenta»)
     ├── AccountPanel                 (sección «Mi cuenta»)
     └── UserAdmin                    (sección «Usuarios», sólo con rol admin)
 ```
@@ -47,6 +49,7 @@ App
 - `LoginForm` pide usuario y contraseña, muestra el error que devuelve el backend y ofrece pasar al alta.
 - `RegisterForm` crea la cuenta: valida en el navegador las mismas reglas que el backend para avisar antes de enviar.
 - `SessionBar` identifica a quién pertenece la sesión y permite cerrarla.
+- `GitlabSettingsForm` resuelve los IDs de los proyectos y el access token que alimentan el tablero de esa persona. El campo del token arranca vacío en cada visita, porque el backend nunca lo devuelve: dejarlo así conserva el guardado.
 - `AccountPanel` resuelve el cambio de la propia contraseña.
 - `UserAdmin` lista los usuarios y permite dar de alta, habilitar, deshabilitar y restablecer contraseñas.
 - `TopBar` presenta los totales, el estado de sincronización y la actualización manual del tablero.
@@ -77,6 +80,7 @@ Al cerrar la sesión la app vuelve al tablero, para que la próxima no empiece d
 - `loading`: indica que existe una actualización en curso.
 - `error`: conserva el último error de la consulta.
 - `lastFetched`: fecha local de la última respuesta satisfactoria.
+- `needsGitlabSettings`: el backend respondió 409 porque todavía falta configurar GitLab. No es un error: el tablero presenta un acceso directo a «Mi cuenta».
 - `viewMode`: vista `general` o `personal` activa.
 - `selectedUsername`: identidad elegida para la vista personal durante la sesión.
 

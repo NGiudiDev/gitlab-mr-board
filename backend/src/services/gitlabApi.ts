@@ -1,5 +1,5 @@
 // 4. Imports exclusivos de tipos de TypeScript.
-import type { GitLabResponse, QueryParams } from '../types.js';
+import type { GitLabClient, GitLabResponse, QueryParams } from '../types.js';
 
 // 6. Utilidades.
 import RateLimiter from '../utils/rateLimiter.js';
@@ -13,6 +13,8 @@ const MAX_PAGES = 10;
 const ITEMS_PER_PAGE = 100;
 const ERROR_BODY_MAX_LENGTH = 200;
 
+// El limitador es del proceso, no de cada cliente: protege a la instancia de
+// GitLab del total de consultas, sin importar en nombre de quién se hagan.
 const requestLimiter = new RateLimiter(MAX_CONCURRENT_REQUESTS);
 
 /** Agrega a la URL los parámetros definidos y omite valores nulos. */
@@ -45,50 +47,63 @@ function buildGitLabErrorMessage(status: number, resourcePath: string, responseB
   return `Error de la API de GitLab ${status}: ${responseBody.slice(0, ERROR_BODY_MAX_LENGTH)}`;
 }
 
-/** Consulta un recurso JSON autenticado y conserva las cabeceras de respuesta. */
-async function fetchJson<T>(resourcePath: string, params: QueryParams = {}): Promise<GitLabResponse<T>> {
-  const url = buildUrl(resourcePath, params);
-  const response = await fetch(url, {
-    headers: { 'PRIVATE-TOKEN': config.gitlabToken },
-  });
-
-  if (!response.ok) {
-    const responseBody = await response.text().catch(() => '');
-    throw new Error(buildGitLabErrorMessage(response.status, resourcePath, responseBody));
-  }
-
-  return { data: await response.json() as T, headers: response.headers };
-}
-
-/** Recorre la paginación de GitLab hasta terminar o alcanzar el límite seguro. */
-async function fetchPaginated<T>(resourcePath: string, params: QueryParams = {}): Promise<T[]> {
-  const results: T[] = [];
-  let page = 1;
-
-  while (page <= MAX_PAGES) {
-    const { data, headers } = await fetchJson<T[]>(resourcePath, {
-      ...params,
-      page,
-      per_page: ITEMS_PER_PAGE,
+/**
+ * Arma el cliente de GitLab para un access token concreto.
+ *
+ * Cada persona configura su propio token, así que el cliente se construye por
+ * consulta al tablero en lugar de vivir a nivel de módulo.
+ *
+ * @param accessToken PAT con alcance `read_api`.
+ * @returns Cliente con las consultas ya autenticadas y limitadas.
+ */
+function createGitLabClient(accessToken: string): GitLabClient {
+  /** Consulta un recurso JSON autenticado y conserva las cabeceras de respuesta. */
+  async function fetchJson<T>(resourcePath: string, params: QueryParams = {}): Promise<GitLabResponse<T>> {
+    const url = buildUrl(resourcePath, params);
+    const response = await fetch(url, {
+      headers: { 'PRIVATE-TOKEN': accessToken },
     });
-    results.push(...data);
 
-    const nextPage = headers.get('x-next-page');
-    if (!nextPage) break;
-    page = Number.parseInt(nextPage, 10);
+    if (!response.ok) {
+      const responseBody = await response.text().catch(() => '');
+      throw new Error(buildGitLabErrorMessage(response.status, resourcePath, responseBody));
+    }
+
+    return { data: await response.json() as T, headers: response.headers };
   }
 
-  return results;
+  /** Recorre la paginación de GitLab hasta terminar o alcanzar el límite seguro. */
+  async function fetchPaginated<T>(resourcePath: string, params: QueryParams = {}): Promise<T[]> {
+    const results: T[] = [];
+    let page = 1;
+
+    while (page <= MAX_PAGES) {
+      const { data, headers } = await fetchJson<T[]>(resourcePath, {
+        ...params,
+        page,
+        per_page: ITEMS_PER_PAGE,
+      });
+      results.push(...data);
+
+      const nextPage = headers.get('x-next-page');
+      if (!nextPage) break;
+      page = Number.parseInt(nextPage, 10);
+    }
+
+    return results;
+  }
+
+  return {
+    /** Ejecuta una consulta JSON respetando el límite global de concurrencia. */
+    fetchWithLimit<T>(resourcePath: string, params: QueryParams = {}): Promise<GitLabResponse<T>> {
+      return requestLimiter.run(() => fetchJson<T>(resourcePath, params));
+    },
+
+    /** Ejecuta una consulta paginada dentro de un único turno del limitador. */
+    fetchPaginatedWithLimit<T>(resourcePath: string, params: QueryParams = {}): Promise<T[]> {
+      return requestLimiter.run(() => fetchPaginated<T>(resourcePath, params));
+    },
+  };
 }
 
-/** Ejecuta una consulta JSON respetando el límite global de concurrencia. */
-function fetchWithLimit<T>(resourcePath: string, params: QueryParams = {}): Promise<GitLabResponse<T>> {
-  return requestLimiter.run(() => fetchJson<T>(resourcePath, params));
-}
-
-/** Ejecuta una consulta paginada dentro de un único turno del limitador. */
-function fetchPaginatedWithLimit<T>(resourcePath: string, params: QueryParams = {}): Promise<T[]> {
-  return requestLimiter.run(() => fetchPaginated<T>(resourcePath, params));
-}
-
-export { buildUrl, fetchJson, fetchPaginated, fetchPaginatedWithLimit, fetchWithLimit };
+export { buildUrl, createGitLabClient };

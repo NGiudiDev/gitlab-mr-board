@@ -54,13 +54,17 @@
 
 - Mantener puras las reglas de `backend/src/services/mergeRequestRules.ts` e inyectar sus dependencias (fuente de datos, reloj) en lugar de acoplarlas al módulo.
 
-- Centralizar la lectura y validación de variables de entorno en `backend/src/config.ts`. Al agregar una variable, actualizar `backend/.env.example` y la tabla de `docs/development/entorno-local.md`.
+- Centralizar la lectura y validación de variables de entorno en `backend/src/config.ts`. Al agregar una variable, actualizar `backend/.env.example` y la tabla de `docs/development/entorno-local.md`. **El token y los proyectos de GitLab no son configuración del proceso**: los guarda cada usuario en la base y viven en `services/gitlabSettingsService.ts`.
 
 - Usar **TypeScript estricto y ES modules**, con extensión `.js` en los imports relativos para ser compatibles con la salida `NodeNext`.
 
 - Las rutas validan sus parámetros y devuelven el error HTTP que corresponda (400, 404, 500, etc.). Al agregar un endpoint, documentarlo; si requiere un router nuevo, montarlo desde `backend/src/app.ts`. **Todo lo que cuelgue de `/api` exige sesión**: el middleware está montado en `createApp()` y una ruta pública nueva debe justificarse.
 
 - La autenticación vive en `services/authRepository.ts` (SQLite), `services/authService.ts` (reglas), `routes/auth.ts` (sesión y cuenta propia) y `routes/users.ts` (administración), con las reglas documentadas en [`docs/domains/autenticacion.md`](docs/domains/autenticacion.md) ([ADR 0006](docs/decisions/0006-login-local-con-sqlite.md) y [ADR 0007](docs/decisions/0007-registro-abierto-y-gestion-de-usuarios.md)). No guardar credenciales fuera de esas capas, no devolver el hash de una contraseña ni el token de sesión en ninguna respuesta, y mantener el repositorio inyectable para poder abrirlo con `:memory:` en los test.
+
+- **Las credenciales de GitLab son de cada usuario y se guardan cifradas** en `services/gitlabSettingsRepository.ts` y `services/gitlabSettingsService.ts`, con el cifrador de `utils/encryption.ts` inyectado ([`docs/domains/configuracion-gitlab.md`](docs/domains/configuracion-gitlab.md), [ADR 0008](docs/decisions/0008-credenciales-de-gitlab-por-usuario.md)). El access token **nunca** vuelve al navegador: las respuestas sólo llevan sus últimos caracteres. Toda consulta a GitLab se hace con un cliente construido a partir del token de quien pregunta, y cualquier caché de esos datos es por usuario.
+
+- La base SQLite se abre una sola vez en `services/database.ts` y los repositorios comparten esa conexión: las claves foráneas entre sus tablas sólo valen dentro de la misma base abierta, y con `:memory:` cada conexión sería una base distinta.
 
 - **Los permisos se validan en el backend, ruta por ruta**: `createRequireSession` para lo que exige sesión y `createRequireAdmin` para lo que exige rol `admin`. Esconder un control en el frontend no es una barrera. Al agregar una operación de administración, montarla bajo `/api/users` y cubrir en los test el 401 sin sesión y el 403 sin rol.
 
@@ -69,6 +73,8 @@
 ### Frontend
 
 - Organizar cada funcionalidad en `frontend/src/features/<feature>/`, con `components/` y `hooks/`. Reservar `frontend/src/app/` para la composición general.
+
+- La sección «Mi cuenta» reúne los datos propios: la contraseña (`features/auth/components/AccountPanel.jsx`) y la configuración de GitLab (`features/gitlabSettings/`). Al sumar algo propio de la persona, va ahí.
 
 - **El layout y la navegación viven en `frontend/src/app/AppShell.jsx`**: la barra superior, el único `main` y el listado `SECTIONS` de secciones navegables. Al agregar una sección, sumarla a esa lista, contemplarla en `ActiveSection` de `App.jsx` y actualizar [`docs/architecture/frontend.md`](docs/architecture/frontend.md#navegación-entre-secciones). No hay router: la sección activa es estado local de `App`.
 

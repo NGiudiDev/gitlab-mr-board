@@ -7,5 +7,6 @@
 - [ADR 0005: migrar el frontend de Vue a React](0005-frontend-en-react.md)
 - [ADR 0006: resolver el login con usuarios locales en SQLite](0006-login-local-con-sqlite.md)
 - [ADR 0007: abrir el registro y administrar usuarios desde la interfaz](0007-registro-abierto-y-gestion-de-usuarios.md)
+- [ADR 0008: guardar las credenciales de GitLab por usuario y cifradas](0008-credenciales-de-gitlab-por-usuario.md)
 
 Una decisión posterior se registra en un ADR nuevo en lugar de reescribir uno aceptado.

@@ -35,11 +35,10 @@ export default defineConfig({
       stdout: 'pipe',
       stderr: 'pipe',
       env: {
-        GITLAB_TOKEN: e2eConfig.gitlabToken,
         GITLAB_BASE_URL: e2eConfig.gitlabBaseUrl,
-        PROJECT_IDS: e2eConfig.projectIds,
         PORT: String(e2eConfig.backendPort),
         DATABASE_PATH: e2eConfig.databasePath,
+        ENCRYPTION_KEY: e2eConfig.encryptionKey,
       },
     },
     {

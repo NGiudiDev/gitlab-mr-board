@@ -6,5 +6,6 @@ const app = createApp();
 
 app.listen(config.port, () => {
   console.log(`Backend disponible en http://localhost:${config.port}`);
-  console.log(`Monitoreando ${config.projectIds.length} proyectos: ${config.projectIds.join(', ')}`);
+  console.log(`Instancia de GitLab: ${config.gitlabBaseUrl}`);
+  console.log('Cada persona configura sus proyectos y su access token desde «Mi cuenta».');
 });

@@ -5,7 +5,8 @@ import { afterEach, describe, expect, it } from 'vitest';
 import type { AuthRepository, StoredSession, StoredUser } from '../types.js';
 
 // 7. Imports relativos restantes.
-import { IN_MEMORY_LOCATION, openAuthDatabase } from './authRepository.js';
+import { openAuthDatabase } from './authRepository.js';
+import { IN_MEMORY_LOCATION } from './database.js';
 
 const openRepositories: AuthRepository[] = [];
 

@@ -126,6 +126,28 @@ describe('fetchMergeRequests', () => {
     expect(getState().error).toBe('GitLab no respondió.')
   })
 
+  it('marca la falta de configuración de GitLab sin tratarla como error', async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse(
+      { error: 'Configurá tus datos de GitLab.', code: 'gitlab_settings_missing' },
+      409,
+    ))
+
+    await fetchMergeRequests()
+
+    expect(getState().needsGitlabSettings).toBe(true)
+    expect(getState().error).toBeNull()
+    expect(getState().mergeRequests).toEqual([])
+  });
+
+  it('deja de reclamar la configuración cuando el tablero responde', async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse({ code: 'gitlab_settings_missing' }, 409))
+    await fetchMergeRequests()
+
+    await fetchMergeRequests(true)
+
+    expect(getState().needsGitlabSettings).toBe(false)
+  });
+
   it('limpia el error de un intento anterior al reintentar', async () => {
     fetchMock.mockRejectedValueOnce(new Error('falló'))
     await fetchMergeRequests()

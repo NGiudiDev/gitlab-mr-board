@@ -18,11 +18,13 @@ import { createApp } from './app.js';
  * cookie, para no repetirla en cada test del tablero.
  */
 async function createBoardClient(options: CreateAppOptions = {}) {
-  const { app, cookie } = await createAuthenticatedApp(options);
+  const { app, cookie, gitlabSettingsService, user } = await createAuthenticatedApp(options);
 
   return {
     app,
     cookie,
+    gitlabSettingsService,
+    user,
     get: (path: string): Promise<HttpTestResponse> => requestApp(app, path, { headers: { cookie } }),
   };
 }
@@ -37,11 +39,11 @@ afterEach(() => {
 });
 
 describe('GET /health', () => {
-  it('informa el estado y la cantidad de proyectos monitoreados', async () => {
+  it('informa el estado del proceso', async () => {
     const response = await requestApp(createApp(), '/health');
 
     expect(response.status).toBe(200);
-    expect(response.json()).toEqual({ status: 'ok', projects: TEST_PROJECT_IDS.length });
+    expect(response.json()).toEqual({ status: 'ok' });
   });
 
   it('no exige sesión, para que el monitoreo externo siga funcionando', async () => {
@@ -102,6 +104,31 @@ describe('GET /api/pull-requests', () => {
     });
 
     expect(response.status).toBe(401);
+  });
+
+  it('responde 409 si la persona todavía no configuró GitLab', async () => {
+    const { get, gitlabSettingsService, user } = await createBoardClient({
+      fetchMergeRequests: async () => { throw new Error('No debería consultarse GitLab.'); },
+    });
+    gitlabSettingsService.remove(user.id);
+
+    const response = await get('/api/pull-requests');
+
+    expect(response.status).toBe(409);
+    expect(response.json<{ code: string }>().code).toBe('gitlab_settings_missing');
+  });
+
+  it('consulta GitLab con el token que guardó la persona', async () => {
+    const stub = createGitLabStub({
+      projects: { 101: 'equipo/tablero', 202: 'equipo/api' },
+      mergeRequestPages: { 101: [[]], 202: [[]] },
+    });
+    vi.stubGlobal('fetch', stub.fetch);
+    const { get } = await createBoardClient();
+
+    await get('/api/pull-requests');
+
+    expect(stub.sentHeaders.every((headers) => headers['PRIVATE-TOKEN'] === TEST_TOKEN)).toBe(true);
   });
 
   it('traduce un fallo de GitLab a HTTP 502 con mensaje en español', async () => {
@@ -204,6 +231,24 @@ describe('caché de GET /api/pull-requests', () => {
     await get('/api/pull-requests?force=1');
 
     expect(getCalls()).toBe(1);
+  });
+
+  it('descarta la caché cuando la persona cambia su configuración', async () => {
+    let calls = 0;
+    const { get, gitlabSettingsService, user } = await createBoardClient({
+      now: () => 0,
+      fetchMergeRequests: async () => {
+        calls++;
+        return buildPayload(calls);
+      },
+    });
+
+    await get('/api/pull-requests');
+    gitlabSettingsService.save(user.id, { projectIds: ['303'] });
+    const afterChange = await get('/api/pull-requests');
+
+    expect(calls).toBe(2);
+    expect(afterChange.json<MergeRequestResponse>().meta.totalMRs).toBe(2);
   });
 
   it('no guarda en caché una respuesta fallida', async () => {

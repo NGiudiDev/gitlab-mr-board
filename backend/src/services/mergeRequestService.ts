@@ -3,6 +3,8 @@ import type {
   ApprovalStatus,
   EnrichedMergeRequest,
   GitLabApprovalsResponse,
+  GitLabClient,
+  GitLabCredentials,
   GitLabDiscussion,
   GitLabMergeRequest,
   GitLabPipeline,
@@ -17,7 +19,7 @@ import type {
 
 // 7. Imports relativos restantes.
 import config from '../config.js';
-import { fetchPaginatedWithLimit, fetchWithLimit } from './gitlabApi.js';
+import { createGitLabClient } from './gitlabApi.js';
 import {
   collectPeople,
   computeMergeability,
@@ -31,8 +33,11 @@ function mergeRequestPath(projectId: number, mergeRequestIid: number): string {
 }
 
 /** Obtiene los merge requests abiertos de un proyecto. */
-async function fetchOpenMRsForProject(projectId: string): Promise<GitLabMergeRequest[]> {
-  return fetchPaginatedWithLimit<GitLabMergeRequest>(`/projects/${projectId}/merge_requests`, {
+async function fetchOpenMRsForProject(
+  client: GitLabClient,
+  projectId: string,
+): Promise<GitLabMergeRequest[]> {
+  return client.fetchPaginatedWithLimit<GitLabMergeRequest>(`/projects/${projectId}/merge_requests`, {
     state: 'opened',
     scope: 'all',
     order_by: 'updated_at',
@@ -44,9 +49,13 @@ async function fetchOpenMRsForProject(projectId: string): Promise<GitLabMergeReq
  * Consulta aprobaciones y degrada a `unknown` si GitLab no ofrece el detalle.
  * La vista parcial sigue siendo útil aunque falle este recurso secundario.
  */
-async function fetchApprovals(projectId: number, mergeRequestIid: number): Promise<ApprovalStatus> {
+async function fetchApprovals(
+  client: GitLabClient,
+  projectId: number,
+  mergeRequestIid: number,
+): Promise<ApprovalStatus> {
   try {
-    const { data } = await fetchWithLimit<GitLabApprovalsResponse>(
+    const { data } = await client.fetchWithLimit<GitLabApprovalsResponse>(
       `${mergeRequestPath(projectId, mergeRequestIid)}/approvals`,
     );
     const approvedBy = data.approved_by ?? [];
@@ -72,9 +81,13 @@ function hasUnresolvedNote({ notes = [] }: GitLabDiscussion): boolean {
 }
 
 /** Consulta la cantidad de discusiones pendientes de un merge request. */
-async function fetchUnresolvedThreads(projectId: number, mergeRequestIid: number): Promise<ThreadStatus> {
+async function fetchUnresolvedThreads(
+  client: GitLabClient,
+  projectId: number,
+  mergeRequestIid: number,
+): Promise<ThreadStatus> {
   try {
-    const discussions = await fetchPaginatedWithLimit<GitLabDiscussion>(
+    const discussions = await client.fetchPaginatedWithLimit<GitLabDiscussion>(
       `${mergeRequestPath(projectId, mergeRequestIid)}/discussions`,
     );
     const unresolvedCount = discussions.filter(hasUnresolvedNote).length;
@@ -86,9 +99,13 @@ async function fetchUnresolvedThreads(projectId: number, mergeRequestIid: number
 }
 
 /** Consulta el pipeline más reciente y usa `none` si no existe o falla. */
-async function fetchPipeline(projectId: number, mergeRequestIid: number): Promise<PipelineStatus> {
+async function fetchPipeline(
+  client: GitLabClient,
+  projectId: number,
+  mergeRequestIid: number,
+): Promise<PipelineStatus> {
   try {
-    const { data } = await fetchWithLimit<GitLabPipeline[]>(
+    const { data } = await client.fetchWithLimit<GitLabPipeline[]>(
       `${mergeRequestPath(projectId, mergeRequestIid)}/pipelines`,
     );
     const latestPipeline = data[0];
@@ -113,11 +130,14 @@ function mapReviewer(reviewer: GitLabUser): MergeRequestReviewer {
 }
 
 /** Enriquece un merge request con sus bloqueos y clasificación. */
-async function enrichMergeRequest(mergeRequest: GitLabMergeRequest): Promise<EnrichedMergeRequest> {
+async function enrichMergeRequest(
+  client: GitLabClient,
+  mergeRequest: GitLabMergeRequest,
+): Promise<EnrichedMergeRequest> {
   const [approvals, threads, pipeline] = await Promise.all([
-    fetchApprovals(mergeRequest.project_id, mergeRequest.iid),
-    fetchUnresolvedThreads(mergeRequest.project_id, mergeRequest.iid),
-    fetchPipeline(mergeRequest.project_id, mergeRequest.iid),
+    fetchApprovals(client, mergeRequest.project_id, mergeRequest.iid),
+    fetchUnresolvedThreads(client, mergeRequest.project_id, mergeRequest.iid),
+    fetchPipeline(client, mergeRequest.project_id, mergeRequest.iid),
   ]);
 
   const mergeability = computeMergeability(mergeRequest, approvals, threads, pipeline);
@@ -145,9 +165,9 @@ async function enrichMergeRequest(mergeRequest: GitLabMergeRequest): Promise<Enr
 }
 
 /** Obtiene el nombre completo del proyecto o construye un respaldo estable. */
-async function fetchProjectPath(projectId: string): Promise<string> {
+async function fetchProjectPath(client: GitLabClient, projectId: string): Promise<string> {
   try {
-    const { data } = await fetchWithLimit<GitLabProject>(`/projects/${projectId}`);
+    const { data } = await client.fetchWithLimit<GitLabProject>(`/projects/${projectId}`);
     return data.path_with_namespace;
   } catch {
     return `project-${projectId}`;
@@ -157,9 +177,12 @@ async function fetchProjectPath(projectId: string): Promise<string> {
 /**
  * Consulta un proyecto sin impedir que los demás aparezcan si GitLab falla.
  */
-async function fetchProjectMergeRequestsSafely(projectId: string): Promise<GitLabMergeRequest[]> {
+async function fetchProjectMergeRequestsSafely(
+  client: GitLabClient,
+  projectId: string,
+): Promise<GitLabMergeRequest[]> {
   try {
-    return await fetchOpenMRsForProject(projectId);
+    return await fetchOpenMRsForProject(client, projectId);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
     console.error(`Error al obtener MRs del proyecto ${projectId}:`, message);
@@ -168,24 +191,38 @@ async function fetchProjectMergeRequestsSafely(projectId: string): Promise<GitLa
 }
 
 /** Construye los metadatos que acompañan la respuesta del tablero. */
-function buildMetadata(mergeRequests: EnrichedMergeRequest[], projectPaths: string[]): MergeRequestMetadata {
+function buildMetadata(
+  mergeRequests: EnrichedMergeRequest[],
+  projectPaths: string[],
+): MergeRequestMetadata {
   return {
     fetchedAt: new Date().toISOString(),
-    projectCount: config.projectIds.length,
+    projectCount: projectPaths.length,
     totalMRs: mergeRequests.length,
     allProjects: projectPaths,
     people: collectPeople(mergeRequests),
   };
 }
 
-/** Consolida y ordena los merge requests de todos los proyectos configurados. */
-async function getAllMergeRequests(): Promise<MergeRequestResponse> {
+/**
+ * Consolida y ordena los merge requests de los proyectos que configuró una
+ * persona, consultados con su propio access token.
+ *
+ * @param credentials Token y proyectos guardados en «Mi cuenta».
+ * @returns Los merge requests enriquecidos y los metadatos de la consulta.
+ */
+async function getAllMergeRequests(credentials: GitLabCredentials): Promise<MergeRequestResponse> {
+  const client = createGitLabClient(credentials.accessToken);
+  const { projectIds } = credentials;
+
   const [projectResults, projectPaths] = await Promise.all([
-    Promise.all(config.projectIds.map(fetchProjectMergeRequestsSafely)),
-    Promise.all(config.projectIds.map(fetchProjectPath)),
+    Promise.all(projectIds.map((projectId) => fetchProjectMergeRequestsSafely(client, projectId))),
+    Promise.all(projectIds.map((projectId) => fetchProjectPath(client, projectId))),
   ]);
 
-  const mergeRequests = await Promise.all(projectResults.flat().map(enrichMergeRequest));
+  const mergeRequests = await Promise.all(
+    projectResults.flat().map((mergeRequest) => enrichMergeRequest(client, mergeRequest)),
+  );
   mergeRequests.sort((first, second) => Date.parse(second.updatedAt) - Date.parse(first.updatedAt));
 
   return {

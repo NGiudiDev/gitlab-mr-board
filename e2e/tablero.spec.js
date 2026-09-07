@@ -43,18 +43,38 @@ test.describe('Tablero de merge requests', () => {
       name: exactCardName(e2eConfig.mergeRequestTitle),
     });
 
-    await test.step('ingresa con el usuario de test y espera los datos de GitLab', async () => {
+    await test.step('ingresa con el usuario de test, todavía sin configurar GitLab', async () => {
       await page.goto('/');
       await expect(page.getByRole('heading', { name: 'Tablero de MRs', level: 1 })).toBeVisible();
 
       await page.getByLabel('Usuario').fill(e2eConfig.username);
       await page.getByLabel('Contraseña').fill(e2eConfig.password);
-
-      const boardResponse = waitForBoardResponse(page);
       await page.getByRole('button', { name: 'Ingresar' }).click();
-      await boardResponse;
 
       await expect(page.getByText(`@${e2eConfig.username}`)).toBeVisible();
+      // La base se recrea en cada corrida, así que el usuario arranca sin
+      // proyectos ni token: el tablero todavía no tiene qué consultar.
+      await expect(page.getByText('Todavía no configuraste GitLab')).toBeVisible();
+    });
+
+    await test.step('carga los proyectos y el access token en «Mi cuenta»', async () => {
+      await page.getByRole('button', { name: 'Configurar en Mi cuenta' }).click();
+      await expect(page.getByRole('heading', { level: 2, name: 'GitLab' })).toBeVisible();
+
+      await page.getByLabel('IDs de los proyectos').fill(e2eConfig.projectIds);
+      await page.getByLabel('Access token').fill(e2eConfig.gitlabToken);
+      await page.getByRole('button', { name: 'Guardar configuración' }).click();
+
+      await expect(page.getByText('Configuración de GitLab guardada.')).toBeVisible();
+      // El token se guarda cifrado y no vuelve al navegador: el campo se vacía.
+      await expect(page.getByLabel('Access token')).toHaveValue('');
+    });
+
+    await test.step('vuelve al tablero y espera los datos de GitLab', async () => {
+      const boardResponse = waitForBoardResponse(page);
+      await page.getByRole('button', { name: 'Tablero' }).click();
+      await boardResponse;
+
       await expect(page.getByRole('button', { name: 'Refrescar ahora' })).toBeEnabled();
     });
 

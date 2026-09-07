@@ -7,7 +7,7 @@ Navegador (React) -> API BFF (Express) -> API v4 de GitLab
        :5173             :3001
 ```
 
-El frontend solicita una vista consolidada mediante `GET /api/pull-requests`. El backend conserva el token, consulta los proyectos, enriquece cada MR, calcula su estado y devuelve datos adaptados al tablero.
+El frontend solicita una vista consolidada mediante `GET /api/pull-requests`. El backend conserva el token de quien pregunta, consulta los proyectos que esa persona configuró, enriquece cada MR, calcula su estado y devuelve datos adaptados al tablero.
 
 ## Flujo principal
 
@@ -19,4 +19,4 @@ El frontend solicita una vista consolidada mediante `GET /api/pull-requests`. El
 6. El backend normaliza y clasifica los MRs.
 7. React agrupa el resultado por proyecto y lo muestra en columnas.
 
-La caché vive en memoria y el token solo pertenece al backend. La única persistencia es una base SQLite local con los usuarios y las sesiones, descrita en el [dominio de autenticación](../domains/autenticacion.md). Los detalles de cada paquete están en [Backend](backend.md) y [Frontend](frontend.md).
+La caché vive en memoria, por usuario, y los token sólo pertenecen al backend. La única persistencia es una base SQLite local con los usuarios y las sesiones ([autenticación](../domains/autenticacion.md)) y los proyectos y access token de cada persona, con el token cifrado ([configuración de GitLab](../domains/configuracion-gitlab.md)). Los detalles de cada paquete están en [Backend](backend.md) y [Frontend](frontend.md).

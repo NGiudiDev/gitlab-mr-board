@@ -22,9 +22,9 @@ npm prune --omit=dev
 npm run start:prod
 ```
 
-Proporcionar las variables de entorno y almacenar el PAT como secreto.
+Proporcionar las variables de entorno y almacenar `ENCRYPTION_KEY` como secreto. Los PAT de GitLab ya no son configuración del despliegue: los carga cada persona desde «Mi cuenta» y se guardan cifrados en la base ([configuración de GitLab](../domains/configuracion-gitlab.md)).
 
-El login guarda usuarios y sesiones en la base SQLite de `DATABASE_PATH`. En producción hay que montarla en un volumen persistente: si el sistema de archivos es efímero, cada despliegue borra los usuarios. El primer usuario se crea registrándose en el tablero —queda administrador— o con `npm run users --prefix backend -- create <usuario>`, según el [dominio de autenticación](../domains/autenticacion.md).
+El login guarda usuarios, sesiones y la configuración de GitLab en la base SQLite de `DATABASE_PATH`. En producción hay que montarla en un volumen persistente: si el sistema de archivos es efímero, cada despliegue borra los usuarios. El primer usuario se crea registrándose en el tablero —queda administrador— o con `npm run users --prefix backend -- create <usuario>`, según el [dominio de autenticación](../domains/autenticacion.md).
 
 ## Operación
 
@@ -32,6 +32,6 @@ El login guarda usuarios y sesiones en la base SQLite de `DATABASE_PATH`. En pro
 - Ajustar CORS en `backend/src/app.ts`; hoy solo permite los orígenes locales con puertos 5173 y 4173.
 - Usar `/health` como chequeo de vida, sabiendo que no valida GitLab.
 - Mantener una instancia o aceptar cachés independientes.
-- Respaldar el archivo de `DATABASE_PATH`: es el único estado que el backend no puede reconstruir.
+- Respaldar el archivo de `DATABASE_PATH` **y `ENCRYPTION_KEY`**: es el único estado que el backend no puede reconstruir, y sin esa clave los access token guardados quedan ilegibles y hay que cargarlos de nuevo.
 - Tener presente que **el registro es abierto**: quien alcance la URL puede crearse una cuenta y ver el tablero ([ADR 0007](../decisions/0007-registro-abierto-y-gestion-de-usuarios.md)). No publicar el tablero en internet sin cerrar antes el alta.
-- Verificar que `/api/pull-requests` responda 401 sin sesión y que el navegador nunca reciba `GITLAB_TOKEN`.
+- Verificar que `/api/pull-requests` responda 401 sin sesión y que el navegador nunca reciba un access token de GitLab.

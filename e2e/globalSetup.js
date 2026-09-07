@@ -34,8 +34,7 @@ export default function globalSetup() {
       env: {
         ...process.env,
         DATABASE_PATH: e2eConfig.databasePath,
-        GITLAB_TOKEN: e2eConfig.gitlabToken,
-        PROJECT_IDS: e2eConfig.projectIds,
+        ENCRYPTION_KEY: e2eConfig.encryptionKey,
       },
     },
   );

@@ -12,9 +12,15 @@ export interface GitLabResponse<T> {
   headers: Headers;
 }
 
+/** Acceso a la API de GitLab ya autenticado con las credenciales de una persona. */
+export interface GitLabClient {
+  fetchWithLimit: <T>(resourcePath: string, params?: QueryParams) => Promise<GitLabResponse<T>>;
+  fetchPaginatedWithLimit: <T>(resourcePath: string, params?: QueryParams) => Promise<T[]>;
+}
+
 export interface MergeRequestsDependencies {
   /** Fuente de datos de los merge requests; inyectable en los test. */
-  fetchMergeRequests?: () => Promise<MergeRequestResponse>;
+  fetchMergeRequests?: (credentials: GitLabCredentials) => Promise<MergeRequestResponse>;
   /** Reloj de la caché; inyectable en los test. */
   now?: () => number;
 }
@@ -22,9 +28,14 @@ export interface MergeRequestsDependencies {
 export interface CreateAppOptions extends MergeRequestsDependencies {
   /** Servicio de autenticación; inyectable para aislar la base en los test. */
   authService?: AuthService;
+  /** Configuración de GitLab; inyectable para aislar la base en los test. */
+  gitlabSettingsService?: GitLabSettingsService;
 }
 
-export type MergeRequestsRouterOptions = MergeRequestsDependencies;
+export interface MergeRequestsRouterOptions extends MergeRequestsDependencies {
+  /** Origen de las credenciales con las que se consulta GitLab. */
+  gitlabSettingsService: GitLabSettingsService;
+}
 
 // Contratos recibidos desde la API de GitLab.
 export interface GitLabUser {
@@ -266,6 +277,68 @@ export interface AuthService {
   close: () => void;
 }
 
+// Contratos de la configuración de GitLab de cada persona.
+
+/** Cifrado simétrico de los secretos que el backend guarda en la base. */
+export interface SecretCipher {
+  encrypt: (plainText: string) => string;
+  decrypt: (payload: string) => string;
+}
+
+/** Fila de `gitlab_settings`; el access token nunca se guarda en claro. */
+export interface StoredGitLabSettings {
+  userId: string;
+  projectIds: string[];
+  encryptedAccessToken: string;
+  updatedAt: string;
+}
+
+/** Vista que se expone al frontend: describe el token pero no lo revela. */
+export interface GitLabSettingsSummary {
+  projectIds: string[];
+  /** Últimos caracteres del token, para reconocer cuál está guardado. */
+  tokenHint: string;
+  updatedAt: string;
+}
+
+/** Credenciales con las que se consulta GitLab en nombre de una persona. */
+export interface GitLabCredentials {
+  accessToken: string;
+  projectIds: string[];
+  /** Cambia con cada guardado; identifica la versión vigente de la caché. */
+  updatedAt: string;
+}
+
+export interface SaveGitLabSettingsInput {
+  /** Lista de IDs, o una cadena separada por comas tal como la escribe la persona. */
+  projectIds: unknown;
+  /** Token nuevo. Si se omite, se conserva el que ya estaba guardado. */
+  accessToken?: string | undefined;
+}
+
+/** Acceso persistente a la configuración de GitLab. */
+export interface GitLabSettingsRepository {
+  findByUserId: (userId: string) => StoredGitLabSettings | null;
+  save: (settings: StoredGitLabSettings) => void;
+  deleteByUserId: (userId: string) => void;
+}
+
+export interface GitLabSettingsServiceOptions {
+  repository: GitLabSettingsRepository;
+  /** Cifrador del access token. */
+  cipher: SecretCipher;
+  /** Reloj inyectable para fijar `updatedAt` en los test. */
+  now?: () => Date;
+}
+
+export interface GitLabSettingsService {
+  getSummary: (userId: string) => GitLabSettingsSummary | null;
+  /** Devuelve el token descifrado; sólo para uso interno del backend. */
+  getCredentials: (userId: string) => GitLabCredentials | null;
+  save: (userId: string, input: SaveGitLabSettingsInput) => GitLabSettingsSummary;
+  remove: (userId: string) => void;
+}
+
 // Contratos usados exclusivamente por la infraestructura de test.
 export interface HttpTestOptions {
   method?: string;
@@ -310,6 +383,9 @@ export interface GitLabStub {
 export interface AuthenticatedTestApp {
   app: Express;
   authService: AuthService;
+  gitlabSettingsService: GitLabSettingsService;
+  /** Usuario de la sesión abierta. */
+  user: AuthenticatedUser;
   /** Cabecera Cookie lista para reenviar en cada petición. */
   cookie: string;
 }

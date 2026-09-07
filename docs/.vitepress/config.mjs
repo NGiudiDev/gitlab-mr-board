@@ -24,6 +24,7 @@ const sidebar = [
       { text: 'ADR 0005: frontend en React', link: '/decisions/0005-frontend-en-react' },
       { text: 'ADR 0006: login local con SQLite', link: '/decisions/0006-login-local-con-sqlite' },
       { text: 'ADR 0007: registro y gestión de usuarios', link: '/decisions/0007-registro-abierto-y-gestion-de-usuarios' },
+      { text: 'ADR 0008: credenciales de GitLab por usuario', link: '/decisions/0008-credenciales-de-gitlab-por-usuario' },
     ],
   },
   {
@@ -49,6 +50,7 @@ const sidebar = [
       { text: 'Merge Requests', link: '/domains/merge-requests' },
       { text: 'Vista personal', link: '/domains/vista-personal' },
       { text: 'Autenticación', link: '/domains/autenticacion' },
+      { text: 'Configuración de GitLab', link: '/domains/configuracion-gitlab' },
     ],
   },
 ]
