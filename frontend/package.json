@@ -11,7 +11,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "engines": {
-    "node": ">=22.13.0",
+    "node": "^22.13.0",
     "npm": ">=10.0.0"
   },
   "devDependencies": {

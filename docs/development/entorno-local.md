@@ -2,11 +2,11 @@
 
 ## Requisitos e instalación
 
-Se requieren Node.js 22.13+, npm 10+, acceso a GitLab y una base de [Neon](https://neon.com). Ejecutar `npm ci` en la raíz, `backend/` y `frontend/`, y copiar `backend/.env.example` como `backend/.env`.
+Se requieren Node.js 22.13 o superior dentro de la línea 22, npm 10+, acceso a GitLab y una base de [Neon](https://neon.com). Ejecutar `npm ci` en la raíz, `backend/` y `frontend/`, y copiar `backend/.env.example` como `backend/.env`.
 
 El PAT `read_api` y los IDs de los proyectos no van en el `.env`: los carga un administrador de cada cuenta desde «Mi cuenta» y el backend los guarda en la base con el token cifrado ([configuración de GitLab](../domains/configuracion-gitlab.md)).
 
-El mínimo de Node 22.13 es un requisito duro por las versiones vigentes de las herramientas de pruebas y de ESLint. Los tres `package.json` —raíz, `backend/` y `frontend/`— lo declaran mediante `engines`, así que `npm install` advierte con `EBADENGINE` si el runtime no lo cumple. No hay una comprobación propia del proyecto: con una versión menor el aviso llega en la instalación y, más adelante, desde la herramienta que no la soporte.
+Node 22.13 es el mínimo y la versión mayor queda fijada en 22 para mantener el mismo runtime en desarrollo y producción. Los tres `package.json` —raíz, `backend/` y `frontend/`— lo declaran mediante `engines`, así que `npm install` advierte con `EBADENGINE` si el runtime no lo cumple. No hay una comprobación propia del proyecto: con una versión incompatible el aviso llega en la instalación y, más adelante, desde la herramienta que no la soporte.
 
 Para comprobar el runtime efectivo en Windows:
 
