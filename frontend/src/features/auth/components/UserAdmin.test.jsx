@@ -87,7 +87,7 @@ describe('lista de usuarios', () => {
     expect(rowFor('beto').textContent).toContain('Usuario')
     expect(rowFor('beto').textContent).toContain('Deshabilitado')
     expect(rowFor('beto').textContent).toContain('Nunca')
-    expect(container.querySelector('caption').textContent).toContain('Usuarios del tablero')
+    expect(container.querySelector('caption').textContent).toContain('Personas de la cuenta')
   })
 
   it('avisa mientras carga', () => {

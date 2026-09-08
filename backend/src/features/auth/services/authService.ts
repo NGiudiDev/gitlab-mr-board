@@ -2,8 +2,9 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 
 // 4. Imports exclusivos de tipos de TypeScript.
-import type { AuthenticatedUser, AuthService, AuthServiceOptions, CreateUserInput, LoginResult, RegisterUserInput, StoredUser, UserStatus, UserSummary } from '../types.js';
+import type { AuthenticatedUser, AuthService, AuthServiceOptions, CreateUserInput, LoginResult, RegisterUserInput, StoredUser, UserRole, UserStatus, UserSummary } from '../types.js';
 
+import { parseGitlabUsername } from '../utils/gitlabUsername.js';
 import { hashPassword, verifyPassword } from '../utils/password.js';
 
 // 6. Utilidades.
@@ -24,13 +25,22 @@ interface FailedAttempts {
   lockedUntil: number;
 }
 
+/** Alta ya validada, con la contraseña derivada y a la espera de una cuenta. */
+interface PreparedUser {
+  username: string;
+  displayName: string;
+  passwordHash: string;
+}
+
 /** Quita los datos sensibles antes de exponer un usuario. */
 function toAuthenticatedUser(user: StoredUser): AuthenticatedUser {
   return {
     id: user.id,
+    accountId: user.accountId,
     username: user.username,
     displayName: user.displayName,
     role: user.role,
+    gitlabUsername: user.gitlabUsername,
   };
 }
 
@@ -62,12 +72,13 @@ function normalizeUsername(username: string): string {
 /**
  * Arma el servicio de autenticación sobre un repositorio ya abierto.
  *
- * @param options Repositorio, reloj y duración de sesión inyectables.
+ * @param options Repositorio, servicio de cuentas, reloj y duración de sesión.
  * @returns Servicio con las operaciones de alta, login y validación de sesión.
  */
 function createAuthService(options: AuthServiceOptions): AuthService {
   const {
     repository,
+    accountService,
     now = () => new Date(),
     sessionDurationDays = DEFAULT_SESSION_DURATION_DAYS,
   } = options;
@@ -96,14 +107,22 @@ function createAuthService(options: AuthServiceOptions): AuthService {
   }
 
   /**
-   * Da de alta un usuario y devuelve la fila ya guardada.
+   * Valida un alta y deja la contraseña ya derivada.
    *
-   * @param input Datos del alta; el rol sólo lo elige quien administra.
-   * @returns El usuario persistido, con su hash.
+   * Se separa del guardado porque el registro necesita rechazar los datos
+   * inválidos **antes** de crear la cuenta: si no, un nombre repetido dejaría
+   * una cuenta sin nadie adentro.
+   *
+   * @param input Nombre, contraseña y nombre visible tal como llegaron.
+   * @returns Los datos normalizados, con el hash de la contraseña.
    * @throws {HttpError} 400 si el nombre o la contraseña no cumplen las reglas,
    * 409 si el nombre ya está tomado.
    */
-  async function insertNewUser(input: CreateUserInput): Promise<StoredUser> {
+  async function prepareNewUser(input: {
+    username?: string;
+    password?: string;
+    displayName?: string;
+  }): Promise<PreparedUser> {
     const username = normalizeUsername(input.username ?? '');
 
     if (!USERNAME_PATTERN.test(username)) {
@@ -113,19 +132,41 @@ function createAuthService(options: AuthServiceOptions): AuthService {
       );
     }
 
+    // El nombre es único en toda la base, no dentro de la cuenta: el login pide
+    // sólo usuario y contraseña, así que no hay con qué desambiguar.
     if (await repository.findUserByUsername(username)) {
       throw new HttpError(`Ya existe un usuario con el nombre «${username}».`, 409);
     }
 
-    const passwordHash = await hashNewPassword(input.password ?? '');
-
-    const user: StoredUser = {
-      id: randomUUID(),
+    return {
       username,
       displayName: input.displayName?.trim() || username,
-      passwordHash,
-      role: input.role ?? 'user',
+      passwordHash: await hashNewPassword(input.password ?? ''),
+    };
+  }
+
+  /**
+   * Guarda en una cuenta un alta ya validada.
+   *
+   * @param prepared Datos que devolvió `prepareNewUser`.
+   * @param accountId Cuenta a la que se suma.
+   * @param role Rol con el que entra.
+   * @returns El usuario persistido, con su hash.
+   */
+  async function insertPreparedUser(
+    prepared: PreparedUser,
+    accountId: string,
+    role: UserRole,
+  ): Promise<StoredUser> {
+    const user: StoredUser = {
+      id: randomUUID(),
+      accountId,
+      username: prepared.username,
+      displayName: prepared.displayName,
+      passwordHash: prepared.passwordHash,
+      role,
       status: 'active',
+      gitlabUsername: null,
       createdAt: now().toISOString(),
       lastLoginAt: null,
     };
@@ -136,7 +177,11 @@ function createAuthService(options: AuthServiceOptions): AuthService {
   }
 
   async function createUser(input: CreateUserInput): Promise<AuthenticatedUser> {
-    return toAuthenticatedUser(await insertNewUser(input));
+    const prepared = await prepareNewUser(input);
+
+    return toAuthenticatedUser(
+      await insertPreparedUser(prepared, input.accountId, input.role ?? 'user'),
+    );
   }
 
   /**
@@ -163,11 +208,28 @@ function createAuthService(options: AuthServiceOptions): AuthService {
     return { user: toAuthenticatedUser(user), token, expiresAt };
   }
 
+  /**
+   * Da de alta a alguien por su propia cuenta y le abre la sesión.
+   *
+   * Con código de invitación se suma a una cuenta que ya existe como `user`;
+   * sin él crea una cuenta nueva y queda su administrador, que es lo que
+   * permite que un equipo empiece a usar el tablero sin intervención de nadie.
+   *
+   * @param input Datos del alta, con el código o el nombre de la cuenta.
+   * @returns Identidad, token de sesión y vencimiento.
+   * @throws {HttpError} 404 si el código de invitación no existe, y lo que
+   * arrastre la validación del usuario.
+   */
   async function register(input: RegisterUserInput): Promise<LoginResult> {
-    // El primer usuario del sistema queda administrador: sin eso nadie podría
-    // entrar a la pantalla de usuarios sin pasar por la línea de comandos.
-    const role = await repository.countUsers() === 0 ? 'admin' : 'user';
-    const user = await insertNewUser({ ...input, role });
+    // Primero el usuario, después la cuenta: crear la cuenta y recién entonces
+    // descubrir que el nombre está tomado dejaría una cuenta vacía.
+    const prepared = await prepareNewUser(input);
+    const joiningWithCode = Boolean(input.inviteCode?.trim());
+    const account = joiningWithCode
+      ? await accountService.findByInviteCode(input.inviteCode)
+      : await accountService.create(input.accountName);
+
+    const user = await insertPreparedUser(prepared, account.id, joiningWithCode ? 'user' : 'admin');
 
     // Se abre la sesión en el mismo paso: quien se registra ya probó quién es.
     return await createSessionFor(user);
@@ -270,6 +332,58 @@ function createAuthService(options: AuthServiceOptions): AuthService {
   }
 
   /**
+   * Guarda el nickname de GitLab de la propia persona.
+   *
+   * Es lo único de GitLab que no es de la cuenta: el token y los proyectos los
+   * carga quien administra, pero la identidad con la que cada uno aparece en
+   * los merge requests es suya.
+   *
+   * @param userId Usuario de la sesión en curso.
+   * @param gitlabUsername Nickname tal como lo escribió la persona.
+   * @returns La identidad ya actualizada.
+   * @throws {HttpError} 400 si el nickname no es válido, 404 si el usuario no
+   * existe.
+   */
+  async function changeGitlabUsername(
+    userId: string,
+    gitlabUsername: unknown,
+  ): Promise<AuthenticatedUser> {
+    const user = await repository.findUserById(userId);
+    if (!user) {
+      throw new HttpError('No existe el usuario de la sesión.', 404);
+    }
+
+    const parsedUsername = parseGitlabUsername(gitlabUsername);
+
+    await repository.updateGitlabUsername(user.id, parsedUsername);
+
+    return toAuthenticatedUser({ ...user, gitlabUsername: parsedUsername });
+  }
+
+  /**
+   * Comprueba que un usuario pertenezca a una cuenta.
+   *
+   * Es lo que impide que quien administra una cuenta toque los usuarios de
+   * otra: el nombre es único en toda la base, así que sin este control una
+   * ruta de administración alcanzaría a cualquiera.
+   *
+   * @param accountId Cuenta de quien administra.
+   * @param username Nombre del usuario a administrar.
+   * @returns El usuario, si es de esa cuenta.
+   * @throws {HttpError} 404 si no existe o pertenece a otra cuenta.
+   */
+  async function requireAccountMember(accountId: string, username: string): Promise<UserSummary> {
+    const normalizedUsername = normalizeUsername(username);
+    const user = await repository.findUserByUsername(normalizedUsername);
+
+    if (!user || user.accountId !== accountId) {
+      throw new HttpError(`No existe el usuario «${normalizedUsername}» en tu cuenta.`, 404);
+    }
+
+    return toUserSummary(user);
+  }
+
+  /**
    * Habilita o deshabilita un usuario.
    *
    * Deshabilitar corta el acceso de inmediato: además de bloquear el login,
@@ -293,7 +407,7 @@ function createAuthService(options: AuthServiceOptions): AuthService {
   }
 
   /**
-   * Borra un usuario y, en cascada, sus sesiones y su configuración de GitLab.
+   * Borra un usuario y, en cascada, sus sesiones.
    *
    * No falla si el usuario no existe: quien la usa —la línea de comandos y la
    * preparación de los E2E— quiere dejar la base en un estado, no comprobar
@@ -312,21 +426,28 @@ function createAuthService(options: AuthServiceOptions): AuthService {
     return await repository.deleteUser(user.id);
   }
 
-  async function listUsers(): Promise<UserSummary[]> {
-    return (await repository.listUsers()).map(toUserSummary);
+  async function listUsers(accountId: string): Promise<UserSummary[]> {
+    return (await repository.listUsersOfAccount(accountId)).map(toUserSummary);
+  }
+
+  async function listAllUsers(): Promise<UserSummary[]> {
+    return (await repository.listAllUsers()).map(toUserSummary);
   }
 
   return {
     authenticate,
+    changeGitlabUsername,
     changeOwnPassword,
     changePassword,
     close: () => repository.close(),
     createUser,
     deleteUser,
+    listAllUsers,
     listUsers,
     login,
     logout,
     register,
+    requireAccountMember,
     setUserStatus,
   };
 }

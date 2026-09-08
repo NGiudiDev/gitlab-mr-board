@@ -38,11 +38,12 @@ async function readErrorMessage(response) {
 }
 
 /**
- * Administra la configuración de GitLab de la propia cuenta.
+ * Administra la configuración de GitLab de la cuenta.
  *
  * El estado es local: sólo lo consume la pantalla de cuenta, así que no
  * pertenece a un store compartido. El access token nunca llega al frontend;
- * el backend sólo devuelve sus últimos caracteres en `tokenHint`.
+ * el backend sólo devuelve sus últimos caracteres en `tokenHint`. Guardar lo
+ * acepta sólo para un administrador: al resto le responde 403.
  *
  * @returns {object} Configuración guardada, estado de carga y el guardado.
  */
@@ -80,19 +81,17 @@ function useGitlabSettings() {
   /**
    * Guarda los proyectos y, si se escribió uno nuevo, el access token.
    *
-   * @param {{ projectIds: string, gitlabUsername: string, accessToken?: string }} input Datos del formulario.
+   * @param {{ projectIds: string, accessToken?: string }} input Datos del formulario.
    * @returns {Promise<string | null>} El mensaje de error, o `null` si se guardó.
    */
-  async function save({ projectIds, gitlabUsername, accessToken }) {
+  async function save({ projectIds, accessToken }) {
     setSaving(true)
 
     try {
       const response = await requestSettings({
         method: 'PUT',
         // Sin token nuevo no se manda el campo: el backend conserva el guardado.
-        body: accessToken
-          ? { projectIds, gitlabUsername, accessToken }
-          : { projectIds, gitlabUsername },
+        body: accessToken ? { projectIds, accessToken } : { projectIds },
       })
 
       if (!response.ok) return await readErrorMessage(response)

@@ -3,6 +3,7 @@ import cors from 'cors';
 import express from 'express';
 
 // 4. Imports exclusivos de tipos de TypeScript.
+import type { AccountService } from './features/accounts/types.js';
 import type { AuthService } from './features/auth/types.js';
 import type { GitLabSettingsService } from './features/gitlabSettings/types.js';
 import type { MergeRequestsDependencies } from './features/mergeRequests/types.js';
@@ -14,6 +15,9 @@ import { createSecretCipher } from './features/gitlabSettings/utils/encryption.j
 
 // 7. Imports relativos restantes.
 import config from './config.js';
+import { createAccountsRouter } from './features/accounts/routes/accounts.js';
+import { createAccountRepository } from './features/accounts/services/accountRepository.js';
+import { createAccountService } from './features/accounts/services/accountService.js';
 import { createAuthRouter, createRequireSession } from './features/auth/routes/auth.js';
 import { createUsersRouter } from './features/auth/routes/users.js';
 import { createAuthRepository } from './features/auth/services/authRepository.js';
@@ -24,13 +28,15 @@ import { createGitLabSettingsService } from './features/gitlabSettings/services/
 import { createMergeRequestsRouter } from './features/mergeRequests/routes/mergeRequests.js';
 import { createNeonDatabase } from './shared/database.js';
 
-/** Dependencias que un test puede reemplazar al construir la aplicación. */
-interface CreateAppOptions extends MergeRequestsDependencies {
-  /** Servicio de autenticación; inyectable para aislar la base en los test. */
-  authService?: AuthService;
-  /** Configuración de GitLab; inyectable para aislar la base en los test. */
-  gitlabSettingsService?: GitLabSettingsService;
+/** Los tres servicios que necesita la aplicación. */
+interface Services {
+  accountService: AccountService;
+  authService: AuthService;
+  gitlabSettingsService: GitLabSettingsService;
 }
+
+/** Dependencias que un test puede reemplazar al construir la aplicación. */
+interface CreateAppOptions extends MergeRequestsDependencies, Partial<Services> {}
 
 const ALLOWED_ORIGINS = ['http://localhost:5173', 'http://localhost:4173'];
 
@@ -41,7 +47,7 @@ const errorHandler: ErrorRequestHandler = (error, _request, response, _next) => 
 };
 
 /**
- * Arma sobre una base ya abierta los dos servicios que necesita la aplicación.
+ * Arma sobre una base ya abierta los servicios que necesita la aplicación.
  *
  * Comparten la conexión: las claves foráneas entre sus tablas sólo valen dentro
  * de la misma base, y un pool por servicio duplicaría las conexiones contra
@@ -49,15 +55,18 @@ const errorHandler: ErrorRequestHandler = (error, _request, response, _next) => 
  *
  * @param database Base devuelta por `createNeonDatabase`, o su equivalente en
  * memoria para los test.
- * @returns Servicio de autenticación y de configuración de GitLab.
+ * @returns Servicios de cuentas, de autenticación y de configuración de GitLab.
  */
-function createServices(database: Database): {
-  authService: AuthService;
-  gitlabSettingsService: GitLabSettingsService;
-} {
+function createServices(database: Database): Services {
+  const accountService = createAccountService({
+    repository: createAccountRepository(database),
+  });
+
   return {
+    accountService,
     authService: createAuthService({
       repository: createAuthRepository(database),
+      accountService,
       sessionDurationDays: config.sessionDurationDays,
     }),
     gitlabSettingsService: createGitLabSettingsService({
@@ -71,27 +80,24 @@ function createServices(database: Database): {
  * Completa con la base configurada los servicios que no vinieron inyectados.
  *
  * El pool de Neon es perezoso, así que construirlo no abre ninguna conexión: un
- * test que inyecta los dos servicios nunca toca la red.
+ * test que inyecta todos los servicios nunca toca la red.
  *
  * @param options Servicios ya construidos, si los hay.
- * @returns Los dos servicios que necesita la aplicación.
+ * @returns Los servicios que necesita la aplicación.
  */
-function resolveServices(options: CreateAppOptions): {
-  authService: AuthService;
-  gitlabSettingsService: GitLabSettingsService;
-} {
-  if (options.authService && options.gitlabSettingsService) {
-    return {
-      authService: options.authService,
-      gitlabSettingsService: options.gitlabSettingsService,
-    };
+function resolveServices(options: CreateAppOptions): Services {
+  const { accountService, authService, gitlabSettingsService } = options;
+
+  if (accountService && authService && gitlabSettingsService) {
+    return { accountService, authService, gitlabSettingsService };
   }
 
   const configured = createServices(createNeonDatabase(config.databaseUrl));
 
   return {
-    authService: options.authService ?? configured.authService,
-    gitlabSettingsService: options.gitlabSettingsService ?? configured.gitlabSettingsService,
+    accountService: accountService ?? configured.accountService,
+    authService: authService ?? configured.authService,
+    gitlabSettingsService: gitlabSettingsService ?? configured.gitlabSettingsService,
   };
 }
 
@@ -101,7 +107,7 @@ function resolveServices(options: CreateAppOptions): {
  */
 function createApp(options: CreateAppOptions = {}): Express {
   const { fetchMergeRequests, now } = options;
-  const { authService, gitlabSettingsService } = resolveServices(options);
+  const { accountService, authService, gitlabSettingsService } = resolveServices(options);
   const app = express();
 
   // `credentials` es lo que permite que el navegador mande la cookie de sesión
@@ -114,6 +120,7 @@ function createApp(options: CreateAppOptions = {}): Express {
   });
 
   app.use('/api/auth', createAuthRouter(authService));
+  app.use('/api/account', createAccountsRouter(authService, accountService));
   app.use('/api/users', createUsersRouter(authService));
   app.use('/api/gitlab-settings', createGitLabSettingsRouter(authService, gitlabSettingsService));
   app.use(
@@ -127,4 +134,4 @@ function createApp(options: CreateAppOptions = {}): Express {
 }
 
 export { createApp, createServices };
-export type { CreateAppOptions };
+export type { CreateAppOptions, Services };

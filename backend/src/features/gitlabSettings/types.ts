@@ -1,5 +1,5 @@
-// Contratos de la feature que guarda los proyectos y el access token de cada
-// persona. El token nunca sale del backend en claro.
+// Contratos de la feature que guarda los proyectos y el access token de una
+// cuenta. El token nunca sale del backend en claro.
 
 /** Cifrado simétrico de los secretos que el backend guarda en la base. */
 export interface SecretCipher {
@@ -7,13 +7,11 @@ export interface SecretCipher {
   decrypt: (payload: string) => string;
 }
 
-/** Fila de `gitlab_settings`; el access token nunca se guarda en claro. */
+/** Fila de `account_gitlab_settings`; el access token nunca se guarda en claro. */
 export interface StoredGitLabSettings {
-  userId: string;
+  accountId: string;
   projectIds: string[];
   encryptedAccessToken: string;
-  /** Nickname de GitLab de la persona; `null` en configuraciones anteriores al campo. */
-  gitlabUsername: string | null;
   updatedAt: string;
 }
 
@@ -22,15 +20,13 @@ export interface GitLabSettingsSummary {
   projectIds: string[];
   /** Últimos caracteres del token, para reconocer cuál está guardado. */
   tokenHint: string;
-  gitlabUsername: string | null;
+  updatedAt: string;
 }
 
-/** Credenciales con las que se consulta GitLab en nombre de una persona. */
+/** Credenciales con las que se consulta GitLab en nombre de una cuenta. */
 export interface GitLabCredentials {
   accessToken: string;
   projectIds: string[];
-  /** Con quién se identifica esta persona dentro de GitLab. */
-  gitlabUsername: string | null;
   /** Cambia con cada guardado; identifica la versión vigente de la caché. */
   updatedAt: string;
 }
@@ -38,17 +34,15 @@ export interface GitLabCredentials {
 export interface SaveGitLabSettingsInput {
   /** Lista de IDs, o una cadena separada por comas tal como la escribe la persona. */
   projectIds: unknown;
-  /** Nickname de GitLab, tal como lo escribe la persona. */
-  gitlabUsername: unknown;
   /** Token nuevo. Si se omite, se conserva el que ya estaba guardado. */
   accessToken?: string | undefined;
 }
 
-/** Acceso persistente a la configuración de GitLab. */
+/** Acceso persistente a la configuración de GitLab de una cuenta. */
 export interface GitLabSettingsRepository {
-  findByUserId: (userId: string) => Promise<StoredGitLabSettings | null>;
+  findByAccountId: (accountId: string) => Promise<StoredGitLabSettings | null>;
   save: (settings: StoredGitLabSettings) => Promise<void>;
-  deleteByUserId: (userId: string) => Promise<void>;
+  deleteByAccountId: (accountId: string) => Promise<void>;
 }
 
 export interface GitLabSettingsServiceOptions {
@@ -60,9 +54,9 @@ export interface GitLabSettingsServiceOptions {
 }
 
 export interface GitLabSettingsService {
-  getSummary: (userId: string) => Promise<GitLabSettingsSummary | null>;
+  getSummary: (accountId: string) => Promise<GitLabSettingsSummary | null>;
   /** Devuelve el token descifrado; sólo para uso interno del backend. */
-  getCredentials: (userId: string) => Promise<GitLabCredentials | null>;
-  save: (userId: string, input: SaveGitLabSettingsInput) => Promise<GitLabSettingsSummary>;
-  remove: (userId: string) => Promise<void>;
+  getCredentials: (accountId: string) => Promise<GitLabCredentials | null>;
+  save: (accountId: string, input: SaveGitLabSettingsInput) => Promise<GitLabSettingsSummary>;
+  remove: (accountId: string) => Promise<void>;
 }

@@ -26,13 +26,13 @@ La vista no incorpora preferencias persistentes, notificaciones ni asignación d
 
 ### Un usuario común: siempre las propias
 
-Cada persona guarda su **nickname de GitLab** en «Mi cuenta» ([configuración de GitLab](configuracion-gitlab.md)). El backend lo devuelve en `meta.viewerUsername` junto con el tablero, y la vista personal filtra por él sin pedir nada.
+Cada persona guarda su **nickname de GitLab** en «Mi cuenta» ([autenticación](autenticacion.md#nickname-de-gitlab)). Es el único dato de GitLab que sigue cargando cada uno: los proyectos y el token son de la cuenta. El backend lo devuelve en `meta.viewerUsername` junto con el tablero, y la vista personal filtra por él sin pedir nada.
 
 Si todavía no lo configuró, la vista lo pide y enlaza a «Mi cuenta» en lugar de mostrar columnas vacías.
 
 ### Un `admin`: cualquiera
 
-Sólo con rol `admin` aparece el selector. El backend reúne a los autores y reviewers de la respuesta consolidada y publica la lista sin duplicados en `meta.people`, ordenada por nombre visible y desempatada por `username`. Cada opción muestra ambos para evitar ambigüedad.
+Sólo con rol `admin` de la cuenta aparece el selector. El backend reúne a los autores y reviewers de la respuesta consolidada y publica la lista sin duplicados en `meta.people`, ordenada por nombre visible y desempatada por `username`. Cada opción muestra ambos para evitar ambigüedad.
 
 - Al entrar por primera vez no hay persona seleccionada: la interfaz pide elegir una y no muestra columnas vacías.
 - La selección permanece durante las actualizaciones y al volver a la vista general, mientras dure la sesión.
@@ -41,7 +41,7 @@ Sólo con rol `admin` aparece el selector. El backend reúne a los autores y rev
 La selección y el modo de vista son estado compartido porque afectan a más de un componente. No se persisten al recargar la página ni se reflejan en la URL.
 
 ::: warning No es una barrera de acceso
-Esconder el selector es una simplificación de la interfaz, no un permiso: la vista general sigue mostrando todos los merge requests de los proyectos configurados, y la respuesta del backend incluye a todas las personas. Quien quiera mirar los datos de otro los tiene igual.
+Esconder el selector es una simplificación de la interfaz, no un permiso: la vista general sigue mostrando todos los merge requests de los proyectos de la cuenta, y la respuesta del backend incluye a todas las personas. Quien quiera mirar los datos de otro los tiene igual.
 :::
 
 ## Presentación
@@ -57,7 +57,7 @@ La interfaz debe funcionar con teclado, conservar foco visible y anunciar los ca
 
 ## Datos y contrato
 
-El filtrado ocurre en el frontend sobre la respuesta ya consolidada, así que no hace falta un endpoint nuevo y se conservan la caché y el polling. El backend expone `authorUsername`, el `username` de reviewers y aprobadores, `responsiblePeople` por merge request, `meta.people` para el selector y `meta.viewerUsername` con el nickname de quien pide el tablero.
+El filtrado ocurre en el frontend sobre la respuesta ya consolidada, así que no hace falta un endpoint nuevo y se conservan la caché y el polling. El backend expone `authorUsername`, el `username` de reviewers y aprobadores, `responsiblePeople` por merge request, `meta.people` para el selector y `meta.viewerUsername` con el nickname de quien pide el tablero. Ese último campo es lo único de la respuesta que no se comparte entre los miembros de la cuenta: la ruta lo completa al entregarla.
 
 Como todos esos campos llegan normalizados de la misma fuente, `personalView.js` compara los `username` por igualdad exacta. Sólo selecciona datos: no contiene reglas de negocio.
 

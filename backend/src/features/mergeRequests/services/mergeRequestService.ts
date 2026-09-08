@@ -170,11 +170,16 @@ async function fetchProjectMergeRequestsSafely(
   }
 }
 
-/** Construye los metadatos que acompañan la respuesta del tablero. */
+/**
+ * Construye los metadatos que acompañan la respuesta del tablero.
+ *
+ * `viewerUsername` queda en `null`: la respuesta es de la cuenta y se guarda en
+ * caché para todos sus miembros, así que quién la lee lo completa la ruta al
+ * entregarla.
+ */
 function buildMetadata(
   mergeRequests: EnrichedMergeRequest[],
   projectPaths: string[],
-  viewerUsername: string | null,
 ): MergeRequestMetadata {
   return {
     fetchedAt: new Date().toISOString(),
@@ -182,15 +187,15 @@ function buildMetadata(
     totalMRs: mergeRequests.length,
     allProjects: projectPaths,
     people: collectPeople(mergeRequests),
-    viewerUsername,
+    viewerUsername: null,
   };
 }
 
 /**
- * Consolida y ordena los merge requests de los proyectos que configuró una
- * persona, consultados con su propio access token.
+ * Consolida y ordena los merge requests de los proyectos que configuró la
+ * cuenta, consultados con su access token.
  *
- * @param credentials Token y proyectos guardados en «Mi cuenta».
+ * @param credentials Token y proyectos de la cuenta.
  * @returns Los merge requests enriquecidos y los metadatos de la consulta.
  */
 async function getAllMergeRequests(credentials: GitLabCredentials): Promise<MergeRequestResponse> {
@@ -209,7 +214,7 @@ async function getAllMergeRequests(credentials: GitLabCredentials): Promise<Merg
 
   return {
     mergeRequests,
-    meta: buildMetadata(mergeRequests, projectPaths, credentials.gitlabUsername),
+    meta: buildMetadata(mergeRequests, projectPaths),
   };
 }
 

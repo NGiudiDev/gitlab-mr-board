@@ -14,11 +14,6 @@ const MAX_PROJECT_IDS = 50;
 const MINIMUM_TOKEN_LENGTH = 20;
 const TOKEN_HINT_LENGTH = 4;
 
-// GitLab admite letras, números, guiones, guiones bajos y puntos, y exige que
-// el nombre empiece con letra o número.
-const GITLAB_USERNAME_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
-const MAX_GITLAB_USERNAME_LENGTH = 255;
-
 /**
  * Normaliza los IDs de proyecto vengan como lista o como texto separado.
  *
@@ -50,40 +45,6 @@ function parseProjectIds(value: unknown): string[] {
   }
 
   return projectIds;
-}
-
-/**
- * Normaliza y valida el nickname de GitLab.
- *
- * Es obligatorio porque de él depende la vista personal: sin nickname el
- * tablero no puede saber cuáles de los merge requests son de quien mira.
- *
- * @param value Valor recibido en el cuerpo de la petición.
- * @returns El nickname sin espacios alrededor.
- * @throws {HttpError} 400 si está vacío o tiene caracteres que GitLab no acepta.
- */
-function parseGitLabUsername(value: unknown): string {
-  const gitlabUsername = String(value ?? '').trim();
-
-  if (!gitlabUsername) {
-    throw new HttpError('Indicá tu nickname de GitLab.', 400);
-  }
-
-  if (gitlabUsername.length > MAX_GITLAB_USERNAME_LENGTH) {
-    throw new HttpError(
-      `El nickname de GitLab no puede superar los ${MAX_GITLAB_USERNAME_LENGTH} caracteres.`,
-      400,
-    );
-  }
-
-  if (!GITLAB_USERNAME_PATTERN.test(gitlabUsername)) {
-    throw new HttpError(
-      `«${gitlabUsername}» no es un nickname de GitLab: se esperan letras, números, punto, guion o guion bajo, empezando con letra o número.`,
-      400,
-    );
-  }
-
-  return gitlabUsername;
 }
 
 /**
@@ -125,9 +86,9 @@ function createGitLabSettingsService(options: GitLabSettingsServiceOptions): Git
     try {
       return cipher.decrypt(settings.encryptedAccessToken);
     } catch (error: unknown) {
-      // Pasa si cambió `ENCRYPTION_KEY`: el token guardado quedó ilegible y la
-      // persona tiene que cargarlo de nuevo.
-      console.error(`No se pudo descifrar el token de GitLab del usuario ${settings.userId}:`, error);
+      // Pasa si cambió `ENCRYPTION_KEY`: el token guardado quedó ilegible y hay
+      // que cargarlo de nuevo.
+      console.error(`No se pudo descifrar el token de GitLab de la cuenta ${settings.accountId}:`, error);
       return null;
     }
   }
@@ -139,18 +100,18 @@ function createGitLabSettingsService(options: GitLabSettingsServiceOptions): Git
     return {
       projectIds: settings.projectIds,
       tokenHint: accessToken ? accessToken.slice(-TOKEN_HINT_LENGTH) : '',
-      gitlabUsername: settings.gitlabUsername,
+      updatedAt: settings.updatedAt,
     };
   }
 
-  async function getSummary(userId: string): Promise<GitLabSettingsSummary | null> {
-    const settings = await repository.findByUserId(userId);
+  async function getSummary(accountId: string): Promise<GitLabSettingsSummary | null> {
+    const settings = await repository.findByAccountId(accountId);
 
     return settings ? toSummary(settings) : null;
   }
 
-  async function getCredentials(userId: string): Promise<GitLabCredentials | null> {
-    const settings = await repository.findByUserId(userId);
+  async function getCredentials(accountId: string): Promise<GitLabCredentials | null> {
+    const settings = await repository.findByAccountId(accountId);
     if (!settings) return null;
 
     const accessToken = decryptAccessToken(settings);
@@ -159,29 +120,27 @@ function createGitLabSettingsService(options: GitLabSettingsServiceOptions): Git
     return {
       accessToken,
       projectIds: settings.projectIds,
-      gitlabUsername: settings.gitlabUsername,
       updatedAt: settings.updatedAt,
     };
   }
 
   /**
-   * Guarda la configuración de una persona.
+   * Guarda la configuración de una cuenta.
    *
    * Omitir el token conserva el que ya estaba guardado, así se pueden cambiar
    * los proyectos sin volver a escribirlo.
    *
-   * @param userId Usuario de la sesión en curso.
+   * @param accountId Cuenta de la sesión en curso.
    * @param input Proyectos y, opcionalmente, un token nuevo.
    * @returns La configuración guardada, sin el token.
    * @throws {HttpError} 400 si los datos no son válidos.
    */
   async function save(
-    userId: string,
+    accountId: string,
     input: SaveGitLabSettingsInput,
   ): Promise<GitLabSettingsSummary> {
     const projectIds = parseProjectIds(input.projectIds);
-    const gitlabUsername = parseGitLabUsername(input.gitlabUsername);
-    const existingSettings = await repository.findByUserId(userId);
+    const existingSettings = await repository.findByAccountId(accountId);
     const receivedToken = input.accessToken?.trim() ?? '';
 
     if (!receivedToken && !existingSettings) {
@@ -193,10 +152,9 @@ function createGitLabSettingsService(options: GitLabSettingsServiceOptions): Git
       : (existingSettings as StoredGitLabSettings).encryptedAccessToken;
 
     const settings: StoredGitLabSettings = {
-      userId,
+      accountId,
       projectIds,
       encryptedAccessToken,
-      gitlabUsername,
       updatedAt: now().toISOString(),
     };
 
@@ -205,8 +163,8 @@ function createGitLabSettingsService(options: GitLabSettingsServiceOptions): Git
     return toSummary(settings);
   }
 
-  async function remove(userId: string): Promise<void> {
-    await repository.deleteByUserId(userId);
+  async function remove(accountId: string): Promise<void> {
+    await repository.deleteByAccountId(accountId);
   }
 
   return { getCredentials, getSummary, remove, save };

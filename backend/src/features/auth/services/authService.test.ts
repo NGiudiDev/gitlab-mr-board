@@ -2,11 +2,14 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
 // 4. Imports exclusivos de tipos de TypeScript.
+import type { AccountService } from '../../accounts/types.js';
 import type { AuthRepository, AuthService } from '../types.js';
 
 // 7. Imports relativos restantes.
 import { createTestDatabase } from '../../../../test/database.js';
 import { HttpError } from '../../../shared/httpError.js';
+import { createAccountRepository } from '../../accounts/services/accountRepository.js';
+import { createAccountService } from '../../accounts/services/accountService.js';
 import { createAuthRepository } from './authRepository.js';
 import { createAuthService, normalizeUsername } from './authService.js';
 
@@ -17,22 +20,42 @@ const openRepositories: AuthRepository[] = [];
 
 interface TestContext {
   authService: AuthService;
+  accountService: AccountService;
   repository: AuthRepository;
+  /** Cuenta de prueba a la que se suman los usuarios del test. */
+  accountId: string;
+  /** Código con el que alguien se suma a esa cuenta al registrarse. */
+  inviteCode: string;
   /** Corre el reloj del servicio sin esperar en tiempo real. */
   advance: (milliseconds: number) => void;
 }
 
-/** Arma el servicio sobre una base en memoria y con el reloj bajo control. */
+/**
+ * Arma el servicio sobre una base en memoria, con el reloj bajo control y una
+ * cuenta ya creada: todo usuario pertenece a una, así que sin ella no hay alta
+ * posible.
+ */
 async function createContext(sessionDurationDays?: number): Promise<TestContext> {
-  const repository = createAuthRepository(await createTestDatabase());
+  const database = await createTestDatabase();
+  const repository = createAuthRepository(database);
   openRepositories.push(repository);
 
   let currentTime = START_DATE.getTime();
 
+  const accountService = createAccountService({
+    repository: createAccountRepository(database),
+    now: () => new Date(currentTime),
+  });
+  const account = await accountService.create('Equipo de prueba');
+
   return {
     repository,
+    accountService,
+    accountId: account.id,
+    inviteCode: account.inviteCode,
     authService: createAuthService({
       repository,
+      accountService,
       now: () => new Date(currentTime),
       ...(sessionDurationDays === undefined ? {} : { sessionDurationDays }),
     }),
@@ -40,10 +63,15 @@ async function createContext(sessionDurationDays?: number): Promise<TestContext>
   };
 }
 
-/** Contexto con el usuario `ana` ya dado de alta. */
+/** Contexto con el usuario `ana` ya dado de alta en la cuenta de prueba. */
 async function createContextWithUser(sessionDurationDays?: number): Promise<TestContext> {
   const context = await createContext(sessionDurationDays);
-  await context.authService.createUser({ username: 'ana', password: PASSWORD, displayName: 'Ana Prueba' });
+  await context.authService.createUser({
+    accountId: context.accountId,
+    username: 'ana',
+    password: PASSWORD,
+    displayName: 'Ana Prueba',
+  });
 
   return context;
 }
@@ -59,24 +87,27 @@ describe('normalizeUsername', () => {
 });
 
 describe('createUser', () => {
-  it('da de alta un usuario activo con rol user', async () => {
-    const { authService, repository } = await createContext();
+  it('da de alta un usuario activo con rol user en la cuenta indicada', async () => {
+    const { authService, accountId, repository } = await createContext();
 
-    const user = await authService.createUser({ username: 'Ana', password: PASSWORD });
+    const user = await authService.createUser({ accountId, username: 'Ana', password: PASSWORD });
 
     expect(user).toEqual({
       id: expect.any(String),
+      accountId,
       username: 'ana',
       displayName: 'ana',
       role: 'user',
+      gitlabUsername: null,
     });
     expect((await repository.findUserByUsername('ana'))?.status).toBe('active');
   });
 
   it('conserva el nombre visible y el rol indicados', async () => {
-    const { authService } = await createContext();
+    const { authService, accountId } = await createContext();
 
     const user = await authService.createUser({
+      accountId,
       username: 'lider',
       password: PASSWORD,
       displayName: 'Nicolás Giudice',
@@ -88,57 +119,120 @@ describe('createUser', () => {
   });
 
   it('nunca expone el hash de la contraseña', async () => {
-    const { authService } = await createContext();
+    const { authService, accountId } = await createContext();
 
-    const user = await authService.createUser({ username: 'ana', password: PASSWORD });
+    const user = await authService.createUser({ accountId, username: 'ana', password: PASSWORD });
 
     expect(JSON.stringify(user)).not.toContain('scrypt');
   });
 
   it('rechaza un nombre de usuario con caracteres no permitidos', async () => {
-    const { authService } = await createContext();
+    const { authService, accountId } = await createContext();
 
-    await expect(authService.createUser({ username: 'ana perez', password: PASSWORD }))
+    await expect(authService.createUser({ accountId, username: 'ana perez', password: PASSWORD }))
       .rejects.toThrow(HttpError);
   });
 
   it('rechaza un nombre de usuario demasiado corto', async () => {
-    const { authService } = await createContext();
+    const { authService, accountId } = await createContext();
 
-    await expect(authService.createUser({ username: 'an', password: PASSWORD }))
+    await expect(authService.createUser({ accountId, username: 'an', password: PASSWORD }))
       .rejects.toThrow(/entre 3 y 32 caracteres/);
   });
 
   it('rechaza un nombre ya usado, sin importar las mayúsculas', async () => {
-    const { authService } = await createContextWithUser();
+    const { authService, accountId } = await createContextWithUser();
 
-    await expect(authService.createUser({ username: 'ANA', password: PASSWORD }))
+    await expect(authService.createUser({ accountId, username: 'ANA', password: PASSWORD }))
       .rejects.toMatchObject({ status: 409 });
   });
 
-  it('rechaza una contraseña más corta que el mínimo', async () => {
-    const { authService } = await createContext();
+  it('rechaza un nombre ya usado en otra cuenta', async () => {
+    const { authService, accountService } = await createContextWithUser();
+    const otherAccount = await accountService.create('Otro equipo');
 
-    await expect(authService.createUser({ username: 'ana', password: 'corta' }))
+    await expect(authService.createUser({
+      accountId: otherAccount.id,
+      username: 'ana',
+      password: PASSWORD,
+    })).rejects.toMatchObject({ status: 409 });
+  });
+
+  it('rechaza una contraseña más corta que el mínimo', async () => {
+    const { authService, accountId } = await createContext();
+
+    await expect(authService.createUser({ accountId, username: 'ana', password: 'corta' }))
       .rejects.toMatchObject({ status: 400 });
   });
 });
 
 describe('register', () => {
-  it('deja administrador al primer usuario del sistema', async () => {
-    const { authService } = await createContext();
+  it('crea una cuenta nueva y deja administrador a quien la abre', async () => {
+    const { authService, accountId } = await createContextWithUser();
 
-    const result = await authService.register({ username: 'ana', password: PASSWORD });
+    const result = await authService.register({
+      username: 'zoe',
+      password: PASSWORD,
+      accountName: 'Equipo de Zoe',
+    });
 
     expect(result.user.role).toBe('admin');
+    expect(result.user.accountId).not.toBe(accountId);
   });
 
-  it('da rol user a los registros siguientes', async () => {
+  it('usa el nombre de cuenta indicado', async () => {
+    const { authService, accountService } = await createContext();
+
+    const result = await authService.register({
+      username: 'zoe',
+      password: PASSWORD,
+      accountName: 'Equipo de Zoe',
+    });
+
+    const account = await accountService.getSummary(result.user.accountId, false);
+    expect(account.name).toBe('Equipo de Zoe');
+  });
+
+  it('suma a la cuenta del código de invitación, con rol user', async () => {
+    const { authService, accountId, inviteCode } = await createContextWithUser();
+
+    const result = await authService.register({ username: 'zoe', password: PASSWORD, inviteCode });
+
+    expect(result.user.accountId).toBe(accountId);
+    expect(result.user.role).toBe('user');
+  });
+
+  it('acepta el código de invitación en minúsculas y con espacios', async () => {
+    const { authService, accountId, inviteCode } = await createContextWithUser();
+
+    const result = await authService.register({
+      username: 'zoe',
+      password: PASSWORD,
+      inviteCode: ` ${inviteCode.toLowerCase()} `,
+    });
+
+    expect(result.user.accountId).toBe(accountId);
+  });
+
+  it('rechaza un código de invitación que no existe', async () => {
     const { authService } = await createContextWithUser();
 
-    const result = await authService.register({ username: 'zoe', password: PASSWORD });
+    await expect(authService.register({
+      username: 'zoe',
+      password: PASSWORD,
+      inviteCode: 'CODIGOMALO',
+    })).rejects.toMatchObject({ status: 404 });
+  });
 
-    expect(result.user.role).toBe('user');
+  it('no deja una cuenta vacía cuando el alta del usuario falla', async () => {
+    const { authService, accountService } = await createContextWithUser();
+
+    await expect(authService.register({ username: 'ana', password: PASSWORD }))
+      .rejects.toMatchObject({ status: 409 });
+    await expect(authService.register({ username: 'zoe', password: 'corta' }))
+      .rejects.toMatchObject({ status: 400 });
+
+    expect(await accountService.list()).toHaveLength(1);
   });
 
   it('abre la sesión en el mismo paso', async () => {
@@ -178,10 +272,10 @@ describe('register', () => {
   });
 
   it('no permite elegir el rol desde el registro', async () => {
-    const { authService } = await createContextWithUser();
+    const { authService, inviteCode } = await createContextWithUser();
 
     const result = await authService.register(
-      { username: 'zoe', password: PASSWORD, role: 'admin' } as never,
+      { username: 'zoe', password: PASSWORD, inviteCode, role: 'admin' } as never,
     );
 
     expect(result.user.role).toBe('user');
@@ -282,23 +376,26 @@ describe('login', () => {
   });
 
   it('limpia las sesiones vencidas al ingresar', async () => {
-    const { authService, repository, advance } = await createContextWithUser(1);
+    const { authService, repository, accountId, advance } = await createContextWithUser(1);
     const { token } = await authService.login({ username: 'ana', password: PASSWORD });
 
     advance(2 * 24 * 60 * 60 * 1000);
     await authService.login({ username: 'ana', password: PASSWORD });
 
-    expect(await repository.listUsers()).toHaveLength(1);
+    expect(await repository.listUsersOfAccount(accountId)).toHaveLength(1);
     expect(await authService.authenticate(token)).toBeNull();
   });
 });
 
 describe('authenticate', () => {
-  it('devuelve el usuario de una sesión vigente', async () => {
-    const { authService } = await createContextWithUser();
+  it('devuelve el usuario de una sesión vigente, con su cuenta', async () => {
+    const { authService, accountId } = await createContextWithUser();
     const { token } = await authService.login({ username: 'ana', password: PASSWORD });
 
-    expect((await authService.authenticate(token))?.username).toBe('ana');
+    const user = await authService.authenticate(token);
+
+    expect(user?.username).toBe('ana');
+    expect(user?.accountId).toBe(accountId);
   });
 
   it('devuelve null sin token o con un token desconocido', async () => {
@@ -326,6 +423,57 @@ describe('authenticate', () => {
     await authService.setUserStatus('ana', 'disabled');
 
     expect(await authService.authenticate(token)).toBeNull();
+  });
+});
+
+describe('changeGitlabUsername', () => {
+  it('guarda el nickname y lo devuelve en la identidad', async () => {
+    const { authService, accountId } = await createContextWithUser();
+    const { user } = await authService.login({ username: 'ana', password: PASSWORD });
+
+    const updated = await authService.changeGitlabUsername(user.id, '  ana-gitlab  ');
+
+    expect(updated.gitlabUsername).toBe('ana-gitlab');
+    expect(updated.accountId).toBe(accountId);
+    expect((await authService.listUsers(accountId))[0]?.gitlabUsername).toBe('ana-gitlab');
+  });
+
+  it('rechaza un nickname vacío o con caracteres que GitLab no acepta', async () => {
+    const { authService } = await createContextWithUser();
+    const { user } = await authService.login({ username: 'ana', password: PASSWORD });
+
+    await expect(authService.changeGitlabUsername(user.id, '  ')).rejects.toMatchObject({ status: 400 });
+    await expect(authService.changeGitlabUsername(user.id, '-ana')).rejects.toMatchObject({ status: 400 });
+  });
+
+  it('falla cuando el usuario de la sesión ya no existe', async () => {
+    const { authService } = await createContextWithUser();
+
+    await expect(authService.changeGitlabUsername('usuario-inexistente', 'ana-gitlab'))
+      .rejects.toMatchObject({ status: 404 });
+  });
+});
+
+describe('requireAccountMember', () => {
+  it('devuelve el usuario cuando pertenece a la cuenta', async () => {
+    const { authService, accountId } = await createContextWithUser();
+
+    expect((await authService.requireAccountMember(accountId, 'ANA')).username).toBe('ana');
+  });
+
+  it('falla cuando el usuario es de otra cuenta', async () => {
+    const { authService, accountService } = await createContextWithUser();
+    const otherAccount = await accountService.create('Otro equipo');
+
+    await expect(authService.requireAccountMember(otherAccount.id, 'ana'))
+      .rejects.toMatchObject({ status: 404 });
+  });
+
+  it('falla cuando el usuario no existe', async () => {
+    const { authService, accountId } = await createContextWithUser();
+
+    await expect(authService.requireAccountMember(accountId, 'zoe'))
+      .rejects.toMatchObject({ status: 404 });
   });
 });
 
@@ -442,28 +590,43 @@ describe('changePassword', () => {
 });
 
 describe('listUsers', () => {
-  it('devuelve los usuarios sin sus credenciales', async () => {
-    const { authService } = await createContextWithUser();
-    await authService.createUser({ username: 'zoe', password: PASSWORD });
+  it('devuelve los usuarios de la cuenta sin sus credenciales', async () => {
+    const { authService, accountId } = await createContextWithUser();
+    await authService.createUser({ accountId, username: 'zoe', password: PASSWORD });
 
-    const users = await authService.listUsers();
+    const users = await authService.listUsers(accountId);
 
     expect(users.map((user) => user.username)).toEqual(['ana', 'zoe']);
     expect(JSON.stringify(users)).not.toContain('scrypt');
   });
 
+  it('no incluye los usuarios de otra cuenta', async () => {
+    const { authService, accountId, accountService } = await createContextWithUser();
+    const otherAccount = await accountService.create('Otro equipo');
+    await authService.createUser({
+      accountId: otherAccount.id,
+      username: 'beto',
+      password: PASSWORD,
+    });
+
+    expect((await authService.listUsers(accountId)).map((user) => user.username)).toEqual(['ana']);
+    expect((await authService.listAllUsers()).map((user) => user.username)).toEqual(['ana', 'beto']);
+  });
+
   it('incluye los datos que necesita la pantalla de administración', async () => {
-    const { authService } = await createContextWithUser();
+    const { authService, accountId } = await createContextWithUser();
     await authService.login({ username: 'ana', password: PASSWORD });
 
-    const [user] = await authService.listUsers();
+    const [user] = await authService.listUsers(accountId);
 
     expect(user).toEqual({
       id: expect.any(String),
+      accountId,
       username: 'ana',
       displayName: 'Ana Prueba',
       role: 'user',
       status: 'active',
+      gitlabUsername: null,
       createdAt: START_DATE.toISOString(),
       lastLoginAt: START_DATE.toISOString(),
     });

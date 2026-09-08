@@ -19,7 +19,7 @@ async function main(): Promise<void> {
   app.listen(config.port, () => {
     console.log(`Backend disponible en http://localhost:${config.port}`);
     console.log(`Instancia de GitLab: ${config.gitlabBaseUrl}`);
-    console.log('Cada persona configura sus proyectos y su access token desde «Mi cuenta».');
+    console.log('Cada cuenta configura sus proyectos y su access token desde «Mi cuenta»; los carga un administrador para todo el equipo.');
   });
 }
 

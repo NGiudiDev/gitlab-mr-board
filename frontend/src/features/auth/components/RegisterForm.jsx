@@ -3,16 +3,24 @@ import { useState } from 'react'
 
 const FIELD_CLASSES = 'block w-full mt-1 rounded-md border border-control bg-surface-raised px-3 py-2 text-[13px] font-normal text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
 const LABEL_CLASSES = 'block text-[12px] font-semibold text-text-muted mb-3'
+const CHOICE_CLASSES = 'flex-1 rounded-md border px-3 py-2 text-[12.5px] cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
 
 const MINIMUM_PASSWORD_LENGTH = 8
 
 /**
  * Formulario de alta de cuenta.
  *
+ * Hay dos caminos y son excluyentes: sumarse a una cuenta que ya existe con su
+ * código de invitación, o abrir una cuenta nueva y quedar su administrador.
+ * Quien se suma no configura nada de GitLab: eso ya está en la cuenta.
+ *
  * Valida en el navegador lo mismo que el backend para avisar antes de enviar,
  * pero la regla que manda es la del backend.
  */
 function RegisterForm({ error = null, submitting = false, onSubmit = () => {}, onShowLogin = () => {} }) {
+  const [joinExisting, setJoinExisting] = useState(true)
+  const [inviteCode, setInviteCode] = useState('')
+  const [accountName, setAccountName] = useState('')
   const [username, setUsername] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [password, setPassword] = useState('')
@@ -28,10 +36,24 @@ function RegisterForm({ error = null, submitting = false, onSubmit = () => {}, o
     }
 
     setLocalError(null)
-    onSubmit({ username: username.trim(), password, displayName: displayName.trim() })
+    onSubmit({
+      username: username.trim(),
+      password,
+      displayName: displayName.trim(),
+      // Sólo viaja el dato del camino elegido: con código el backend ignora el
+      // nombre, y sin código no hay cuenta a la que sumarse.
+      ...(joinExisting ? { inviteCode: inviteCode.trim() } : { accountName: accountName.trim() }),
+    })
   }
 
   const visibleError = localError ?? error
+
+  /** Clases del botón que elige el camino, según esté activo o no. */
+  function choiceClasses(isActive) {
+    return `${CHOICE_CLASSES} ${isActive
+      ? 'border-accent bg-surface-raised font-semibold text-text-primary'
+      : 'border-control text-text-muted hover:text-text-primary'}`
+  }
 
   return (
     <form
@@ -51,6 +73,72 @@ function RegisterForm({ error = null, submitting = false, onSubmit = () => {}, o
           {visibleError}
         </p>
       ) : null}
+
+      <fieldset className="mb-4">
+        <legend className="text-[12px] font-semibold text-text-muted mb-2">
+          ¿Cómo querés entrar?
+        </legend>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            aria-pressed={joinExisting}
+            onClick={() => setJoinExisting(true)}
+            className={choiceClasses(joinExisting)}
+          >
+            Sumarme a un equipo
+          </button>
+          <button
+            type="button"
+            aria-pressed={!joinExisting}
+            onClick={() => setJoinExisting(false)}
+            className={choiceClasses(!joinExisting)}
+          >
+            Crear un equipo
+          </button>
+        </div>
+      </fieldset>
+
+      {joinExisting ? (
+        <>
+          <label className={LABEL_CLASSES} htmlFor="registro-invitacion">
+            Código de invitación
+            <input
+              id="registro-invitacion"
+              name="inviteCode"
+              type="text"
+              value={inviteCode}
+              onChange={(event) => setInviteCode(event.target.value)}
+              autoCapitalize="characters"
+              spellCheck="false"
+              required
+              aria-describedby="registro-invitacion-ayuda"
+              className={FIELD_CLASSES}
+            />
+          </label>
+          <p id="registro-invitacion-ayuda" className="-mt-2 mb-3 text-[11.5px] font-normal text-text-faint">
+            Te lo da quien administra el tablero de tu equipo. Con él ves los mismos proyectos, sin cargar credenciales de GitLab.
+          </p>
+        </>
+      ) : (
+        <>
+          <label className={LABEL_CLASSES} htmlFor="registro-cuenta">
+            Nombre del equipo (opcional)
+            <input
+              id="registro-cuenta"
+              name="accountName"
+              type="text"
+              value={accountName}
+              onChange={(event) => setAccountName(event.target.value)}
+              maxLength={80}
+              aria-describedby="registro-cuenta-ayuda"
+              className={FIELD_CLASSES}
+            />
+          </label>
+          <p id="registro-cuenta-ayuda" className="-mt-2 mb-3 text-[11.5px] font-normal text-text-faint">
+            Vas a quedar administrador: cargás una vez los proyectos y el access token de GitLab, y el resto del equipo se suma con un código.
+          </p>
+        </>
+      )}
 
       <label className={LABEL_CLASSES} htmlFor="registro-username">
         Usuario

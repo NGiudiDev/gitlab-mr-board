@@ -7,9 +7,12 @@ export default defineConfig({
     include: ['src/**/*.test.ts'],
     setupFiles: ['./test/setup.ts'],
     // El primer test de cada archivo que use la base paga el arranque de
-    // PGlite —compilar el WebAssembly de Postgres—, que con varios workers en
-    // paralelo supera holgadamente los 5 segundos por omisión.
+    // PGlite —compilar el WebAssembly de Postgres— y la aplicación del
+    // esquema, que con varios workers en paralelo superan holgadamente los
+    // límites por omisión. El de los hooks va aparte: casi todos los archivos
+    // abren la base en un `beforeEach`.
     testTimeout: 30_000,
+    hookTimeout: 30_000,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],

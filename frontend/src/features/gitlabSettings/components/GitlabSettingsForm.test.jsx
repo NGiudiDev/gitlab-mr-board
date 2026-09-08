@@ -12,7 +12,7 @@ const ACCESS_TOKEN = 'glpat-token-de-prueba-no-real'
 const STORED_SETTINGS = {
   projectIds: ['101', '202'],
   tokenHint: 'real',
-  gitlabUsername: 'ana-gitlab',
+  updatedAt: '2026-09-01T10:00:00.000Z',
 }
 
 let fetchMock
@@ -26,9 +26,14 @@ async function flush() {
   })
 }
 
-/** Monta el formulario y espera la carga de la configuración guardada. */
+/**
+ * Monta el formulario y espera la carga de la configuración guardada.
+ *
+ * Se monta con permiso de edición porque es lo que hace un administrador; la
+ * vista de sólo lectura tiene su propio describe.
+ */
 async function renderForm(props = {}) {
-  const { container } = render(<GitlabSettingsForm {...props} />)
+  const { container } = render(<GitlabSettingsForm canEdit {...props} />)
   await flush()
   return container
 }
@@ -82,18 +87,6 @@ describe('carga de la configuración', () => {
     expect(screen.getByLabelText('IDs de los proyectos').value).toBe('101, 202')
   })
 
-  it('completa el nickname de GitLab ya configurado', async () => {
-    await renderForm()
-
-    expect(screen.getByLabelText('Nickname de GitLab').value).toBe('ana-gitlab')
-  })
-
-  it('exige el nickname de GitLab', async () => {
-    await renderForm()
-
-    expect(screen.getByLabelText('Nickname de GitLab').required).toBe(true)
-  })
-
   it('describe el token guardado sin mostrarlo', async () => {
     const container = await renderForm()
 
@@ -106,7 +99,6 @@ describe('carga de la configuración', () => {
     const container = await renderForm()
 
     expect(screen.getByLabelText('IDs de los proyectos').value).toBe('')
-    expect(screen.getByLabelText('Nickname de GitLab').value).toBe('')
     expect(container.textContent).toContain('alcance read_api')
   })
 
@@ -131,6 +123,26 @@ describe('carga de la configuración', () => {
   })
 })
 
+describe('vista de quien no administra la cuenta', () => {
+  it('describe la configuración sin ofrecer cambiarla', async () => {
+    const container = await render(<GitlabSettingsForm />).container
+    await flush()
+
+    expect(container.textContent).toContain('101, 202')
+    expect(container.textContent).toContain('terminado en «real»')
+    expect(screen.queryByLabelText('Access token')).toBeNull()
+    expect(screen.queryByRole('button', { name: /Guardar configuración/ })).toBeNull()
+  })
+
+  it('explica a quién pedirle la configuración cuando falta', async () => {
+    stubSettings(null)
+    const { container } = render(<GitlabSettingsForm />)
+    await flush()
+
+    expect(container.textContent).toContain('Pedíselo a quien administra la cuenta')
+  })
+})
+
 describe('guardado', () => {
   it('envía los proyectos y el token nuevo', async () => {
     await renderForm()
@@ -141,7 +153,6 @@ describe('guardado', () => {
 
     expect(lastSavedBody()).toEqual({
       projectIds: '303, 404',
-      gitlabUsername: 'ana-gitlab',
       accessToken: ACCESS_TOKEN,
     })
   })
@@ -152,7 +163,7 @@ describe('guardado', () => {
     fillField('IDs de los proyectos', '303')
     await submit()
 
-    expect(lastSavedBody()).toEqual({ projectIds: '303', gitlabUsername: 'ana-gitlab' })
+    expect(lastSavedBody()).toEqual({ projectIds: '303' })
   })
 
   it('vacía el campo del token después de guardarlo', async () => {

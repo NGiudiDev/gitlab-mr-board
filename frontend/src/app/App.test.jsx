@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 // 7. Imports relativos restantes.
 import { buildMergeRequest, buildResponse } from '../../test/fixtures/mergeRequests.js'
-import { jsonResponse, resetSharedState, signInTestUser, TEST_USER } from '../../test/sharedState.js'
+import { jsonResponse, resetSharedState, signInTestUser, TEST_ACCOUNT, TEST_USER } from '../../test/sharedState.js'
 import App from './App.jsx'
 
 const MRS = [
@@ -21,15 +21,17 @@ const MRS = [
   }),
 ]
 
-/** Configuración de GitLab que el backend devuelve para el usuario de prueba. */
+/** Configuración de GitLab que el backend devuelve para la cuenta de prueba. */
 const GITLAB_SETTINGS = {
   projectIds: ['101', '202'],
   tokenHint: 'real',
-  gitlabUsername: 'ana-gitlab',
+  updatedAt: '2026-08-01T10:00:00.000Z',
 }
 
 let fetchMock
 let container
+/** Respuestas encoladas para las próximas consultas al tablero. */
+let queuedBoardResponses
 
 /** Región de estado del tablero; TopBar expone otro role="status". */
 function boardStatus() {
@@ -60,10 +62,34 @@ async function renderApp() {
   return container
 }
 
+/**
+ * Fija la respuesta de la próxima consulta al tablero.
+ *
+ * El tablero no es lo primero que consulta la app —la barra superior pide la
+ * cuenta antes—, así que encolar por ruta es lo único que deja simular un
+ * fallo del tablero sin depender del orden de las peticiones.
+ *
+ * @param {object | (() => Promise<object>)} response Respuesta, o una función
+ * que la produce para poder rechazar o dejar la promesa colgada.
+ */
+function queueBoardResponse(response) {
+  queuedBoardResponses.push(response)
+}
+
 beforeEach(() => {
   vi.useFakeTimers()
   vi.setSystemTime(new Date('2026-08-28T12:00:00.000Z'))
-  fetchMock = vi.fn(async () => jsonResponse(buildResponse(MRS)))
+  queuedBoardResponses = []
+  fetchMock = vi.fn(async (url) => {
+    const path = String(url)
+    if (path.includes('/api/account')) return jsonResponse({ account: TEST_ACCOUNT })
+    if (path.includes('/api/gitlab-settings')) return jsonResponse({ settings: GITLAB_SETTINGS })
+
+    const queued = queuedBoardResponses.shift()
+    if (queued) return typeof queued === 'function' ? await queued() : queued
+
+    return jsonResponse(buildResponse(MRS))
+  })
   vi.stubGlobal('fetch', fetchMock)
   resetSharedState()
   signInTestUser()
@@ -92,7 +118,7 @@ describe('carga inicial', () => {
   })
 
   it('anuncia la carga sin mover el foco', async () => {
-    fetchMock.mockImplementationOnce(() => new Promise(() => {}))
+    queueBoardResponse(() => new Promise(() => {}))
     await renderApp()
 
     expect(boardStatus().textContent).toContain('Cargando merge requests')
@@ -125,7 +151,7 @@ describe('carga inicial', () => {
 
 describe('estado de error', () => {
   it('avisa que no pudo conectar y muestra el detalle', async () => {
-    fetchMock.mockResolvedValueOnce(jsonResponse({ error: 'Token inválido.' }, 502))
+    queueBoardResponse(jsonResponse({ error: 'Token inválido.' }, 502))
     await renderApp()
 
     const alerta = screen.getByRole('alert')
@@ -134,7 +160,7 @@ describe('estado de error', () => {
   })
 
   it('anuncia el error en la región de estado', async () => {
-    fetchMock.mockRejectedValueOnce(new Error('sin red'))
+    queueBoardResponse(() => Promise.reject(new Error('sin red')))
     await renderApp()
 
     expect(liveRegion().textContent).toContain('No se pudieron actualizar los datos')
@@ -143,7 +169,7 @@ describe('estado de error', () => {
   it('mantiene el tablero visible si ya había datos', async () => {
     await renderApp()
 
-    fetchMock.mockRejectedValueOnce(new Error('sin red'))
+    queueBoardResponse(() => Promise.reject(new Error('sin red')))
     fireEvent.click(refreshButton())
     await flush()
 
@@ -154,7 +180,7 @@ describe('estado de error', () => {
 
 describe('estado vacío', () => {
   it('avisa cuando el backend no devuelve merge requests', async () => {
-    fetchMock.mockResolvedValueOnce(jsonResponse(buildResponse([])))
+    queueBoardResponse(jsonResponse(buildResponse([])))
     await renderApp()
 
     expect(boardStatus().textContent).toContain('No hay merge requests abiertos.')
@@ -325,6 +351,7 @@ describe('portero de sesión', () => {
       if (path.endsWith('/api/auth/login')) return login
       if (path.endsWith('/api/auth/logout')) return logout
       if (path.endsWith('/api/auth/register')) return register
+      if (path.includes('/api/account')) return jsonResponse({ account: TEST_ACCOUNT })
       if (path.includes('/api/users')) return users
       return board
     })
@@ -432,13 +459,15 @@ describe('alta de cuenta desde el tablero', () => {
       const path = String(url)
       if (path.endsWith('/api/auth/me')) return me
       if (path.endsWith('/api/auth/register')) return register
+      if (path.includes('/api/account')) return jsonResponse({ account: TEST_ACCOUNT })
       if (path.includes('/api/users')) return users
       return board
     })
   }
 
-  /** Completa el formulario de alta y lo envía. */
+  /** Completa el formulario de alta y lo envía, sumándose con un código. */
   function submitRegistration() {
+    fireEvent.change(screen.getByLabelText('Código de invitación'), { target: { value: 'ABCD234XYZ' } })
     fireEvent.change(screen.getByLabelText('Usuario'), { target: { value: 'ana' } })
     fireEvent.change(screen.getByLabelText('Contraseña'), { target: { value: 'contrasena-de-prueba' } })
     fireEvent.change(screen.getByLabelText('Repetí la contraseña'), { target: { value: 'contrasena-de-prueba' } })
@@ -500,6 +529,7 @@ describe('navegación entre secciones', () => {
     return vi.fn(async (url) => {
       const path = String(url)
       if (path.endsWith('/api/auth/me')) return jsonResponse({ user: TEST_USER })
+      if (path.includes('/api/account')) return jsonResponse({ account: TEST_ACCOUNT })
       if (path.includes('/api/users')) return jsonResponse({ users })
       if (path.includes('/api/gitlab-settings')) return jsonResponse({ settings: GITLAB_SETTINGS })
       return jsonResponse(buildResponse(MRS))
@@ -526,42 +556,74 @@ describe('navegación entre secciones', () => {
     expect(container.textContent).toContain('equipo/tablero')
   })
 
-  it('reúne en la cuenta la configuración de GitLab y la contraseña', async () => {
+  it('reúne en la cuenta el equipo, GitLab, la identidad propia y la contraseña', async () => {
+    fetchMock.mockImplementation(routeApi())
+    signInTestUser({ ...TEST_USER, role: 'admin' })
+    await renderApp()
+
+    await openSection('Mi cuenta')
+
+    expect(screen.getByRole('heading', { level: 2, name: 'Mi equipo' })).toBeDefined()
+    expect(screen.getByRole('heading', { level: 2, name: 'GitLab de la cuenta' })).toBeDefined()
+    expect(screen.getByRole('heading', { level: 2, name: 'Mi identidad en GitLab' })).toBeDefined()
+    expect(screen.getByRole('heading', { level: 2, name: 'Mi contraseña' })).toBeDefined()
+    expect(screen.getByLabelText('IDs de los proyectos').value).toBe('101, 202')
+  });
+
+  it('no deja cambiar la configuración de GitLab a quien no administra la cuenta', async () => {
     fetchMock.mockImplementation(routeApi())
     await renderApp()
 
     await openSection('Mi cuenta')
 
-    expect(screen.getByRole('heading', { level: 2, name: 'GitLab' })).toBeDefined()
-    expect(screen.getByRole('heading', { level: 2, name: 'Mi contraseña' })).toBeDefined()
-    expect(screen.getByLabelText('IDs de los proyectos').value).toBe('101, 202')
+    expect(screen.getByRole('heading', { level: 2, name: 'GitLab de la cuenta' })).toBeDefined()
+    expect(screen.queryByLabelText('IDs de los proyectos')).toBeNull()
+    // Su nickname sí lo carga cada uno: de él depende la vista personal.
+    expect(screen.getByLabelText('Nickname de GitLab').value).toBe('ana-gitlab')
   });
 
-  it('lleva a la cuenta cuando falta configurar GitLab', async () => {
+  it('lleva a la cuenta cuando a un admin le falta configurar GitLab', async () => {
     fetchMock.mockImplementation(async (url) => {
       const path = String(url)
-      if (path.endsWith('/api/auth/me')) return jsonResponse({ user: TEST_USER })
+      if (path.endsWith('/api/auth/me')) return jsonResponse({ user: { ...TEST_USER, role: 'admin' } })
+      if (path.includes('/api/account')) return jsonResponse({ account: TEST_ACCOUNT })
       if (path.includes('/api/gitlab-settings')) return jsonResponse({ settings: null })
       return jsonResponse(
-        { error: 'Configurá tus datos de GitLab.', code: 'gitlab_settings_missing' },
+        { error: 'Todavía no hay datos de GitLab configurados en esta cuenta.', code: 'gitlab_settings_missing' },
         409,
       )
     })
+    signInTestUser({ ...TEST_USER, role: 'admin' })
     await renderApp()
 
-    expect(container.textContent).toContain('Todavía no configuraste GitLab')
+    expect(container.textContent).toContain('Todavía no configuraste GitLab en tu cuenta')
 
     fireEvent.click(screen.getByRole('button', { name: 'Configurar en Mi cuenta' }))
     await flush()
 
-    expect(screen.getByRole('heading', { level: 2, name: 'GitLab' })).toBeDefined()
+    expect(screen.getByRole('heading', { level: 2, name: 'GitLab de la cuenta' })).toBeDefined()
+  });
+
+  it('a quien no administra le dice a quién pedirle la configuración', async () => {
+    fetchMock.mockImplementation(async (url) => {
+      const path = String(url)
+      if (path.endsWith('/api/auth/me')) return jsonResponse({ user: TEST_USER })
+      if (path.includes('/api/account')) return jsonResponse({ account: TEST_ACCOUNT })
+      if (path.includes('/api/gitlab-settings')) return jsonResponse({ settings: null })
+      return jsonResponse({ code: 'gitlab_settings_missing' }, 409)
+    })
+    await renderApp()
+
+    expect(container.textContent).toContain('Pedile a quien la administra')
+    expect(screen.queryByRole('button', { name: 'Configurar en Mi cuenta' })).toBeNull()
   });
 
   it('actualiza el tablero apenas se guarda la configuración de GitLab', async () => {
     let configured = false
     fetchMock.mockImplementation(async (url, options) => {
       const path = String(url)
-      if (path.endsWith('/api/auth/me')) return jsonResponse({ user: TEST_USER })
+      if (path.endsWith('/api/auth/me')) return jsonResponse({ user: { ...TEST_USER, role: 'admin' } })
+      if (path.includes('/api/account')) return jsonResponse({ account: TEST_ACCOUNT })
       if (path.includes('/api/gitlab-settings')) {
         if (options?.method === 'PUT') configured = true
         return jsonResponse({ settings: configured ? GITLAB_SETTINGS : null })
@@ -569,12 +631,12 @@ describe('navegación entre secciones', () => {
       if (configured) return jsonResponse(buildResponse(MRS))
       return jsonResponse({ code: 'gitlab_settings_missing' }, 409)
     })
+    signInTestUser({ ...TEST_USER, role: 'admin' })
     await renderApp()
 
     fireEvent.click(screen.getByRole('button', { name: 'Configurar en Mi cuenta' }))
     await flush()
     fireEvent.change(screen.getByLabelText('IDs de los proyectos'), { target: { value: '101' } })
-    fireEvent.change(screen.getByLabelText('Nickname de GitLab'), { target: { value: 'ana-gitlab' } })
     fireEvent.change(screen.getByLabelText('Access token'), { target: { value: 'glpat-token-de-prueba' } })
     fireEvent.click(screen.getByRole('button', { name: 'Guardar configuración' }))
     await flush()

@@ -12,6 +12,7 @@ Usa ES modules y la resolución `NodeNext`. Por ese motivo, los imports relativo
 src/
   app.ts, index.ts, config.ts     Composición, arranque y configuración
   features/
+    accounts/                      routes/ services/ utils/ types.ts
     auth/                          routes/ services/ utils/ types.ts
     gitlabSettings/                routes/ services/ utils/ types.ts
     mergeRequests/                 routes/ services/ utils/ types.ts
@@ -26,28 +27,35 @@ En `shared/` va únicamente lo que usan varias features. Lo que usa una sola viv
 ### Composición y entradas
 
 - `src/index.ts`: abre la base, aplica el esquema y recién entonces inicia el servidor en el puerto configurado. No contiene rutas ni lógica de negocio.
-- `src/app.ts`: construye Express mediante `createApp()`, configura CORS y JSON, registra el health check, monta los routers de cada feature —exigiendo sesión en `/api` y rol `admin` en `/api/users`— y centraliza los errores no controlados. Importa cada router por su ruta completa: no hay barrels.
+- `src/app.ts`: construye Express mediante `createApp()`, configura CORS y JSON, registra el health check, monta los routers de cada feature —exigiendo sesión en `/api`, y rol `admin` en `/api/users` y en la escritura de la cuenta y de la configuración de GitLab— y centraliza los errores no controlados. Importa cada router por su ruta completa: no hay barrels.
 - `src/config.ts`: carga `backend/.env`, valida las variables obligatorias y expone la configuración normalizada.
-- `src/scripts/users.ts`: herramienta de línea de comandos para administrar usuarios. Es un punto de entrada más, como `index.ts`, y no forma parte de la API.
+- `src/scripts/users.ts`: herramienta de línea de comandos para administrar cuentas y usuarios. Es un punto de entrada más, como `index.ts`, y no forma parte de la API.
+
+### Feature `accounts`
+
+- `routes/accounts.ts`: lectura de la cuenta de la sesión, cambio de su nombre y renovación de su código de invitación.
+- `services/accountRepository.ts`: acceso a las cuentas y conteo de sus miembros.
+- `services/accountService.ts`: valida el nombre, resuelve el código de invitación y arma la vista pública, que incluye el código sólo para un `admin`.
+- `utils/inviteCode.ts`: generación y normalización del código de invitación.
 
 ### Feature `auth`
 
-- `routes/auth.ts`: sesión y cuenta propia. Publica además los middlewares `createRequireSession` y `createRequireAdmin`, que reutilizan las otras features.
-- `routes/users.ts`: administración de usuarios, sólo para rol `admin`.
+- `routes/auth.ts`: sesión y datos propios —contraseña y nickname de GitLab—. Publica además los middlewares `createRequireSession` y `createRequireAdmin`, que reutilizan las otras features.
+- `routes/users.ts`: administración de los usuarios de la cuenta, sólo para rol `admin`.
 - `services/authRepository.ts`: acceso a usuarios y sesiones.
-- `services/authService.ts`: reglas de alta, registro, ingreso, vencimiento de sesión, cambio de contraseña, borrado y freno de fuerza bruta, con el repositorio y el reloj inyectados.
-- `utils/`: derivación de contraseñas y lectura de cookies.
+- `services/authService.ts`: reglas de alta, registro, ingreso, vencimiento de sesión, cambio de contraseña y de nickname de GitLab, borrado, pertenencia a la cuenta y freno de fuerza bruta, con el repositorio, el servicio de cuentas y el reloj inyectados. El registro resuelve la cuenta —la crea, o la busca por su código—, y por eso recibe `accountService`.
+- `utils/`: derivación de contraseñas, validación del nickname de GitLab y lectura de cookies.
 
 ### Feature `gitlabSettings`
 
-- `routes/gitlabSettings.ts`: lectura, guardado y borrado de la configuración propia.
-- `services/gitlabSettingsRepository.ts`: acceso a la configuración de cada usuario.
+- `routes/gitlabSettings.ts`: lectura de la configuración de la cuenta para cualquier miembro, y guardado y borrado para un `admin`.
+- `services/gitlabSettingsRepository.ts`: acceso a la configuración de cada cuenta.
 - `services/gitlabSettingsService.ts`: valida los IDs de proyecto y el access token, y cifra y descifra el token con el cifrador inyectado.
 - `utils/encryption.ts`: cifrado simétrico de secretos.
 
 ### Feature `mergeRequests`
 
-- `routes/mergeRequests.ts`: contrato de `GET /api/pull-requests` y la caché por usuario.
+- `routes/mergeRequests.ts`: contrato de `GET /api/pull-requests`, la caché por cuenta y el `viewerUsername` que se completa al responder.
 - `services/gitlabApi.ts`: construye el cliente de GitLab para un access token concreto, y encapsula URLs, paginación y acceso limitado a la API v4.
 - `services/mergeRequestService.ts`: coordina las consultas, enriquece los merge requests y construye la respuesta del BFF.
 - `services/mergeRequestRules.ts`: reglas puras de clasificación, responsabilidad y normalización que no dependen de Express ni de la red.
@@ -63,20 +71,20 @@ En `shared/` va únicamente lo que usan varias features. Lo que usa una sola viv
 
 ## Construcción y arranque
 
-`createApp()` construye la aplicación sin abrir un puerto y `src/index.ts` es el único responsable de invocar `listen()`, así que la aplicación puede ejecutarse en memoria o en distintos entornos. Tanto `createApp()` como `createMergeRequestsRouter()` reciben por inyección la fuente de merge requests y el reloj de la caché, lo que permite controlar sus dependencias sin consultar GitLab ni depender del tiempo real. `createApp()` acepta además el servicio de autenticación y el de configuración de GitLab ya construidos; si le falta alguno, abre el pool de `DATABASE_URL` y arma los dos sobre esa misma conexión. Aplicar el esquema, en cambio, es responsabilidad de `src/index.ts`: la base es remota y hay que esperar a que esté lista antes de escuchar.
+`createApp()` construye la aplicación sin abrir un puerto y `src/index.ts` es el único responsable de invocar `listen()`, así que la aplicación puede ejecutarse en memoria o en distintos entornos. Tanto `createApp()` como `createMergeRequestsRouter()` reciben por inyección la fuente de merge requests y el reloj de la caché, lo que permite controlar sus dependencias sin consultar GitLab ni depender del tiempo real. `createApp()` acepta además los servicios de cuentas, de autenticación y de configuración de GitLab ya construidos; si le falta alguno, abre el pool de `DATABASE_URL` y arma los tres sobre esa misma conexión. Aplicar el esquema, en cambio, es responsabilidad de `src/index.ts`: la base es remota y hay que esperar a que esté lista antes de escuchar.
 
 ## Flujo de una consulta
 
 Una solicitud a `GET /api/pull-requests` atraviesa el siguiente flujo:
 
-1. El router lee la configuración de quien pregunta y descifra su access token; sin configuración responde HTTP 409.
-2. El router responde con la caché vigente de esa persona, salvo que la solicitud incluya `?force=true`.
+1. El router lee la configuración de la cuenta de quien pregunta y descifra su access token; sin configuración responde HTTP 409.
+2. El router responde con la caché vigente de esa cuenta, salvo que la solicitud incluya `?force=true`.
 3. El servicio construye el cliente de GitLab con ese token y consulta en paralelo los merge requests abiertos y la ruta de cada proyecto configurado.
 4. Cada merge request se enriquece en paralelo con aprobaciones, discusiones y el último pipeline.
 5. El limitador del proceso permite hasta seis operaciones concurrentes contra GitLab, sin importar cuántas personas consulten a la vez.
 6. Las reglas puras calculan la clasificación del merge request y sus responsables.
 7. Los resultados se ordenan por fecha de actualización descendente y se agregan los metadatos de la consulta, incluidas las personas participantes.
-8. El router conserva la respuesta completa en memoria y la devuelve al frontend.
+8. El router conserva la respuesta completa en memoria, le agrega en `meta.viewerUsername` el nickname de GitLab de quien preguntó y la devuelve al frontend.
 
 Los merge requests no se guardan: cada proceso mantiene su propia caché y la pierde al reiniciarse. La persistencia del backend es la base Postgres alojada en Neon ([ADR 0009](../decisions/0009-neon-como-base-de-datos.md)), con los usuarios y las sesiones descritos en el [dominio de autenticación](../domains/autenticacion.md) y las credenciales de GitLab en la [configuración de GitLab](../domains/configuracion-gitlab.md).
 
@@ -102,9 +110,10 @@ El backend prioriza entregar una vista parcial antes que descartar toda la respu
 
 ## Caché
 
-`createMergeRequestsRouter()` mantiene en memoria **una respuesta por usuario**: cada persona consulta GitLab con su propio token, así que compartir la caché filtraría entre cuentas proyectos que no configuraron. Su duración se configura con `POLL_CACHE_TTL_MS`, cuyo valor predeterminado es 60 segundos.
+`createMergeRequestsRouter()` mantiene en memoria **una respuesta por cuenta**: sus miembros consultan GitLab con las mismas credenciales, así que comparten la respuesta y el equipo entero cuesta una sola consulta. Compartirla entre cuentas, en cambio, filtraría proyectos que no configuraron. Su duración se configura con `POLL_CACHE_TTL_MS`, cuyo valor predeterminado es 60 segundos.
 
-- Una solicitud normal reutiliza la caché de esa persona mientras el TTL siga vigente.
+- Una solicitud normal reutiliza la caché de esa cuenta mientras el TTL siga vigente.
+- Lo único que no se comparte es `meta.viewerUsername`: la ruta lo completa al entregar la respuesta, así que dos personas de la misma cuenta reciben los mismos merge requests con distinta identidad.
 - Junto a la respuesta se guarda la fecha de la configuración con la que se consultó. Cambiar los proyectos o el token la descarta, sin necesidad de avisarle al router.
 - `GET /api/pull-requests?force=true` omite la lectura de la caché, vuelve a consultar GitLab y reemplaza el valor almacenado.
 - La caché solo se actualiza después de obtener una respuesta satisfactoria.
@@ -118,11 +127,15 @@ Devuelve el estado del proceso. Sirve como chequeo de vida, pero no comprueba la
 
 ### `/api/auth/*`
 
-Administran la sesión y la propia cuenta. `register` crea un usuario y abre su sesión; `login` recibe `{ username, password }` y responde con el usuario, entregando el token en una cookie `HttpOnly`; `logout` la invalida; `me` devuelve el usuario de la sesión vigente; `password` cambia la contraseña propia exigiendo la actual.
+Administran la sesión y los datos propios. `register` da de alta un usuario y abre su sesión, sumándolo a la cuenta de `inviteCode` o creando una nueva con `accountName`; `login` recibe `{ username, password }` y responde con el usuario, entregando el token en una cookie `HttpOnly`; `logout` la invalida; `me` devuelve el usuario de la sesión vigente; `password` cambia la contraseña propia exigiendo la actual; `gitlab-username` guarda el nickname de GitLab propio sin cerrar la sesión.
+
+### `/api/account`
+
+La cuenta de la sesión: su nombre, cuánta gente la integra y, sólo para un `admin`, su código de invitación. Renombrarla y renovar el código exigen rol `admin`. Las reglas están en el [dominio de cuentas](../domains/cuentas.md).
 
 ### `/api/users/*`
 
-Administración de usuarios: listado, alta con rol, habilitación y deshabilitación. Exigen rol `admin`, no sólo sesión.
+Administración de usuarios: listado, alta con rol, habilitación y deshabilitación. Exigen rol `admin`, no sólo sesión, y alcanzan **sólo a la cuenta de quien administra**: el `username` es único en toda la base, así que sin ese límite un administrador llegaría a los usuarios de otra cuenta. Sobre alguien de otra cuenta responden 404.
 
 No hay ruta para restablecer la contraseña de otra persona: fijarle la contraseña a alguien equivale a poder entrar como esa persona, así que la operación quedó sólo en `npm run users -- password`, que exige acceso al servidor.
 
@@ -130,11 +143,11 @@ La tabla completa de permisos y las reglas —vencimiento, estados, freno de fue
 
 ### `/api/gitlab-settings`
 
-Configuración de GitLab de la propia cuenta: los IDs de los proyectos y el access token con el que se los consulta. Exige sesión y opera siempre sobre la configuración de quien la tiene abierta. El token se guarda cifrado y nunca vuelve al navegador. Las rutas y las reglas están en la [configuración de GitLab](../domains/configuracion-gitlab.md).
+Configuración de GitLab de la cuenta: los IDs de los proyectos y el access token con el que se los consulta. Leerla exige sesión y escribirla, rol `admin`; siempre opera sobre la cuenta de la sesión. El token se guarda cifrado y nunca vuelve al navegador. Las rutas y las reglas están en la [configuración de GitLab](../domains/configuracion-gitlab.md).
 
 ### `GET /api/pull-requests`
 
-**Exige una sesión válida**: sin ella responde HTTP 401. Si la persona todavía no configuró GitLab responde HTTP 409 con el código `gitlab_settings_missing`. Devuelve los merge requests consolidados en `mergeRequests` y un objeto `meta` con la fecha de consulta, cantidad de proyectos, total de resultados, nombres de todos los proyectos configurados, las personas participantes en `people` y el nickname de GitLab de quien pregunta en `viewerUsername`.
+**Exige una sesión válida**: sin ella responde HTTP 401. Si en la cuenta todavía no se configuró GitLab responde HTTP 409 con el código `gitlab_settings_missing`. Devuelve los merge requests consolidados en `mergeRequests` y un objeto `meta` con la fecha de consulta, cantidad de proyectos, total de resultados, nombres de todos los proyectos configurados, las personas participantes en `people` y el nickname de GitLab de quien pregunta en `viewerUsername`.
 
 Cada merge request incluye el nombre y el `username` del autor. El nombre se presenta en la interfaz y `authorUsername` aporta la identidad estable con la que se comparan las personas.
 
@@ -144,6 +157,6 @@ El parámetro opcional `force=true` fuerza la actualización de la caché. Cualq
 
 ## Configuración
 
-`src/config.ts` carga `backend/.env`. `DATABASE_URL` y `ENCRYPTION_KEY` son obligatorias; si falta alguna, el proceso informa el problema y termina. Los valores opcionales controlan la URL de GitLab, el puerto, el TTL de la caché, las reglas de aprobación y la ubicación y duración de las sesiones. El access token y los proyectos no son configuración del proceso: los carga cada persona y se guardan en la base.
+`src/config.ts` carga `backend/.env`. `DATABASE_URL` y `ENCRYPTION_KEY` son obligatorias; si falta alguna, el proceso informa el problema y termina. Los valores opcionales controlan la URL de GitLab, el puerto, el TTL de la caché, las reglas de aprobación y la ubicación y duración de las sesiones. El access token y los proyectos no son configuración del proceso: los carga un administrador de cada cuenta y se guardan en la base.
 
 La lista completa, sus valores predeterminados y el procedimiento de actualización se mantienen en la [guía de entorno local](../development/entorno-local.md).

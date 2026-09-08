@@ -12,6 +12,7 @@ import {
   logout,
   PASSWORD_CHANGED_MESSAGE,
   register,
+  saveGitlabUsername,
   SESSION_EXPIRED_MESSAGE,
   useSession,
 } from './useSession.js'
@@ -216,7 +217,12 @@ describe('expireSession', () => {
 
 describe('register', () => {
   it('envía el alta como JSON con la cookie habilitada', async () => {
-    await register({ username: 'zoe', password: 'contrasena-de-prueba', displayName: 'Zoe Ruiz' })
+    await register({
+      username: 'zoe',
+      password: 'contrasena-de-prueba',
+      displayName: 'Zoe Ruiz',
+      accountName: 'Plataforma',
+    })
 
     expect(fetchMock).toHaveBeenCalledWith('http://localhost:3001/api/auth/register', {
       credentials: 'include',
@@ -226,8 +232,16 @@ describe('register', () => {
         username: 'zoe',
         password: 'contrasena-de-prueba',
         displayName: 'Zoe Ruiz',
+        accountName: 'Plataforma',
       }),
     })
+  })
+
+  it('manda el código de invitación cuando el alta se suma a un equipo', async () => {
+    await register({ username: 'zoe', password: 'contrasena-de-prueba', inviteCode: 'ABCD234XYZ' })
+
+    const [, options] = fetchMock.mock.calls.at(-1)
+    expect(JSON.parse(options.body).inviteCode).toBe('ABCD234XYZ')
   })
 
   it('deja la sesión abierta cuando el backend acepta el alta', async () => {
@@ -246,6 +260,39 @@ describe('register', () => {
     expect(result).toBe(false)
     expect(getState().status).toBe('anonymous')
     expect(getState().error).toBe('Ya existe un usuario con el nombre «ana».')
+  })
+})
+
+describe('saveGitlabUsername', () => {
+  it('envía el nickname y guarda la identidad que devuelve el backend', async () => {
+    const updated = { ...TEST_USER, gitlabUsername: 'otro-nick' }
+    fetchMock.mockResolvedValueOnce(jsonResponse({ user: updated }))
+
+    const failure = await saveGitlabUsername('otro-nick')
+
+    expect(failure).toBeNull()
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:3001/api/auth/gitlab-username', {
+      credentials: 'include',
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gitlabUsername: 'otro-nick' }),
+    })
+    expect(getState().user).toEqual(updated)
+  })
+
+  it('devuelve el mensaje del backend sin tocar la sesión', async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse({ error: 'Indicá tu nickname de GitLab.' }, 400))
+
+    const failure = await saveGitlabUsername('')
+
+    expect(failure).toBe('Indicá tu nickname de GitLab.')
+    expect(getState().user).toBeNull()
+  })
+
+  it('avisa cuando no se pudo conectar al backend', async () => {
+    fetchMock.mockRejectedValueOnce(new Error('sin red'))
+
+    expect(await saveGitlabUsername('otro-nick')).toBe('No se pudo conectar al backend.')
   })
 })
 

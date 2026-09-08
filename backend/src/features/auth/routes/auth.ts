@@ -125,13 +125,17 @@ function createAuthRouter(authService: AuthService): Router {
       return;
     }
 
-    const { username, password, displayName } = (request.body ?? {}) as Partial<Record<string, string>>;
+    const { username, password, displayName, accountName, inviteCode } = (request.body ?? {}) as Partial<Record<string, string>>;
 
     try {
+      // El código y el nombre de la cuenta se pasan tal como llegaron: es el
+      // servicio el que decide si el alta se suma a una cuenta o crea una.
       const result = await authService.register({
         username: username ?? '',
         password: password ?? '',
         ...(displayName === undefined ? {} : { displayName }),
+        ...(accountName === undefined ? {} : { accountName }),
+        ...(inviteCode === undefined ? {} : { inviteCode }),
       });
 
       registrationsByAddress.get(address)?.push(Date.now());
@@ -169,6 +173,17 @@ function createAuthRouter(authService: AuthService): Router {
 
   router.get('/me', createRequireSession(authService), (_request, response) => {
     response.json({ user: response.locals.user as AuthenticatedUser });
+  });
+
+  router.put('/gitlab-username', createRequireSession(authService), async (request, response) => {
+    const user = response.locals.user as AuthenticatedUser;
+    const { gitlabUsername } = (request.body ?? {}) as { gitlabUsername?: unknown };
+
+    try {
+      response.json({ user: await authService.changeGitlabUsername(user.id, gitlabUsername) });
+    } catch (error: unknown) {
+      respondWithHttpError(response, error, 'al guardar el nickname de GitLab');
+    }
   });
 
   router.put('/password', createRequireSession(authService), async (request, response) => {

@@ -7,26 +7,31 @@ import type { CreateAppOptions } from '../../../app.js';
 import type { MergeRequestResponse } from '../types.js';
 
 // 5. Módulos de constantes.
-import { TEST_GITLAB_USERNAME, TEST_PROJECT_IDS, TEST_TOKEN } from '../../../../test/constants.js';
+import { TEST_GITLAB_USERNAME, TEST_PASSWORD, TEST_PROJECT_IDS, TEST_TOKEN } from '../../../../test/constants.js';
 
 // 7. Imports relativos restantes.
 import { createAuthenticatedApp } from '../../../../test/auth.js';
 import { buildMergeRequest, createGitLabStub } from '../../../../test/fixtures/gitlab.js';
 import { requestApp } from '../../../../test/httpClient.js';
+import { SESSION_COOKIE_NAME } from '../../auth/routes/auth.js';
 
 /**
  * Levanta la app con sesión iniciada y devuelve un `GET` que ya reenvía la
  * cookie, para no repetirla en cada test del tablero.
  */
 async function createBoardClient(options: CreateAppOptions = {}) {
-  const { app, cookie, gitlabSettingsService, user } = await createAuthenticatedApp(options);
+  const { account, accountService, app, authService, cookie, gitlabSettingsService, user } = await createAuthenticatedApp(options);
 
   return {
+    account,
+    accountService,
     app,
+    authService,
     cookie,
     gitlabSettingsService,
     user,
-    get: (path: string): Promise<HttpTestResponse> => requestApp(app, path, { headers: { cookie } }),
+    get: (path: string, sessionCookie: string = cookie): Promise<HttpTestResponse> =>
+      requestApp(app, path, { headers: { cookie: sessionCookie } }),
   };
 }
 
@@ -98,11 +103,11 @@ describe('GET /api/pull-requests', () => {
     expect(response.status).toBe(401);
   });
 
-  it('responde 409 si la persona todavía no configuró GitLab', async () => {
-    const { get, gitlabSettingsService, user } = await createBoardClient({
+  it('responde 409 si en la cuenta todavía no se configuró GitLab', async () => {
+    const { account, get, gitlabSettingsService } = await createBoardClient({
       fetchMergeRequests: async () => { throw new Error('No debería consultarse GitLab.'); },
     });
-    gitlabSettingsService.remove(user.id);
+    await gitlabSettingsService.remove(account.id);
 
     const response = await get('/api/pull-requests');
 
@@ -110,7 +115,7 @@ describe('GET /api/pull-requests', () => {
     expect(response.json<{ code: string }>().code).toBe('gitlab_settings_missing');
   });
 
-  it('consulta GitLab con el token que guardó la persona', async () => {
+  it('consulta GitLab con el token que guardó la cuenta', async () => {
     const stub = createGitLabStub({
       projects: { 101: 'equipo/tablero', 202: 'equipo/api' },
       mergeRequestPages: { 101: [[]], 202: [[]] },
@@ -226,9 +231,9 @@ describe('caché de GET /api/pull-requests', () => {
     expect(getCalls()).toBe(1);
   });
 
-  it('descarta la caché cuando la persona cambia su configuración', async () => {
+  it('descarta la caché cuando cambia la configuración de la cuenta', async () => {
     let calls = 0;
-    const { get, gitlabSettingsService, user } = await createBoardClient({
+    const { account, get, gitlabSettingsService } = await createBoardClient({
       now: () => 0,
       fetchMergeRequests: async () => {
         calls++;
@@ -237,11 +242,64 @@ describe('caché de GET /api/pull-requests', () => {
     });
 
     await get('/api/pull-requests');
-    gitlabSettingsService.save(user.id, { projectIds: ['303'], gitlabUsername: 'otro' });
+    await gitlabSettingsService.save(account.id, { projectIds: ['303'] });
     const afterChange = await get('/api/pull-requests');
 
     expect(calls).toBe(2);
     expect(afterChange.json<MergeRequestResponse>().meta.totalMRs).toBe(2);
+  });
+
+  it('comparte la respuesta entre los miembros de la cuenta, con el nickname de cada uno', async () => {
+    let calls = 0;
+    const { account, authService, get } = await createBoardClient({
+      now: () => 0,
+      fetchMergeRequests: async () => {
+        calls++;
+        return buildPayload(calls);
+      },
+    });
+    const other = await authService.createUser({
+      accountId: account.id,
+      username: 'bruno',
+      password: TEST_PASSWORD,
+    });
+    await authService.changeGitlabUsername(other.id, 'bruno-gitlab');
+    const { token } = await authService.login({ username: 'bruno', password: TEST_PASSWORD });
+
+    const mine = await get('/api/pull-requests');
+    const theirs = await get('/api/pull-requests', `${SESSION_COOKIE_NAME}=${token}`);
+
+    // Una sola consulta a GitLab para las dos personas: el token es el mismo.
+    expect(calls).toBe(1);
+    expect(mine.json<MergeRequestResponse>().meta.viewerUsername).toBe(TEST_GITLAB_USERNAME);
+    expect(theirs.json<MergeRequestResponse>().meta.viewerUsername).toBe('bruno-gitlab');
+  });
+
+  it('no comparte la caché entre cuentas distintas', async () => {
+    let calls = 0;
+    const { accountService, authService, get, gitlabSettingsService } = await createBoardClient({
+      now: () => 0,
+      fetchMergeRequests: async () => {
+        calls++;
+        return buildPayload(calls);
+      },
+    });
+    const otherAccount = await accountService.create('Otro equipo');
+    await authService.createUser({
+      accountId: otherAccount.id,
+      username: 'beto',
+      password: TEST_PASSWORD,
+    });
+    await gitlabSettingsService.save(otherAccount.id, {
+      projectIds: ['303'],
+      accessToken: TEST_TOKEN,
+    });
+    const { token } = await authService.login({ username: 'beto', password: TEST_PASSWORD });
+
+    await get('/api/pull-requests');
+    await get('/api/pull-requests', `${SESSION_COOKIE_NAME}=${token}`);
+
+    expect(calls).toBe(2);
   });
 
   it('no guarda en caché una respuesta fallida', async () => {

@@ -58,21 +58,23 @@
 
 - Mantener puras las reglas de `features/mergeRequests/services/mergeRequestRules.ts` e inyectar sus dependencias (fuente de datos, reloj) en lugar de acoplarlas al módulo.
 
-- Centralizar la lectura y validación de variables de entorno en `backend/src/config.ts`. Al agregar una variable, actualizar `backend/.env.example` y la tabla de `docs/development/entorno-local.md`. **El token y los proyectos de GitLab no son configuración del proceso**: los guarda cada usuario en la base y viven en `services/gitlabSettingsService.ts`.
+- Centralizar la lectura y validación de variables de entorno en `backend/src/config.ts`. Al agregar una variable, actualizar `backend/.env.example` y la tabla de `docs/development/entorno-local.md`. **El token y los proyectos de GitLab no son configuración del proceso**: los guarda cada cuenta en la base y viven en `services/gitlabSettingsService.ts`.
 
 - Usar **TypeScript estricto y ES modules**, con extensión `.js` en los imports relativos para ser compatibles con la salida `NodeNext`.
 
 - Las rutas validan sus parámetros y devuelven el error HTTP que corresponda (400, 404, 500, etc.). Al agregar un endpoint, documentarlo; si requiere un router nuevo, montarlo desde `backend/src/app.ts`. **Todo lo que cuelgue de `/api` exige sesión**: el middleware está montado en `createApp()` y una ruta pública nueva debe justificarse.
 
-- La autenticación vive en la feature `auth`: `services/authRepository.ts` (acceso a la base), `services/authService.ts` (reglas), `routes/auth.ts` (sesión y cuenta propia) y `routes/users.ts` (administración), con las reglas documentadas en [`docs/domains/autenticacion.md`](docs/domains/autenticacion.md) ([ADR 0006](docs/decisions/0006-login-local-con-sqlite.md) y [ADR 0007](docs/decisions/0007-registro-abierto-y-gestion-de-usuarios.md)). No guardar credenciales fuera de esas capas, no devolver el hash de una contraseña ni el token de sesión en ninguna respuesta, y mantener el repositorio inyectable para poder correrlo contra la base en memoria de los test.
+- La autenticación vive en la feature `auth`: `services/authRepository.ts` (acceso a la base), `services/authService.ts` (reglas), `routes/auth.ts` (sesión y datos propios) y `routes/users.ts` (administración), con las reglas documentadas en [`docs/domains/autenticacion.md`](docs/domains/autenticacion.md) ([ADR 0006](docs/decisions/0006-login-local-con-sqlite.md) y [ADR 0007](docs/decisions/0007-registro-abierto-y-gestion-de-usuarios.md)). No guardar credenciales fuera de esas capas, no devolver el hash de una contraseña ni el token de sesión en ninguna respuesta, y mantener el repositorio inyectable para poder correrlo contra la base en memoria de los test.
 
-- **Las credenciales de GitLab son de cada usuario y se guardan cifradas** en la feature `gitlabSettings`, con el cifrador de su `utils/encryption.ts` inyectado ([`docs/domains/configuracion-gitlab.md`](docs/domains/configuracion-gitlab.md), [ADR 0008](docs/decisions/0008-credenciales-de-gitlab-por-usuario.md)). El access token **nunca** vuelve al navegador: las respuestas sólo llevan sus últimos caracteres. Toda consulta a GitLab se hace con un cliente construido a partir del token de quien pregunta, y cualquier caché de esos datos es por usuario.
+- **Todo usuario pertenece a una cuenta, y la cuenta es la unidad que comparte el tablero** ([`docs/domains/cuentas.md`](docs/domains/cuentas.md), [ADR 0011](docs/decisions/0011-cuentas-compartidas.md)). La feature `accounts` es dueña de la tabla `accounts` y del código de invitación. Al sumar una operación que lea o escriba datos de la cuenta, tomar el `accountId` **de la sesión** y nunca del cuerpo de la petición, y cubrir en los test que no alcance a otra cuenta.
+
+- **Las credenciales de GitLab son de la cuenta y se guardan cifradas** en la feature `gitlabSettings`, con el cifrador de su `utils/encryption.ts` inyectado ([`docs/domains/configuracion-gitlab.md`](docs/domains/configuracion-gitlab.md), [ADR 0008](docs/decisions/0008-credenciales-de-gitlab-por-usuario.md)). Sólo un `admin` las escribe; cualquier miembro las lee. El access token **nunca** vuelve al navegador: las respuestas sólo llevan sus últimos caracteres. Toda consulta a GitLab se hace con un cliente construido a partir del token de la cuenta de quien pregunta, y cualquier caché de esos datos es por cuenta. Lo único de GitLab que sigue siendo de cada persona es su nickname, que vive en `users` porque de él depende la vista personal.
 
 - **La base es Postgres en Neon** ([ADR 0009](docs/decisions/0009-neon-como-base-de-datos.md)), así que toda la capa de datos es asíncrona. El pool se abre una sola vez en `services/database.ts` y los repositorios comparten esa conexión, porque las claves foráneas entre sus tablas sólo valen dentro de la misma base. Los repositorios reciben la interfaz mínima `Database` y nunca el driver: eso es lo que permite correrlos contra PGlite en los test.
 
 - **Express 4 no captura promesas rechazadas**: todo handler asíncrono maneja sus propios errores. Un fallo de la base al validar la sesión o al leer la configuración responde 503, nunca 401 ni 502.
 
-- **Los permisos se validan en el backend, ruta por ruta**: `createRequireSession` para lo que exige sesión y `createRequireAdmin` para lo que exige rol `admin`. Esconder un control en el frontend no es una barrera. Al agregar una operación de administración, montarla bajo `/api/users` y cubrir en los test el 401 sin sesión y el 403 sin rol.
+- **Los permisos se validan en el backend, ruta por ruta**: `createRequireSession` para lo que exige sesión y `createRequireAdmin` para lo que exige rol `admin`. Esconder un control en el frontend no es una barrera. Al agregar una operación de administración, montarla bajo `/api/users` o `/api/account` y cubrir en los test el 401 sin sesión, el 403 sin rol y el 404 sobre otra cuenta.
 
 - Respetar el **rate limiter** existente al llamar a la API de GitLab.
 
@@ -80,7 +82,7 @@
 
 - Organizar cada funcionalidad en `frontend/src/features/<feature>/`, con `components/` y `hooks/`. Reservar `frontend/src/app/` para la composición general.
 
-- La sección «Mi cuenta» reúne los datos propios: la contraseña (`features/auth/components/AccountPanel.jsx`) y la configuración de GitLab (`features/gitlabSettings/`). Al sumar algo propio de la persona, va ahí.
+- La sección «Mi cuenta» reúne, en ese orden, el equipo (`features/accounts/components/AccountPanel.jsx`), la configuración de GitLab de la cuenta (`features/gitlabSettings/`), el nickname propio de GitLab (`features/auth/components/GitlabIdentityPanel.jsx`) y la contraseña (`features/auth/components/PasswordPanel.jsx`). Al sumar algo propio de la persona o de la cuenta, va ahí, en su propia tarjeta.
 
 - **El layout y la navegación viven en `frontend/src/app/AppShell.jsx`**: la barra superior, el único `main` y el listado `SECTIONS` de secciones navegables. Al agregar una sección, sumarla a esa lista, contemplarla en `ActiveSection` de `App.jsx` y actualizar [`docs/architecture/frontend.md`](docs/architecture/frontend.md#navegación-entre-secciones). No hay router: la sección activa es estado local de `App`.
 
@@ -90,7 +92,7 @@
 
 - Estilos con **Tailwind CSS** — nada de CSS custom salvo para lo que Tailwind no cubra.
 
-- **El estado compartido va al store** de `hooks/useMergeRequests.js` para el tablero y `features/auth/hooks/useSession.js` para la sesión, ambos con `useSyncExternalStore`; `useState` queda para estado local del componente. Toda petición al backend viaja con `credentials: 'include'`.
+- **El estado compartido va al store**: `hooks/useMergeRequests.js` para el tablero, `features/auth/hooks/useSession.js` para la sesión y `features/accounts/hooks/useAccount.js` para la cuenta, los tres con `useSyncExternalStore`; `useState` queda para estado local del componente. Al cerrar sesión hay que reiniciarlos todos. Toda petición al backend viaja con `credentials: 'include'`.
 
 - Al agregar o renombrar una clasificación, mantener sincronizados el tipo `Mergeability` del backend, las columnas de `mergeRequestColumns.js` y `docs/domains/merge-requests.md`. Al cambiar la asignación de responsables, modificar `computeResponsiblePeople`, cubrir las combinaciones en `mergeRequestRules.test.ts` y actualizar ese mismo documento.
 

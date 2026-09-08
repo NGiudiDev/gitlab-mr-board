@@ -4,14 +4,41 @@ import { afterEach, describe, expect, it } from 'vitest';
 // 4. Imports exclusivos de tipos de TypeScript.
 import type { AuthRepository, StoredSession, StoredUser } from '../types.js';
 
+import { createTestDatabase } from '../../../../test/auth.js';
 // 7. Imports relativos restantes.
-import { createTestRepository } from '../../../../test/auth.js';
+import { createAccountRepository } from '../../accounts/services/accountRepository.js';
+import { createAuthRepository } from './authRepository.js';
+
+const ACCOUNT_ID = 'cuenta-1';
+const OTHER_ACCOUNT_ID = 'cuenta-2';
 
 const openRepositories: AuthRepository[] = [];
 
-/** Abre una base aislada y la registra para cerrarla al terminar el test. */
+/**
+ * Abre una base aislada con dos cuentas ya dadas de alta y registra el
+ * repositorio para cerrarlo al terminar el test.
+ *
+ * Las cuentas van primero porque `users.account_id` es una clave foránea: sin
+ * ellas no se puede insertar ningún usuario.
+ */
 async function openRepository(): Promise<AuthRepository> {
-  const repository = await createTestRepository();
+  const database = await createTestDatabase();
+  const accounts = createAccountRepository(database);
+
+  await accounts.insert({
+    id: ACCOUNT_ID,
+    name: 'Equipo de prueba',
+    inviteCode: 'CODIGOUNO2',
+    createdAt: '2026-09-01T10:00:00.000Z',
+  });
+  await accounts.insert({
+    id: OTHER_ACCOUNT_ID,
+    name: 'Otro equipo',
+    inviteCode: 'CODIGODOS3',
+    createdAt: '2026-09-01T10:00:00.000Z',
+  });
+
+  const repository = createAuthRepository(database);
   openRepositories.push(repository);
 
   return repository;
@@ -20,11 +47,13 @@ async function openRepository(): Promise<AuthRepository> {
 function buildUser(overrides: Partial<StoredUser> = {}): StoredUser {
   return {
     id: 'usuario-1',
+    accountId: ACCOUNT_ID,
     username: 'ana',
     displayName: 'Ana Prueba',
     passwordHash: 'scrypt$16384$8$1$aa$bb',
     role: 'user',
     status: 'active',
+    gitlabUsername: null,
     createdAt: '2026-09-01T10:00:00.000Z',
     lastLoginAt: null,
     ...overrides,
@@ -49,7 +78,7 @@ afterEach(async () => {
 describe('usuarios', () => {
   it('guarda y recupera un usuario por id y por nombre', async () => {
     const repository = await openRepository();
-    const user = buildUser();
+    const user = buildUser({ gitlabUsername: 'ana-gitlab' });
 
     await repository.insertUser(user);
 
@@ -64,11 +93,20 @@ describe('usuarios', () => {
     expect(await repository.findUserByUsername('desconocido')).toBeNull();
   });
 
-  it('rechaza dos usuarios con el mismo nombre', async () => {
+  it('rechaza dos usuarios con el mismo nombre, incluso en cuentas distintas', async () => {
     const repository = await openRepository();
     await repository.insertUser(buildUser());
 
     await expect(repository.insertUser(buildUser({ id: 'usuario-2' }))).rejects.toThrow();
+    await expect(repository.insertUser(buildUser({ id: 'usuario-3', accountId: OTHER_ACCOUNT_ID })))
+      .rejects.toThrow();
+  });
+
+  it('rechaza un usuario de una cuenta que no existe', async () => {
+    const repository = await openRepository();
+
+    await expect(repository.insertUser(buildUser({ accountId: 'cuenta-inexistente' })))
+      .rejects.toThrow();
   });
 
   it('rechaza un rol o un estado fuera del contrato', async () => {
@@ -80,15 +118,31 @@ describe('usuarios', () => {
       .rejects.toThrow();
   });
 
-  it('lista los usuarios ordenados por nombre y los cuenta', async () => {
+  it('lista sólo los usuarios de una cuenta, ordenados por nombre', async () => {
     const repository = await openRepository();
     await repository.insertUser(buildUser({ id: 'usuario-2', username: 'zoe' }));
     await repository.insertUser(buildUser());
+    await repository.insertUser(buildUser({
+      id: 'usuario-3',
+      username: 'beto',
+      accountId: OTHER_ACCOUNT_ID,
+    }));
 
-    const users = await repository.listUsers();
+    const users = await repository.listUsersOfAccount(ACCOUNT_ID);
 
     expect(users.map((user) => user.username)).toEqual(['ana', 'zoe']);
-    expect(await repository.countUsers()).toBe(2);
+  });
+
+  it('lista todos los usuarios de la base para la línea de comandos', async () => {
+    const repository = await openRepository();
+    await repository.insertUser(buildUser());
+    await repository.insertUser(buildUser({
+      id: 'usuario-2',
+      username: 'beto',
+      accountId: OTHER_ACCOUNT_ID,
+    }));
+
+    expect((await repository.listAllUsers()).map((user) => user.username)).toEqual(['ana', 'beto']);
   });
 
   it('actualiza el último ingreso y la contraseña', async () => {
@@ -110,6 +164,17 @@ describe('usuarios', () => {
     await repository.updateStatus('usuario-1', 'disabled');
 
     expect((await repository.findUserById('usuario-1'))?.status).toBe('disabled');
+  });
+
+  it('guarda y limpia el nickname de GitLab del usuario', async () => {
+    const repository = await openRepository();
+    await repository.insertUser(buildUser());
+
+    await repository.updateGitlabUsername('usuario-1', 'ana-gitlab');
+    expect((await repository.findUserById('usuario-1'))?.gitlabUsername).toBe('ana-gitlab');
+
+    await repository.updateGitlabUsername('usuario-1', null);
+    expect((await repository.findUserById('usuario-1'))?.gitlabUsername).toBeNull();
   });
 
   it('conserva la marca temporal aunque Postgres la guarde con zona horaria', async () => {

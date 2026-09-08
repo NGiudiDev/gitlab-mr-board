@@ -35,18 +35,26 @@ function runUsersCommand(args, input = '') {
 }
 
 /**
- * Deja el usuario del recorrido recién creado y sin configurar.
+ * Deja el usuario del recorrido recién creado, con una cuenta propia y sin
+ * configurar.
  *
  * Antes alcanzaba con borrar el archivo de SQLite. Ahora la base es remota, así
- * que se borra el usuario: la cascada se lleva sus sesiones y su configuración
- * de GitLab, y el recorrido vuelve a arrancar desde «todavía no configuraste».
- * Sólo se toca ese usuario, nunca el resto de la base.
+ * que se borra el usuario y se lo vuelve a crear con una cuenta nueva: esa
+ * cuenta no tiene proyectos ni token, y el recorrido arranca desde «todavía no
+ * configuraste». Sólo se toca ese usuario, nunca el resto de la base; las
+ * cuentas de corridas anteriores quedan vacías y sin nadie que pueda entrar.
  *
  * La contraseña se manda por la entrada estándar: el script nunca la acepta por
  * argumento.
  */
 export default function globalSetup() {
-  const removed = runUsersCommand(['delete', e2eConfig.username]);
+  // El invitado se borra primero: se da de alta durante el recorrido con el
+  // código de la cuenta, y sin borrarlo la corrida siguiente choca con su
+  // nombre ya tomado.
+  const removedGuest = runUsersCommand(['delete', e2eConfig.guestUsername]);
+  const removed = removedGuest.status === 0
+    ? runUsersCommand(['delete', e2eConfig.username])
+    : removedGuest;
 
   if (removed.status !== 0) {
     throw new Error([
@@ -57,12 +65,14 @@ export default function globalSetup() {
     ].filter(Boolean).join('\n'));
   }
 
+  // Sin `--invite` se abre una cuenta nueva y el usuario queda su
+  // administrador, que es lo que necesita el recorrido para cargar los datos de
+  // GitLab y llegar a la pantalla de usuarios.
   const created = runUsersCommand(
     [
       'create', e2eConfig.username,
       '--name', 'Usuario E2E',
-      // Administrador, para que el recorrido llegue a la pantalla de usuarios.
-      '--role', 'admin',
+      '--account', e2eConfig.accountName,
     ],
     `${e2eConfig.password}\n${e2eConfig.password}\n`,
   );

@@ -38,6 +38,8 @@ function focusedAccessibleName(page) {
 
 test.describe('Tablero de merge requests', () => {
   test('recorre el tablero contra GitLab real', async ({ page }) => {
+    // Lo completa el paso que visita «Mi cuenta» y lo usa el último paso.
+    let inviteCode = '';
     const project = page.getByRole('region', { name: e2eConfig.projectPath, exact: true });
     const mergeRequestLink = page.getByRole('link', {
       name: exactCardName(e2eConfig.mergeRequestTitle),
@@ -59,16 +61,21 @@ test.describe('Tablero de merge requests', () => {
 
     await test.step('carga los proyectos y el access token en «Mi cuenta»', async () => {
       await page.getByRole('button', { name: 'Configurar en Mi cuenta' }).click();
-      await expect(page.getByRole('heading', { level: 2, name: 'GitLab' })).toBeVisible();
+      await expect(page.getByRole('heading', { level: 2, name: 'GitLab de la cuenta' })).toBeVisible();
 
       await page.getByLabel('IDs de los proyectos').fill(e2eConfig.projectIds);
-      await page.getByLabel('Nickname de GitLab').fill(e2eConfig.gitlabUsername);
       await page.getByLabel('Access token').fill(e2eConfig.gitlabToken);
       await page.getByRole('button', { name: 'Guardar configuración' }).click();
 
       await expect(page.getByText('Configuración de GitLab guardada.')).toBeVisible();
       // El token se guarda cifrado y no vuelve al navegador: el campo se vacía.
       await expect(page.getByLabel('Access token')).toHaveValue('');
+
+      // El nickname es de cada persona y no de la cuenta: de él depende la
+      // vista personal.
+      await page.getByLabel('Nickname de GitLab').fill(e2eConfig.gitlabUsername);
+      await page.getByRole('button', { name: 'Guardar mi nickname' }).click();
+      await expect(page.getByText('Nickname de GitLab guardado.')).toBeVisible();
     });
 
     await test.step('vuelve al tablero y espera los datos de GitLab', async () => {
@@ -163,6 +170,11 @@ test.describe('Tablero de merge requests', () => {
     await test.step('navega entre la cuenta, los usuarios y el tablero', async () => {
       await page.getByRole('button', { name: 'Mi cuenta' }).click();
       await expect(page.getByRole('heading', { level: 2, name: 'Mi contraseña' })).toBeVisible();
+      await expect(page.getByRole('heading', { level: 2, name: 'Mi equipo' })).toBeVisible();
+
+      // El código habilita el último paso: sumar a alguien más a esta cuenta.
+      inviteCode = await page.getByLabel('Código de invitación').inputValue();
+      expect(inviteCode).toMatch(/^[A-Z2-9]{10}$/);
 
       // El usuario del recorrido es administrador, así que ve la tabla de usuarios.
       await page.getByRole('button', { name: 'Usuarios' }).click();
@@ -182,6 +194,30 @@ test.describe('Tablero de merge requests', () => {
       // La cookie quedó invalidada: recargar no devuelve el tablero.
       await page.reload();
       await expect(page.getByRole('button', { name: 'Ingresar' })).toBeVisible();
+    });
+
+    await test.step('alguien invitado ve el mismo tablero sin cargar credenciales', async () => {
+      await page.getByRole('button', { name: 'Crear una cuenta' }).click();
+      await page.getByLabel('Código de invitación').fill(inviteCode);
+      await page.getByLabel('Usuario').fill(e2eConfig.guestUsername);
+      await page.getByLabel('Contraseña', { exact: true }).fill(e2eConfig.password);
+      await page.getByLabel('Repetí la contraseña').fill(e2eConfig.password);
+
+      const boardResponse = waitForBoardResponse(page);
+      await page.getByRole('button', { name: 'Crear cuenta' }).click();
+      await boardResponse;
+
+      // Entra al tablero ya armado: los proyectos y el token son de la cuenta.
+      await expect(page.getByText('Todavía no configuraste GitLab')).toHaveCount(0);
+      await expect(page.getByRole('button', { name: 'Refrescar ahora' })).toBeEnabled();
+      await expect(project).toBeVisible();
+
+      // No administra la cuenta, así que no puede tocar esa configuración ni
+      // ver la pantalla de usuarios.
+      await expect(page.getByRole('button', { name: 'Usuarios' })).toHaveCount(0);
+      await page.getByRole('button', { name: 'Mi cuenta' }).click();
+      await expect(page.getByRole('heading', { level: 2, name: 'GitLab de la cuenta' })).toBeVisible();
+      await expect(page.getByLabel('IDs de los proyectos')).toHaveCount(0);
     });
   });
 });

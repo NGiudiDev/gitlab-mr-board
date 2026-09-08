@@ -39,7 +39,12 @@ const BACKEND_PORT = 3101;
 // El tablero exige sesión. La suite usa una base descartable y un usuario
 // propio, que se recrean en cada corrida desde `globalSetup.js`.
 const DEFAULT_USERNAME = 'e2e';
+// La cuenta del recorrido se crea junto con el usuario en cada corrida.
+const ACCOUNT_NAME = 'Equipo E2E';
 const DEFAULT_PASSWORD = 'contrasena-de-test-e2e'
+// Segundo usuario del recorrido: se suma a la cuenta con el código de
+// invitación y comprueba que ve el tablero sin cargar ninguna credencial.
+const GUEST_USERNAME = 'e2e-invitado';
 
 // La base es descartable y se recrea en cada corrida, así que la clave con
 // la que se cifra el token de GitLab puede ser fija.
@@ -74,6 +79,8 @@ const e2eConfig = {
   mergeRequestTitle: process.env.E2E_MR_TITLE.trim(),
   mergeRequestColumn: process.env.E2E_MR_COLUMN.trim(),
   username: process.env.E2E_USERNAME?.trim() || DEFAULT_USERNAME,
+  accountName: ACCOUNT_NAME,
+  guestUsername: GUEST_USERNAME,
   password: process.env.E2E_PASSWORD?.trim() || DEFAULT_PASSWORD,
   // Nunca cae en DATABASE_URL: un descuido no debe tocar la base de trabajo.
   databaseUrl: process.env.E2E_DATABASE_URL.trim(),

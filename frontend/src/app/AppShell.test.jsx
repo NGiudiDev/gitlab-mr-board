@@ -1,13 +1,24 @@
 // 2. Dependencias externas.
-import { render, screen } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 // 7. Imports relativos restantes.
-import { TEST_USER } from '../../test/sharedState.js'
+import { jsonResponse, resetSharedState, TEST_ACCOUNT, TEST_USER } from '../../test/sharedState.js'
 import AppShell, { sectionsFor } from './AppShell.jsx'
 
 const ADMIN_USER = { ...TEST_USER, role: 'admin' }
+
+beforeEach(() => {
+  resetSharedState()
+  // La barra pide la cuenta para mostrar de qué equipo es el tablero.
+  vi.stubGlobal('fetch', vi.fn(async () => jsonResponse({ account: TEST_ACCOUNT })))
+})
+
+afterEach(() => {
+  resetSharedState()
+  vi.unstubAllGlobals()
+})
 
 function renderShell(props = {}) {
   return render(<AppShell {...props}><p>Contenido de la sección</p></AppShell>)
@@ -41,6 +52,17 @@ describe('AppShell', () => {
     renderShell({ user: TEST_USER })
 
     expect(screen.getByRole('heading', { level: 1 }).textContent).toContain('Tablero de MRs')
+  })
+
+  it('muestra de qué equipo es el tablero que se está mirando', async () => {
+    const { container } = renderShell({ user: TEST_USER })
+
+    await act(async () => {
+      await Promise.resolve()
+      await Promise.resolve()
+    })
+
+    expect(container.querySelector('header').textContent).toContain('Equipo de prueba')
   })
 
   it('esconde la barra sin sesión, para que el ingreso ocupe la pantalla', () => {

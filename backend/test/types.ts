@@ -1,4 +1,5 @@
 // 4. Imports exclusivos de tipos de TypeScript.
+import type { AccountService, StoredAccount } from '../src/features/accounts/types.js';
 import type { AuthenticatedUser, AuthService } from '../src/features/auth/types.js';
 import type { GitLabSettingsService } from '../src/features/gitlabSettings/types.js';
 import type { GitLabApprovalsResponse, GitLabDiscussion, GitLabMergeRequest, GitLabPipeline } from '../src/features/mergeRequests/types.js';
@@ -50,8 +51,11 @@ export interface GitLabStub {
 /** App levantada con una sesión ya iniciada, para los test de rutas protegidas. */
 export interface AuthenticatedTestApp {
   app: Express;
+  accountService: AccountService;
   authService: AuthService;
   gitlabSettingsService: GitLabSettingsService;
+  /** Cuenta a la que pertenece el usuario de la sesión. */
+  account: StoredAccount;
   /** Usuario de la sesión abierta. */
   user: AuthenticatedUser;
   /** Cabecera Cookie lista para reenviar en cada petición. */

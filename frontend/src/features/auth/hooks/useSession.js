@@ -145,13 +145,53 @@ function login({ username, password }) {
 }
 
 /**
- * Crea una cuenta y deja la sesión abierta.
+ * Da de alta un usuario y deja la sesión abierta.
  *
- * @param {{ username: string, password: string, displayName?: string }} input Datos del alta.
- * @returns {Promise<boolean>} `true` si la cuenta se creó y la sesión quedó abierta.
+ * Con `inviteCode` se suma a la cuenta de ese código; sin él crea una cuenta
+ * nueva con el nombre indicado y queda como su administrador.
+ *
+ * @param {{ username: string, password: string, displayName?: string, accountName?: string, inviteCode?: string }} input Datos del alta.
+ * @returns {Promise<boolean>} `true` si el alta se hizo y la sesión quedó abierta.
  */
-function register({ username, password, displayName }) {
-  return openSession('/api/auth/register', { username, password, displayName })
+function register({ username, password, displayName, accountName, inviteCode }) {
+  return openSession('/api/auth/register', {
+    username,
+    password,
+    displayName,
+    accountName,
+    inviteCode,
+  })
+}
+
+/**
+ * Guarda el nickname de GitLab de la propia persona.
+ *
+ * Es lo único de GitLab que no es de la cuenta: con él la vista personal sabe
+ * cuáles de los merge requests del equipo son de quien mira.
+ *
+ * @param {string} gitlabUsername Nickname tal como lo escribió la persona.
+ * @returns {Promise<string | null>} El mensaje de error, o `null` si se guardó.
+ */
+async function saveGitlabUsername(gitlabUsername) {
+  setState({ submitting: true })
+
+  try {
+    const response = await requestSession('/api/auth/gitlab-username', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gitlabUsername }),
+    })
+
+    if (!response.ok) return await readErrorMessage(response)
+
+    const { user } = await response.json()
+    setState({ user })
+    return null
+  } catch {
+    return NETWORK_ERROR_MESSAGE
+  } finally {
+    setState({ submitting: false })
+  }
 }
 
 /**
@@ -222,7 +262,7 @@ function useSession() {
     loadSessionOnce()
   }, [])
 
-  return { ...snapshot, changeOwnPassword, login, logout, register }
+  return { ...snapshot, changeOwnPassword, login, logout, register, saveGitlabUsername }
 }
 
 export {
@@ -234,6 +274,7 @@ export {
   PASSWORD_CHANGED_MESSAGE,
   register,
   resetSessionStore,
+  saveGitlabUsername,
   SESSION_EXPIRED_MESSAGE,
   useSession,
 }

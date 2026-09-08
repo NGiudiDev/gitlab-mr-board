@@ -1,13 +1,25 @@
 // 7. Imports relativos restantes.
+import { resetAccountStore } from '../src/features/accounts/hooks/useAccount.js'
 import { resetSessionStore } from '../src/features/auth/hooks/useSession.js'
 import { getState, resetStore } from '../src/features/mergeRequests/hooks/useMergeRequests.js'
+
+/** Cuenta a la que pertenece el usuario de prueba. */
+const TEST_ACCOUNT = {
+  id: 'cuenta-1',
+  name: 'Equipo de prueba',
+  createdAt: '2026-08-01T10:00:00.000Z',
+  memberCount: 3,
+  inviteCode: null,
+}
 
 /** Usuario con el que corren las pruebas que necesitan el tablero visible. */
 const TEST_USER = {
   id: 'usuario-1',
+  accountId: TEST_ACCOUNT.id,
   username: 'ana',
   displayName: 'Ana Pérez',
   role: 'user',
+  gitlabUsername: 'ana-gitlab',
 }
 
 /**
@@ -17,6 +29,7 @@ const TEST_USER = {
 function resetSharedState() {
   resetStore()
   resetSessionStore()
+  resetAccountStore()
   return getState()
 }
 
@@ -39,4 +52,4 @@ function jsonResponse(body, status = 200) {
   }
 }
 
-export { jsonResponse, resetSharedState, signInTestUser, TEST_USER }
+export { jsonResponse, resetSharedState, signInTestUser, TEST_ACCOUNT, TEST_USER }

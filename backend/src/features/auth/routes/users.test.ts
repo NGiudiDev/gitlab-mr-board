@@ -93,6 +93,20 @@ describe('GET /api/users', () => {
     expect(users[0]).toMatchObject({ username: TEST_USERNAME, role: 'admin', status: 'active' });
     expect(response.body).not.toContain('scrypt');
   });
+
+  it('no incluye los usuarios de otra cuenta', async () => {
+    const { request } = await createClient('admin');
+    const otherAccount = await session.accountService.create('Otro equipo');
+    await session.authService.createUser({
+      accountId: otherAccount.id,
+      username: 'beto',
+      password: TEST_PASSWORD,
+    });
+
+    const { users } = (await request('/api/users')).json<UsersResponseBody>();
+
+    expect(users.map((user) => user.username)).toEqual([TEST_USERNAME]);
+  });
 });
 
 describe('POST /api/users', () => {
@@ -106,10 +120,23 @@ describe('POST /api/users', () => {
 
     expect(response.status).toBe(201);
     expect(response.json<UserResponseBody>().user).toMatchObject({
+      accountId: session.account.id,
       username: 'zoe',
       displayName: 'Zoe Ruiz',
       role: 'admin',
     });
+  });
+
+  it('suma el usuario a la cuenta de quien administra, sin poder elegir otra', async () => {
+    const { request } = await createClient('admin');
+    const otherAccount = await session.accountService.create('Otro equipo');
+
+    const response = await request('/api/users', {
+      method: 'POST',
+      body: { username: 'zoe', password: TEST_PASSWORD, accountId: otherAccount.id },
+    });
+
+    expect(response.json<UserResponseBody>().user.accountId).toBe(session.account.id);
   });
 
   it('usa el rol user ante cualquier valor desconocido', async () => {
@@ -208,6 +235,25 @@ describe('PATCH /api/users/:username/status', () => {
     });
 
     expect(response.status).toBe(404);
+  });
+
+  it('responde 404 y no toca al usuario cuando es de otra cuenta', async () => {
+    const { request } = await createClient('admin');
+    const otherAccount = await session.accountService.create('Otro equipo');
+    await session.authService.createUser({
+      accountId: otherAccount.id,
+      username: 'beto',
+      password: TEST_PASSWORD,
+    });
+
+    const response = await request('/api/users/beto/status', {
+      method: 'PATCH',
+      body: { status: 'disabled' },
+    });
+
+    expect(response.status).toBe(404);
+    await expect(session.authService.login({ username: 'beto', password: TEST_PASSWORD }))
+      .resolves.toBeDefined();
   });
 });
 

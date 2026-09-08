@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 // 7. Imports relativos restantes.
 import { TEST_USER } from '../../../../test/sharedState.js'
-import AccountPanel from './AccountPanel.jsx'
+import PasswordPanel from './PasswordPanel.jsx'
 
 /** Deja que se resuelvan las promesas pendientes y React vuelva a renderizar. */
 async function flush() {
@@ -25,34 +25,34 @@ async function submitPasswordChange({ confirmation = 'contrasena-nueva' } = {}) 
   await flush()
 }
 
-describe('AccountPanel', () => {
+describe('PasswordPanel', () => {
   it('no muestra nada sin usuario', () => {
-    const { container } = render(<AccountPanel />)
+    const { container } = render(<PasswordPanel />)
 
     expect(container.innerHTML).toBe('')
   })
 
   it('ofrece el cambio de contraseña a cualquier usuario', () => {
-    render(<AccountPanel user={TEST_USER} />)
+    render(<PasswordPanel user={TEST_USER} />)
 
     expect(screen.getByRole('heading', { level: 2, name: 'Mi contraseña' })).toBeDefined()
   })
 
   it('avisa que el cambio cierra las sesiones abiertas', () => {
-    const { container } = render(<AccountPanel user={TEST_USER} />)
+    const { container } = render(<PasswordPanel user={TEST_USER} />)
 
     expect(container.textContent).toContain('se cierran todas tus sesiones')
   })
 
   it('deja la administración de usuarios fuera de la pantalla de cuenta', () => {
-    render(<AccountPanel user={{ ...TEST_USER, role: 'admin' }} />)
+    render(<PasswordPanel user={{ ...TEST_USER, role: 'admin' }} />)
 
     expect(screen.queryByRole('heading', { name: 'Usuarios' })).toBeNull()
   })
 
   it('envía la contraseña actual y la nueva', async () => {
     const onChangePassword = vi.fn(async () => null)
-    render(<AccountPanel user={TEST_USER} onChangePassword={onChangePassword} />)
+    render(<PasswordPanel user={TEST_USER} onChangePassword={onChangePassword} />)
 
     await submitPasswordChange()
 
@@ -64,7 +64,7 @@ describe('AccountPanel', () => {
 
   it('avisa y no envía cuando la confirmación no coincide', async () => {
     const onChangePassword = vi.fn(async () => null)
-    render(<AccountPanel user={TEST_USER} onChangePassword={onChangePassword} />)
+    render(<PasswordPanel user={TEST_USER} onChangePassword={onChangePassword} />)
 
     await submitPasswordChange({ confirmation: 'otra-contrasena' })
 
@@ -74,7 +74,7 @@ describe('AccountPanel', () => {
 
   it('muestra el error que devuelve el backend', async () => {
     const onChangePassword = vi.fn(async () => 'La contraseña actual no coincide.')
-    render(<AccountPanel user={TEST_USER} onChangePassword={onChangePassword} />)
+    render(<PasswordPanel user={TEST_USER} onChangePassword={onChangePassword} />)
 
     await submitPasswordChange()
 
@@ -82,7 +82,7 @@ describe('AccountPanel', () => {
   })
 
   it('bloquea el botón mientras se guarda', () => {
-    render(<AccountPanel user={TEST_USER} submitting />)
+    render(<PasswordPanel user={TEST_USER} submitting />)
 
     const button = screen.getByRole('button', { name: 'Guardando...' })
     expect(button.disabled).toBe(true)

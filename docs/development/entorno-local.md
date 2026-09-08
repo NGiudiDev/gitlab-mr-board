@@ -4,7 +4,7 @@
 
 Se requieren Node.js 22.13+, npm 10+, acceso a GitLab y una base de [Neon](https://neon.com). Ejecutar `npm ci` en la raíz, `backend/` y `frontend/`, y copiar `backend/.env.example` como `backend/.env`.
 
-El PAT `read_api` y los IDs de los proyectos no van en el `.env`: los carga cada persona desde «Mi cuenta» y el backend los guarda en la base con el token cifrado ([configuración de GitLab](../domains/configuracion-gitlab.md)).
+El PAT `read_api` y los IDs de los proyectos no van en el `.env`: los carga un administrador de cada cuenta desde «Mi cuenta» y el backend los guarda en la base con el token cifrado ([configuración de GitLab](../domains/configuracion-gitlab.md)).
 
 El mínimo de Node 22.13 es un requisito duro por las versiones vigentes de las herramientas de pruebas y de ESLint. Los tres `package.json` —raíz, `backend/` y `frontend/`— lo declaran mediante `engines`, así que `npm install` advierte con `EBADENGINE` si el runtime no lo cumple. No hay una comprobación propia del proyecto: con una versión menor el aviso llega en la instalación y, más adelante, desde la herramienta que no la soporte.
 
@@ -75,7 +75,7 @@ Dentro de `backend/`, `npm run dev` agrega recarga ante cambios con `tsx watch` 
 - Backend: `http://localhost:3001`
 - Salud: `http://localhost:3001/health`
 
-Si el backend no inicia, revisar las variables obligatorias y que la base de Neon responda: el proceso aplica el esquema antes de escuchar, así que una base inalcanzable lo detiene con un mensaje explícito en lugar de dejarlo respondiendo errores. Un HTTP 409 indica que todavía no se cargaron los datos de GitLab en «Mi cuenta». Un HTTP 502 indica un error al consultar GitLab; comprobar token, permisos, URL e IDs. Un HTTP 401 significa que falta la sesión y un 403 que falta el rol `admin`. Si nadie puede entrar, `npm run users` es el camino de recuperación.
+Si el backend no inicia, revisar las variables obligatorias y que la base de Neon responda: el proceso aplica el esquema antes de escuchar, así que una base inalcanzable lo detiene con un mensaje explícito en lugar de dejarlo respondiendo errores. Un HTTP 409 indica que en la cuenta todavía no se cargaron los datos de GitLab en «Mi cuenta». Un HTTP 502 indica un error al consultar GitLab; comprobar token, permisos, URL e IDs. Un HTTP 401 significa que falta la sesión y un 403 que falta el rol `admin`. Si nadie puede entrar, `npm run users` es el camino de recuperación, y `npm run users -- accounts` recupera el código de invitación de una cuenta.
 
 ## Sitio de documentación
 

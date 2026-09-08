@@ -16,7 +16,7 @@ interface MergeRequestsRouterOptions extends MergeRequestsDependencies {
   gitlabSettingsService: GitLabSettingsService;
 }
 
-/** Respuesta guardada para una configuración concreta de una persona. */
+/** Respuesta guardada para una configuración concreta de una cuenta. */
 interface CacheEntry {
   /** Identifica la versión de la configuración con la que se consultó. */
   settingsVersion: string;
@@ -28,8 +28,10 @@ interface CacheEntry {
  * Crea el router con una caché aislada y dependencias reemplazables para los
  * test de integración.
  *
- * Cada persona consulta GitLab con su propio token, así que la caché es por
- * usuario: compartirla filtraría entre cuentas proyectos que no configuraron.
+ * La caché es **por cuenta**: sus miembros consultan GitLab con las mismas
+ * credenciales, así que comparten la respuesta y el equipo entero cuesta una
+ * sola consulta. Lo único propio de cada persona es con qué nickname se
+ * reconoce en el tablero, y eso se completa al responder.
  */
 export function createMergeRequestsRouter(params: MergeRequestsRouterOptions): Router {
   const {
@@ -39,17 +41,17 @@ export function createMergeRequestsRouter(params: MergeRequestsRouterOptions): R
   } = params;
 
   const router = express.Router();
-  const cacheByUserId = new Map<string, CacheEntry>();
+  const cacheByAccountId = new Map<string, CacheEntry>();
 
   /**
    * Devuelve la respuesta reutilizable mientras siga dentro del TTL y
    * corresponda a la configuración vigente.
    *
    * Guardar la fecha de la configuración evita tener que avisarle a este
-   * router cuando alguien cambia sus proyectos o su token.
+   * router cuando alguien cambia los proyectos o el token de la cuenta.
    */
-  function getFreshCache(userId: string, credentials: GitLabCredentials): MergeRequestResponse | null {
-    const entry = cacheByUserId.get(userId);
+  function getFreshCache(accountId: string, credentials: GitLabCredentials): MergeRequestResponse | null {
+    const entry = cacheByAccountId.get(accountId);
 
     if (!entry) return null;
     if (entry.settingsVersion !== credentials.updatedAt) return null;
@@ -59,49 +61,60 @@ export function createMergeRequestsRouter(params: MergeRequestsRouterOptions): R
   }
 
   /** Reemplaza la caché solo después de completar una consulta satisfactoria. */
-  function storeInCache(userId: string, credentials: GitLabCredentials, data: MergeRequestResponse): void {
-    cacheByUserId.set(userId, {
+  function storeInCache(accountId: string, credentials: GitLabCredentials, data: MergeRequestResponse): void {
+    cacheByAccountId.set(accountId, {
       settingsVersion: credentials.updatedAt,
       data,
       storedAt: now(),
     });
   }
 
+  /**
+   * Marca en la respuesta con qué nickname de GitLab se reconoce quien pregunta.
+   *
+   * La respuesta guardada es de la cuenta, así que la identidad del lector se
+   * aplica recién al entregarla: dos personas de la misma cuenta reciben los
+   * mismos merge requests con distinto `viewerUsername`.
+   */
+  function withViewer(data: MergeRequestResponse, viewerUsername: string | null): MergeRequestResponse {
+    return { ...data, meta: { ...data.meta, viewerUsername } };
+  }
+
   router.get('/pull-requests', async (request, response) => {
-    const { id: userId } = response.locals.user as AuthenticatedUser;
+    const { accountId, gitlabUsername } = response.locals.user as AuthenticatedUser;
 
     // La configuración vive en una base remota: si no se puede leer, el
     // problema es de la base y no de GitLab ni de la configuración.
     let credentials: GitLabCredentials | null;
 
     try {
-      credentials = await gitlabSettingsService.getCredentials(userId);
+      credentials = await gitlabSettingsService.getCredentials(accountId);
     } catch (error: unknown) {
       console.error('Error al leer la configuración de GitLab:', error);
-      response.status(503).json({ error: 'No se pudo leer tu configuración de GitLab.' });
+      response.status(503).json({ error: 'No se pudo leer la configuración de GitLab de tu cuenta.' });
       return;
     }
 
     if (!credentials) {
       response.status(409).json({
-        error: 'Configurá tus datos de GitLab en «Mi cuenta» para ver el tablero.',
+        error: 'Todavía no hay datos de GitLab configurados en esta cuenta.',
         code: 'gitlab_settings_missing',
       });
       return;
     }
 
     const forceRefresh = request.query.force === 'true';
-    const freshCache = forceRefresh ? null : getFreshCache(userId, credentials);
+    const freshCache = forceRefresh ? null : getFreshCache(accountId, credentials);
 
     if (freshCache) {
-      response.json(freshCache);
+      response.json(withViewer(freshCache, gitlabUsername));
       return;
     }
 
     try {
       const data = await fetchMergeRequests(credentials);
-      storeInCache(userId, credentials, data);
-      response.json(data);
+      storeInCache(accountId, credentials, data);
+      response.json(withViewer(data, gitlabUsername));
     } catch (error: unknown) {
       const detail = error instanceof Error ? error.message : String(error);
 

@@ -147,7 +147,9 @@ export interface MergeRequestMetadata {
   people: MergeRequestPerson[];
   /**
    * Nickname de GitLab de quien pide el tablero, o `null` si todavía no lo
-   * configuró. Es lo que permite armar la vista personal sin elegir a nadie.
+   * cargó en «Mi cuenta». Es lo que permite armar la vista personal sin elegir
+   * a nadie. Lo completa la ruta, no el servicio: la respuesta se comparte
+   * entre los miembros de la cuenta y esto es lo único propio de cada uno.
    */
   viewerUsername: string | null;
 }

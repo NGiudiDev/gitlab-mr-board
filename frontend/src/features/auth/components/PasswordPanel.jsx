@@ -5,13 +5,15 @@ const FIELD_CLASSES = 'block w-full mt-1 rounded-md border border-control bg-sur
 const LABEL_CLASSES = 'block text-[12px] font-semibold text-text-muted mb-3'
 
 /**
- * Pantalla de cuenta: el cambio de la propia contraseña, pidiendo la actual
- * como confirmación. La administración de usuarios es su propia sección.
+ * Cambio de la propia contraseña, pidiendo la actual como confirmación.
+ *
+ * Es una de las tarjetas de «Mi cuenta»; el equipo, las credenciales de GitLab
+ * y la administración de usuarios son sus propios componentes.
  *
  * El estado de las contraseñas es local: sólo lo necesita esta pantalla y no
  * debe sobrevivir al envío.
  */
-function AccountPanel({ user = null, submitting = false, onChangePassword = () => {} }) {
+function PasswordPanel({ user = null, submitting = false, onChangePassword = () => {} }) {
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmation, setConfirmation] = useState('')
@@ -100,4 +102,4 @@ function AccountPanel({ user = null, submitting = false, onChangePassword = () =
   )
 }
 
-export default AccountPanel
+export default PasswordPanel

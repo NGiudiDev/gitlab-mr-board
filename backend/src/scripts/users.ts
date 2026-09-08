@@ -3,24 +3,34 @@ import readline from 'node:readline';
 import { Writable } from 'node:stream';
 
 // 4. Imports exclusivos de tipos de TypeScript.
+import type { AccountService } from '../features/accounts/types.js';
 import type { AuthService, UserRole, UserStatus } from '../features/auth/types.js';
 
 // 7. Imports relativos restantes.
 import config from '../config.js';
+import { createAccountRepository } from '../features/accounts/services/accountRepository.js';
+import { createAccountService } from '../features/accounts/services/accountService.js';
 import { createAuthRepository } from '../features/auth/services/authRepository.js';
 import { createAuthService } from '../features/auth/services/authService.js';
 import { applySchema, createNeonDatabase } from '../shared/database.js';
 
-const USAGE = `Gestión de usuarios del tablero.
+const USAGE = `Gestión de cuentas y usuarios del tablero.
 
-  npm run users --prefix backend -- create <usuario> [--name "Nombre visible"] [--role admin]
+  npm run users --prefix backend -- create <usuario> [--name "Nombre visible"] [--account "Nombre de la cuenta"]
+  npm run users --prefix backend -- create <usuario> --invite <código> [--name "Nombre visible"] [--role admin]
   npm run users --prefix backend -- password <usuario>
   npm run users --prefix backend -- disable <usuario>
   npm run users --prefix backend -- enable <usuario>
   npm run users --prefix backend -- delete <usuario>
   npm run users --prefix backend -- list
+  npm run users --prefix backend -- accounts
 
-Borrar un usuario arrastra sus sesiones y su configuración de GitLab.
+Cada usuario pertenece a una cuenta, que es la que comparte los proyectos y el
+access token de GitLab. Sin --invite, «create» abre una cuenta nueva y el
+usuario queda su administrador; con --invite se suma a la cuenta de ese código.
+
+Borrar un usuario arrastra sus sesiones. La cuenta y su configuración de GitLab
+quedan en pie, incluso si era su último miembro.
 
 La contraseña nunca se pasa por argumento: se pide por teclado y no se muestra.
 El tablero también permite registrarse y administrar usuarios desde la interfaz.`;
@@ -139,22 +149,41 @@ async function askNewPassword(): Promise<string> {
   return password ?? '';
 }
 
-/** Da de alta un usuario nuevo. */
-async function createUserCommand(authService: AuthService, args: string[]): Promise<void> {
+/**
+ * Da de alta un usuario nuevo, con su cuenta.
+ *
+ * Sin `--invite` se abre una cuenta nueva y el usuario queda su administrador:
+ * es el camino de recuperación para dejar lista una instalación vacía. Con
+ * `--invite` se suma a la cuenta de ese código y el rol lo decide `--role`.
+ */
+async function createUserCommand(
+  authService: AuthService,
+  accountService: AccountService,
+  args: string[],
+): Promise<void> {
   const username = args[0];
   if (!username || username.startsWith('--')) {
-    throw new Error('Indicá el nombre de usuario. Ejemplo: create ana');
+    throw new Error('Indicá el nombre de usuario. Ejemplo: create ana --account "Mi equipo"');
   }
 
-  const role = readOption(args, 'role') === 'admin' ? 'admin' : 'user';
+  const inviteCode = readOption(args, 'invite');
+  const account = inviteCode
+    ? await accountService.findByInviteCode(inviteCode)
+    : await accountService.create(readOption(args, 'account'));
+  const role = inviteCode && readOption(args, 'role') !== 'admin' ? 'user' : 'admin';
+
   const user = await authService.createUser({
+    accountId: account.id,
     username,
     password: await askNewPassword(),
     displayName: readOption(args, 'name'),
     role: role as UserRole,
   });
 
-  console.log(`Usuario «${user.username}» creado con el rol ${user.role}.`);
+  console.log(`Usuario «${user.username}» creado con el rol ${user.role} en la cuenta «${account.name}».`);
+  if (!inviteCode) {
+    console.log(`Código de invitación de la cuenta: ${account.inviteCode}`);
+  }
 }
 
 /** Cambia la contraseña de un usuario existente y cierra sus sesiones. */
@@ -183,7 +212,7 @@ async function setStatusCommand(authService: AuthService, args: string[], status
     : `Usuario «${user.username}» habilitado de nuevo.`);
 }
 
-/** Borra un usuario junto con sus sesiones y su configuración de GitLab. */
+/** Borra un usuario junto con sus sesiones. */
 async function deleteUserCommand(authService: AuthService, args: string[]): Promise<void> {
   const username = args[0];
   if (!username) {
@@ -193,21 +222,46 @@ async function deleteUserCommand(authService: AuthService, args: string[]): Prom
   const deleted = await authService.deleteUser(username);
 
   console.log(deleted
-    ? `Usuario «${username}» borrado, junto con sus sesiones y su configuración de GitLab.`
+    ? `Usuario «${username}» borrado, junto con sus sesiones.`
     : `No existía el usuario «${username}»; no había nada que borrar.`);
 }
 
-/** Lista los usuarios dados de alta. */
-async function listUsersCommand(authService: AuthService): Promise<void> {
-  const users = await authService.listUsers();
+/** Lista los usuarios de todas las cuentas, indicando a cuál pertenece cada uno. */
+async function listUsersCommand(
+  authService: AuthService,
+  accountService: AccountService,
+): Promise<void> {
+  const users = await authService.listAllUsers();
 
   if (users.length === 0) {
-    console.log('Todavía no hay usuarios. Creá el primero acá, o registrate en el tablero: el primer registro queda administrador.');
+    console.log('Todavía no hay usuarios. Creá el primero acá, o registrate en el tablero: quien abre una cuenta queda su administrador.');
     return;
   }
 
+  const accountNamesById = new Map(
+    (await accountService.list()).map((account) => [account.id, account.name]),
+  );
+
   for (const user of users) {
-    console.log(`${user.username}\t${user.role}\t${user.status}\t${user.displayName}`);
+    const accountName = accountNamesById.get(user.accountId) ?? '(sin cuenta)';
+
+    console.log(`${user.username}\t${user.role}\t${user.status}\t${accountName}\t${user.displayName}`);
+  }
+}
+
+/** Lista las cuentas con su código de invitación y su cantidad de miembros. */
+async function listAccountsCommand(accountService: AccountService): Promise<void> {
+  const accounts = await accountService.list();
+
+  if (accounts.length === 0) {
+    console.log('Todavía no hay cuentas. La primera se crea al registrarse en el tablero o con «create».');
+    return;
+  }
+
+  for (const account of accounts) {
+    const members = account.memberCount === 1 ? '1 miembro' : `${account.memberCount} miembros`;
+
+    console.log(`${account.name}\t${account.inviteCode ?? ''}\t${members}`);
   }
 }
 
@@ -218,14 +272,16 @@ async function main(): Promise<void> {
   // El script puede ser lo primero que corra contra una base recién creada.
   await applySchema(database);
 
+  const accountService = createAccountService({ repository: createAccountRepository(database) });
   const authService = createAuthService({
     repository: createAuthRepository(database),
+    accountService,
     sessionDurationDays: config.sessionDurationDays,
   });
 
   try {
     if (command === 'create') {
-      await createUserCommand(authService, args);
+      await createUserCommand(authService, accountService, args);
       return;
     }
 
@@ -245,7 +301,12 @@ async function main(): Promise<void> {
     }
 
     if (command === 'list') {
-      await listUsersCommand(authService);
+      await listUsersCommand(authService, accountService);
+      return;
+    }
+
+    if (command === 'accounts') {
+      await listAccountsCommand(accountService);
       return;
     }
 

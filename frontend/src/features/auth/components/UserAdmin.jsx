@@ -35,7 +35,7 @@ function CreateUserForm({ submitting = false, onCreate = () => {} }) {
   return (
     <form onSubmit={handleSubmit} aria-labelledby="alta-heading" className="mb-6">
       <h3 id="alta-heading" className="text-[13px] font-semibold text-text-primary mb-3">
-        Dar de alta un usuario
+        Dar de alta un usuario en el equipo
       </h3>
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -107,9 +107,12 @@ function CreateUserForm({ submitting = false, onCreate = () => {} }) {
 }
 
 /**
- * Administración de usuarios: alta, habilitación y deshabilitación. El backend
- * valida el rol en cada ruta; esconder los controles es sólo una cortesía de la
- * interfaz.
+ * Administración de usuarios: alta, habilitación y deshabilitación.
+ *
+ * Alcanza sólo a la cuenta de quien administra: quien se da de alta acá ve el
+ * mismo tablero, con los proyectos y el token que ya están cargados. El backend
+ * valida el rol y la cuenta en cada ruta; esconder los controles es sólo una
+ * cortesía de la interfaz.
  */
 function UserAdmin({ currentUsername = '' }) {
   const { users, loading, error, createUser, setStatus } = useUsers()
@@ -157,9 +160,12 @@ function UserAdmin({ currentUsername = '' }) {
 
   return (
     <section aria-labelledby="usuarios-heading" className="rounded-lg border border-border bg-surface p-5">
-      <h2 id="usuarios-heading" className="text-base font-semibold text-text-primary mb-4">
+      <h2 id="usuarios-heading" className="text-base font-semibold text-text-primary mb-1">
         Usuarios
       </h2>
+      <p className="text-[12.5px] text-text-muted mb-4">
+        Las personas de tu cuenta. Todas ven el mismo tablero: no tienen que cargar credenciales de GitLab.
+      </p>
 
       {actionError || error ? (
         <p role="alert" className="mb-4 rounded-md border border-conflict bg-conflict-soft px-3 py-2 text-[12.5px] text-text-primary">
@@ -180,7 +186,7 @@ function UserAdmin({ currentUsername = '' }) {
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-[12.5px]">
-            <caption className="sr-only">Usuarios del tablero y sus permisos</caption>
+            <caption className="sr-only">Personas de la cuenta y sus permisos</caption>
             <thead className="text-text-muted">
               <tr>
                 <th scope="col" className="py-2 pr-4 font-semibold">Usuario</th>

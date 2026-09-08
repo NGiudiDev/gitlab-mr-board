@@ -1,15 +1,17 @@
 // 2. Dependencias externas.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { TestServices } from '../../../../test/auth.js';
 // 4. Imports exclusivos de tipos de TypeScript.
-import type { AuthenticatedUser, AuthService } from '../types.js';
+import type { StoredAccount } from '../../accounts/types.js';
+import type { AuthenticatedUser } from '../types.js';
 import type { Express } from 'express';
 
 // 5. Módulos de constantes.
 import { TEST_DISPLAY_NAME, TEST_PASSWORD, TEST_USERNAME } from '../../../../test/constants.js';
 
 // 7. Imports relativos restantes.
-import { createEmptyAuthService, createTestAuthService } from '../../../../test/auth.js';
+import { createEmptyServices, createTestServicesWithUser } from '../../../../test/auth.js';
 import { readSetCookie, requestApp } from '../../../../test/httpClient.js';
 import { createApp } from '../../../app.js';
 import { SESSION_COOKIE_NAME } from './auth.js';
@@ -22,11 +24,21 @@ interface ErrorResponseBody {
   error: string;
 }
 
-let authService: AuthService;
+let services: TestServices & { account: StoredAccount };
+
+/**
+ * Levanta la app con los servicios del test.
+ *
+ * Se pasan los tres siempre: si faltara alguno, `createApp` armaría el resto
+ * contra la base configurada en lugar de la de memoria.
+ */
+function appFor(): Express {
+  return createApp(services);
+}
 
 /** Envía credenciales a `POST /api/auth/login`. */
 function login(username: string, password: string) {
-  return requestApp(createApp({ authService }), '/api/auth/login', {
+  return requestApp(appFor(), '/api/auth/login', {
     method: 'POST',
     body: { username, password },
   });
@@ -34,42 +46,59 @@ function login(username: string, password: string) {
 
 beforeEach(async () => {
   vi.spyOn(console, 'error').mockImplementation(() => {});
-  authService = await createTestAuthService();
+  services = await createTestServicesWithUser();
 });
 
 afterEach(async () => {
-  await authService.close();
+  await services.authService.close();
   vi.restoreAllMocks();
 });
 
 describe('POST /api/auth/register', () => {
-  /** Envía un alta a `POST /api/auth/register` sobre el servicio indicado. */
-  function register(service: AuthService, body: Record<string, string>) {
-    return requestApp(createApp({ authService: service }), '/api/auth/register', {
-      method: 'POST',
-      body,
-    });
+  /** Envía un alta a `POST /api/auth/register`. */
+  function register(body: Record<string, string>, app: Express = appFor()) {
+    return requestApp(app, '/api/auth/register', { method: 'POST', body });
   }
 
-  it('crea el usuario, lo deja administrador si es el primero y abre la sesión', async () => {
-    const empty = await createEmptyAuthService();
-
-    const response = await register(empty, { username: 'zoe', password: TEST_PASSWORD });
+  it('crea una cuenta nueva, deja administrador a quien la abre y abre la sesión', async () => {
+    const response = await register({
+      username: 'zoe',
+      password: TEST_PASSWORD,
+      accountName: 'Equipo de Zoe',
+    });
+    const { user } = response.json<LoginResponseBody>();
 
     expect(response.status).toBe(201);
-    expect(response.json<LoginResponseBody>().user).toMatchObject({ username: 'zoe', role: 'admin' });
+    expect(user).toMatchObject({ username: 'zoe', role: 'admin' });
+    expect(user.accountId).not.toBe(services.account.id);
     expect(readSetCookie(response, SESSION_COOKIE_NAME)).not.toBeNull();
-    await empty.close();
   });
 
-  it('da rol user cuando ya hay alguien registrado', async () => {
-    const response = await register(authService, { username: 'zoe', password: TEST_PASSWORD });
+  it('suma a la cuenta del código de invitación, con rol user', async () => {
+    const response = await register({
+      username: 'zoe',
+      password: TEST_PASSWORD,
+      inviteCode: services.account.inviteCode,
+    });
+    const { user } = response.json<LoginResponseBody>();
 
-    expect(response.json<LoginResponseBody>().user.role).toBe('user');
+    expect(user.role).toBe('user');
+    expect(user.accountId).toBe(services.account.id);
+  });
+
+  it('responde 404 cuando el código de invitación no existe', async () => {
+    const response = await register({
+      username: 'zoe',
+      password: TEST_PASSWORD,
+      inviteCode: 'CODIGOMALO',
+    });
+
+    expect(response.status).toBe(404);
+    expect(readSetCookie(response, SESSION_COOKIE_NAME)).toBeNull();
   });
 
   it('conserva el nombre visible recibido', async () => {
-    const response = await register(authService, {
+    const response = await register({
       username: 'zoe',
       password: TEST_PASSWORD,
       displayName: 'Zoe Ruiz',
@@ -79,35 +108,31 @@ describe('POST /api/auth/register', () => {
   });
 
   it('responde 409 cuando el nombre ya está tomado', async () => {
-    const response = await register(authService, { username: TEST_USERNAME, password: TEST_PASSWORD });
+    const response = await register({ username: TEST_USERNAME, password: TEST_PASSWORD });
 
     expect(response.status).toBe(409);
     expect(readSetCookie(response, SESSION_COOKIE_NAME)).toBeNull();
   });
 
   it('responde 400 cuando el nombre o la contraseña no cumplen las reglas', async () => {
-    const shortName = await register(authService, { username: 'an', password: TEST_PASSWORD });
-    const shortPassword = await register(authService, { username: 'zoe', password: 'corta' });
+    const shortName = await register({ username: 'an', password: TEST_PASSWORD });
+    const shortPassword = await register({ username: 'zoe', password: 'corta' });
 
     expect(shortName.status).toBe(400);
     expect(shortPassword.status).toBe(400);
   });
 
   it('corta con 429 después de varios registros seguidos del mismo origen', async () => {
-    const empty = await createEmptyAuthService();
+    const empty = await createEmptyServices();
     // El límite se cuenta por router, así que la app se reutiliza entre altas.
-    const app = createApp({ authService: empty });
-    const send = (username: string) => requestApp(app, '/api/auth/register', {
-      method: 'POST',
-      body: { username, password: TEST_PASSWORD },
-    });
+    const app = createApp(empty);
 
     for (const username of ['uno', 'dos', 'tres', 'cuatro', 'cinco']) {
-      expect((await send(username)).status).toBe(201);
+      expect((await register({ username, password: TEST_PASSWORD }, app)).status).toBe(201);
     }
 
-    expect((await send('seis')).status).toBe(429);
-    await empty.close();
+    expect((await register({ username: 'seis', password: TEST_PASSWORD }, app)).status).toBe(429);
+    await empty.authService.close();
   });
 });
 
@@ -118,9 +143,11 @@ describe('POST /api/auth/login', () => {
     expect(response.status).toBe(200);
     expect(response.json<LoginResponseBody>().user).toEqual({
       id: expect.any(String),
+      accountId: services.account.id,
       username: TEST_USERNAME,
       displayName: TEST_DISPLAY_NAME,
       role: 'user',
+      gitlabUsername: null,
     });
     expect(readSetCookie(response, SESSION_COOKIE_NAME)).not.toBeNull();
   });
@@ -152,7 +179,7 @@ describe('POST /api/auth/login', () => {
   });
 
   it('responde 400 cuando faltan las credenciales', async () => {
-    const response = await requestApp(createApp({ authService }), '/api/auth/login', {
+    const response = await requestApp(appFor(), '/api/auth/login', {
       method: 'POST',
       body: {},
     });
@@ -162,7 +189,7 @@ describe('POST /api/auth/login', () => {
   });
 
   it('responde 403 cuando el usuario está deshabilitado', async () => {
-    await authService.setUserStatus(TEST_USERNAME, 'disabled');
+    await services.authService.setUserStatus(TEST_USERNAME, 'disabled');
 
     const response = await login(TEST_USERNAME, TEST_PASSWORD);
 
@@ -170,7 +197,7 @@ describe('POST /api/auth/login', () => {
   });
 
   it('traduce a 500 un fallo inesperado del servicio', async () => {
-    vi.spyOn(authService, 'login').mockRejectedValue(new Error('la base no responde'));
+    vi.spyOn(services.authService, 'login').mockRejectedValue(new Error('la base no responde'));
 
     const response = await login(TEST_USERNAME, TEST_PASSWORD);
 
@@ -181,7 +208,7 @@ describe('POST /api/auth/login', () => {
 
 describe('GET /api/auth/me', () => {
   it('devuelve el usuario de la sesión vigente', async () => {
-    const app = createApp({ authService });
+    const app = appFor();
     const cookie = readSetCookie(await login(TEST_USERNAME, TEST_PASSWORD), SESSION_COOKIE_NAME) ?? '';
 
     const response = await requestApp(app, '/api/auth/me', { headers: { cookie } });
@@ -191,15 +218,56 @@ describe('GET /api/auth/me', () => {
   });
 
   it('responde 401 sin cookie', async () => {
-    const response = await requestApp(createApp({ authService }), '/api/auth/me');
+    const response = await requestApp(appFor(), '/api/auth/me');
 
     expect(response.status).toBe(401);
     expect(response.json<ErrorResponseBody>().error).toBe('Iniciá sesión para ver el tablero.');
   });
 
   it('responde 401 con una cookie que no corresponde a ninguna sesión', async () => {
-    const response = await requestApp(createApp({ authService }), '/api/auth/me', {
+    const response = await requestApp(appFor(), '/api/auth/me', {
       headers: { cookie: `${SESSION_COOKIE_NAME}=token-inventado` },
+    });
+
+    expect(response.status).toBe(401);
+  });
+});
+
+describe('PUT /api/auth/gitlab-username', () => {
+  /** Guarda el nickname propio reenviando la cookie de sesión. */
+  function saveGitlabUsername(app: Express, cookie: string, gitlabUsername: unknown) {
+    return requestApp(app, '/api/auth/gitlab-username', {
+      method: 'PUT',
+      headers: { cookie },
+      body: { gitlabUsername },
+    });
+  }
+
+  it('guarda el nickname y devuelve la identidad actualizada', async () => {
+    const app = appFor();
+    const cookie = readSetCookie(await login(TEST_USERNAME, TEST_PASSWORD), SESSION_COOKIE_NAME) ?? '';
+
+    const response = await saveGitlabUsername(app, cookie, 'ana-gitlab');
+    const session = await requestApp(app, '/api/auth/me', { headers: { cookie } });
+
+    expect(response.status).toBe(200);
+    expect(response.json<LoginResponseBody>().user.gitlabUsername).toBe('ana-gitlab');
+    // La sesión sigue abierta: el nickname no es una credencial.
+    expect(session.json<LoginResponseBody>().user.gitlabUsername).toBe('ana-gitlab');
+  });
+
+  it('responde 400 cuando el nickname no es válido', async () => {
+    const app = appFor();
+    const cookie = readSetCookie(await login(TEST_USERNAME, TEST_PASSWORD), SESSION_COOKIE_NAME) ?? '';
+
+    expect((await saveGitlabUsername(app, cookie, '')).status).toBe(400);
+    expect((await saveGitlabUsername(app, cookie, '-ana')).status).toBe(400);
+  });
+
+  it('responde 401 sin sesión', async () => {
+    const response = await requestApp(appFor(), '/api/auth/gitlab-username', {
+      method: 'PUT',
+      body: { gitlabUsername: 'ana-gitlab' },
     });
 
     expect(response.status).toBe(401);
@@ -213,7 +281,7 @@ describe('PUT /api/auth/password', () => {
   }
 
   it('cambia la contraseña, borra la cookie y cierra la sesión', async () => {
-    const app = createApp({ authService });
+    const app = appFor();
     const cookie = readSetCookie(await login(TEST_USERNAME, TEST_PASSWORD), SESSION_COOKIE_NAME) ?? '';
 
     const response = await changePassword(app, cookie, {
@@ -228,7 +296,7 @@ describe('PUT /api/auth/password', () => {
   });
 
   it('responde 403 cuando la contraseña actual no coincide', async () => {
-    const app = createApp({ authService });
+    const app = appFor();
     const cookie = readSetCookie(await login(TEST_USERNAME, TEST_PASSWORD), SESSION_COOKIE_NAME) ?? '';
 
     const response = await changePassword(app, cookie, {
@@ -241,7 +309,7 @@ describe('PUT /api/auth/password', () => {
   });
 
   it('responde 400 cuando la contraseña nueva es demasiado corta', async () => {
-    const app = createApp({ authService });
+    const app = appFor();
     const cookie = readSetCookie(await login(TEST_USERNAME, TEST_PASSWORD), SESSION_COOKIE_NAME) ?? '';
 
     const response = await changePassword(app, cookie, {
@@ -253,7 +321,7 @@ describe('PUT /api/auth/password', () => {
   });
 
   it('responde 401 sin sesión', async () => {
-    const response = await requestApp(createApp({ authService }), '/api/auth/password', {
+    const response = await requestApp(appFor(), '/api/auth/password', {
       method: 'PUT',
       body: { currentPassword: TEST_PASSWORD, newPassword: 'contrasena-nueva' },
     });
@@ -264,7 +332,7 @@ describe('PUT /api/auth/password', () => {
 
 describe('POST /api/auth/logout', () => {
   it('invalida la sesión y borra la cookie', async () => {
-    const app = createApp({ authService });
+    const app = appFor();
     const cookie = readSetCookie(await login(TEST_USERNAME, TEST_PASSWORD), SESSION_COOKIE_NAME) ?? '';
 
     const logout = await requestApp(app, '/api/auth/logout', { method: 'POST', headers: { cookie } });
@@ -276,7 +344,7 @@ describe('POST /api/auth/logout', () => {
   });
 
   it('responde 204 aunque no haya sesión activa', async () => {
-    const response = await requestApp(createApp({ authService }), '/api/auth/logout', { method: 'POST' });
+    const response = await requestApp(appFor(), '/api/auth/logout', { method: 'POST' });
 
     expect(response.status).toBe(204);
   });
