@@ -1,4 +1,4 @@
-// 7. Imports relativos restantes.
+// 6. Imports relativos restantes.
 import { resetAccountStore } from '../src/features/accounts/hooks/useAccount.js'
 import { resetSessionStore } from '../src/features/auth/hooks/useSession.js'
 import { getState, resetStore } from '../src/features/mergeRequests/hooks/useMergeRequests.js'

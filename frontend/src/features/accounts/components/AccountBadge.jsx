@@ -1,4 +1,4 @@
-// 7. Imports relativos restantes.
+// 6. Imports relativos restantes.
 import { useAccount } from '../hooks/useAccount.js'
 
 /**

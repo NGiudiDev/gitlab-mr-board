@@ -1,7 +1,7 @@
 // 2. Dependencias externas.
 import { useEffect, useState } from 'react'
 
-// 7. Imports relativos restantes.
+// 6. Imports relativos restantes.
 import AccountPanel from '../features/accounts/components/AccountPanel.jsx'
 import { resetAccountStore } from '../features/accounts/hooks/useAccount.js'
 import GitlabIdentityPanel from '../features/auth/components/GitlabIdentityPanel.jsx'

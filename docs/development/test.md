@@ -19,7 +19,6 @@ Los E2E recorren la aplicación completa contra proyectos reales dedicados a tes
 | `npm test` en la raíz | Suites unitarias y de integración de ambos paquetes |
 | `npm test` en `backend/` o `frontend/` | La suite de ese paquete |
 | `npm run test:watch` en un paquete | Su suite en modo interactivo |
-| `npm run typecheck` en `backend/` | Tipos de producción y de test |
 | `npm run test:e2e` en la raíz | Recorrido E2E contra GitLab real |
 | `npm run test:e2e:ui` en la raíz | El mismo recorrido en el modo interactivo de Playwright |
 | `npm run test:coverage` en la raíz | Cobertura de ambos paquetes |
@@ -29,7 +28,7 @@ Los E2E recorren la aplicación completa contra proyectos reales dedicados a tes
 
 ## Cobertura
 
-Cada paquete la calcula con el proveedor `v8` de Vitest sobre todos sus módulos de producción, incluidos los que todavía no tienen test. Quedan afuera los propios archivos de test, los `types.ts` de cada feature del backend —sólo declaran tipos— y `frontend/src/main.jsx`, que únicamente monta la aplicación.
+Cada paquete la calcula con el proveedor `v8` de Vitest sobre todos sus módulos de producción, incluidos los que todavía no tienen test. Quedan afuera los propios archivos de test y `frontend/src/main.jsx`, que únicamente monta la aplicación.
 
 El resumen sale por consola y el detalle navegable queda en `coverage/index.html` de cada paquete, junto con `lcov.info` para las herramientas que lo consuman. La tabla de consola omite los archivos con 100 % en todas las columnas: para verlos a todos, abrir el reporte HTML.
 
@@ -37,7 +36,7 @@ No hay umbral mínimo configurado, en línea con la convención de no tratar la 
 
 ## Convenciones
 
-- Ubicar cada test junto al módulo cubierto con el sufijo `.test.ts`, `.test.js` o `.test.jsx`, según el tipo de archivo. En el backend eso significa dentro de la feature: los del tablero viven en `features/mergeRequests/` y `src/app.test.ts` cubre sólo la composición.
+- Ubicar cada test junto al módulo cubierto con el sufijo `.test.js` o `.test.jsx`, según el tipo de archivo. En el backend eso significa dentro de la feature: los del tablero viven en `features/mergeRequests/` y `src/app.test.js` cubre sólo la composición.
 - Reservar `test/` dentro de cada paquete para configuración, fixtures y utilidades compartidas.
 - Priorizar reglas de negocio y comportamiento observable; evitar snapshots extensos y aserciones sobre clases de Tailwind.
 - Mantener cada test independiente y ejecutable en cualquier orden.
@@ -56,17 +55,16 @@ Y las cuentas: la generación y normalización del código de invitación, el al
 
 Los test de integración construyen Express en memoria con `createApp()`, inyectan la fuente de datos y el reloj cuando corresponde y reemplazan `global.fetch` con respuestas controladas. Los contratos de esas piezas están en la [arquitectura del backend](../architecture/backend.md).
 
-Los test que necesitan persistencia piden una base con `createTestDatabase()` de `backend/test/database.ts`. Arrancar PGlite cuesta alrededor de un segundo, así que **la instancia es una sola por archivo de test** y cada llamada vacía las tablas: pedir dos bases dentro del mismo test no da dos bases independientes, sino la misma recién vaciada. Por ese arranque, `testTimeout` y `hookTimeout` están en 30 segundos —casi todos los archivos abren la base en un `beforeEach`—. `backend/test/auth.ts` arma la app con una sesión ya iniciada —del rol que pida el test— y devuelve la cookie que hay que reenviar, junto con la cuenta, el usuario y los tres servicios; `createEmptyServices()` sirve para probar el alta sobre una base vacía y `createTestServicesWithUser()`, para armar la app a mano.
+Los test que necesitan persistencia piden una base con `createTestDatabase()` de `backend/test/database.js`. Arrancar PGlite cuesta alrededor de un segundo, así que **la instancia es una sola por archivo de test** y cada llamada vacía las tablas: pedir dos bases dentro del mismo test no da dos bases independientes, sino la misma recién vaciada. Por ese arranque, `testTimeout` y `hookTimeout` están en 30 segundos —casi todos los archivos abren la base en un `beforeEach`—. `backend/test/auth.js` arma la app con una sesión ya iniciada —del rol que pida el test— y devuelve la cookie que hay que reenviar, junto con la cuenta, el usuario y los tres servicios; `createEmptyServices()` sirve para probar el alta sobre una base vacía y `createTestServicesWithUser()`, para armar la app a mano.
 
 Hay que pasarle a `createApp()` **los tres servicios**: si falta alguno, arma el que falte contra la base configurada en lugar de la de memoria.
 
 Ese mismo helper deja la configuración de GitLab ya guardada en la cuenta y el nickname cargado en el usuario, porque casi todos los test del tablero los dan por hechos: para probar lo contrario alcanza con `gitlabSettingsService.remove(account.id)`. Los tres repositorios comparten una sola base en memoria, ya que las claves foráneas entre sus tablas sólo valen dentro de la misma.
 
-La migración a cuentas se prueba en `src/shared/database.test.ts`, que arma el esquema anterior en su propio PGlite —no el compartido, que ya viene migrado— y comprueba lo que `applySchema()` rescata y lo que descarta.
+La migración a cuentas se prueba en `src/shared/database.test.js`, que arma el esquema anterior en su propio PGlite —no el compartido, que ya viene migrado— y comprueba lo que `applySchema()` rescata y lo que descarta.
 
 Toda la capa de datos es asíncrona, así que los test la esperan: un `expect(servicio.metodo())` sin `await` compara contra una promesa y falla con «expected Promise{…}».
 
-`backend/tsconfig.json` excluye los test del build y `backend/tsconfig.test.json` los incluye en la validación de tipos.
 
 ## Frontend
 
@@ -125,10 +123,9 @@ Sólo se ejecuta Chromium: Firefox y WebKit se agregan únicamente ante un requi
 
 Para cualquier cambio:
 
-1. Ejecutar `npm test` desde la raíz.
-2. Si cambia el backend, ejecutar `npm run typecheck` y `npm run build` en `backend/`.
-3. Si cambia el frontend, ejecutar `npm run build` en `frontend/`.
-4. Iniciar los paquetes afectados y revisar terminales y consola del navegador.
+1. Ejecutar `npm test` y `npm run lint` desde la raíz.
+2. Si cambia el frontend, ejecutar `npm run build` en `frontend/`.
+3. Iniciar los paquetes afectados y revisar terminales y consola del navegador.
 
 Para cambios de interfaz, además:
 

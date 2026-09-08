@@ -3,21 +3,18 @@
   "version": "1.0.0",
   "description": "BFF backend for GitLab MR Dashboard",
   "type": "module",
-  "main": "src/index.ts",
+  "main": "src/index.js",
   "engines": {
     "node": ">=22.13.0",
     "npm": ">=10.0.0"
   },
   "scripts": {
-    "build": "tsc",
-    "start": "tsx src/index.ts",
-    "start:prod": "node dist/index.js",
-    "dev": "tsx watch src/index.ts",
-    "typecheck": "tsc --noEmit && tsc --project tsconfig.test.json",
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "users": "tsx src/scripts/users.ts"
+    "users": "node src/scripts/users.js"
   },
   "dependencies": {
     "@neondatabase/serverless": "1.1.0",
@@ -27,12 +24,7 @@
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.8",
-    "@types/cors": "2.8.19",
-    "@types/express": "5.0.6",
-    "@types/node": "22.20.1",
     "@vitest/coverage-v8": "4.1.11",
-    "tsx": "4.23.12",
-    "typescript": "5.9.3",
     "vitest": "4.1.11"
   }
 }

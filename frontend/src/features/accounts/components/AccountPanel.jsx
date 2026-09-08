@@ -1,7 +1,7 @@
 // 2. Dependencias externas.
 import { useEffect, useState } from 'react'
 
-// 7. Imports relativos restantes.
+// 6. Imports relativos restantes.
 import { useAccount } from '../hooks/useAccount.js'
 
 const FIELD_CLASSES = 'block w-full mt-1 rounded-md border border-control bg-surface-raised px-3 py-2 text-[13px] font-normal text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'

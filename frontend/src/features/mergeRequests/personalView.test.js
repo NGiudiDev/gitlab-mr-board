@@ -1,7 +1,7 @@
 // 2. Dependencias externas.
 import { describe, expect, it } from 'vitest'
 
-// 7. Imports relativos restantes.
+// 6. Imports relativos restantes.
 import { buildMergeRequest } from '../../../test/fixtures/mergeRequests.js'
 import { findPersonByUsername, mergeRequestsForPerson } from './personalView.js'
 

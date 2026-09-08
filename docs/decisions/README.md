@@ -11,5 +11,6 @@
 - [ADR 0009: reemplazar SQLite local por Neon](0009-neon-como-base-de-datos.md)
 - [ADR 0010: organizar el backend por features](0010-backend-por-features.md)
 - [ADR 0011: agrupar a los usuarios en cuentas](0011-cuentas-compartidas.md)
+- [ADR 0012: dejar TypeScript y escribir el backend en JavaScript](0012-javascript-sin-typescript.md)
 
 Una decisión posterior se registra en un ADR nuevo en lugar de reescribir uno aceptado.

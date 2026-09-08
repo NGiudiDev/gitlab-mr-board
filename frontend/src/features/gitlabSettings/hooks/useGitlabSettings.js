@@ -1,7 +1,7 @@
 // 2. Dependencias externas.
 import { useCallback, useEffect, useState } from 'react'
 
-// 7. Imports relativos restantes.
+// 6. Imports relativos restantes.
 import config from '../../../config.js'
 
 const NETWORK_ERROR_MESSAGE = 'No se pudo conectar al backend.'

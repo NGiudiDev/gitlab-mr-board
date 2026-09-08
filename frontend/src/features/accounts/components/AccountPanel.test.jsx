@@ -2,7 +2,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-// 7. Imports relativos restantes.
+// 6. Imports relativos restantes.
 import { jsonResponse, resetSharedState, TEST_ACCOUNT, TEST_USER } from '../../../../test/sharedState.js'
 import AccountPanel from './AccountPanel.jsx'
 

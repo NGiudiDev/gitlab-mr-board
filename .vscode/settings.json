@@ -6,9 +6,7 @@
   "editor.formatOnSave": false,
   "eslint.validate": [
     "javascript",
-    "javascriptreact",
-    "typescript",
-    "typescriptreact"
+    "javascriptreact"
   ],
   "eslint.workingDirectories": [
     {

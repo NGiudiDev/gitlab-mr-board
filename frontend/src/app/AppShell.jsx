@@ -1,4 +1,4 @@
-// 7. Imports relativos restantes.
+// 6. Imports relativos restantes.
 import AccountBadge from '../features/accounts/components/AccountBadge.jsx'
 import SessionBar from '../features/auth/components/SessionBar.jsx'
 

@@ -3,7 +3,7 @@ import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-// 7. Imports relativos restantes.
+// 6. Imports relativos restantes.
 import { jsonResponse } from '../../../../test/sharedState.js'
 import UserAdmin from './UserAdmin.jsx'
 
