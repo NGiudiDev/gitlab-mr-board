@@ -18,7 +18,9 @@ import { createGitLabSettingsRouter } from './features/gitlabSettings/routes/git
 import { createGitLabSettingsRepository } from './features/gitlabSettings/services/gitlabSettingsRepository.js';
 import { createGitLabSettingsService } from './features/gitlabSettings/services/gitlabSettingsService.js';
 import { createMergeRequestsRouter } from './features/mergeRequests/routes/mergeRequests.js';
-import { createNeonDatabase } from './shared/database.js';
+import { applySchema, createNeonDatabase } from './shared/database.js';
+
+let configuredAppPromise;
 
 const ALLOWED_ORIGINS = ['http://localhost:5173', 'http://localhost:4173'];
 
@@ -115,4 +117,63 @@ function createApp(options = {}) {
   return app;
 }
 
-export { createApp, createServices };
+/**
+ * Prepara la aplicación sobre la base configurada y aplica el esquema antes de
+ * aceptar solicitudes.
+ *
+ * @returns Aplicación Express lista para atender solicitudes.
+ * @throws {Error} Si la base no está disponible o no se puede aplicar el esquema.
+ */
+async function createConfiguredApp() {
+  const database = createNeonDatabase(config.databaseUrl);
+
+  try {
+    await applySchema(database);
+
+    return createApp(createServices(database));
+  } catch (error) {
+    await database.close().catch((closeError) => {
+      console.error('No se pudo cerrar la conexión después de un arranque fallido:', closeError);
+    });
+
+    throw error;
+  }
+}
+
+/** Conserva una sola inicialización por proceso y permite reintentar si falla. */
+async function getConfiguredApp() {
+  configuredAppPromise ??= createConfiguredApp();
+
+  try {
+    return await configuredAppPromise;
+  } catch (error) {
+    configuredAppPromise = undefined;
+    throw error;
+  }
+}
+
+/**
+ * Adapta Express al contrato de entrada de una Vercel Function.
+ *
+ * @param loadApp Inicializador inyectable para los test.
+ * @returns Handler compatible con Vercel.
+ */
+function createVercelHandler(loadApp = getConfiguredApp) {
+  return async (request, response) => {
+    try {
+      const app = await loadApp();
+
+      return app(request, response);
+    } catch (error) {
+      console.error('No se pudo preparar el backend para atender la solicitud:', error);
+      response.statusCode = 503;
+      response.setHeader('Content-Type', 'application/json; charset=utf-8');
+      response.end(JSON.stringify({ error: 'El backend no pudo conectarse con la base de datos.' }));
+    }
+  };
+}
+
+const handleVercelRequest = createVercelHandler();
+
+export default handleVercelRequest;
+export { createApp, createConfiguredApp, createServices, createVercelHandler };

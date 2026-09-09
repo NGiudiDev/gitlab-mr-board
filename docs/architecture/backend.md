@@ -26,8 +26,8 @@ En `shared/` va únicamente lo que usan varias features. Lo que usa una sola viv
 
 ### Composición y entradas
 
-- `src/index.js`: abre la base, aplica el esquema y recién entonces inicia el servidor en el puerto configurado. No contiene rutas ni lógica de negocio.
-- `src/app.js`: construye Express mediante `createApp()`, configura CORS y JSON, registra el health check, monta los routers de cada feature —exigiendo sesión en `/api`, y rol `admin` en `/api/users` y en la escritura de la cuenta y de la configuración de GitLab— y centraliza los errores no controlados. Importa cada router por su ruta completa: no hay barrels.
+- `src/index.js`: prepara la aplicación y recién entonces inicia el servidor local en el puerto configurado. No contiene rutas ni lógica de negocio.
+- `src/app.js`: construye Express mediante `createApp()`, abre la base y aplica el esquema mediante `createConfiguredApp()`, y exporta por omisión el handler que usa Vercel. Configura CORS y JSON, registra el health check, monta los routers de cada feature —exigiendo sesión en `/api`, y rol `admin` en `/api/users` y en la escritura de la cuenta y de la configuración de GitLab— y centraliza los errores no controlados. Importa cada router por su ruta completa: no hay barrels.
 - `src/config.js`: carga `backend/.env`, valida las variables obligatorias y expone la configuración normalizada.
 - `src/scripts/users.js`: herramienta de línea de comandos para administrar cuentas y usuarios. Es un punto de entrada más, como `index.js`, y no forma parte de la API.
 
@@ -70,7 +70,9 @@ En `shared/` va únicamente lo que usan varias features. Lo que usa una sola viv
 
 ## Construcción y arranque
 
-`createApp()` construye la aplicación sin abrir un puerto y `src/index.js` es el único responsable de invocar `listen()`, así que la aplicación puede ejecutarse en memoria o en distintos entornos. Tanto `createApp()` como `createMergeRequestsRouter()` reciben por inyección la fuente de merge requests y el reloj de la caché, lo que permite controlar sus dependencias sin consultar GitLab ni depender del tiempo real. `createApp()` acepta además los servicios de cuentas, de autenticación y de configuración de GitLab ya construidos; si le falta alguno, abre el pool de `DATABASE_URL` y arma los tres sobre esa misma conexión. Aplicar el esquema, en cambio, es responsabilidad de `src/index.js`: la base es remota y hay que esperar a que esté lista antes de escuchar.
+`createApp()` construye la aplicación sin abrir un puerto y `src/index.js` es el único responsable de invocar `listen()`, así que la aplicación puede ejecutarse en memoria o en distintos entornos. Tanto `createApp()` como `createMergeRequestsRouter()` reciben por inyección la fuente de merge requests y el reloj de la caché, lo que permite controlar sus dependencias sin consultar GitLab ni depender del tiempo real. `createApp()` acepta además los servicios de cuentas, de autenticación y de configuración de GitLab ya construidos; si le falta alguno, abre el pool de `DATABASE_URL` y arma los tres sobre esa misma conexión.
+
+`createConfiguredApp()` abre una sola base y aplica el esquema antes de construir los servicios. El handler exportado por omisión conserva esa inicialización por proceso para las invocaciones de Vercel y la descarta si falla, de modo que una interrupción transitoria de Neon pueda reintentarse. Si la preparación no termina, responde HTTP 503; el arranque local reutiliza la misma función y no abre el puerto hasta que la base está lista.
 
 ## Flujo de una consulta
 

@@ -1,7 +1,6 @@
 // 6. Imports relativos restantes.
-import { createApp, createServices } from './app.js';
+import { createConfiguredApp } from './app.js';
 import config from './config.js';
-import { applySchema, createNeonDatabase } from './shared/database.js';
 
 /**
  * Abre la base, deja el esquema aplicado y recién entonces atiende pedidos.
@@ -10,11 +9,7 @@ import { applySchema, createNeonDatabase } from './shared/database.js';
  * arrancar, en lugar de responder errores a cada consulta.
  */
 async function main() {
-  const database = createNeonDatabase(config.databaseUrl);
-
-  await applySchema(database);
-
-  const app = createApp(createServices(database));
+  const app = await createConfiguredApp();
 
   app.listen(config.port, () => {
     console.log(`Backend disponible en http://localhost:${config.port}`);

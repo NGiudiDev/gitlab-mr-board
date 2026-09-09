@@ -101,7 +101,7 @@ const SCHEMA_STATEMENTS = [
   'ALTER TABLE users ALTER COLUMN account_id SET NOT NULL',
 ];
 
-// El driver habla el protocolo de Postgres sobre WebSocket. Node 22 ya trae la
+// El driver habla el protocolo de Postgres sobre WebSocket. Node 24 ya trae la
 // implementación como global, así que dejarla explícita evita depender de la
 // autodetección del paquete.
 neonConfig.webSocketConstructor ??= globalThis.WebSocket;
