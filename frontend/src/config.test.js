@@ -10,6 +10,10 @@ describe('parseApiBaseUrl', () => {
     expect(parseApiBaseUrl('')).toBe(DEFAULT_API_BASE_URL)
   })
 
+  it('permite usar el mismo origen como valor predeterminado en producción', () => {
+    expect(parseApiBaseUrl(undefined, '')).toBe('')
+  })
+
   it('normaliza espacios y barras finales', () => {
     expect(parseApiBaseUrl(' https://api.example.com/base/ ')).toBe('https://api.example.com/base')
   })

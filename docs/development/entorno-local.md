@@ -33,9 +33,9 @@ El frontend usa esta variable, expuesta por Vite durante el build:
 
 | Variable | Obligatoria | Predeterminado | Uso |
 |---|---:|---|---|
-| `VITE_API_BASE_URL` | No | `http://localhost:3001` | URL base HTTP(S) del backend |
+| `VITE_API_BASE_URL` | No | `http://localhost:3001` en desarrollo; mismo origen en producción | URL base HTTP(S) del backend |
 
-`frontend/src/config.js` valida el valor y elimina la barra final. `frontend/.env.example` contiene la configuración recomendada para desarrollo local. Vite solo expone al navegador variables con el prefijo `VITE_`; nunca colocar secretos en ellas.
+`frontend/src/config.js` valida el valor y elimina la barra final. `frontend/.env.example` contiene la configuración recomendada para desarrollo local. En Vercel la variable se deja sin definir: el frontend usa su propio origen y `frontend/vercel.json` reescribe `/api` hacia el proyecto del backend, evitando CORS y cookies de terceros. Vite solo expone al navegador variables con el prefijo `VITE_`; nunca colocar secretos en ellas.
 
 ## Base de datos
 

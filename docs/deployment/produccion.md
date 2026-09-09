@@ -10,7 +10,7 @@ npm ci
 npm run build
 ```
 
-Definir `VITE_API_BASE_URL` con la URL pública del backend antes del build y servir `frontend/dist/` como contenido estático. El valor queda incorporado en los archivos generados; el predeterminado `http://localhost:3001` se reserva para desarrollo local.
+Servir `frontend/dist/` como contenido estático. En Vercel, crear un proyecto con `frontend/` como Root Directory, dejar `VITE_API_BASE_URL` sin definir y conservar el rewrite de `frontend/vercel.json`: el navegador consulta `/api` en el mismo origen y Vercel deriva esas solicitudes al proyecto del backend. El valor `http://localhost:3001` se reserva para desarrollo local.
 
 ## Backend
 
@@ -31,7 +31,7 @@ El login guarda usuarios, sesiones y la configuración de GitLab en la base Post
 ## Operación
 
 - Publicar ambos servicios detrás de HTTPS y dejar `COOKIE_SECURE=true`, para que la cookie de sesión no viaje en claro. Con `NODE_ENV=production` ya queda activo.
-- Ajustar CORS en `backend/src/app.js`; hoy solo permite los orígenes locales con puertos 5173 y 4173.
+- Mantener las llamadas del frontend en el mismo origen mediante el rewrite de Vercel. Si se publica otro frontend que consulte directamente al backend, agregar explícitamente su origen permitido en `backend/src/app.js` y revisar también la política de la cookie de sesión.
 - Usar `/health` como chequeo de vida, sabiendo que no valida GitLab.
 - Se pueden correr varias instancias: comparten la base, pero no la caché del tablero, que sigue siendo por proceso ([ADR 0002](../decisions/0002-cache-en-memoria.md)).
 - El respaldo de la base lo cubre Neon, con sus ramas y su recuperación por punto en el tiempo. Lo que sí hay que respaldar aparte es **`ENCRYPTION_KEY`**: sin ella, un volcado de la base no alcanza para recuperar los access token y cada cuenta tiene que cargar el suyo de nuevo.
