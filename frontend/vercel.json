@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://gitlab-mr-board.vercel.app/api/:path*"
+      "destination": "https://gitlab-mr-board-backend.vercel.app/api/:path*"
     },
     {
       "source": "/(.*)",
