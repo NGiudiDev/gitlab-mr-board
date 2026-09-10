@@ -1,0 +1,22 @@
+name: Protect main
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate-source-branch:
+    name: Validate source branch
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check source branch
+        run: |
+          if [ "${{ github.head_ref }}" != "staging" ]; then
+            echo "❌ Only pull requests from 'staging' can be merged into 'main'."
+            echo "Source branch: ${{ github.head_ref }}"
+            exit 1
+          fi
+
+          echo "✅ Pull request comes from 'staging'."
