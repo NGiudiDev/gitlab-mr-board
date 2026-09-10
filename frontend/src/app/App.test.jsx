@@ -265,7 +265,7 @@ describe('vista personal de un administrador', () => {
     expect(container.textContent).not.toContain('Corregir cálculo de approvals')
     expect(screen.getByRole('heading', { level: 2 }).textContent).toBe('Tareas de Ana Pérez por estado')
     expect(container.textContent).toContain('equipo/tablero')
-    expect(container.querySelectorAll('button[aria-expanded]')).toHaveLength(2)
+    expect(container.querySelectorAll('button[aria-controls^="panel-"]')).toHaveLength(2)
     expect(container.querySelectorAll('section[aria-labelledby^="columna-"]')).toHaveLength(12)
     expect(container.textContent).toContain('1 MRs visibles')
     expect(liveRegion().textContent).toBe('Vista personal de Ana Pérez. Se muestran 1 merge requests.')
@@ -428,6 +428,7 @@ describe('portero de sesión', () => {
     signInTestUser()
     await renderApp()
 
+    fireEvent.click(screen.getByRole('button', { name: 'Abrir menú de cuenta de Ana Pérez' }))
     fireEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
     await flush()
 
@@ -680,6 +681,7 @@ describe('navegación entre secciones', () => {
     await renderApp()
     await openSection('Mi cuenta')
 
+    fireEvent.click(screen.getByRole('button', { name: 'Abrir menú de cuenta de Ana Pérez' }))
     fireEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
     await flush()
     signInTestUser()

@@ -55,14 +55,15 @@ describe('AppShell', () => {
   })
 
   it('muestra de qué equipo es el tablero que se está mirando', async () => {
-    const { container } = renderShell({ user: TEST_USER })
+    renderShell({ user: TEST_USER })
 
     await act(async () => {
       await Promise.resolve()
       await Promise.resolve()
     })
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir menú de cuenta de Ana Pérez' }))
 
-    expect(container.querySelector('header').textContent).toContain('Equipo de prueba')
+    expect(screen.getByRole('region', { name: 'Menú de cuenta' }).textContent).toContain('Equipo de prueba')
   })
 
   it('esconde la barra sin sesión, para que el ingreso ocupe la pantalla', () => {
@@ -116,6 +117,7 @@ describe('AppShell: navegación', () => {
     const onLogout = vi.fn()
     renderShell({ user: TEST_USER, onLogout })
 
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir menú de cuenta de Ana Pérez' }))
     await userEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
 
     expect(onLogout).toHaveBeenCalledTimes(1)

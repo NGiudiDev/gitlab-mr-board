@@ -1,6 +1,5 @@
 // 6. Imports relativos restantes.
-import AccountBadge from '../features/accounts/components/AccountBadge.jsx'
-import SessionBar from '../features/auth/components/SessionBar.jsx'
+import AccountMenu from './AccountMenu.jsx'
 
 /**
  * Secciones navegables con la sesión abierta, en el orden en que aparecen en la
@@ -32,8 +31,8 @@ function sectionsFor(user) {
 
 /**
  * Layout de la aplicación: una barra superior mínima con el nombre del tablero,
- * la navegación entre el tablero y la configuración de la cuenta, y el equipo y
- * la sesión abierta; debajo, el contenido de la sección activa.
+ * la navegación entre el tablero y la configuración de la cuenta, y un menú
+ * con la cuenta y la sesión abierta; debajo, el contenido de la sección activa.
  *
  * La barra aparece sólo con la sesión abierta: el ingreso y el alta son
  * pantallas completas que traen su propio encabezado principal.
@@ -82,10 +81,7 @@ function AppShell({
               </ul>
             </nav>
 
-            <div className="ml-auto flex items-center gap-4">
-              <AccountBadge user={user} />
-              <SessionBar user={user} onLogout={onLogout} />
-            </div>
+            <AccountMenu user={user} onLogout={onLogout} />
           </div>
         </header>
       ) : null}

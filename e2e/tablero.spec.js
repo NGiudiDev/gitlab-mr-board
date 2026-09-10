@@ -130,7 +130,7 @@ test.describe('Tablero de merge requests', () => {
       await page.keyboard.press('Tab');
       expect(await focusedAccessibleName(page)).toContain('Saltar al contenido principal');
 
-      // La barra del layout va primero: tablero, cuenta, usuarios y la sesión.
+      // La barra del layout va primero: tablero, cuenta, usuarios y el menú de sesión.
       await page.keyboard.press('Tab');
       expect(await focusedAccessibleName(page)).toContain('Tablero');
 
@@ -141,7 +141,15 @@ test.describe('Tablero de merge requests', () => {
       expect(await focusedAccessibleName(page)).toContain('Usuarios');
 
       await page.keyboard.press('Tab');
+      expect(await focusedAccessibleName(page)).toContain('Abrir menú de cuenta');
+      await page.keyboard.press('Enter');
+      await expect(page.getByRole('button', { name: 'Cerrar sesión' })).toBeVisible();
+
+      await page.keyboard.press('Tab');
       expect(await focusedAccessibleName(page)).toContain('Cerrar sesión');
+
+      await page.keyboard.press('Escape');
+      await expect(page.getByRole('button', { name: 'Abrir menú de cuenta' })).toBeFocused();
 
       await page.keyboard.press('Tab');
       expect(await focusedAccessibleName(page)).toContain('General');
@@ -186,6 +194,7 @@ test.describe('Tablero de merge requests', () => {
     });
 
     await test.step('cierra la sesión y vuelve al formulario de ingreso', async () => {
+      await page.getByRole('button', { name: 'Abrir menú de cuenta' }).click();
       await page.getByRole('button', { name: 'Cerrar sesión' }).click();
 
       await expect(page.getByRole('button', { name: 'Ingresar' })).toBeVisible();

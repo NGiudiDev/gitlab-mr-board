@@ -134,7 +134,7 @@ El estado de la sesión vive en el store `features/auth/hooks/useSession.js`, co
 
 1. Al abrir la app se consulta `GET /api/auth/me`. Mientras tanto se muestra «Verificando tu sesión...», para no hacer parpadear el formulario.
 2. Sin sesión se presenta `LoginForm`, que ofrece cambiar a `RegisterForm`; ese formulario elige entre sumarse a un equipo con su código o abrir uno nuevo. Con sesión, el tablero, que recién se monta autenticado para que el polling no dispare peticiones que el backend vaya a rechazar.
-3. `SessionBar` muestra quién está conectado y ofrece cerrar sesión, y `AccountBadge` de qué equipo es el tablero que se está mirando; al cerrarla se descartan también los datos del tablero y de la cuenta. La barra del layout navega entre el tablero, la cuenta y `UserAdmin`, según la [arquitectura del frontend](../architecture/frontend.md#navegación-entre-secciones).
+3. `AccountMenu` reúne detrás de un avatar quién está conectado, su usuario, el equipo y la acción para cerrar sesión; al cerrarla se descartan también los datos del tablero y de la cuenta. La barra del layout navega entre el tablero, la cuenta y `UserAdmin`, según la [arquitectura del frontend](../architecture/frontend.md#navegación-entre-secciones).
 4. Si el tablero recibe un 401, el store da la sesión por terminada y la app vuelve al login con el aviso correspondiente.
 
 La lista de usuarios es lo único que no vive en un store compartido: la consume una sola pantalla, así que `useUsers` la mantiene en estado local.
