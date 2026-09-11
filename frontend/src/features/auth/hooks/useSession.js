@@ -164,6 +164,34 @@ function register({ username, password, displayName, accountName, inviteCode }) 
 }
 
 /**
+ * Guarda el nombre visible y el identificador de la propia persona.
+ *
+ * @param {{ username: string, displayName: string }} profile Perfil editado.
+ * @returns {Promise<string | null>} El mensaje de error, o `null` si se guardó.
+ */
+async function saveProfile(profile) {
+  setState({ submitting: true })
+
+  try {
+    const response = await requestSession('/api/auth/profile', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(profile),
+    })
+
+    if (!response.ok) return await readErrorMessage(response)
+
+    const { user } = await response.json()
+    setState({ user })
+    return null
+  } catch {
+    return NETWORK_ERROR_MESSAGE
+  } finally {
+    setState({ submitting: false })
+  }
+}
+
+/**
  * Guarda el nickname de GitLab de la propia persona.
  *
  * Es lo único de GitLab que no es de la cuenta: con él la vista personal sabe
@@ -262,7 +290,7 @@ function useSession() {
     loadSessionOnce()
   }, [])
 
-  return { ...snapshot, changeOwnPassword, login, logout, register, saveGitlabUsername }
+  return { ...snapshot, changeOwnPassword, login, logout, register, saveGitlabUsername, saveProfile }
 }
 
 export {
@@ -275,6 +303,7 @@ export {
   register,
   resetSessionStore,
   saveGitlabUsername,
+  saveProfile,
   SESSION_EXPIRED_MESSAGE,
   useSession,
 }

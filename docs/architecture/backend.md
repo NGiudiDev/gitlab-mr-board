@@ -128,7 +128,7 @@ Devuelve el estado del proceso. Sirve como chequeo de vida, pero no comprueba la
 
 ### `/api/auth/*`
 
-Administran la sesión y los datos propios. `register` da de alta un usuario y abre su sesión, sumándolo a la cuenta de `inviteCode` o creando una nueva con `accountName`; `login` recibe `{ username, password }` y responde con el usuario, entregando el token en una cookie `HttpOnly`; `logout` la invalida; `me` devuelve el usuario de la sesión vigente; `password` cambia la contraseña propia exigiendo la actual; `gitlab-username` guarda el nickname de GitLab propio sin cerrar la sesión.
+Administran la sesión y los datos propios. `register` da de alta un usuario y abre su sesión, sumándolo a la cuenta de `inviteCode` o creando una nueva con `accountName`; `login` recibe `{ username, password }` y responde con el usuario, entregando el token en una cookie `HttpOnly`; `logout` la invalida; `me` devuelve el usuario de la sesión vigente; `profile` cambia el nombre visible y el identificador propios sin cerrar la sesión; `password` cambia la contraseña propia exigiendo la actual; `gitlab-username` guarda el nickname de GitLab propio sin cerrar la sesión.
 
 ### `/api/account`
 

@@ -13,6 +13,7 @@ Cada usuario pertenece a una **cuenta**, que es la que comparte el tablero y sus
 | `POST /api/auth/login` | Público |
 | `POST /api/auth/logout` | Público; sin sesión no hace nada y responde 204 |
 | `GET /api/auth/me` | Sesión |
+| `PATCH /api/auth/profile` | Sesión |
 | `PUT /api/auth/password` | Sesión |
 | `PUT /api/auth/gitlab-username` | Sesión |
 | `GET /api/account` | Sesión; el código de invitación sólo vuelve a un `admin` |
@@ -45,13 +46,14 @@ El esquema se aplica en cada arranque con sentencias `IF NOT EXISTS`, así que n
 - El `username` se normaliza a minúsculas y sin espacios: `Ana` y `ana` son la misma persona.
 - Debe tener entre 3 y 32 caracteres, y sólo letras, números, punto, guion o guion bajo.
 - Es **único en toda la base**, no dentro de la cuenta: el login pide sólo usuario y contraseña, así que no habría con qué desambiguar.
+- Cada persona puede cambiar su nombre visible y su `username` desde el menú del avatar. La sesión continúa abierta porque referencia el ID inmutable; si cambia el `username`, debe usar el nuevo en el próximo ingreso.
 - `account_id` es obligatorio: no hay usuarios sin cuenta.
 - `role` vale `user` o `admin`, y siempre **dentro de su cuenta**. Ambos roles ven el mismo tablero; el detalle de qué puede cada uno está en el [dominio de cuentas](cuentas.md#qué-puede-cada-rol).
 - `status` vale `active` o `disabled`. Deshabilitar corta el acceso de inmediato, incluso el de las sesiones ya emitidas.
 
 ### Nickname de GitLab
 
-- El nombre de usuario de la persona en GitLab, sin la arroba. Se carga en «Mi cuenta», en la tarjeta «Mi identidad en GitLab».
+- El nombre de usuario de la persona en GitLab, sin la arroba. Se carga en «Mi cuenta», en la tarjeta «Mi identidad en GitLab», y el campo muestra el valor guardado en la sesión.
 - Es **de cada persona y no de la cuenta**: los proyectos y el access token los carga quien administra, pero con qué nombre aparece cada uno en los merge requests es suyo.
 - De él depende la [vista personal](vista-personal.md): sin nickname el tablero no puede saber cuáles de los merge requests son de quien mira. Es nullable, y hasta que se carga la vista personal lo pide.
 - Se aceptan letras, números, punto, guion y guion bajo, empezando con letra o número, que es lo que admite GitLab. Hasta 255 caracteres.
@@ -96,9 +98,10 @@ Con el registro abierto, cualquiera que alcance la URL puede crearse una cuenta.
 
 ## Pantallas de configuración
 
-La barra superior navega entre el tablero y la configuración de la cuenta:
+La barra superior ofrece el tablero y, para un `admin`, la administración de usuarios. El menú del avatar separa la información personal de la compartida:
 
-- **«Mi cuenta»**, para cualquier usuario, reúne cuatro tarjetas: el equipo y su invitación ([cuentas](cuentas.md#pantalla-mi-equipo)), la configuración de GitLab de la cuenta ([configuración de GitLab](configuracion-gitlab.md)), el nickname propio de GitLab y el cambio de la propia contraseña indicando la actual como confirmación. Al cambiar la contraseña se cierran todas sus sesiones y la app vuelve al ingreso.
+- **«Mi perfil»**, desde «Editar perfil», reúne el perfil propio y el cambio de la propia contraseña indicando la actual como confirmación. Al cambiar la contraseña se cierran todas sus sesiones y la app vuelve al ingreso.
+- **«Mi cuenta»**, desde «Editar cuenta» para un `admin` o «Ver cuenta» para el resto, reúne el equipo y su invitación ([cuentas](cuentas.md#pantalla-mi-equipo)), la configuración de GitLab compartida ([configuración de GitLab](configuracion-gitlab.md)) y el nickname personal de GitLab. Sólo un `admin` puede modificar los datos compartidos; cada persona puede cambiar su nickname.
 - **«Usuarios»**, sólo para un `admin`, lista **los usuarios de su cuenta** con su rol, estado y último ingreso, y permite dar de alta, habilitar y deshabilitar. Restablecer una contraseña ajena quedó fuera de la interfaz: se hace con `npm run users -- password <usuario>`.
 
 Deshabilitar la propia cuenta está impedido: dejaría a la cuenta sin ningún administrador si es el único, y en cualquier caso cerraría la sesión en curso.
@@ -134,7 +137,7 @@ El estado de la sesión vive en el store `features/auth/hooks/useSession.js`, co
 
 1. Al abrir la app se consulta `GET /api/auth/me`. Mientras tanto se muestra «Verificando tu sesión...», para no hacer parpadear el formulario.
 2. Sin sesión se presenta `LoginForm`, que ofrece cambiar a `RegisterForm`; ese formulario elige entre sumarse a un equipo con su código o abrir uno nuevo. Con sesión, el tablero, que recién se monta autenticado para que el polling no dispare peticiones que el backend vaya a rechazar.
-3. `AccountMenu` reúne detrás de un avatar quién está conectado, su usuario, el equipo y la acción para cerrar sesión; al cerrarla se descartan también los datos del tablero y de la cuenta. La barra del layout navega entre el tablero, la cuenta y `UserAdmin`, según la [arquitectura del frontend](../architecture/frontend.md#navegación-entre-secciones).
+3. `AccountMenu` reúne detrás de un avatar quién está conectado, su usuario, el equipo, los accesos separados a «Mi perfil» y «Mi cuenta», y la acción para cerrar sesión; al cerrarla se descartan también los datos del tablero y de la cuenta. La navegación visible del layout ofrece el tablero y, según el rol, `UserAdmin`, según la [arquitectura del frontend](../architecture/frontend.md#navegación-entre-secciones).
 4. Si el tablero recibe un 401, el store da la sesión por terminada y la app vuelve al login con el aviso correspondiente.
 
 La lista de usuarios es lo único que no vive en un store compartido: la consume una sola pantalla, así que `useUsers` la mantiene en estado local.

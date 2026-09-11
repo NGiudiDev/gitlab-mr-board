@@ -219,6 +219,54 @@ describe('GET /api/auth/me', () => {
   });
 });
 
+describe('PATCH /api/auth/profile', () => {
+  /** Guarda el perfil propio reenviando la cookie de sesión. */
+  function saveProfile(app, cookie, body) {
+    return requestApp(app, '/api/auth/profile', {
+      method: 'PATCH',
+      headers: { cookie },
+      body,
+    });
+  }
+
+  it('actualiza el perfil y conserva la sesión abierta', async () => {
+    const app = appFor();
+    const cookie = readSetCookie(await login(TEST_USERNAME, TEST_PASSWORD), SESSION_COOKIE_NAME) ?? '';
+
+    const response = await saveProfile(app, cookie, {
+      username: 'anita',
+      displayName: 'Ana Pérez',
+    });
+    const session = await requestApp(app, '/api/auth/me', { headers: { cookie } });
+
+    expect(response.status).toBe(200);
+    expect(response.json().user).toMatchObject({ username: 'anita', displayName: 'Ana Pérez' });
+    expect(session.json().user).toMatchObject({ username: 'anita', displayName: 'Ana Pérez' });
+  });
+
+  it('responde 400 ante un identificador inválido y 409 si ya existe', async () => {
+    const app = appFor();
+    const cookie = readSetCookie(await login(TEST_USERNAME, TEST_PASSWORD), SESSION_COOKIE_NAME) ?? '';
+    await services.authService.createUser({
+      accountId: services.account.id,
+      username: 'beto',
+      password: TEST_PASSWORD,
+    });
+
+    expect((await saveProfile(app, cookie, { username: 'a' })).status).toBe(400);
+    expect((await saveProfile(app, cookie, { username: 'beto' })).status).toBe(409);
+  });
+
+  it('responde 401 sin sesión', async () => {
+    const response = await requestApp(appFor(), '/api/auth/profile', {
+      method: 'PATCH',
+      body: { username: 'anita', displayName: 'Ana Pérez' },
+    });
+
+    expect(response.status).toBe(401);
+  });
+});
+
 describe('PUT /api/auth/gitlab-username', () => {
   /** Guarda el nickname propio reenviando la cookie de sesión. */
   function saveGitlabUsername(app, cookie, gitlabUsername) {

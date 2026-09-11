@@ -96,6 +96,13 @@ function createAuthRepository(database) {
       await database.query('UPDATE users SET password_hash = $1 WHERE id = $2', [passwordHash, userId]);
     },
 
+    async updateProfile(userId, username, displayName) {
+      await database.query(
+        'UPDATE users SET username = $1, display_name = $2 WHERE id = $3',
+        [username, displayName, userId],
+      );
+    },
+
     async updateStatus(userId, status) {
       await database.query('UPDATE users SET status = $1 WHERE id = $2', [status, userId]);
     },

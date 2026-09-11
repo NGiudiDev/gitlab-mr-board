@@ -93,8 +93,8 @@ function createRequireAdmin(authService) {
 }
 
 /**
- * Crea el router de sesión: registro, login, logout, usuario actual y cambio
- * de la propia contraseña.
+ * Crea el router de sesión: registro, login, logout, usuario actual y cambios
+ * del propio perfil y la contraseña.
  *
  * @param authService Servicio de autenticación ya construido.
  * @returns Router para montar bajo `/api/auth`.
@@ -169,6 +169,22 @@ function createAuthRouter(authService) {
 
   router.get('/me', createRequireSession(authService), (_request, response) => {
     response.json({ user: response.locals.user });
+  });
+
+  router.patch('/profile', createRequireSession(authService), async (request, response) => {
+    const user = response.locals.user;
+    const { username, displayName } = request.body ?? {};
+
+    try {
+      response.json({
+        user: await authService.changeOwnProfile(user.id, {
+          ...(username === undefined ? {} : { username }),
+          ...(displayName === undefined ? {} : { displayName }),
+        }),
+      });
+    } catch (error) {
+      respondWithHttpError(response, error, 'al guardar el perfil');
+    }
   });
 
   router.put('/gitlab-username', createRequireSession(authService), async (request, response) => {

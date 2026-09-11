@@ -438,6 +438,56 @@ describe('changeGitlabUsername', () => {
   });
 });
 
+describe('changeOwnProfile', () => {
+  it('normaliza y guarda el nombre visible y el identificador sin cerrar la sesión', async () => {
+    const { authService } = await createContextWithUser();
+    const { token, user } = await authService.login({ username: 'ana', password: PASSWORD });
+
+    const updated = await authService.changeOwnProfile(user.id, {
+      username: '  Anita  ',
+      displayName: '  Ana Pérez  ',
+    });
+
+    expect(updated).toMatchObject({ username: 'anita', displayName: 'Ana Pérez' });
+    expect(await authService.authenticate(token)).toMatchObject({
+      username: 'anita',
+      displayName: 'Ana Pérez',
+    });
+    await expect(authService.login({ username: 'anita', password: PASSWORD })).resolves.toBeDefined();
+  });
+
+  it('usa el identificador como nombre visible cuando se lo deja vacío', async () => {
+    const { authService } = await createContextWithUser();
+    const { user } = await authService.login({ username: 'ana', password: PASSWORD });
+
+    const updated = await authService.changeOwnProfile(user.id, { displayName: '  ' });
+
+    expect(updated.displayName).toBe('ana');
+  });
+
+  it('rechaza un identificador inválido o ya ocupado', async () => {
+    const { authService, accountId } = await createContextWithUser();
+    const { user } = await authService.login({ username: 'ana', password: PASSWORD });
+    await authService.createUser({ accountId, username: 'beto', password: PASSWORD });
+
+    await expect(authService.changeOwnProfile(user.id, { username: 'a' }))
+      .rejects.toMatchObject({ status: 400 });
+    await expect(authService.changeOwnProfile(user.id, { username: 123 }))
+      .rejects.toMatchObject({ status: 400 });
+    await expect(authService.changeOwnProfile(user.id, { displayName: 123 }))
+      .rejects.toMatchObject({ status: 400 });
+    await expect(authService.changeOwnProfile(user.id, { username: 'beto' }))
+      .rejects.toMatchObject({ status: 409 });
+  });
+
+  it('falla cuando el usuario de la sesión ya no existe', async () => {
+    const { authService } = await createContextWithUser();
+
+    await expect(authService.changeOwnProfile('usuario-inexistente', { displayName: 'Ana' }))
+      .rejects.toMatchObject({ status: 404 });
+  });
+});
+
 describe('requireAccountMember', () => {
   it('devuelve el usuario cuando pertenece a la cuenta', async () => {
     const { authService, accountId } = await createContextWithUser();

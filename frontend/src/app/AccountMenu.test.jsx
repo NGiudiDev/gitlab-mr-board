@@ -7,6 +7,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { jsonResponse, resetSharedState, TEST_ACCOUNT, TEST_USER } from '../../test/sharedState.js'
 import AccountMenu, { initialsFor } from './AccountMenu.jsx'
 
+const ADMIN_USER = { ...TEST_USER, role: 'admin' }
+
 beforeEach(() => {
   resetSharedState()
   vi.stubGlobal('fetch', vi.fn(async () => jsonResponse({ account: TEST_ACCOUNT })))
@@ -43,7 +45,7 @@ describe('AccountMenu', () => {
     const trigger = screen.getByRole('button', { name: 'Abrir menú de cuenta de Ana Pérez' })
     await user.click(trigger)
     await user.tab()
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Cerrar sesión' }))
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Editar perfil' }))
 
     await user.keyboard('{Escape}')
 
@@ -68,6 +70,37 @@ describe('AccountMenu', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
 
     expect(onLogout).toHaveBeenCalledTimes(1)
+  })
+
+  it('avisa al layout que debe abrir la pantalla del perfil', async () => {
+    const onEditProfile = vi.fn()
+    render(<AccountMenu user={TEST_USER} onEditProfile={onEditProfile} />)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir menú de cuenta de Ana Pérez' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Editar perfil' }))
+
+    expect(onEditProfile).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('region', { name: 'Menú de cuenta' })).toBeNull()
+  })
+
+  it('ofrece editar la cuenta a un admin y avisa al layout', async () => {
+    const onEditAccount = vi.fn()
+    render(<AccountMenu user={ADMIN_USER} onEditAccount={onEditAccount} />)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir menú de cuenta de Ana Pérez' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Editar cuenta' }))
+
+    expect(onEditAccount).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('region', { name: 'Menú de cuenta' })).toBeNull()
+  })
+
+  it('ofrece ver la cuenta cuando sus datos son de sólo lectura', async () => {
+    render(<AccountMenu user={TEST_USER} />)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir menú de cuenta de Ana Pérez' }))
+
+    expect(screen.getByRole('button', { name: 'Ver cuenta' })).toBeDefined()
+    expect(screen.queryByRole('button', { name: 'Editar cuenta' })).toBeNull()
   })
 
   it('no muestra nada sin usuario', () => {

@@ -76,22 +76,22 @@ describe('AppShell', () => {
 })
 
 describe('AppShell: navegación', () => {
-  it('ofrece el tablero y la cuenta a cualquier usuario', () => {
+  it('ofrece sólo el tablero como navegación principal a cualquier usuario', () => {
     renderShell({ user: TEST_USER })
 
-    expect(navLabels()).toEqual(['Tablero', 'Mi cuenta'])
+    expect(navLabels()).toEqual(['Tablero'])
   })
 
   it('agrega la sección de usuarios a un admin', () => {
     renderShell({ user: ADMIN_USER })
 
-    expect(navLabels()).toEqual(['Tablero', 'Mi cuenta', 'Usuarios'])
+    expect(navLabels()).toEqual(['Tablero', 'Usuarios'])
   })
 
-  it('marca la sección activa sin depender del color', () => {
+  it('no marca el tablero cuando la cuenta está activa desde el menú', () => {
     renderShell({ user: TEST_USER, view: 'account' })
 
-    expect(screen.getByRole('button', { name: 'Mi cuenta' }).getAttribute('aria-current')).toBe('page')
+    expect(screen.queryByRole('button', { name: 'Mi cuenta' })).toBeNull()
     expect(screen.getByRole('button', { name: 'Tablero' }).getAttribute('aria-current')).toBeNull()
   })
 
@@ -113,6 +113,26 @@ describe('AppShell: navegación', () => {
     expect(onChangeView).toHaveBeenCalledWith('board')
   })
 
+  it('abre la pantalla personal desde la acción Editar perfil', async () => {
+    const onChangeView = vi.fn()
+    renderShell({ user: TEST_USER, onChangeView })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir menú de cuenta de Ana Pérez' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Editar perfil' }))
+
+    expect(onChangeView).toHaveBeenCalledWith('profile')
+  })
+
+  it('abre la pantalla compartida desde la acción Editar cuenta', async () => {
+    const onChangeView = vi.fn()
+    renderShell({ user: ADMIN_USER, onChangeView })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir menú de cuenta de Ana Pérez' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Editar cuenta' }))
+
+    expect(onChangeView).toHaveBeenCalledWith('account')
+  })
+
   it('avisa al padre al cerrar la sesión', async () => {
     const onLogout = vi.fn()
     renderShell({ user: TEST_USER, onLogout })
@@ -126,8 +146,8 @@ describe('AppShell: navegación', () => {
 
 describe('sectionsFor', () => {
   it('deja la administración de usuarios sólo para el rol admin', () => {
-    expect(sectionsFor(TEST_USER).map((section) => section.id)).toEqual(['board', 'account'])
-    expect(sectionsFor(ADMIN_USER).map((section) => section.id)).toEqual(['board', 'account', 'users'])
+    expect(sectionsFor(TEST_USER).map((section) => section.id)).toEqual(['board', 'profile', 'account'])
+    expect(sectionsFor(ADMIN_USER).map((section) => section.id)).toEqual(['board', 'profile', 'account', 'users'])
   })
 
   it('sin usuario no ofrece ninguna sección de administración', () => {

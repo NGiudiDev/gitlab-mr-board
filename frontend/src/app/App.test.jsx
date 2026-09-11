@@ -539,7 +539,14 @@ describe('navegación entre secciones', () => {
 
   /** Abre una sección desde la barra de navegación del layout. */
   async function openSection(label) {
-    fireEvent.click(screen.getByRole('button', { name: label }))
+    if (label === 'Mi perfil' || label === 'Mi cuenta') {
+      fireEvent.click(screen.getByRole('button', { name: 'Abrir menú de cuenta de Ana Pérez' }))
+      fireEvent.click(screen.getByRole('button', {
+        name: label === 'Mi perfil' ? 'Editar perfil' : /^(Editar|Ver) cuenta$/,
+      }))
+    } else {
+      fireEvent.click(screen.getByRole('button', { name: label }))
+    }
     await flush()
   }
 
@@ -549,7 +556,7 @@ describe('navegación entre secciones', () => {
 
     await openSection('Mi cuenta')
 
-    expect(screen.getByRole('heading', { level: 2, name: 'Mi contraseña' })).toBeDefined()
+    expect(screen.getByRole('heading', { level: 2, name: 'Mi equipo' })).toBeDefined()
     expect(container.textContent).not.toContain('equipo/tablero')
 
     await openSection('Tablero')
@@ -557,7 +564,7 @@ describe('navegación entre secciones', () => {
     expect(container.textContent).toContain('equipo/tablero')
   })
 
-  it('reúne en la cuenta el equipo, GitLab, la identidad propia y la contraseña', async () => {
+  it('reúne en la cuenta el equipo, la configuración y el nickname de GitLab', async () => {
     fetchMock.mockImplementation(routeApi())
     signInTestUser({ ...TEST_USER, role: 'admin' })
     await renderApp()
@@ -567,8 +574,23 @@ describe('navegación entre secciones', () => {
     expect(screen.getByRole('heading', { level: 2, name: 'Mi equipo' })).toBeDefined()
     expect(screen.getByRole('heading', { level: 2, name: 'GitLab de la cuenta' })).toBeDefined()
     expect(screen.getByRole('heading', { level: 2, name: 'Mi identidad en GitLab' })).toBeDefined()
-    expect(screen.getByRole('heading', { level: 2, name: 'Mi contraseña' })).toBeDefined()
+    expect(screen.getByLabelText('Nickname de GitLab').value).toBe('ana-gitlab')
+    expect(screen.queryByRole('heading', { level: 2, name: 'Mi perfil' })).toBeNull()
+    expect(screen.queryByRole('heading', { level: 2, name: 'Mi contraseña' })).toBeNull()
     expect(screen.getByLabelText('IDs de los proyectos').value).toBe('101, 202')
+  });
+
+  it('reúne en el perfil los datos personales y la contraseña', async () => {
+    fetchMock.mockImplementation(routeApi())
+    await renderApp()
+
+    await openSection('Mi perfil')
+
+    expect(screen.getByRole('heading', { level: 2, name: 'Mi perfil' })).toBeDefined()
+    expect(screen.getByRole('heading', { level: 2, name: 'Mi contraseña' })).toBeDefined()
+    expect(screen.queryByRole('heading', { level: 2, name: 'Mi identidad en GitLab' })).toBeNull()
+    expect(screen.queryByRole('heading', { level: 2, name: 'Mi equipo' })).toBeNull()
+    expect(screen.queryByRole('heading', { level: 2, name: 'GitLab de la cuenta' })).toBeNull()
   });
 
   it('no deja cambiar la configuración de GitLab a quien no administra la cuenta', async () => {
@@ -579,7 +601,6 @@ describe('navegación entre secciones', () => {
 
     expect(screen.getByRole('heading', { level: 2, name: 'GitLab de la cuenta' })).toBeDefined()
     expect(screen.queryByLabelText('IDs de los proyectos')).toBeNull()
-    // Su nickname sí lo carga cada uno: de él depende la vista personal.
     expect(screen.getByLabelText('Nickname de GitLab').value).toBe('ana-gitlab')
   });
 
@@ -666,13 +687,13 @@ describe('navegación entre secciones', () => {
     expect(container.textContent).not.toContain('equipo/tablero')
   })
 
-  it('mantiene la sección activa marcada en la barra', async () => {
+  it('no deja marcado el tablero al entrar a la cuenta desde el menú', async () => {
     fetchMock.mockImplementation(routeApi())
     await renderApp()
 
     await openSection('Mi cuenta')
 
-    expect(screen.getByRole('button', { name: 'Mi cuenta' }).getAttribute('aria-current')).toBe('page')
+    expect(screen.queryByRole('button', { name: 'Mi cuenta' })).toBeNull()
     expect(screen.getByRole('button', { name: 'Tablero' }).getAttribute('aria-current')).toBeNull()
   })
 

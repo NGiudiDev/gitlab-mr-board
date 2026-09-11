@@ -13,6 +13,7 @@ import {
   PASSWORD_CHANGED_MESSAGE,
   register,
   saveGitlabUsername,
+  saveProfile,
   SESSION_EXPIRED_MESSAGE,
   useSession,
 } from './useSession.js'
@@ -293,6 +294,41 @@ describe('saveGitlabUsername', () => {
     fetchMock.mockRejectedValueOnce(new Error('sin red'))
 
     expect(await saveGitlabUsername('otro-nick')).toBe('No se pudo conectar al backend.')
+  })
+})
+
+describe('saveProfile', () => {
+  it('envía el perfil y guarda la identidad que devuelve el backend', async () => {
+    const updated = { ...TEST_USER, username: 'anita', displayName: 'Ana Pérez' }
+    fetchMock.mockResolvedValueOnce(jsonResponse({ user: updated }))
+
+    const failure = await saveProfile({ username: 'anita', displayName: 'Ana Pérez' })
+
+    expect(failure).toBeNull()
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:3001/api/auth/profile', {
+      credentials: 'include',
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: 'anita', displayName: 'Ana Pérez' }),
+    })
+    expect(getState().user).toEqual(updated)
+  })
+
+  it('devuelve el mensaje del backend sin tocar la identidad', async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse({ error: 'El nombre ya existe.' }, 409))
+
+    const failure = await saveProfile({ username: 'ana', displayName: 'Ana' })
+
+    expect(failure).toBe('El nombre ya existe.')
+    expect(getState().user).toBeNull()
+    expect(getState().submitting).toBe(false)
+  })
+
+  it('avisa cuando no se pudo conectar al backend', async () => {
+    fetchMock.mockRejectedValueOnce(new Error('sin red'))
+
+    expect(await saveProfile({ username: 'ana', displayName: 'Ana' }))
+      .toBe('No se pudo conectar al backend.')
   })
 })
 

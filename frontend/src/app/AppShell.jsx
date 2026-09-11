@@ -8,7 +8,8 @@ import AccountMenu from './AccountMenu.jsx'
  */
 const SECTIONS = [
   { id: 'board', label: 'Tablero' },
-  { id: 'account', label: 'Mi cuenta' },
+  { id: 'profile', label: 'Mi perfil', menuOnly: true },
+  { id: 'account', label: 'Mi cuenta', menuOnly: true },
   { id: 'users', label: 'Usuarios', adminOnly: true },
 ]
 
@@ -21,7 +22,7 @@ const NAV_ITEM_CLASSES = 'block rounded-md px-2.5 py-1 text-[13px] cursor-pointe
  * el backend valida el rol ruta por ruta.
  *
  * @param {{ role?: string } | null} user Usuario de la sesión, o `null`.
- * @returns {Array<{ id: string, label: string }>} Secciones visibles.
+ * @returns {Array<{ id: string, label: string, menuOnly?: boolean }>} Secciones permitidas.
  */
 function sectionsFor(user) {
   if (user?.role === 'admin') return SECTIONS
@@ -31,8 +32,8 @@ function sectionsFor(user) {
 
 /**
  * Layout de la aplicación: una barra superior mínima con el nombre del tablero,
- * la navegación entre el tablero y la configuración de la cuenta, y un menú
- * con la cuenta y la sesión abierta; debajo, el contenido de la sección activa.
+ * la navegación principal y un menú con la cuenta, el acceso al perfil y la
+ * sesión abierta; debajo, el contenido de la sección activa.
  *
  * La barra aparece sólo con la sesión abierta: el ingreso y el alta son
  * pantallas completas que traen su propio encabezado principal.
@@ -60,7 +61,7 @@ function AppShell({
 
             <nav aria-label="Secciones">
               <ul className="flex flex-wrap items-center gap-1">
-                {sectionsFor(user).map((section) => {
+                {sectionsFor(user).filter((section) => !section.menuOnly).map((section) => {
                   const isActive = section.id === view
 
                   return (
@@ -81,7 +82,12 @@ function AppShell({
               </ul>
             </nav>
 
-            <AccountMenu user={user} onLogout={onLogout} />
+            <AccountMenu
+              user={user}
+              onEditProfile={() => onChangeView('profile')}
+              onEditAccount={() => onChangeView('account')}
+              onLogout={onLogout}
+            />
           </div>
         </header>
       ) : null}

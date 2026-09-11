@@ -55,6 +55,43 @@ function normalizeUsername(username) {
 }
 
 /**
+ * Normaliza y valida el identificador usado para ingresar.
+ *
+ * @param username Nombre tal como llegó del cliente.
+ * @returns Nombre listo para persistir.
+ * @throws {HttpError} 400 si no cumple el formato admitido.
+ */
+function parseUsername(username) {
+  const normalizedUsername = typeof username === 'string' ? normalizeUsername(username) : '';
+
+  if (!USERNAME_PATTERN.test(normalizedUsername)) {
+    throw new HttpError(
+      'El nombre de usuario debe tener entre 3 y 32 caracteres y usar sólo letras, números, punto, guion o guion bajo.',
+      400,
+    );
+  }
+
+  return normalizedUsername;
+}
+
+/**
+ * Limpia el nombre mostrado y usa el identificador cuando queda vacío.
+ *
+ * @param displayName Nombre visible recibido.
+ * @param fallback Identificador que se muestra como alternativa.
+ * @returns Nombre listo para persistir.
+ * @throws {HttpError} 400 si el valor no es texto.
+ */
+function parseDisplayName(displayName, fallback) {
+  if (displayName === undefined) return fallback;
+  if (typeof displayName !== 'string') {
+    throw new HttpError('El nombre visible debe ser texto.', 400);
+  }
+
+  return displayName.trim() || fallback;
+}
+
+/**
  * Arma el servicio de autenticación sobre un repositorio ya abierto.
  *
  * @param options Repositorio, servicio de cuentas, reloj y duración de sesión.
@@ -104,14 +141,7 @@ function createAuthService(options) {
    * 409 si el nombre ya está tomado.
    */
   async function prepareNewUser(input) {
-    const username = normalizeUsername(input.username ?? '');
-
-    if (!USERNAME_PATTERN.test(username)) {
-      throw new HttpError(
-        'El nombre de usuario debe tener entre 3 y 32 caracteres y usar sólo letras, números, punto, guion o guion bajo.',
-        400,
-      );
-    }
+    const username = parseUsername(input.username);
 
     // El nombre es único en toda la base, no dentro de la cuenta: el login pide
     // sólo usuario y contraseña, así que no hay con qué desambiguar.
@@ -121,7 +151,7 @@ function createAuthService(options) {
 
     return {
       username,
-      displayName: input.displayName?.trim() || username,
+      displayName: parseDisplayName(input.displayName, username),
       passwordHash: await hashNewPassword(input.password ?? ''),
     };
   }
@@ -331,6 +361,45 @@ function createAuthService(options) {
   }
 
   /**
+   * Actualiza el nombre visible y el identificador de la propia persona.
+   *
+   * La sesión sigue vigente porque referencia el ID inmutable del usuario. El
+   * identificador de login continúa siendo único en toda la base.
+   *
+   * @param userId Usuario de la sesión en curso.
+   * @param input Campos del perfil recibidos.
+   * @returns La identidad ya actualizada.
+   * @throws {HttpError} 400 si el nombre de usuario no es válido, 404 si el
+   * usuario ya no existe y 409 si el identificador está ocupado.
+   */
+  async function changeOwnProfile(userId, input) {
+    const user = await repository.findUserById(userId);
+    if (!user) {
+      throw new HttpError('No existe el usuario de la sesión.', 404);
+    }
+
+    const username = input.username === undefined
+      ? user.username
+      : parseUsername(input.username);
+    const displayName = input.displayName === undefined
+      ? user.displayName
+      : parseDisplayName(input.displayName, username);
+
+    if (username !== user.username) {
+      const existingUser = await repository.findUserByUsername(username);
+      if (existingUser) {
+        throw new HttpError(`Ya existe un usuario con el nombre «${username}».`, 409);
+      }
+    }
+
+    await repository.updateProfile(user.id, username, displayName);
+    failedAttemptsByUsername.delete(user.username);
+    failedAttemptsByUsername.delete(username);
+
+    return toAuthenticatedUser({ ...user, username, displayName });
+  }
+
+  /**
    * Comprueba que un usuario pertenezca a una cuenta.
    *
    * Es lo que impide que quien administra una cuenta toque los usuarios de
@@ -408,6 +477,7 @@ function createAuthService(options) {
     authenticate,
     changeGitlabUsername,
     changeOwnPassword,
+    changeOwnProfile,
     changePassword,
     close: () => repository.close(),
     createUser,

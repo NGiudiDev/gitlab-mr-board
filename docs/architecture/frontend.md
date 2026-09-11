@@ -15,7 +15,7 @@ El código se divide entre la composición general y las funcionalidades del dom
 - `src/app/App.jsx`: decide si mostrar el ingreso o el layout según la sesión, conserva la sección activa y resuelve qué presentar durante la carga, los errores y la ausencia de datos.
 - `src/app/AppShell.jsx`: define el layout —barra superior, navegación entre secciones y contenido— y declara en `SECTIONS` las secciones navegables; `AccountMenu.jsx` reúne allí la identidad, el equipo y el cierre de sesión.
 - `src/features/accounts/`: contiene el store de la cuenta y el panel que la presenta, descritos en el [dominio de cuentas](../domains/cuentas.md).
-- `src/features/auth/`: contiene el store de la sesión, el hook de la lista de usuarios y los componentes de ingreso, alta, administración, contraseña e identidad en GitLab, descritos en el [dominio de autenticación](../domains/autenticacion.md).
+- `src/features/auth/`: contiene el store de la sesión, el hook de la lista de usuarios y los componentes de ingreso, alta, administración, perfil, contraseña e identidad en GitLab, descritos en el [dominio de autenticación](../domains/autenticacion.md).
 - `src/features/gitlabSettings/`: contiene el formulario de la configuración de GitLab de la cuenta y su hook, descritos en la [configuración de GitLab](../domains/configuracion-gitlab.md).
 - `src/features/mergeRequests/hooks/useMergeRequests.js`: contiene el store compartido, el acceso al backend y el polling.
 - `src/features/mergeRequests/components/`: contiene los componentes del tablero de merge requests.
@@ -43,18 +43,20 @@ App
     │               └── BlockerBadge
     ├── AccountPanel                 (sección «Mi cuenta»)
     ├── GitlabSettingsForm           (sección «Mi cuenta»)
+    ├── ProfilePanel                 (sección «Mi perfil»)
     ├── GitlabIdentityPanel          (sección «Mi cuenta»)
-    ├── PasswordPanel                (sección «Mi cuenta»)
+    ├── PasswordPanel                (sección «Mi perfil»)
     └── UserAdmin                    (sección «Usuarios», sólo con rol admin)
 ```
 
-- `AppShell` presenta la barra superior con el nombre del tablero, la navegación entre secciones y el avatar que abre el menú de cuenta, y envuelve el contenido en el único `main` de la aplicación. La barra aparece sólo con la sesión abierta, porque el ingreso y el alta son pantallas completas con su propio encabezado principal.
+- `AppShell` presenta la barra superior con el nombre del tablero, la navegación principal y el avatar que abre el menú de cuenta, y envuelve el contenido en el único `main` de la aplicación. «Mi perfil» se abre desde «Editar perfil» y «Mi cuenta» desde «Editar cuenta» —o «Ver cuenta» sin permisos de escritura—; ninguna ocupa un botón propio en la barra. La barra aparece sólo con la sesión abierta, porque el ingreso y el alta son pantallas completas con su propio encabezado principal.
 - `LoginForm` pide usuario y contraseña, muestra el error que devuelve el backend y ofrece pasar al alta.
 - `RegisterForm` da de alta la persona y elige entre sus dos caminos excluyentes: sumarse a un equipo con su código de invitación, o abrir uno nuevo. Valida en el navegador las mismas reglas que el backend para avisar antes de enviar.
-- `AccountMenu` concentra detrás de un avatar el nombre visible, el usuario, el equipo y el cierre de sesión. Se cierra al elegir la acción, al interactuar fuera o con `Escape`, que devuelve el foco al avatar.
+- `AccountMenu` concentra detrás de un avatar el nombre visible, el usuario, el equipo, los accesos separados al perfil y a la cuenta, y el cierre de sesión. Se cierra al elegir una acción, al interactuar fuera o con `Escape`, que devuelve el foco al avatar.
 - `AccountPanel` presenta el equipo: su nombre, cuánta gente lo integra y, para un `admin`, el código de invitación y su renovación.
 - `GitlabSettingsForm` resuelve los IDs de los proyectos y el access token de la cuenta. Sólo los edita un `admin`; al resto le presenta la configuración vigente en modo lectura. El campo del token arranca vacío en cada visita, porque el backend nunca lo devuelve: dejarlo así conserva el guardado.
-- `GitlabIdentityPanel` resuelve el nickname de GitLab propio, del que depende la vista personal.
+- `ProfilePanel` permite cambiar el nombre visible y el nombre de usuario propios desde una tarjeta de «Mi perfil» y comunica el resultado sin sacar a la persona de la pantalla.
+- `GitlabIdentityPanel` resuelve en «Mi cuenta» el nickname de GitLab propio, lo precarga desde la sesión y permite actualizarlo; de él depende la vista personal.
 - `PasswordPanel` resuelve el cambio de la propia contraseña.
 - `UserAdmin` lista los usuarios de la cuenta y permite dar de alta, habilitar y deshabilitar. No ofrece restablecer contraseñas: eso se hace por línea de comandos.
 - `TopBar` presenta los totales, el estado de sincronización y la actualización manual del tablero.
@@ -70,9 +72,9 @@ Los componentes presentacionales reciben valores mediante props y notifican acci
 
 ## Navegación entre secciones
 
-No hay router: la sección activa es estado local de `App`, porque nadie más la observa. `AppShell` declara las secciones en `SECTIONS` —`board`, `account` y `users`— y `App` resuelve el contenido con el mismo `id`, así que agregar una sección es sumarla a esa lista y contemplarla en `ActiveSection`.
+No hay router: la sección activa es estado local de `App`, porque nadie más la observa. `AppShell` declara las secciones en `SECTIONS` —`board`, `profile`, `account` y `users`— y `App` resuelve el contenido con el mismo `id`, así que agregar una sección es sumarla a esa lista y contemplarla en `ActiveSection`. `profile` y `account` llevan `menuOnly` porque se abren desde el avatar y no se muestran en la navegación principal.
 
-`sectionsFor(user)` decide qué secciones ofrece la barra: `users` sólo aparece con rol `admin`. Dentro de «Mi cuenta», el rol también decide qué tarjetas se pueden editar. Si la sección activa deja de estar disponible, `App` cae en el tablero en lugar de dejar la pantalla vacía. Esconder la sección es una cortesía de la interfaz: el backend valida el rol ruta por ruta, según el [dominio de autenticación](../domains/autenticacion.md).
+`sectionsFor(user)` decide qué secciones puede abrir cada persona: `users` sólo está disponible con rol `admin`; la barra omite además las marcadas como `menuOnly`. «Mi perfil» siempre es editable por su titular; dentro de «Mi cuenta», el rol decide si el contenido compartido se edita o se consulta, mientras que el nickname personal siempre puede actualizarse. Si la sección activa deja de estar disponible, `App` cae en el tablero en lugar de dejar la pantalla vacía. Esconder la sección es una cortesía de la interfaz: el backend valida el rol ruta por ruta, según el [dominio de autenticación](../domains/autenticacion.md).
 
 Al cerrar la sesión la app vuelve al tablero, para que la próxima no empiece donde quedó la anterior, y descarta los stores del tablero y de la cuenta.
 

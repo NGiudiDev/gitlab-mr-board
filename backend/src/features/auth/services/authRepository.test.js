@@ -154,6 +154,19 @@ describe('usuarios', () => {
     expect(stored?.passwordHash).toBe('scrypt$16384$8$1$cc$dd');
   });
 
+  it('actualiza el nombre visible y el identificador del usuario', async () => {
+    const repository = await openRepository();
+    await repository.insertUser(buildUser());
+
+    await repository.updateProfile('usuario-1', 'anita', 'Ana Pérez');
+
+    expect(await repository.findUserByUsername('ana')).toBeNull();
+    expect(await repository.findUserById('usuario-1')).toMatchObject({
+      username: 'anita',
+      displayName: 'Ana Pérez',
+    });
+  });
+
   it('cambia el estado del usuario', async () => {
     const repository = await openRepository();
     await repository.insertUser(buildUser());

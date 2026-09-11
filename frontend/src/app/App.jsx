@@ -7,6 +7,7 @@ import { resetAccountStore } from '../features/accounts/hooks/useAccount.js'
 import GitlabIdentityPanel from '../features/auth/components/GitlabIdentityPanel.jsx'
 import LoginForm from '../features/auth/components/LoginForm.jsx'
 import PasswordPanel from '../features/auth/components/PasswordPanel.jsx'
+import ProfilePanel from '../features/auth/components/ProfilePanel.jsx'
 import RegisterForm from '../features/auth/components/RegisterForm.jsx'
 import UserAdmin from '../features/auth/components/UserAdmin.jsx'
 import { useSession } from '../features/auth/hooks/useSession.js'
@@ -246,12 +247,18 @@ function AnonymousView({ error, notice, submitting, onLogin, onRegister }) {
 /**
  * Presenta la sección elegida en la barra de navegación.
  *
- * «Mi cuenta» reúne, en ese orden, el equipo con el que se comparte el tablero,
- * los datos de GitLab de la cuenta, la identidad propia en GitLab y la
- * contraseña. Sólo un administrador puede cargar los datos de GitLab: son
- * compartidos, así que un cambio afecta a todo el equipo.
+ * «Mi cuenta» reúne el equipo y los datos de GitLab, incluido el nickname
+ * personal. «Mi perfil» conserva la identidad de acceso y la contraseña.
  */
-function ActiveSection({ view, user, submitting, onChangePassword, onSaveGitlabUsername, onGoToAccount }) {
+function ActiveSection({
+  view,
+  user,
+  submitting,
+  onChangePassword,
+  onSaveGitlabUsername,
+  onSaveProfile,
+  onGoToAccount,
+}) {
   const isAdmin = user.role === 'admin'
 
   if (view === 'account') {
@@ -266,6 +273,14 @@ function ActiveSection({ view, user, submitting, onChangePassword, onSaveGitlabU
           submitting={submitting}
           onSave={onSaveGitlabUsername}
         />
+      </div>
+    )
+  }
+
+  if (view === 'profile') {
+    return (
+      <div className="flex flex-col gap-5">
+        <ProfilePanel user={user} submitting={submitting} onSave={onSaveProfile} />
         <PasswordPanel
           user={user}
           submitting={submitting}
@@ -300,6 +315,7 @@ function App() {
     logout,
     register,
     saveGitlabUsername,
+    saveProfile,
   } = useSession()
   const [view, setView] = useState('board')
   const isAuthenticated = status === 'authenticated'
@@ -337,6 +353,7 @@ function App() {
           submitting={submitting}
           onChangePassword={changeOwnPassword}
           onSaveGitlabUsername={saveGitlabUsername}
+          onSaveProfile={saveProfile}
           onGoToAccount={() => setView('account')}
         />
       ) : (

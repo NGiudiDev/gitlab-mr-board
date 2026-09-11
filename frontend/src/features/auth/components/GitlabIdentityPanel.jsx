@@ -13,7 +13,7 @@ const HINT_CLASSES = 'mt-1 text-[12px] font-normal text-text-faint'
  * suyo, y de eso depende la vista personal.
  */
 function GitlabIdentityPanel({ user = null, submitting = false, onSave = () => {} }) {
-  const [gitlabUsername, setGitlabUsername] = useState('')
+  const [gitlabUsername, setGitlabUsername] = useState(user?.gitlabUsername ?? '')
   const [error, setError] = useState(null)
   const [message, setMessage] = useState(null)
 

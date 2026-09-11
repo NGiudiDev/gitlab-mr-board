@@ -130,12 +130,9 @@ test.describe('Tablero de merge requests', () => {
       await page.keyboard.press('Tab');
       expect(await focusedAccessibleName(page)).toContain('Saltar al contenido principal');
 
-      // La barra del layout va primero: tablero, cuenta, usuarios y el menú de sesión.
+      // La barra del layout va primero: tablero, usuarios y el menú de sesión.
       await page.keyboard.press('Tab');
       expect(await focusedAccessibleName(page)).toContain('Tablero');
-
-      await page.keyboard.press('Tab');
-      expect(await focusedAccessibleName(page)).toContain('Mi cuenta');
 
       await page.keyboard.press('Tab');
       expect(await focusedAccessibleName(page)).toContain('Usuarios');
@@ -144,6 +141,12 @@ test.describe('Tablero de merge requests', () => {
       expect(await focusedAccessibleName(page)).toContain('Abrir menú de cuenta');
       await page.keyboard.press('Enter');
       await expect(page.getByRole('button', { name: 'Cerrar sesión' })).toBeVisible();
+
+      await page.keyboard.press('Tab');
+      expect(await focusedAccessibleName(page)).toContain('Editar perfil');
+
+      await page.keyboard.press('Tab');
+      expect(await focusedAccessibleName(page)).toContain('Editar cuenta');
 
       await page.keyboard.press('Tab');
       expect(await focusedAccessibleName(page)).toContain('Cerrar sesión');
@@ -176,13 +179,23 @@ test.describe('Tablero de merge requests', () => {
     });
 
     await test.step('navega entre la cuenta, los usuarios y el tablero', async () => {
-      await page.getByRole('button', { name: 'Mi cuenta' }).click();
-      await expect(page.getByRole('heading', { level: 2, name: 'Mi contraseña' })).toBeVisible();
+      await page.getByRole('button', { name: 'Abrir menú de cuenta' }).click();
+      await page.getByRole('button', { name: 'Editar cuenta' }).click();
       await expect(page.getByRole('heading', { level: 2, name: 'Mi equipo' })).toBeVisible();
+      await expect(page.getByRole('heading', { level: 2, name: 'GitLab de la cuenta' })).toBeVisible();
+      await expect(page.getByLabel('Nickname de GitLab')).toHaveValue(e2eConfig.gitlabUsername);
+      await expect(page.getByRole('heading', { level: 2, name: 'Mi perfil' })).toHaveCount(0);
 
       // El código habilita el último paso: sumar a alguien más a esta cuenta.
       inviteCode = await page.getByLabel('Código de invitación').inputValue();
       expect(inviteCode).toMatch(/^[A-Z2-9]{10}$/);
+
+      await page.getByRole('button', { name: 'Abrir menú de cuenta' }).click();
+      await page.getByRole('button', { name: 'Editar perfil' }).click();
+      await expect(page.getByRole('heading', { level: 2, name: 'Mi perfil' })).toBeVisible();
+      await expect(page.getByRole('heading', { level: 2, name: 'Mi contraseña' })).toBeVisible();
+      await expect(page.getByRole('heading', { level: 2, name: 'Mi identidad en GitLab' })).toHaveCount(0);
+      await expect(page.getByRole('heading', { level: 2, name: 'Mi equipo' })).toHaveCount(0);
 
       // El usuario del recorrido es administrador, así que ve la tabla de usuarios.
       await page.getByRole('button', { name: 'Usuarios' }).click();
@@ -224,7 +237,8 @@ test.describe('Tablero de merge requests', () => {
       // No administra la cuenta, así que no puede tocar esa configuración ni
       // ver la pantalla de usuarios.
       await expect(page.getByRole('button', { name: 'Usuarios' })).toHaveCount(0);
-      await page.getByRole('button', { name: 'Mi cuenta' }).click();
+      await page.getByRole('button', { name: 'Abrir menú de cuenta' }).click();
+      await page.getByRole('button', { name: 'Ver cuenta' }).click();
       await expect(page.getByRole('heading', { level: 2, name: 'GitLab de la cuenta' })).toBeVisible();
       await expect(page.getByLabel('IDs de los proyectos')).toHaveCount(0);
     });
