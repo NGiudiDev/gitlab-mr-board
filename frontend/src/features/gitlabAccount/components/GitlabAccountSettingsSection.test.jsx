@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // 6. Imports relativos restantes.
 import { jsonResponse } from "../../../../test/sharedState.js";
-import GitlabSettingsForm from "./GitlabSettingsForm.jsx";
+import { GitlabAccountSettingsSection } from "./GitlabAccountSettingsSection.jsx";
 
 const SETTINGS_URL = "http://localhost:3001/api/gitlab-settings";
 const ACCESS_TOKEN = "glpat-token-de-prueba-no-real";
@@ -33,7 +33,7 @@ async function flush() {
  * vista de sólo lectura tiene su propio describe.
  */
 async function renderForm(props = {}) {
-  const { container } = render(<GitlabSettingsForm canEdit {...props} />);
+  const { container } = render(<GitlabAccountSettingsSection canEdit {...props} />);
   await flush();
   return container;
 }
@@ -74,7 +74,19 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("carga de la configuración", () => {
+describe("carga de la configuración de la cuenta de GitLab", () => {
+  it("muestra un skeleton accesible mientras espera al backend", () => {
+    fetchMock.mockImplementation(() => new Promise(() => {}));
+    const { container } = render(<GitlabAccountSettingsSection canEdit />);
+
+    const loadingStatus = screen.getByRole("status");
+    expect(loadingStatus.textContent).toBe("Cargando la configuración...");
+    expect(loadingStatus.getAttribute("aria-busy")).toBe("true");
+    expect(loadingStatus.querySelector("[aria-hidden=\"true\"]")).not.toBeNull();
+    expect(screen.queryByLabelText("IDs de los proyectos")).toBeNull();
+    expect(container.querySelector("form")).toBeNull();
+  });
+
   it("consulta la configuración guardada con la cookie de sesión", async () => {
     await renderForm();
 
@@ -125,7 +137,7 @@ describe("carga de la configuración", () => {
 
 describe("vista de quien no administra la cuenta", () => {
   it("describe la configuración sin ofrecer cambiarla", async () => {
-    const container = await render(<GitlabSettingsForm />).container;
+    const container = await render(<GitlabAccountSettingsSection />).container;
     await flush();
 
     expect(container.textContent).toContain("101, 202");
@@ -136,7 +148,7 @@ describe("vista de quien no administra la cuenta", () => {
 
   it("explica a quién pedirle la configuración cuando falta", async () => {
     stubSettings(null);
-    const { container } = render(<GitlabSettingsForm />);
+    const { container } = render(<GitlabAccountSettingsSection />);
     await flush();
 
     expect(container.textContent).toContain("Pedíselo a quien administra la cuenta");

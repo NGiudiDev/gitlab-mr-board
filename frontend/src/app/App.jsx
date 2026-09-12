@@ -12,7 +12,7 @@ import ProfilePanel from "../features/auth/components/ProfilePanel.jsx";
 import RegisterForm from "../features/auth/components/RegisterForm.jsx";
 import UserAdmin from "../features/auth/components/UserAdmin.jsx";
 import { useSession } from "../features/auth/hooks/useSession.js";
-import GitlabSettingsForm from "../features/gitlabSettings/components/GitlabSettingsForm.jsx";
+import { GitlabAccountSettingsSection } from "../features/gitlabAccount/components/GitlabAccountSettingsSection.jsx";
 import MrBoard from "../features/mergeRequests/components/MrBoard.jsx";
 import TopBar from "../features/mergeRequests/components/TopBar.jsx";
 import ViewControls from "../features/mergeRequests/components/ViewControls.jsx";
@@ -296,7 +296,10 @@ function ActiveSection({
           />
         ) : null}
 
-        <GitlabSettingsForm canEdit={isAdmin} onSaved={() => fetchMergeRequests(true)} />
+        <GitlabAccountSettingsSection
+          canEdit={isAdmin}
+          onSaved={() => fetchMergeRequests(true)}
+        />
 
         <GitlabIdentityPanel
           user={user}

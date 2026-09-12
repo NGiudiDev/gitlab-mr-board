@@ -1,13 +1,10 @@
-// 2. Dependencias externas.
 import { useEffect, useSyncExternalStore } from "react";
 
-// 6. Imports relativos restantes.
 import { config } from "../../../config.js";
 
 const NETWORK_ERROR_MESSAGE = "No se pudo conectar al backend.";
 
 const INITIAL_STATE = {
-  /** Cuenta de la sesión, o `null` mientras no se cargó. */
   account: null,
   loading: false,
   error: null,
@@ -20,6 +17,7 @@ const INITIAL_STATE = {
  * no en el estado local de un componente.
  */
 let state = INITIAL_STATE;
+
 const listeners = new Set();
 
 function getState() {

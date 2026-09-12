@@ -593,7 +593,7 @@ describe("navegación entre secciones", () => {
 
     expect(screen.getByRole("heading", { level: 2, name: "Mi cuenta" })).toBeDefined();
     expect(screen.getByRole("heading", { level: 2, name: "Invitar al equipo" })).toBeDefined();
-    expect(screen.getByRole("heading", { level: 2, name: "GitLab de la cuenta" })).toBeDefined();
+    expect(screen.getByRole("heading", { level: 2, name: "Cuenta de GitLab" })).toBeDefined();
     expect(screen.getByRole("heading", { level: 2, name: "Mi identidad en GitLab" })).toBeDefined();
     expect(screen.getByLabelText("Nickname de GitLab").value).toBe("ana-gitlab");
     expect(screen.queryByRole("heading", { level: 2, name: "Mi perfil" })).toBeNull();
@@ -611,7 +611,7 @@ describe("navegación entre secciones", () => {
     expect(screen.getByRole("heading", { level: 2, name: "Mi contraseña" })).toBeDefined();
     expect(screen.queryByRole("heading", { level: 2, name: "Mi identidad en GitLab" })).toBeNull();
     expect(screen.queryByRole("heading", { level: 2, name: "Mi cuenta" })).toBeNull();
-    expect(screen.queryByRole("heading", { level: 2, name: "GitLab de la cuenta" })).toBeNull();
+    expect(screen.queryByRole("heading", { level: 2, name: "Cuenta de GitLab" })).toBeNull();
   });
 
   it("no deja cambiar la configuración de GitLab a quien no administra la cuenta", async () => {
@@ -620,7 +620,7 @@ describe("navegación entre secciones", () => {
 
     await openSection("Mi cuenta");
 
-    expect(screen.getByRole("heading", { level: 2, name: "GitLab de la cuenta" })).toBeDefined();
+    expect(screen.getByRole("heading", { level: 2, name: "Cuenta de GitLab" })).toBeDefined();
     expect(screen.queryByLabelText("IDs de los proyectos")).toBeNull();
     expect(screen.getByLabelText("Nickname de GitLab").value).toBe("ana-gitlab");
     expect(screen.queryByRole("heading", { level: 2, name: "Invitar al equipo" })).toBeNull();
@@ -645,7 +645,7 @@ describe("navegación entre secciones", () => {
     fireEvent.click(screen.getByRole("button", { name: "Configurar en Mi cuenta" }));
     await flush();
 
-    expect(screen.getByRole("heading", { level: 2, name: "GitLab de la cuenta" })).toBeDefined();
+    expect(screen.getByRole("heading", { level: 2, name: "Cuenta de GitLab" })).toBeDefined();
   });
 
   it("a quien no administra le dice a quién pedirle la configuración", async () => {
