@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // 4. Módulos de constantes.
-import { TEST_DISPLAY_NAME, TEST_PASSWORD, TEST_USERNAME } from '../../../../test/constants.js';
+import { TEST_DISPLAY_NAME, TEST_EMAIL, TEST_PASSWORD } from '../../../../test/constants.js';
 
 // 6. Imports relativos restantes.
 import { createEmptyServices, createTestServicesWithUser } from '../../../../test/auth.js';
@@ -23,10 +23,10 @@ function appFor() {
 }
 
 /** Envía credenciales a `POST /api/auth/login`. */
-function login(username, password) {
+function login(email, password) {
   return requestApp(appFor(), '/api/auth/login', {
     method: 'POST',
-    body: { username, password },
+    body: { email, password },
   });
 }
 
@@ -48,21 +48,21 @@ describe('POST /api/auth/register', () => {
 
   it('crea una cuenta nueva, deja administrador a quien la abre y abre la sesión', async () => {
     const response = await register({
-      username: 'zoe',
+      email: 'zoe@example.com',
       password: TEST_PASSWORD,
       accountName: 'Equipo de Zoe',
     });
     const { user } = response.json();
 
     expect(response.status).toBe(201);
-    expect(user).toMatchObject({ username: 'zoe', role: 'admin' });
+    expect(user).toMatchObject({ email: 'zoe@example.com', role: 'admin' });
     expect(user.accountId).not.toBe(services.account.id);
     expect(readSetCookie(response, SESSION_COOKIE_NAME)).not.toBeNull();
   });
 
   it('suma a la cuenta del código de invitación, con rol user', async () => {
     const response = await register({
-      username: 'zoe',
+      email: 'zoe@example.com',
       password: TEST_PASSWORD,
       inviteCode: services.account.inviteCode,
     });
@@ -74,7 +74,7 @@ describe('POST /api/auth/register', () => {
 
   it('responde 404 cuando el código de invitación no existe', async () => {
     const response = await register({
-      username: 'zoe',
+      email: 'zoe@example.com',
       password: TEST_PASSWORD,
       inviteCode: 'CODIGOMALO',
     });
@@ -85,7 +85,7 @@ describe('POST /api/auth/register', () => {
 
   it('conserva el nombre visible recibido', async () => {
     const response = await register({
-      username: 'zoe',
+      email: 'zoe@example.com',
       password: TEST_PASSWORD,
       displayName: 'Zoe Ruiz',
     });
@@ -93,16 +93,16 @@ describe('POST /api/auth/register', () => {
     expect(response.json().user.displayName).toBe('Zoe Ruiz');
   });
 
-  it('responde 409 cuando el nombre ya está tomado', async () => {
-    const response = await register({ username: TEST_USERNAME, password: TEST_PASSWORD });
+  it('responde 409 cuando el email ya está registrado', async () => {
+    const response = await register({ email: TEST_EMAIL, password: TEST_PASSWORD });
 
     expect(response.status).toBe(409);
     expect(readSetCookie(response, SESSION_COOKIE_NAME)).toBeNull();
   });
 
-  it('responde 400 cuando el nombre o la contraseña no cumplen las reglas', async () => {
-    const shortName = await register({ username: 'an', password: TEST_PASSWORD });
-    const shortPassword = await register({ username: 'zoe', password: 'corta' });
+  it('responde 400 cuando el email o la contraseña no cumplen las reglas', async () => {
+    const shortName = await register({ email: 'an', password: TEST_PASSWORD });
+    const shortPassword = await register({ email: 'zoe@example.com', password: 'corta' });
 
     expect(shortName.status).toBe(400);
     expect(shortPassword.status).toBe(400);
@@ -113,24 +113,24 @@ describe('POST /api/auth/register', () => {
     // El límite se cuenta por router, así que la app se reutiliza entre altas.
     const app = createApp(empty);
 
-    for (const username of ['uno', 'dos', 'tres', 'cuatro', 'cinco']) {
-      expect((await register({ username, password: TEST_PASSWORD }, app)).status).toBe(201);
+    for (const email of ['uno@example.com', 'dos@example.com', 'tres@example.com', 'cuatro@example.com', 'cinco@example.com']) {
+      expect((await register({ email, password: TEST_PASSWORD }, app)).status).toBe(201);
     }
 
-    expect((await register({ username: 'seis', password: TEST_PASSWORD }, app)).status).toBe(429);
+    expect((await register({ email: 'seis@example.com', password: TEST_PASSWORD }, app)).status).toBe(429);
     await empty.authService.close();
   });
 });
 
 describe('POST /api/auth/login', () => {
   it('devuelve el usuario y entrega la cookie de sesión', async () => {
-    const response = await login(TEST_USERNAME, TEST_PASSWORD);
+    const response = await login(TEST_EMAIL, TEST_PASSWORD);
 
     expect(response.status).toBe(200);
     expect(response.json().user).toEqual({
       id: expect.any(String),
       accountId: services.account.id,
-      username: TEST_USERNAME,
+      email: TEST_EMAIL,
       displayName: TEST_DISPLAY_NAME,
       role: 'user',
       gitlabUsername: null,
@@ -139,7 +139,7 @@ describe('POST /api/auth/login', () => {
   });
 
   it('protege la cookie con HttpOnly, SameSite y vencimiento', async () => {
-    const response = await login(TEST_USERNAME, TEST_PASSWORD);
+    const response = await login(TEST_EMAIL, TEST_PASSWORD);
     const [cookie] = response.headers['set-cookie'] ?? [];
 
     expect(cookie).toContain('HttpOnly');
@@ -149,7 +149,7 @@ describe('POST /api/auth/login', () => {
   });
 
   it('no incluye el token de sesión en el cuerpo de la respuesta', async () => {
-    const response = await login(TEST_USERNAME, TEST_PASSWORD);
+    const response = await login(TEST_EMAIL, TEST_PASSWORD);
     const token = readSetCookie(response, SESSION_COOKIE_NAME)?.split('=')[1] ?? '';
 
     expect(token).not.toBe('');
@@ -157,10 +157,10 @@ describe('POST /api/auth/login', () => {
   });
 
   it('responde 401 y sin cookie ante credenciales incorrectas', async () => {
-    const response = await login(TEST_USERNAME, 'contrasena-incorrecta');
+    const response = await login(TEST_EMAIL, 'contrasena-incorrecta');
 
     expect(response.status).toBe(401);
-    expect(response.json().error).toBe('Usuario o contraseña incorrectos.');
+    expect(response.json().error).toBe('Email o contraseña incorrectos.');
     expect(readSetCookie(response, SESSION_COOKIE_NAME)).toBeNull();
   });
 
@@ -171,13 +171,13 @@ describe('POST /api/auth/login', () => {
     });
 
     expect(response.status).toBe(400);
-    expect(response.json().error).toBe('Ingresá tu usuario y tu contraseña.');
+    expect(response.json().error).toBe('Ingresá tu email y tu contraseña.');
   });
 
   it('responde 403 cuando el usuario está deshabilitado', async () => {
-    await services.authService.setUserStatus(TEST_USERNAME, 'disabled');
+    await services.authService.setUserStatus(TEST_EMAIL, 'disabled');
 
-    const response = await login(TEST_USERNAME, TEST_PASSWORD);
+    const response = await login(TEST_EMAIL, TEST_PASSWORD);
 
     expect(response.status).toBe(403);
   });
@@ -185,7 +185,7 @@ describe('POST /api/auth/login', () => {
   it('traduce a 500 un fallo inesperado del servicio', async () => {
     vi.spyOn(services.authService, 'login').mockRejectedValue(new Error('la base no responde'));
 
-    const response = await login(TEST_USERNAME, TEST_PASSWORD);
+    const response = await login(TEST_EMAIL, TEST_PASSWORD);
 
     expect(response.status).toBe(500);
     expect(response.json().error).toBe('Error interno del servidor.');
@@ -195,12 +195,12 @@ describe('POST /api/auth/login', () => {
 describe('GET /api/auth/me', () => {
   it('devuelve el usuario de la sesión vigente', async () => {
     const app = appFor();
-    const cookie = readSetCookie(await login(TEST_USERNAME, TEST_PASSWORD), SESSION_COOKIE_NAME) ?? '';
+    const cookie = readSetCookie(await login(TEST_EMAIL, TEST_PASSWORD), SESSION_COOKIE_NAME) ?? '';
 
     const response = await requestApp(app, '/api/auth/me', { headers: { cookie } });
 
     expect(response.status).toBe(200);
-    expect(response.json().user.username).toBe(TEST_USERNAME);
+    expect(response.json().user.email).toBe(TEST_EMAIL);
   });
 
   it('responde 401 sin cookie', async () => {
@@ -219,6 +219,54 @@ describe('GET /api/auth/me', () => {
   });
 });
 
+describe('PATCH /api/auth/profile', () => {
+  /** Guarda el perfil propio reenviando la cookie de sesión. */
+  function saveProfile(app, cookie, body) {
+    return requestApp(app, '/api/auth/profile', {
+      method: 'PATCH',
+      headers: { cookie },
+      body,
+    });
+  }
+
+  it('actualiza el perfil y conserva la sesión abierta', async () => {
+    const app = appFor();
+    const cookie = readSetCookie(await login(TEST_EMAIL, TEST_PASSWORD), SESSION_COOKIE_NAME) ?? '';
+
+    const response = await saveProfile(app, cookie, {
+      email: 'anita@example.com',
+      displayName: 'Ana Pérez',
+    });
+    const session = await requestApp(app, '/api/auth/me', { headers: { cookie } });
+
+    expect(response.status).toBe(200);
+    expect(response.json().user).toMatchObject({ email: 'anita@example.com', displayName: 'Ana Pérez' });
+    expect(session.json().user).toMatchObject({ email: 'anita@example.com', displayName: 'Ana Pérez' });
+  });
+
+  it('responde 400 ante un email inválido y 409 si ya existe', async () => {
+    const app = appFor();
+    const cookie = readSetCookie(await login(TEST_EMAIL, TEST_PASSWORD), SESSION_COOKIE_NAME) ?? '';
+    await services.authService.createUser({
+      accountId: services.account.id,
+      email: 'beto@example.com',
+      password: TEST_PASSWORD,
+    });
+
+    expect((await saveProfile(app, cookie, { email: 'a' })).status).toBe(400);
+    expect((await saveProfile(app, cookie, { email: 'beto@example.com' })).status).toBe(409);
+  });
+
+  it('responde 401 sin sesión', async () => {
+    const response = await requestApp(appFor(), '/api/auth/profile', {
+      method: 'PATCH',
+      body: { email: 'anita@example.com', displayName: 'Ana Pérez' },
+    });
+
+    expect(response.status).toBe(401);
+  });
+});
+
 describe('PUT /api/auth/gitlab-username', () => {
   /** Guarda el nickname propio reenviando la cookie de sesión. */
   function saveGitlabUsername(app, cookie, gitlabUsername) {
@@ -231,7 +279,7 @@ describe('PUT /api/auth/gitlab-username', () => {
 
   it('guarda el nickname y devuelve la identidad actualizada', async () => {
     const app = appFor();
-    const cookie = readSetCookie(await login(TEST_USERNAME, TEST_PASSWORD), SESSION_COOKIE_NAME) ?? '';
+    const cookie = readSetCookie(await login(TEST_EMAIL, TEST_PASSWORD), SESSION_COOKIE_NAME) ?? '';
 
     const response = await saveGitlabUsername(app, cookie, 'ana-gitlab');
     const session = await requestApp(app, '/api/auth/me', { headers: { cookie } });
@@ -244,7 +292,7 @@ describe('PUT /api/auth/gitlab-username', () => {
 
   it('responde 400 cuando el nickname no es válido', async () => {
     const app = appFor();
-    const cookie = readSetCookie(await login(TEST_USERNAME, TEST_PASSWORD), SESSION_COOKIE_NAME) ?? '';
+    const cookie = readSetCookie(await login(TEST_EMAIL, TEST_PASSWORD), SESSION_COOKIE_NAME) ?? '';
 
     expect((await saveGitlabUsername(app, cookie, '')).status).toBe(400);
     expect((await saveGitlabUsername(app, cookie, '-ana')).status).toBe(400);
@@ -268,7 +316,7 @@ describe('PUT /api/auth/password', () => {
 
   it('cambia la contraseña, borra la cookie y cierra la sesión', async () => {
     const app = appFor();
-    const cookie = readSetCookie(await login(TEST_USERNAME, TEST_PASSWORD), SESSION_COOKIE_NAME) ?? '';
+    const cookie = readSetCookie(await login(TEST_EMAIL, TEST_PASSWORD), SESSION_COOKIE_NAME) ?? '';
 
     const response = await changePassword(app, cookie, {
       currentPassword: TEST_PASSWORD,
@@ -283,7 +331,7 @@ describe('PUT /api/auth/password', () => {
 
   it('responde 403 cuando la contraseña actual no coincide', async () => {
     const app = appFor();
-    const cookie = readSetCookie(await login(TEST_USERNAME, TEST_PASSWORD), SESSION_COOKIE_NAME) ?? '';
+    const cookie = readSetCookie(await login(TEST_EMAIL, TEST_PASSWORD), SESSION_COOKIE_NAME) ?? '';
 
     const response = await changePassword(app, cookie, {
       currentPassword: 'incorrecta',
@@ -296,7 +344,7 @@ describe('PUT /api/auth/password', () => {
 
   it('responde 400 cuando la contraseña nueva es demasiado corta', async () => {
     const app = appFor();
-    const cookie = readSetCookie(await login(TEST_USERNAME, TEST_PASSWORD), SESSION_COOKIE_NAME) ?? '';
+    const cookie = readSetCookie(await login(TEST_EMAIL, TEST_PASSWORD), SESSION_COOKIE_NAME) ?? '';
 
     const response = await changePassword(app, cookie, {
       currentPassword: TEST_PASSWORD,
@@ -319,7 +367,7 @@ describe('PUT /api/auth/password', () => {
 describe('POST /api/auth/logout', () => {
   it('invalida la sesión y borra la cookie', async () => {
     const app = appFor();
-    const cookie = readSetCookie(await login(TEST_USERNAME, TEST_PASSWORD), SESSION_COOKIE_NAME) ?? '';
+    const cookie = readSetCookie(await login(TEST_EMAIL, TEST_PASSWORD), SESSION_COOKIE_NAME) ?? '';
 
     const logout = await requestApp(app, '/api/auth/logout', { method: 'POST', headers: { cookie } });
     const afterLogout = await requestApp(app, '/api/auth/me', { headers: { cookie } });

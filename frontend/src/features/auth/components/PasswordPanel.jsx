@@ -7,8 +7,8 @@ const LABEL_CLASSES = 'block text-[12px] font-semibold text-text-muted mb-3'
 /**
  * Cambio de la propia contraseña, pidiendo la actual como confirmación.
  *
- * Es una de las tarjetas de «Mi cuenta»; el equipo, las credenciales de GitLab
- * y la administración de usuarios son sus propios componentes.
+ * Es una de las tarjetas de «Mi perfil»; los datos compartidos de la cuenta y
+ * la administración de usuarios son sus propios componentes.
  *
  * El estado de las contraseñas es local: sólo lo necesita esta pantalla y no
  * debe sobrevivir al envío.
@@ -34,7 +34,7 @@ function PasswordPanel({ user = null, submitting = false, onChangePassword = () 
   if (!user) return null
 
   return (
-    <section aria-labelledby="contrasena-heading" className="max-w-xl rounded-lg border border-border bg-surface p-5">
+    <section aria-labelledby="contrasena-heading">
       <h2 id="contrasena-heading" className="text-base font-semibold text-text-primary mb-1">
         Mi contraseña
       </h2>
@@ -48,7 +48,7 @@ function PasswordPanel({ user = null, submitting = false, onChangePassword = () 
         </p>
       ) : null}
 
-      <form onSubmit={handleSubmit} className="max-w-sm">
+      <form onSubmit={handleSubmit}>
         <label className={LABEL_CLASSES} htmlFor="cuenta-actual">
           Contraseña actual
           <input

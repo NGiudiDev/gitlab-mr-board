@@ -37,7 +37,7 @@ async function fillAndSubmit({
 } = {}) {
   if (inviteCode) await userEvent.type(screen.getByLabelText('Código de invitación'), inviteCode)
   if (accountName) await userEvent.type(screen.getByLabelText('Nombre del equipo (opcional)'), accountName)
-  await userEvent.type(screen.getByLabelText('Usuario'), 'zoe')
+  await userEvent.type(screen.getByLabelText('Email'), 'zoe@example.com')
   if (displayName) await userEvent.type(screen.getByLabelText('Nombre visible (opcional)'), displayName)
   await userEvent.type(screen.getByLabelText('Contraseña'), password)
   await userEvent.type(screen.getByLabelText('Repetí la contraseña'), confirmation)
@@ -50,7 +50,7 @@ describe('RegisterForm', () => {
 
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Crear una cuenta')
     expect(screen.getByLabelText('Código de invitación')).toBeDefined()
-    expect(screen.getByLabelText('Usuario')).toBeDefined()
+    expect(screen.getByLabelText('Email')).toBeDefined()
     expect(screen.getByLabelText('Nombre visible (opcional)')).toBeDefined()
     expect(screen.getByLabelText('Contraseña')).toBeDefined()
     expect(screen.getByLabelText('Repetí la contraseña')).toBeDefined()
@@ -73,12 +73,12 @@ describe('RegisterForm', () => {
     expect(screen.queryByLabelText('Código de invitación')).toBeNull()
   })
 
-  it('explica las reglas del nombre de usuario en el propio campo', () => {
+  it('configura el campo para ingresar un email', () => {
     renderRegisterForm()
-    const field = screen.getByLabelText('Usuario')
-    const help = document.getElementById(field.getAttribute('aria-describedby'))
+    const field = screen.getByLabelText('Email')
 
-    expect(help.textContent).toContain('Entre 3 y 32 caracteres')
+    expect(field.getAttribute('type')).toBe('email')
+    expect(field.getAttribute('autocomplete')).toBe('email')
   })
 
   it('explica que sumarse a un equipo no exige credenciales de GitLab', () => {
@@ -103,7 +103,7 @@ describe('RegisterForm', () => {
     await fillAndSubmit({ displayName: 'Zoe Ruiz' })
 
     expect(onSubmit).toHaveBeenCalledWith({
-      username: 'zoe',
+      email: 'zoe@example.com',
       password: PASSWORD,
       displayName: 'Zoe Ruiz',
       inviteCode: INVITE_CODE,
@@ -118,7 +118,7 @@ describe('RegisterForm', () => {
     await fillAndSubmit({ inviteCode: '', accountName: 'Plataforma' })
 
     expect(onSubmit).toHaveBeenCalledWith({
-      username: 'zoe',
+      email: 'zoe@example.com',
       password: PASSWORD,
       displayName: '',
       accountName: 'Plataforma',
@@ -136,9 +136,9 @@ describe('RegisterForm', () => {
   })
 
   it('muestra el error que devuelve el backend', () => {
-    renderRegisterForm({ error: 'Ya existe un usuario con el nombre «zoe».' })
+    renderRegisterForm({ error: 'Ya existe un usuario con el email «zoe@example.com».' })
 
-    expect(screen.getByRole('alert').textContent).toBe('Ya existe un usuario con el nombre «zoe».')
+    expect(screen.getByRole('alert').textContent).toBe('Ya existe un usuario con el email «zoe@example.com».')
   })
 
   it('bloquea el botón mientras se está creando la cuenta', () => {

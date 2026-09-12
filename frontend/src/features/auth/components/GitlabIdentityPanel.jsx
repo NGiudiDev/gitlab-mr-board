@@ -13,7 +13,7 @@ const HINT_CLASSES = 'mt-1 text-[12px] font-normal text-text-faint'
  * suyo, y de eso depende la vista personal.
  */
 function GitlabIdentityPanel({ user = null, submitting = false, onSave = () => {} }) {
-  const [gitlabUsername, setGitlabUsername] = useState('')
+  const [gitlabUsername, setGitlabUsername] = useState(user?.gitlabUsername ?? '')
   const [error, setError] = useState(null)
   const [message, setMessage] = useState(null)
 
@@ -41,7 +41,7 @@ function GitlabIdentityPanel({ user = null, submitting = false, onSave = () => {
   if (!user) return null
 
   return (
-    <section aria-labelledby="identidad-heading" className="max-w-xl rounded-lg border border-border bg-surface p-5">
+    <section aria-labelledby="identidad-heading">
       <h2 id="identidad-heading" className="text-base font-semibold text-text-primary mb-1">
         Mi identidad en GitLab
       </h2>
@@ -61,7 +61,7 @@ function GitlabIdentityPanel({ user = null, submitting = false, onSave = () => {
         </p>
       ) : null}
 
-      <form onSubmit={handleSubmit} className="max-w-sm">
+      <form onSubmit={handleSubmit}>
         {/* La ayuda queda fuera del `label` para que no forme parte del nombre
             accesible del campo; `aria-describedby` la asocia igual. */}
         <div className="mb-4">

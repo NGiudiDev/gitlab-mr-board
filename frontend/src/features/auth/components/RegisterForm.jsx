@@ -21,7 +21,7 @@ function RegisterForm({ error = null, submitting = false, onSubmit = () => {}, o
   const [joinExisting, setJoinExisting] = useState(true)
   const [inviteCode, setInviteCode] = useState('')
   const [accountName, setAccountName] = useState('')
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [password, setPassword] = useState('')
   const [confirmation, setConfirmation] = useState('')
@@ -37,7 +37,7 @@ function RegisterForm({ error = null, submitting = false, onSubmit = () => {}, o
 
     setLocalError(null)
     onSubmit({
-      username: username.trim(),
+      email: email.trim(),
       password,
       displayName: displayName.trim(),
       // Sólo viaja el dato del camino elegido: con código el backend ignora el
@@ -65,7 +65,7 @@ function RegisterForm({ error = null, submitting = false, onSubmit = () => {}, o
         Crear una cuenta
       </h1>
       <p className="text-[12.5px] text-text-muted mb-5">
-        Elegí un usuario y una contraseña de al menos {MINIMUM_PASSWORD_LENGTH} caracteres.
+        Ingresá tu email y una contraseña de al menos {MINIMUM_PASSWORD_LENGTH} caracteres.
       </p>
 
       {visibleError ? (
@@ -140,29 +140,22 @@ function RegisterForm({ error = null, submitting = false, onSubmit = () => {}, o
         </>
       )}
 
-      <label className={LABEL_CLASSES} htmlFor="registro-username">
-        Usuario
+      <label className={LABEL_CLASSES} htmlFor="registro-email">
+        Email
         <input
-          id="registro-username"
-          name="username"
-          type="text"
-          value={username}
-          onChange={(event) => setUsername(event.target.value)}
-          autoComplete="username"
+          id="registro-email"
+          name="email"
+          type="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          autoComplete="email"
           autoCapitalize="none"
           spellCheck="false"
           required
-          minLength={3}
-          maxLength={32}
-          pattern="[A-Za-z0-9._\-]+"
-          aria-describedby="registro-username-ayuda"
+          maxLength={254}
           className={FIELD_CLASSES}
         />
       </label>
-      <p id="registro-username-ayuda" className="-mt-2 mb-3 text-[11.5px] font-normal text-text-faint">
-        Entre 3 y 32 caracteres: letras, números, punto, guion o guion bajo.
-      </p>
-
       <label className={LABEL_CLASSES} htmlFor="registro-nombre">
         Nombre visible (opcional)
         <input

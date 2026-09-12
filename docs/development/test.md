@@ -47,7 +47,7 @@ No hay umbral mínimo configurado, en línea con la convención de no tratar la 
 
 La suite debe cubrir la matriz y el orden de prioridad de `computeMergeability()`; las combinaciones de autor, reviewers y aprobadores de `computeResponsiblePeople()` junto con `collectPeople()`; la extracción de la ruta del proyecto; URLs, autenticación, errores y paginación del cliente de GitLab; el límite de concurrencia y la liberación de la cola ante fallos; el enriquecimiento, orden y degradación parcial de los merge requests; y `GET /health`, `GET /api/pull-requests`, la caché, `force=true` y la traducción de errores HTTP.
 
-También debe cubrir la autenticación: derivación y verificación de contraseñas, el esquema y las operaciones de la base, el ciclo de la sesión —alta, registro, ingreso, vencimiento, cierre y bloqueo por intentos fallidos—, el cambio de la propia contraseña y las rutas `/api/auth/*` y `/api/users/*`, incluidos el 401 sin sesión, el 403 sin rol `admin` y el límite de registros.
+También debe cubrir la autenticación: derivación y verificación de contraseñas, el esquema y las operaciones de la base, el ciclo de la sesión —alta, registro, ingreso, vencimiento, cierre y bloqueo por intentos fallidos—, la edición del perfil propio, el cambio de la propia contraseña y las rutas `/api/auth/*` y `/api/users/*`, incluidos el 401 sin sesión, el 403 sin rol `admin` y el límite de registros.
 
 Y la configuración de GitLab: el ida y vuelta del cifrado, su fallo ante una clave distinta o un valor alterado, la validación de IDs y token, la conservación del token guardado, el aislamiento entre cuentas, las rutas `/api/gitlab-settings` con su 403 para quien no administra, el `meta.viewerUsername` del tablero y su 409 sin configuración. Ninguna respuesta ni log debe contener un access token en claro.
 
@@ -72,7 +72,7 @@ Los test de componentes y del store deben cubrir la carga inicial, la actualizac
 
 Deben consultar el DOM como lo haría una persona usuaria, sin afirmar props de componentes hijos ni estado interno del store.
 
-Deben cubrir además el portero de sesión: la verificación inicial, el ingreso, el alta por sus dos caminos —con código de invitación y creando un equipo—, el cambio de la propia contraseña, el guardado del nickname de GitLab, la administración de usuarios visible sólo para un `admin`, el cierre de sesión y la vuelta al login cuando el backend responde 401.
+Deben cubrir además el portero de sesión: la verificación inicial, el ingreso, el alta por sus dos caminos —con código de invitación y creando un equipo—, la edición del perfil propio, el cambio de la propia contraseña, el guardado del nickname de GitLab, los accesos separados a «Mi perfil» y «Mi cuenta» desde el dropdown, la administración de usuarios visible sólo para un `admin`, el cierre de sesión y la vuelta al login cuando el backend responde 401.
 
 Y la configuración de GitLab: la carga de lo guardado, el campo del token que arranca vacío y sólo se envía si se escribe, los errores de validación del backend, la vista de sólo lectura de quien no administra la cuenta, y el 409 del tablero con su acceso directo a «Mi cuenta» para quien puede resolverlo.
 
@@ -99,19 +99,20 @@ Los E2E corren contra GitLab real, así que necesitan estas variables. Copiar `.
 | `GITLAB_TOKEN` | Sí | PAT con alcance `read_api` sobre los proyectos de test; el recorrido lo carga en «Mi cuenta» |
 | `E2E_PROJECT_IDS` | Sí | IDs de los proyectos dedicados a test, separados por comas |
 | `E2E_PROJECT_PATH` | Sí | Ruta `grupo/proyecto` de la sección que expande el recorrido |
-| `E2E_GITLAB_USERNAME` | Sí | Nickname de GitLab que el recorrido carga en «Mi cuenta» |
+| `E2E_GITLAB_USERNAME` | Sí | Nickname de GitLab que el recorrido carga y verifica en «Mi cuenta» |
 | `E2E_MR_TITLE` | Sí | Título exacto (mayúsculas incluidas) del merge request que se verifica |
 | `E2E_MR_COLUMN` | Sí | Columna donde debe aparecer ese merge request |
 | `E2E_DATABASE_URL` | Sí | Base de Neon dedicada a test; el usuario del recorrido se borra y se recrea en cada corrida |
 | `E2E_GITLAB_BASE_URL` | No | Instancia de GitLab; por omisión `https://gitlab.com` |
+| `E2E_EMAIL` | No | Email del usuario del recorrido; por omisión `e2e@example.com` |
 
 Usar proyectos creados para test, nunca los de trabajo real: el recorrido depende de que ese merge request siga abierto y en su columna.
 
 Playwright levanta ambos servicios con `webServer`, sin reutilizar procesos existentes: el backend en el puerto 3101 con una `ENCRYPTION_KEY` fija —la base es descartable—, y el build del frontend servido con `vite preview` en 4173, uno de los dos orígenes que acepta el CORS del backend.
 
-Antes de levantarlos, `e2e/globalSetup.js` borra y vuelve a crear con `npm run users` el usuario del recorrido —y borra el invitado que ese recorrido da de alta—, para que cada corrida arranque siempre igual: el usuario se recrea con una cuenta nueva, sin proyectos ni token. Sólo toca esos dos usuarios, nunca el resto de la base; las cuentas de corridas anteriores quedan vacías y sin nadie que pueda entrar. `E2E_DATABASE_URL` es obligatoria y nunca cae en `DATABASE_URL`, para que un descuido no toque la base de trabajo. Las credenciales se pueden cambiar con `E2E_USERNAME` y `E2E_PASSWORD`.
+Antes de levantarlos, `e2e/globalSetup.js` borra y vuelve a crear con `npm run users` el usuario del recorrido —y borra el invitado que ese recorrido da de alta—, para que cada corrida arranque siempre igual: el usuario se recrea con una cuenta nueva, sin proyectos ni token. Sólo toca esos dos usuarios, nunca el resto de la base; las cuentas de corridas anteriores quedan vacías y sin nadie que pueda entrar. `E2E_DATABASE_URL` es obligatoria y nunca cae en `DATABASE_URL`, para que un descuido no toque la base de trabajo. Las credenciales se pueden cambiar con `E2E_EMAIL` y `E2E_PASSWORD`.
 
-El recorrido crítico ingresa con ese usuario, comprueba que el tablero reclame la configuración de GitLab, la carga en «Mi cuenta» con `GITLAB_TOKEN` y `E2E_PROJECT_IDS` —y su nickname con `E2E_GITLAB_USERNAME`— y espera una respuesta real de GitLab; después expande el proyecto configurado, verifica la columna y los bloqueadores del merge request conocido, fuerza una actualización que omite la caché, recorre los controles principales con teclado hasta la vista personal, copia el código de invitación, cierra la sesión comprobando que recargar no devuelva el tablero y, con ese código, da de alta un segundo usuario que ve el mismo tablero sin cargar ninguna credencial.
+El recorrido crítico ingresa con ese usuario, comprueba que el tablero reclame la configuración de GitLab, carga `GITLAB_TOKEN`, `E2E_PROJECT_IDS` y su nickname con `E2E_GITLAB_USERNAME` en «Mi cuenta», y espera una respuesta real de GitLab; después expande el proyecto configurado, verifica la columna y los bloqueadores del merge request conocido, fuerza una actualización que omite la caché, recorre los controles principales con teclado hasta la vista personal, comprueba las dos pantallas del dropdown y que el nickname guardado siga precargado, copia el código de invitación, cierra la sesión comprobando que recargar no devuelva el tablero y, con ese código, da de alta un segundo usuario que ve el mismo tablero sin cargar ninguna credencial.
 
 Para verlo correr: `npm run test:e2e:ui` abre el modo interactivo con watch y time-travel por paso, y `npm run test:e2e -- --headed` lo ejecuta en una ventana visible (`--debug` agrega el Inspector paso a paso). Las trazas de los reintentos se revisan después con `npx playwright show-trace`.
 

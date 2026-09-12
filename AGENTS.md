@@ -80,9 +80,9 @@
 
 - Organizar cada funcionalidad en `frontend/src/features/<feature>/`, con `components/` y `hooks/`. Reservar `frontend/src/app/` para la composición general.
 
-- La sección «Mi cuenta» reúne, en ese orden, el equipo (`features/accounts/components/AccountPanel.jsx`), la configuración de GitLab de la cuenta (`features/gitlabSettings/`), el nickname propio de GitLab (`features/auth/components/GitlabIdentityPanel.jsx`) y la contraseña (`features/auth/components/PasswordPanel.jsx`). Al sumar algo propio de la persona o de la cuenta, va ahí, en su propia tarjeta.
+- «Mi cuenta» reúne el equipo (`features/accounts/components/AccountPanel.jsx`), la configuración compartida de GitLab (`features/gitlabSettings/`) y el nickname propio de GitLab (`features/auth/components/GitlabIdentityPanel.jsx`). «Mi perfil» reúne los datos de acceso (`features/auth/components/ProfilePanel.jsx`) y la contraseña (`features/auth/components/PasswordPanel.jsx`). Al sumar un dato, ubicarlo según su contexto de edición.
 
-- **El layout y la navegación viven en `frontend/src/app/AppShell.jsx`**: la barra superior, el único `main` y el listado `SECTIONS` de secciones navegables. Al agregar una sección, sumarla a esa lista, contemplarla en `ActiveSection` de `App.jsx` y actualizar [`docs/architecture/frontend.md`](docs/architecture/frontend.md#navegación-entre-secciones). No hay router: la sección activa es estado local de `App`.
+- **El layout y la navegación viven en `frontend/src/app/`**: `AppShell.jsx` contiene la barra superior, el único `main` y el listado `SECTIONS` de secciones navegables; `AccountMenu.jsx`, el avatar y su desplegable para abrir «Mi perfil» o «Mi cuenta» y cerrar la sesión. Al agregar una sección, sumarla a esa lista, contemplarla en `ActiveSection` de `App.jsx` y actualizar [`docs/architecture/frontend.md`](docs/architecture/frontend.md#navegación-entre-secciones). No hay router: la sección activa es estado local de `App`.
 
 - Centralizar las variables de entorno en `frontend/src/config.js`. Al agregar una, actualizar `frontend/.env.example` y `docs/development/entorno-local.md`.
 

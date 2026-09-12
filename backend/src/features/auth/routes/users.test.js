@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // 4. Módulos de constantes.
-import { TEST_PASSWORD, TEST_USERNAME } from '../../../../test/constants.js';
+import { TEST_EMAIL, TEST_PASSWORD } from '../../../../test/constants.js';
 
 // 6. Imports relativos restantes.
 import { createAuthenticatedApp } from '../../../../test/auth.js';
@@ -58,7 +58,7 @@ describe('permisos de /api/users', () => {
 
     const response = await request('/api/users', {
       method: 'POST',
-      body: { username: 'zoe', password: TEST_PASSWORD },
+      body: { email: 'zoe@example.com', password: TEST_PASSWORD },
     });
 
     expect(response.status).toBe(403);
@@ -74,7 +74,7 @@ describe('GET /api/users', () => {
 
     expect(response.status).toBe(200);
     expect(users).toHaveLength(1);
-    expect(users[0]).toMatchObject({ username: TEST_USERNAME, role: 'admin', status: 'active' });
+    expect(users[0]).toMatchObject({ email: TEST_EMAIL, role: 'admin', status: 'active' });
     expect(response.body).not.toContain('scrypt');
   });
 
@@ -83,13 +83,13 @@ describe('GET /api/users', () => {
     const otherAccount = await session.accountService.create('Otro equipo');
     await session.authService.createUser({
       accountId: otherAccount.id,
-      username: 'beto',
+      email: 'beto@example.com',
       password: TEST_PASSWORD,
     });
 
     const { users } = (await request('/api/users')).json();
 
-    expect(users.map((user) => user.username)).toEqual([TEST_USERNAME]);
+    expect(users.map((user) => user.email)).toEqual([TEST_EMAIL]);
   });
 });
 
@@ -99,13 +99,13 @@ describe('POST /api/users', () => {
 
     const response = await request('/api/users', {
       method: 'POST',
-      body: { username: 'zoe', password: TEST_PASSWORD, displayName: 'Zoe Ruiz', role: 'admin' },
+      body: { email: 'zoe@example.com', password: TEST_PASSWORD, displayName: 'Zoe Ruiz', role: 'admin' },
     });
 
     expect(response.status).toBe(201);
     expect(response.json().user).toMatchObject({
       accountId: session.account.id,
-      username: 'zoe',
+      email: 'zoe@example.com',
       displayName: 'Zoe Ruiz',
       role: 'admin',
     });
@@ -117,7 +117,7 @@ describe('POST /api/users', () => {
 
     const response = await request('/api/users', {
       method: 'POST',
-      body: { username: 'zoe', password: TEST_PASSWORD, accountId: otherAccount.id },
+      body: { email: 'zoe@example.com', password: TEST_PASSWORD, accountId: otherAccount.id },
     });
 
     expect(response.json().user.accountId).toBe(session.account.id);
@@ -128,18 +128,18 @@ describe('POST /api/users', () => {
 
     const response = await request('/api/users', {
       method: 'POST',
-      body: { username: 'zoe', password: TEST_PASSWORD, role: 'root' },
+      body: { email: 'zoe@example.com', password: TEST_PASSWORD, role: 'root' },
     });
 
     expect(response.json().user.role).toBe('user');
   });
 
-  it('responde 409 cuando el nombre ya está tomado', async () => {
+  it('responde 409 cuando el email ya está registrado', async () => {
     const { request } = await createClient('admin');
 
     const response = await request('/api/users', {
       method: 'POST',
-      body: { username: TEST_USERNAME, password: TEST_PASSWORD },
+      body: { email: TEST_EMAIL, password: TEST_PASSWORD },
     });
 
     expect(response.status).toBe(409);
@@ -150,20 +150,20 @@ describe('POST /api/users', () => {
 
     const response = await request('/api/users', {
       method: 'POST',
-      body: { username: 'zoe', password: 'corta' },
+      body: { email: 'zoe@example.com', password: 'corta' },
     });
 
     expect(response.status).toBe(400);
   });
 });
 
-describe('PATCH /api/users/:username/status', () => {
+describe('PATCH /api/users/:email/status', () => {
   it('deshabilita a otro usuario y le cierra las sesiones', async () => {
     const { request } = await createClient('admin');
-    await request('/api/users', { method: 'POST', body: { username: 'zoe', password: TEST_PASSWORD } });
-    const { token } = await session.authService.login({ username: 'zoe', password: TEST_PASSWORD });
+    await request('/api/users', { method: 'POST', body: { email: 'zoe@example.com', password: TEST_PASSWORD } });
+    const { token } = await session.authService.login({ email: 'zoe@example.com', password: TEST_PASSWORD });
 
-    const response = await request('/api/users/zoe/status', {
+    const response = await request('/api/users/zoe@example.com/status', {
       method: 'PATCH',
       body: { status: 'disabled' },
     });
@@ -175,10 +175,10 @@ describe('PATCH /api/users/:username/status', () => {
 
   it('vuelve a habilitar a un usuario', async () => {
     const { request } = await createClient('admin');
-    await request('/api/users', { method: 'POST', body: { username: 'zoe', password: TEST_PASSWORD } });
-    await request('/api/users/zoe/status', { method: 'PATCH', body: { status: 'disabled' } });
+    await request('/api/users', { method: 'POST', body: { email: 'zoe@example.com', password: TEST_PASSWORD } });
+    await request('/api/users/zoe@example.com/status', { method: 'PATCH', body: { status: 'disabled' } });
 
-    const response = await request('/api/users/zoe/status', {
+    const response = await request('/api/users/zoe@example.com/status', {
       method: 'PATCH',
       body: { status: 'active' },
     });
@@ -189,7 +189,7 @@ describe('PATCH /api/users/:username/status', () => {
   it('impide cambiar el estado de la propia cuenta', async () => {
     const { request } = await createClient('admin');
 
-    const response = await request(`/api/users/${TEST_USERNAME}/status`, {
+    const response = await request(`/api/users/${TEST_EMAIL}/status`, {
       method: 'PATCH',
       body: { status: 'disabled' },
     });
@@ -200,9 +200,9 @@ describe('PATCH /api/users/:username/status', () => {
 
   it('responde 400 ante un estado fuera del contrato', async () => {
     const { request } = await createClient('admin');
-    await request('/api/users', { method: 'POST', body: { username: 'zoe', password: TEST_PASSWORD } });
+    await request('/api/users', { method: 'POST', body: { email: 'zoe@example.com', password: TEST_PASSWORD } });
 
-    const response = await request('/api/users/zoe/status', {
+    const response = await request('/api/users/zoe@example.com/status', {
       method: 'PATCH',
       body: { status: 'vacaciones' },
     });
@@ -213,7 +213,7 @@ describe('PATCH /api/users/:username/status', () => {
   it('responde 404 cuando el usuario no existe', async () => {
     const { request } = await createClient('admin');
 
-    const response = await request('/api/users/fantasma/status', {
+    const response = await request('/api/users/fantasma@example.com/status', {
       method: 'PATCH',
       body: { status: 'disabled' },
     });
@@ -226,17 +226,17 @@ describe('PATCH /api/users/:username/status', () => {
     const otherAccount = await session.accountService.create('Otro equipo');
     await session.authService.createUser({
       accountId: otherAccount.id,
-      username: 'beto',
+      email: 'beto@example.com',
       password: TEST_PASSWORD,
     });
 
-    const response = await request('/api/users/beto/status', {
+    const response = await request('/api/users/beto@example.com/status', {
       method: 'PATCH',
       body: { status: 'disabled' },
     });
 
     expect(response.status).toBe(404);
-    await expect(session.authService.login({ username: 'beto', password: TEST_PASSWORD }))
+    await expect(session.authService.login({ email: 'beto@example.com', password: TEST_PASSWORD }))
       .resolves.toBeDefined();
   });
 });
@@ -244,15 +244,15 @@ describe('PATCH /api/users/:username/status', () => {
 describe('restablecimiento de contraseñas ajenas', () => {
   it('ya no se expone por HTTP: sólo queda en la línea de comandos', async () => {
     const { request } = await createClient('admin');
-    await request('/api/users', { method: 'POST', body: { username: 'zoe', password: TEST_PASSWORD } });
+    await request('/api/users', { method: 'POST', body: { email: 'zoe@example.com', password: TEST_PASSWORD } });
 
-    const response = await request('/api/users/zoe/password', {
+    const response = await request('/api/users/zoe@example.com/password', {
       method: 'PUT',
       body: { password: 'contrasena-restablecida' },
     });
 
     expect(response.status).toBe(404);
-    await expect(session.authService.login({ username: 'zoe', password: TEST_PASSWORD }))
+    await expect(session.authService.login({ email: 'zoe@example.com', password: TEST_PASSWORD }))
       .resolves.toBeDefined();
   });
 });

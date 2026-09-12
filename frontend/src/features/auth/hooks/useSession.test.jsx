@@ -13,6 +13,7 @@ import {
   PASSWORD_CHANGED_MESSAGE,
   register,
   saveGitlabUsername,
+  saveProfile,
   SESSION_EXPIRED_MESSAGE,
   useSession,
 } from './useSession.js'
@@ -107,18 +108,18 @@ describe('carga inicial', () => {
 
 describe('login', () => {
   it('envía las credenciales como JSON con la cookie habilitada', async () => {
-    await login({ username: 'ana', password: 'contrasena-de-prueba' })
+    await login({ email: 'ana@example.com', password: 'contrasena-de-prueba' })
 
     expect(fetchMock).toHaveBeenCalledWith('http://localhost:3001/api/auth/login', {
       credentials: 'include',
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'ana', password: 'contrasena-de-prueba' }),
+      body: JSON.stringify({ email: 'ana@example.com', password: 'contrasena-de-prueba' }),
     })
   })
 
   it('deja la sesión abierta cuando el backend acepta', async () => {
-    const result = await login({ username: 'ana', password: 'contrasena-de-prueba' })
+    const result = await login({ email: 'ana@example.com', password: 'contrasena-de-prueba' })
 
     expect(result).toBe(true)
     expect(getState().status).toBe('authenticated')
@@ -127,19 +128,19 @@ describe('login', () => {
   })
 
   it('muestra el mensaje del backend cuando rechaza las credenciales', async () => {
-    fetchMock.mockResolvedValueOnce(jsonResponse({ error: 'Usuario o contraseña incorrectos.' }, 401))
+    fetchMock.mockResolvedValueOnce(jsonResponse({ error: 'Email o contraseña incorrectos.' }, 401))
 
-    const result = await login({ username: 'ana', password: 'incorrecta' })
+    const result = await login({ email: 'ana@example.com', password: 'incorrecta' })
 
     expect(result).toBe(false)
     expect(getState().status).toBe('anonymous')
-    expect(getState().error).toBe('Usuario o contraseña incorrectos.')
+    expect(getState().error).toBe('Email o contraseña incorrectos.')
   })
 
   it('usa el código HTTP cuando la respuesta no trae mensaje', async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse('no es json', 500))
 
-    await login({ username: 'ana', password: 'contrasena-de-prueba' })
+    await login({ email: 'ana@example.com', password: 'contrasena-de-prueba' })
 
     expect(getState().error).toBe('Error 500')
   })
@@ -147,7 +148,7 @@ describe('login', () => {
   it('avisa cuando la petición falla por red', async () => {
     fetchMock.mockRejectedValueOnce(new Error('sin red'))
 
-    const result = await login({ username: 'ana', password: 'contrasena-de-prueba' })
+    const result = await login({ email: 'ana@example.com', password: 'contrasena-de-prueba' })
 
     expect(result).toBe(false)
     expect(getState().error).toBe('No se pudo conectar al backend.')
@@ -158,7 +159,7 @@ describe('login', () => {
     let resolveRequest
     fetchMock.mockImplementationOnce(() => new Promise((resolve) => { resolveRequest = resolve }))
 
-    const pending = login({ username: 'ana', password: 'contrasena-de-prueba' })
+    const pending = login({ email: 'ana@example.com', password: 'contrasena-de-prueba' })
     expect(getState().submitting).toBe(true)
 
     resolveRequest(jsonResponse({ user: TEST_USER }))
@@ -170,7 +171,7 @@ describe('login', () => {
 
 describe('logout', () => {
   it('avisa al backend y deja la app anónima', async () => {
-    await login({ username: 'ana', password: 'contrasena-de-prueba' })
+    await login({ email: 'ana@example.com', password: 'contrasena-de-prueba' })
 
     await logout()
 
@@ -183,7 +184,7 @@ describe('logout', () => {
   })
 
   it('cierra la sesión local aunque falle la petición', async () => {
-    await login({ username: 'ana', password: 'contrasena-de-prueba' })
+    await login({ email: 'ana@example.com', password: 'contrasena-de-prueba' })
     fetchMock.mockRejectedValueOnce(new Error('sin red'))
 
     await logout()
@@ -195,7 +196,7 @@ describe('logout', () => {
 
 describe('expireSession', () => {
   it('pide volver a ingresar cuando la sesión venció', async () => {
-    await login({ username: 'ana', password: 'contrasena-de-prueba' })
+    await login({ email: 'ana@example.com', password: 'contrasena-de-prueba' })
 
     expireSession()
 
@@ -218,7 +219,7 @@ describe('expireSession', () => {
 describe('register', () => {
   it('envía el alta como JSON con la cookie habilitada', async () => {
     await register({
-      username: 'zoe',
+      email: 'zoe@example.com',
       password: 'contrasena-de-prueba',
       displayName: 'Zoe Ruiz',
       accountName: 'Plataforma',
@@ -229,7 +230,7 @@ describe('register', () => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        username: 'zoe',
+        email: 'zoe@example.com',
         password: 'contrasena-de-prueba',
         displayName: 'Zoe Ruiz',
         accountName: 'Plataforma',
@@ -238,28 +239,28 @@ describe('register', () => {
   })
 
   it('manda el código de invitación cuando el alta se suma a un equipo', async () => {
-    await register({ username: 'zoe', password: 'contrasena-de-prueba', inviteCode: 'ABCD234XYZ' })
+    await register({ email: 'zoe@example.com', password: 'contrasena-de-prueba', inviteCode: 'ABCD234XYZ' })
 
     const [, options] = fetchMock.mock.calls.at(-1)
     expect(JSON.parse(options.body).inviteCode).toBe('ABCD234XYZ')
   })
 
   it('deja la sesión abierta cuando el backend acepta el alta', async () => {
-    const result = await register({ username: 'ana', password: 'contrasena-de-prueba' })
+    const result = await register({ email: 'ana@example.com', password: 'contrasena-de-prueba' })
 
     expect(result).toBe(true)
     expect(getState().status).toBe('authenticated')
     expect(getState().user).toEqual(TEST_USER)
   })
 
-  it('muestra el mensaje del backend cuando el nombre ya está tomado', async () => {
-    fetchMock.mockResolvedValueOnce(jsonResponse({ error: 'Ya existe un usuario con el nombre «ana».' }, 409))
+  it('muestra el mensaje del backend cuando el email ya está registrado', async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse({ error: 'Ya existe un usuario con el email «ana@example.com».' }, 409))
 
-    const result = await register({ username: 'ana', password: 'contrasena-de-prueba' })
+    const result = await register({ email: 'ana@example.com', password: 'contrasena-de-prueba' })
 
     expect(result).toBe(false)
     expect(getState().status).toBe('anonymous')
-    expect(getState().error).toBe('Ya existe un usuario con el nombre «ana».')
+    expect(getState().error).toBe('Ya existe un usuario con el email «ana@example.com».')
   })
 })
 
@@ -296,6 +297,41 @@ describe('saveGitlabUsername', () => {
   })
 })
 
+describe('saveProfile', () => {
+  it('envía el perfil y guarda la identidad que devuelve el backend', async () => {
+    const updated = { ...TEST_USER, email: 'anita@example.com', displayName: 'Ana Pérez' }
+    fetchMock.mockResolvedValueOnce(jsonResponse({ user: updated }))
+
+    const failure = await saveProfile({ email: 'anita@example.com', displayName: 'Ana Pérez' })
+
+    expect(failure).toBeNull()
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:3001/api/auth/profile', {
+      credentials: 'include',
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'anita@example.com', displayName: 'Ana Pérez' }),
+    })
+    expect(getState().user).toEqual(updated)
+  })
+
+  it('devuelve el mensaje del backend sin tocar la identidad', async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse({ error: 'El email ya existe.' }, 409))
+
+    const failure = await saveProfile({ email: 'ana@example.com', displayName: 'Ana' })
+
+    expect(failure).toBe('El email ya existe.')
+    expect(getState().user).toBeNull()
+    expect(getState().submitting).toBe(false)
+  })
+
+  it('avisa cuando no se pudo conectar al backend', async () => {
+    fetchMock.mockRejectedValueOnce(new Error('sin red'))
+
+    expect(await saveProfile({ email: 'ana@example.com', displayName: 'Ana' }))
+      .toBe('No se pudo conectar al backend.')
+  })
+})
+
 describe('changeOwnPassword', () => {
   it('envía la contraseña actual y la nueva', async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse(null, 204))
@@ -311,7 +347,7 @@ describe('changeOwnPassword', () => {
   })
 
   it('cierra la sesión y avisa que hay que volver a ingresar', async () => {
-    await login({ username: 'ana', password: 'contrasena-de-prueba' })
+    await login({ email: 'ana@example.com', password: 'contrasena-de-prueba' })
     fetchMock.mockResolvedValueOnce(jsonResponse(null, 204))
 
     const failure = await changeOwnPassword({
@@ -326,7 +362,7 @@ describe('changeOwnPassword', () => {
   })
 
   it('devuelve el error y conserva la sesión cuando el backend rechaza', async () => {
-    await login({ username: 'ana', password: 'contrasena-de-prueba' })
+    await login({ email: 'ana@example.com', password: 'contrasena-de-prueba' })
     fetchMock.mockResolvedValueOnce(jsonResponse({ error: 'La contraseña actual no coincide.' }, 403))
 
     const failure = await changeOwnPassword({

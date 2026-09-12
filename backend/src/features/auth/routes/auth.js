@@ -93,8 +93,8 @@ function createRequireAdmin(authService) {
 }
 
 /**
- * Crea el router de sesión: registro, login, logout, usuario actual y cambio
- * de la propia contraseña.
+ * Crea el router de sesión: registro, login, logout, usuario actual y cambios
+ * del propio perfil y la contraseña.
  *
  * @param authService Servicio de autenticación ya construido.
  * @returns Router para montar bajo `/api/auth`.
@@ -121,13 +121,13 @@ function createAuthRouter(authService) {
       return;
     }
 
-    const { username, password, displayName, accountName, inviteCode } = request.body ?? {};
+    const { email, password, displayName, accountName, inviteCode } = request.body ?? {};
 
     try {
       // El código y el nombre de la cuenta se pasan tal como llegaron: es el
       // servicio el que decide si el alta se suma a una cuenta o crea una.
       const result = await authService.register({
-        username: username ?? '',
+        email: email ?? '',
         password: password ?? '',
         ...(displayName === undefined ? {} : { displayName }),
         ...(accountName === undefined ? {} : { accountName }),
@@ -143,10 +143,10 @@ function createAuthRouter(authService) {
   });
 
   router.post('/login', async (request, response) => {
-    const { username, password } = request.body ?? {};
+    const { email, password } = request.body ?? {};
 
     try {
-      const result = await authService.login({ username: username ?? '', password: password ?? '' });
+      const result = await authService.login({ email: email ?? '', password: password ?? '' });
 
       response.cookie(SESSION_COOKIE_NAME, result.token, sessionCookieOptions(result.expiresAt));
       response.json({ user: result.user });
@@ -171,6 +171,22 @@ function createAuthRouter(authService) {
     response.json({ user: response.locals.user });
   });
 
+  router.patch('/profile', createRequireSession(authService), async (request, response) => {
+    const user = response.locals.user;
+    const { email, displayName } = request.body ?? {};
+
+    try {
+      response.json({
+        user: await authService.changeOwnProfile(user.id, {
+          ...(email === undefined ? {} : { email }),
+          ...(displayName === undefined ? {} : { displayName }),
+        }),
+      });
+    } catch (error) {
+      respondWithHttpError(response, error, 'al guardar el perfil');
+    }
+  });
+
   router.put('/gitlab-username', createRequireSession(authService), async (request, response) => {
     const user = response.locals.user;
     const { gitlabUsername } = request.body ?? {};
@@ -187,7 +203,7 @@ function createAuthRouter(authService) {
     const { currentPassword, newPassword } = request.body ?? {};
 
     try {
-      await authService.changeOwnPassword(user.username, currentPassword ?? '', newPassword ?? '');
+      await authService.changeOwnPassword(user.email, currentPassword ?? '', newPassword ?? '');
 
       // Cambiar la contraseña cierra todas las sesiones, incluida esta.
       response.clearCookie(SESSION_COOKIE_NAME, sessionCookieOptions());

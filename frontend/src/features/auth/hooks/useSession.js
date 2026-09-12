@@ -135,13 +135,13 @@ async function openSession(path, body) {
 }
 
 /**
- * Inicia sesión con usuario y contraseña.
+ * Inicia sesión con email y contraseña.
  *
- * @param {{ username: string, password: string }} credentials Datos del formulario.
+ * @param {{ email: string, password: string }} credentials Datos del formulario.
  * @returns {Promise<boolean>} `true` si la sesión quedó abierta.
  */
-function login({ username, password }) {
-  return openSession('/api/auth/login', { username, password })
+function login({ email, password }) {
+  return openSession('/api/auth/login', { email, password })
 }
 
 /**
@@ -150,17 +150,45 @@ function login({ username, password }) {
  * Con `inviteCode` se suma a la cuenta de ese código; sin él crea una cuenta
  * nueva con el nombre indicado y queda como su administrador.
  *
- * @param {{ username: string, password: string, displayName?: string, accountName?: string, inviteCode?: string }} input Datos del alta.
+ * @param {{ email: string, password: string, displayName?: string, accountName?: string, inviteCode?: string }} input Datos del alta.
  * @returns {Promise<boolean>} `true` si el alta se hizo y la sesión quedó abierta.
  */
-function register({ username, password, displayName, accountName, inviteCode }) {
+function register({ email, password, displayName, accountName, inviteCode }) {
   return openSession('/api/auth/register', {
-    username,
+    email,
     password,
     displayName,
     accountName,
     inviteCode,
   })
+}
+
+/**
+ * Guarda el nombre visible y el email de la propia persona.
+ *
+ * @param {{ email: string, displayName: string }} profile Perfil editado.
+ * @returns {Promise<string | null>} El mensaje de error, o `null` si se guardó.
+ */
+async function saveProfile(profile) {
+  setState({ submitting: true })
+
+  try {
+    const response = await requestSession('/api/auth/profile', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(profile),
+    })
+
+    if (!response.ok) return await readErrorMessage(response)
+
+    const { user } = await response.json()
+    setState({ user })
+    return null
+  } catch {
+    return NETWORK_ERROR_MESSAGE
+  } finally {
+    setState({ submitting: false })
+  }
 }
 
 /**
@@ -262,7 +290,7 @@ function useSession() {
     loadSessionOnce()
   }, [])
 
-  return { ...snapshot, changeOwnPassword, login, logout, register, saveGitlabUsername }
+  return { ...snapshot, changeOwnPassword, login, logout, register, saveGitlabUsername, saveProfile }
 }
 
 export {
@@ -275,6 +303,7 @@ export {
   register,
   resetSessionStore,
   saveGitlabUsername,
+  saveProfile,
   SESSION_EXPIRED_MESSAGE,
   useSession,
 }

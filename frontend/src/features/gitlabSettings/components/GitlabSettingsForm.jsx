@@ -79,7 +79,7 @@ function GitlabSettingsForm({ canEdit = false, onSaved = () => {} }) {
   }
 
   return (
-    <section aria-labelledby="gitlab-heading" className="max-w-xl rounded-lg border border-border bg-surface p-5">
+    <section aria-labelledby="gitlab-heading">
       <h2 id="gitlab-heading" className="text-base font-semibold text-text-primary mb-1">
         GitLab de la cuenta
       </h2>
@@ -106,7 +106,7 @@ function GitlabSettingsForm({ canEdit = false, onSaved = () => {} }) {
       ) : !canEdit ? (
         <SettingsSummary settings={settings} />
       ) : (
-        <form onSubmit={handleSubmit} className="max-w-sm">
+        <form onSubmit={handleSubmit}>
           {/* La ayuda queda fuera del `label` para que no forme parte del
               nombre accesible del campo; `aria-describedby` la asocia igual. */}
           <div className="mb-4">

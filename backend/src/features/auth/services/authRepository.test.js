@@ -45,7 +45,7 @@ function buildUser(overrides = {}) {
   return {
     id: 'usuario-1',
     accountId: ACCOUNT_ID,
-    username: 'ana',
+    email: 'ana@example.com',
     displayName: 'Ana Prueba',
     passwordHash: 'scrypt$16384$8$1$aa$bb',
     role: 'user',
@@ -73,24 +73,24 @@ afterEach(async () => {
 });
 
 describe('usuarios', () => {
-  it('guarda y recupera un usuario por id y por nombre', async () => {
+  it('guarda y recupera un usuario por id y por email', async () => {
     const repository = await openRepository();
     const user = buildUser({ gitlabUsername: 'ana-gitlab' });
 
     await repository.insertUser(user);
 
     expect(await repository.findUserById(user.id)).toEqual(user);
-    expect(await repository.findUserByUsername(user.username)).toEqual(user);
+    expect(await repository.findUserByEmail(user.email)).toEqual(user);
   });
 
   it('devuelve null cuando el usuario no existe', async () => {
     const repository = await openRepository();
 
-    expect(await repository.findUserById('desconocido')).toBeNull();
-    expect(await repository.findUserByUsername('desconocido')).toBeNull();
+    expect(await repository.findUserById('desconocido@example.com')).toBeNull();
+    expect(await repository.findUserByEmail('desconocido@example.com')).toBeNull();
   });
 
-  it('rechaza dos usuarios con el mismo nombre, incluso en cuentas distintas', async () => {
+  it('rechaza dos usuarios con el mismo email, incluso en cuentas distintas', async () => {
     const repository = await openRepository();
     await repository.insertUser(buildUser());
 
@@ -115,19 +115,19 @@ describe('usuarios', () => {
       .rejects.toThrow();
   });
 
-  it('lista sólo los usuarios de una cuenta, ordenados por nombre', async () => {
+  it('lista sólo los usuarios de una cuenta, ordenados por email', async () => {
     const repository = await openRepository();
-    await repository.insertUser(buildUser({ id: 'usuario-2', username: 'zoe' }));
+    await repository.insertUser(buildUser({ id: 'usuario-2', email: 'zoe@example.com' }));
     await repository.insertUser(buildUser());
     await repository.insertUser(buildUser({
       id: 'usuario-3',
-      username: 'beto',
+      email: 'beto@example.com',
       accountId: OTHER_ACCOUNT_ID,
     }));
 
     const users = await repository.listUsersOfAccount(ACCOUNT_ID);
 
-    expect(users.map((user) => user.username)).toEqual(['ana', 'zoe']);
+    expect(users.map((user) => user.email)).toEqual(['ana@example.com', 'zoe@example.com']);
   });
 
   it('lista todos los usuarios de la base para la línea de comandos', async () => {
@@ -135,11 +135,11 @@ describe('usuarios', () => {
     await repository.insertUser(buildUser());
     await repository.insertUser(buildUser({
       id: 'usuario-2',
-      username: 'beto',
+      email: 'beto@example.com',
       accountId: OTHER_ACCOUNT_ID,
     }));
 
-    expect((await repository.listAllUsers()).map((user) => user.username)).toEqual(['ana', 'beto']);
+    expect((await repository.listAllUsers()).map((user) => user.email)).toEqual(['ana@example.com', 'beto@example.com']);
   });
 
   it('actualiza el último ingreso y la contraseña', async () => {
@@ -152,6 +152,19 @@ describe('usuarios', () => {
     const stored = await repository.findUserById('usuario-1');
     expect(stored?.lastLoginAt).toBe('2026-09-02T08:00:00.000Z');
     expect(stored?.passwordHash).toBe('scrypt$16384$8$1$cc$dd');
+  });
+
+  it('actualiza el nombre visible y el email del usuario', async () => {
+    const repository = await openRepository();
+    await repository.insertUser(buildUser());
+
+    await repository.updateProfile('usuario-1', 'anita@example.com', 'Ana Pérez');
+
+    expect(await repository.findUserByEmail('ana@example.com')).toBeNull();
+    expect(await repository.findUserById('usuario-1')).toMatchObject({
+      email: 'anita@example.com',
+      displayName: 'Ana Pérez',
+    });
   });
 
   it('cambia el estado del usuario', async () => {

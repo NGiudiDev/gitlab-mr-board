@@ -3,7 +3,7 @@ import express from 'express';
 
 // 6. Imports relativos restantes.
 import { HttpError, respondWithHttpError } from '../../../shared/httpError.js';
-import { normalizeUsername } from '../services/authService.js';
+import { normalizeEmail } from '../services/authService.js';
 import { createRequireAdmin } from './auth.js';
 
 const VALID_STATUSES = ['active', 'disabled'];
@@ -12,7 +12,7 @@ const VALID_STATUSES = ['active', 'disabled'];
  * Crea el router de administración de usuarios.
  *
  * Todas sus rutas exigen rol de administrador y **operan sólo sobre la cuenta
- * de quien administra**: el nombre de usuario es único en toda la base, así que
+ * de quien administra**: el email es único en toda la base, así que
  * sin ese límite un administrador alcanzaría a los usuarios de otra cuenta. El
  * alta pública vive en `/api/auth/register` y no permite elegir rol.
  *
@@ -40,12 +40,12 @@ function createUsersRouter(authService) {
 
   router.post('/', async (request, response) => {
     const { accountId } = response.locals.user;
-    const { username, password, displayName, role } = request.body ?? {};
+    const { email, password, displayName, role } = request.body ?? {};
 
     try {
       const user = await authService.createUser({
         accountId,
-        username: username ?? '',
+        email: email ?? '',
         password: password ?? '',
         ...(displayName === undefined ? {} : { displayName }),
         role: role === 'admin' ? 'admin' : ('user'),
@@ -57,8 +57,8 @@ function createUsersRouter(authService) {
     }
   });
 
-  router.patch('/:username/status', async (request, response) => {
-    const { username = '' } = request.params;
+  router.patch('/:email/status', async (request, response) => {
+    const { email = '' } = request.params;
     const { status } = request.body ?? {};
     const currentUser = response.locals.user;
 
@@ -69,13 +69,13 @@ function createUsersRouter(authService) {
 
       // Deshabilitarse a sí mismo dejaría la cuenta sin administrador si es el
       // único, y en cualquier caso cerraría la sesión en curso.
-      if (normalizeUsername(username) === currentUser.username) {
+      if (normalizeEmail(email) === currentUser.email) {
         throw new HttpError('No podés cambiar el estado de tu propio usuario.', 409);
       }
 
-      await authService.requireAccountMember(currentUser.accountId, username);
+      await authService.requireAccountMember(currentUser.accountId, email);
 
-      response.json({ user: await authService.setUserStatus(username, status) });
+      response.json({ user: await authService.setUserStatus(email, status) });
     } catch (error) {
       respondWithHttpError(response, error, 'al cambiar el estado de un usuario');
     }
