@@ -68,7 +68,7 @@ describe("carga de la cuenta", () => {
 describe("cambio de nombre", () => {
   it("envía el nombre nuevo y confirma el guardado", async () => {
     await renderPanel();
-    stubAccount({ ...ADMIN_ACCOUNT, name: "Plataforma" });
+    stubAccount({ ...TEST_ACCOUNT, name: "Plataforma" });
 
     fireEvent.change(screen.getByLabelText("Nombre de la cuenta"), { target: { value: "Plataforma" } });
     fireEvent.click(screen.getByRole("button", { name: /Guardar el nombre/ }));

@@ -558,7 +558,7 @@ describe("navegación entre secciones", () => {
 
     await openSection("Mi cuenta");
 
-    expect(screen.getByRole("heading", { level: 2, name: "Mi equipo" })).toBeDefined();
+    expect(screen.getByRole("heading", { level: 2, name: "Mi cuenta" })).toBeDefined();
     expect(container.textContent).not.toContain("equipo/tablero");
 
     await openSection("Tablero");
@@ -573,7 +573,7 @@ describe("navegación entre secciones", () => {
 
     await openSection("Mi cuenta");
 
-    expect(screen.getByRole("heading", { level: 2, name: "Mi equipo" })).toBeDefined();
+    expect(screen.getByRole("heading", { level: 2, name: "Mi cuenta" })).toBeDefined();
     expect(screen.getByRole("heading", { level: 2, name: "Invitar al equipo" })).toBeDefined();
     expect(screen.getByRole("heading", { level: 2, name: "GitLab de la cuenta" })).toBeDefined();
     expect(screen.getByRole("heading", { level: 2, name: "Mi identidad en GitLab" })).toBeDefined();
@@ -611,7 +611,7 @@ describe("navegación entre secciones", () => {
     expect(screen.getByRole("heading", { level: 2, name: "Mi perfil" })).toBeDefined();
     expect(screen.getByRole("heading", { level: 2, name: "Mi contraseña" })).toBeDefined();
     expect(screen.queryByRole("heading", { level: 2, name: "Mi identidad en GitLab" })).toBeNull();
-    expect(screen.queryByRole("heading", { level: 2, name: "Mi equipo" })).toBeNull();
+    expect(screen.queryByRole("heading", { level: 2, name: "Mi cuenta" })).toBeNull();
     expect(screen.queryByRole("heading", { level: 2, name: "GitLab de la cuenta" })).toBeNull();
   });
 

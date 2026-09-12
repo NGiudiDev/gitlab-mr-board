@@ -261,12 +261,13 @@ function ActiveSection({
   onSaveProfile,
   onGoToAccount,
 }) {
-  const isAdmin = user.role === "admin";
   const {
     account,
     submitting: accountSubmitting,
     rotateInviteCode,
   } = useAccount(user.accountId);
+
+  const isAdmin = user.role === "admin";
 
   if (view === "account") {
     return (

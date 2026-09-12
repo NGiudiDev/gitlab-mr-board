@@ -1,29 +1,22 @@
-// 2. Dependencias externas.
 import { useState } from "react";
 
-const FIELD_CLASSES = "block w-full mt-1 rounded-md border border-control bg-surface-raised px-3 py-2 text-[13px] font-normal text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
-const HINT_CLASSES = "mt-1 text-[12px] font-normal text-text-faint";
-const LABEL_CLASSES = "block text-[12px] font-semibold text-text-muted";
-const SECONDARY_BUTTON_CLASSES = "rounded-md border border-control px-3 py-2 text-[12.5px] text-text-primary hover:border-accent cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+import {
+  FIELD_CLASSES,
+  HINT_CLASSES,
+  LABEL_CLASSES,
+  SECONDARY_BUTTON_CLASSES,
+} from "../../../assets/constants.js";
 
-/**
- * Presenta el código con el que una persona puede sumarse a la cuenta.
- *
- * @param {object} props Propiedades de la sección.
- * @param {string} [props.inviteCode] Código vigente de la cuenta.
- * @param {boolean} [props.submitting] Indica si se está renovando el código.
- * @param {() => Promise<string | null>} [props.onRotate] Solicita renovar el código.
- * @returns {import("react").ReactElement} Sección de invitación.
- */
-export function AccountMemberInviteSection({
-  inviteCode = "",
-  submitting = false,
-  onRotate = async () => null,
-}) {
+export function AccountMemberInviteSection(props) {
+  const {
+    inviteCode = "",
+    onRotate = async () => null,
+    submitting = false,
+  } = props;
+
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
 
-  /** Renueva el código y comunica el resultado sin abandonar la sección. */
   async function handleRotate() {
     setError(null);
     setMessage(null);
@@ -70,19 +63,19 @@ export function AccountMemberInviteSection({
         </label>
 
         <input
+          className={`${FIELD_CLASSES} font-mono tracking-widest`}
           id="cuenta-invitacion"
+          readOnly
           type="text"
           value={inviteCode}
-          readOnly
-          className={`${FIELD_CLASSES} font-mono tracking-widest`}
         />
       </div>
 
       <button
-        type="button"
-        onClick={handleRotate}
-        disabled={submitting}
         className={SECONDARY_BUTTON_CLASSES}
+        disabled={submitting}
+        onClick={handleRotate}
+        type="button"
       >
         {submitting ? "Renovando..." : "Renovar el código"}
       </button>

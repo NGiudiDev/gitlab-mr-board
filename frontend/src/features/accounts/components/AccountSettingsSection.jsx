@@ -1,13 +1,16 @@
 // 2. Dependencias externas.
 import { useEffect, useState } from "react";
 
+// 4. Módulos de constantes.
+import {
+  BUTTON_CLASSES,
+  FIELD_CLASSES,
+  HINT_CLASSES,
+  LABEL_CLASSES,
+} from "../../../assets/constants.js";
+
 // 6. Imports relativos restantes.
 import { useAccount } from "../hooks/useAccount.js";
-
-const FIELD_CLASSES = "block w-full mt-1 rounded-md border border-control bg-surface-raised px-3 py-2 text-[13px] font-normal text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
-const LABEL_CLASSES = "block text-[12px] font-semibold text-text-muted";
-const HINT_CLASSES = "mt-1 text-[12px] font-normal text-text-faint";
-const BUTTON_CLASSES = "rounded-md bg-accent px-3 py-2 text-[13px] font-semibold text-bg disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
 /** Describe la cantidad de miembros sin dejar el número suelto. */
 function membersLabel(memberCount) {
@@ -35,25 +38,20 @@ export function AccountSettingsSection({ user = null }) {
 
   const isAdmin = user?.role === "admin";
 
-  /** Ejecuta una acción sobre la cuenta y presenta su resultado. */
-  async function runAction(action, successMessage) {
+  async function handleSubmit(event) {
+    event.preventDefault();
+
     setFormError(null);
     setMessage(null);
 
-    const failure = await action();
+    const failure = await renameAccount(name);
 
     if (failure) {
       setFormError(failure);
       return;
     }
 
-    setMessage(successMessage);
-  }
-
-  function handleSubmit(event) {
-    event.preventDefault();
-
-    return runAction(() => renameAccount(name), "Nombre de la cuenta actualizado.");
+    setMessage("Nombre de la cuenta actualizado.");
   }
 
   if (!user) return null;
@@ -61,7 +59,7 @@ export function AccountSettingsSection({ user = null }) {
   return (
     <section aria-labelledby="cuenta-heading">
       <h2 id="cuenta-heading" className="text-base font-semibold text-text-primary mb-1">
-        Mi equipo
+        Mi cuenta
       </h2>
 
       <p className="text-[12.5px] text-text-muted mb-4">
@@ -90,6 +88,7 @@ export function AccountSettingsSection({ user = null }) {
                 <label className={LABEL_CLASSES} htmlFor="cuenta-nombre">
                   Nombre de la cuenta
                 </label>
+
                 <input
                   id="cuenta-nombre"
                   type="text"
@@ -100,6 +99,7 @@ export function AccountSettingsSection({ user = null }) {
                   aria-describedby="cuenta-nombre-ayuda"
                   className={FIELD_CLASSES}
                 />
+
                 <p id="cuenta-nombre-ayuda" className={HINT_CLASSES}>
                   La integran {membersLabel(account.memberCount)}.
                 </p>
@@ -113,6 +113,7 @@ export function AccountSettingsSection({ user = null }) {
             <dl className="text-[13px]">
               <dt className={LABEL_CLASSES}>Cuenta</dt>
               <dd className="mb-3 mt-1 text-text-primary">{account.name}</dd>
+
               <dt className={LABEL_CLASSES}>Integrantes</dt>
               <dd className="mt-1 text-text-primary">{membersLabel(account.memberCount)}</dd>
             </dl>
