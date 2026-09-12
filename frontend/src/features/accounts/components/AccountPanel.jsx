@@ -24,7 +24,10 @@ function membersLabel(memberCount) {
 function InviteCode({ inviteCode = '', submitting = false, onRotate = () => {} }) {
   return (
     <div className="mt-5 border-t border-border-soft pt-4">
-      <h3 className="text-[13px] font-semibold text-text-primary mb-1">Invitar al equipo</h3>
+      <h3 className="text-[13px] font-semibold text-text-primary mb-1">
+        Invitar al equipo
+      </h3>
+      
       <p className="text-[12.5px] text-text-muted mb-3">
         Quien se registre con este código entra a esta cuenta y ve el mismo tablero, sin cargar ninguna credencial de GitLab.
       </p>
@@ -35,6 +38,7 @@ function InviteCode({ inviteCode = '', submitting = false, onRotate = () => {} }
         <label className={LABEL_CLASSES} htmlFor="cuenta-invitacion">
           Código de invitación
         </label>
+
         <input
           id="cuenta-invitacion"
           type="text"
@@ -52,6 +56,7 @@ function InviteCode({ inviteCode = '', submitting = false, onRotate = () => {} }
       >
         {submitting ? 'Renovando...' : 'Renovar el código'}
       </button>
+
       <p className={HINT_CLASSES}>
         Al renovarlo, el código anterior deja de servir. Quien ya se sumó no pierde el acceso.
       </p>
@@ -103,7 +108,7 @@ function AccountPanel({ user = null }) {
   if (!user) return null
 
   return (
-    <section aria-labelledby="cuenta-heading" className="max-w-xl rounded-lg border border-border bg-surface p-5">
+    <section aria-labelledby="cuenta-heading">
       <h2 id="cuenta-heading" className="text-base font-semibold text-text-primary mb-1">
         Mi equipo
       </h2>
@@ -128,7 +133,7 @@ function AccountPanel({ user = null }) {
       ) : !account ? null : (
         <>
           {isAdmin ? (
-            <form onSubmit={handleSubmit} className="max-w-sm">
+            <form onSubmit={handleSubmit}>
               <div className="mb-4">
                 <label className={LABEL_CLASSES} htmlFor="cuenta-nombre">
                   Nombre de la cuenta

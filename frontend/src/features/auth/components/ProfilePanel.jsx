@@ -41,7 +41,7 @@ function ProfilePanel({
   }
 
   return (
-    <section aria-labelledby="perfil-heading" className="max-w-xl rounded-lg border border-border bg-surface p-5">
+    <section aria-labelledby="perfil-heading">
       <h2 id="perfil-heading" className="mb-1 text-base font-semibold text-text-primary">
         Mi perfil
       </h2>
@@ -49,7 +49,7 @@ function ProfilePanel({
         Estos datos identifican tu sesión. Si cambiás el nombre de usuario, usá el nuevo la próxima vez que ingreses.
       </p>
 
-      <form className="max-w-sm" onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit}>
         <label className="mb-3 block text-[12px] font-semibold text-text-muted" htmlFor="perfil-display-name">
           Nombre visible
           <input

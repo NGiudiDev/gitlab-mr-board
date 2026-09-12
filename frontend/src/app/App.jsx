@@ -263,11 +263,11 @@ function ActiveSection({
 
   if (view === 'account') {
     return (
-      <div className="flex flex-col gap-5">
+      <div className="mx-auto max-w-xl divide-y divide-border-soft [&>section]:py-5 [&>section:first-child]:pt-0 [&>section:last-child]:pb-0">
         <AccountPanel user={user} />
-        {/* Al guardar se actualiza el store, así que el tablero ya no reclama
-            la configuración cuando se vuelve a él. */}
+
         <GitlabSettingsForm canEdit={isAdmin} onSaved={() => fetchMergeRequests(true)} />
+
         <GitlabIdentityPanel
           user={user}
           submitting={submitting}
@@ -279,7 +279,7 @@ function ActiveSection({
 
   if (view === 'profile') {
     return (
-      <div className="flex flex-col gap-5">
+      <div className="mx-auto max-w-xl divide-y divide-border-soft [&>section]:py-5 [&>section:first-child]:pt-0 [&>section:last-child]:pb-0">
         <ProfilePanel user={user} submitting={submitting} onSave={onSaveProfile} />
         <PasswordPanel
           user={user}
