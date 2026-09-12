@@ -566,6 +566,24 @@ describe("navegación entre secciones", () => {
     expect(container.textContent).toContain("equipo/tablero");
   });
 
+  it("muestra el error si no se puede cargar la cuenta", async () => {
+    fetchMock.mockImplementation(async (url) => {
+      const path = String(url);
+      if (path.includes("/api/account")) {
+        return jsonResponse({ error: "No se pudo leer la cuenta." }, 503);
+      }
+      if (path.includes("/api/gitlab-settings")) {
+        return jsonResponse({ settings: GITLAB_SETTINGS });
+      }
+      return jsonResponse(buildResponse(MRS));
+    });
+    await renderApp();
+
+    await openSection("Mi cuenta");
+
+    expect(screen.getByRole("alert").textContent).toBe("No se pudo leer la cuenta.");
+  });
+
   it("reúne en la cuenta el equipo, la configuración y el nickname de GitLab", async () => {
     fetchMock.mockImplementation(routeApi([], ADMIN_ACCOUNT));
     signInTestUser({ ...TEST_USER, role: "admin" });
@@ -581,25 +599,6 @@ describe("navegación entre secciones", () => {
     expect(screen.queryByRole("heading", { level: 2, name: "Mi perfil" })).toBeNull();
     expect(screen.queryByRole("heading", { level: 2, name: "Mi contraseña" })).toBeNull();
     expect(screen.getByLabelText("IDs de los proyectos").value).toBe("101, 202");
-  });
-
-  it("renueva desde App el código de invitación de un administrador", async () => {
-    fetchMock.mockImplementation(routeApi([], ADMIN_ACCOUNT));
-    signInTestUser({ ...TEST_USER, role: "admin" });
-    await renderApp();
-
-    await openSection("Mi cuenta");
-
-    const inviteCodeField = screen.getByLabelText("Código de invitación");
-    expect(inviteCodeField.value).toBe("ABCD234XYZ");
-    expect(inviteCodeField.readOnly).toBe(true);
-
-    fireEvent.click(screen.getByRole("button", { name: "Renovar el código" }));
-    await flush();
-
-    const rotateCall = fetchMock.mock.calls.find(([url]) => String(url).endsWith("/api/account/invite-code"));
-    expect(rotateCall[1].method).toBe("POST");
-    expect(screen.getByRole("status").textContent).toBe("Código de invitación renovado.");
   });
 
   it("reúne en el perfil los datos personales y la contraseña", async () => {

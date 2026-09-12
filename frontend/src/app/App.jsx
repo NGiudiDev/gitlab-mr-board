@@ -263,6 +263,8 @@ function ActiveSection({
 }) {
   const {
     account,
+    error: accountError,
+    loading: accountLoading,
     submitting: accountSubmitting,
     rotateInviteCode,
   } = useAccount(user.accountId);
@@ -272,7 +274,19 @@ function ActiveSection({
   if (view === "account") {
     return (
       <div className="mx-auto max-w-xl divide-y divide-border-soft [&>section]:py-5 [&>section:first-child]:pt-0 [&>section:last-child]:pb-0">
-        <AccountSettingsSection user={user} />
+        {accountLoading && !account ? (
+          <section aria-label="Estado de la cuenta">
+            <p role="status" className="text-[13px] text-text-muted">Cargando la cuenta...</p>
+          </section>
+        ) : accountError && !account ? (
+          <section aria-label="Estado de la cuenta">
+            <p role="alert" className="rounded-md border border-conflict bg-conflict-soft px-3 py-2 text-[12.5px] text-text-primary">
+              {accountError}
+            </p>
+          </section>
+        ) : (
+          <AccountSettingsSection account={account} />
+        )}
 
         {isAdmin && account?.inviteCode ? (
           <AccountMemberInviteSection
