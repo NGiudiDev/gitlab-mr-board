@@ -4,13 +4,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // 6. Imports relativos restantes.
 import { jsonResponse, resetSharedState, TEST_ACCOUNT, TEST_USER } from "../../../../test/sharedState.js";
-import AccountPanel from "./AccountPanel.jsx";
+import { AccountSettingsSection } from "./AccountSettingsSection.jsx";
 
 const ACCOUNT_URL = "http://localhost:3001/api/account";
 const ADMIN_USER = { ...TEST_USER, role: "admin" };
-
-/** Cuenta tal como la ve un administrador: con su código de invitación. */
-const ADMIN_ACCOUNT = { ...TEST_ACCOUNT, inviteCode: "ABCD234XYZ" };
 
 let fetchMock;
 
@@ -25,7 +22,7 @@ async function flush() {
 
 /** Monta el panel y espera la carga de la cuenta. */
 async function renderPanel(user = ADMIN_USER) {
-  const { container } = render(<AccountPanel user={user} />);
+  const { container } = render(<AccountSettingsSection user={user} />);
   await flush();
   return container;
 }
@@ -37,7 +34,7 @@ function stubAccount(account) {
 
 beforeEach(() => {
   resetSharedState();
-  fetchMock = vi.fn(async () => jsonResponse({ account: ADMIN_ACCOUNT }));
+  fetchMock = vi.fn(async () => jsonResponse({ account: TEST_ACCOUNT }));
   vi.stubGlobal("fetch", fetchMock);
 });
 
@@ -65,28 +62,6 @@ describe("carga de la cuenta", () => {
     await renderPanel();
 
     expect(screen.getByRole("alert").textContent).toBe("Iniciá sesión.");
-  });
-});
-
-describe("invitación al equipo", () => {
-  it("muestra el código con el que se suma el resto, listo para copiar", async () => {
-    await renderPanel();
-
-    const field = screen.getByLabelText("Código de invitación");
-    expect(field.value).toBe("ABCD234XYZ");
-    expect(field.readOnly).toBe(true);
-  });
-
-  it("renueva el código y avisa que el anterior dejó de servir", async () => {
-    await renderPanel();
-    stubAccount({ ...ADMIN_ACCOUNT, inviteCode: "NUEVO23456" });
-
-    fireEvent.click(screen.getByRole("button", { name: /Renovar el código/ }));
-    await flush();
-
-    const [, options] = fetchMock.mock.calls.at(-1);
-    expect(options.method).toBe("POST");
-    expect(screen.getByRole("status").textContent).toBe("Código de invitación renovado.");
   });
 });
 
@@ -127,15 +102,12 @@ describe("cambio de nombre", () => {
 });
 
 describe("vista de quien no administra", () => {
-  it("describe la cuenta sin ofrecer cambiarla ni revelar el código", async () => {
-    // El backend no devuelve el código a quien no administra.
+  it("describe la cuenta sin ofrecer cambiarla", async () => {
     stubAccount(TEST_ACCOUNT);
     const container = await renderPanel(TEST_USER);
 
     expect(container.textContent).toContain("Equipo de prueba");
     expect(container.textContent).toContain("3 personas");
     expect(screen.queryByLabelText("Nombre de la cuenta")).toBeNull();
-    expect(screen.queryByLabelText("Código de invitación")).toBeNull();
-    expect(screen.queryByRole("button", { name: /Renovar el código/ })).toBeNull();
   });
 });

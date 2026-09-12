@@ -41,7 +41,8 @@ App
     │       └── BoardColumn
     │           └── MrCard
     │               └── BlockerBadge
-    ├── AccountPanel                 (sección «Mi cuenta»)
+    ├── AccountSettingsSection       (sección «Mi cuenta»)
+    ├── AccountMemberInviteSection  (sección «Mi cuenta», sólo admin)
     ├── GitlabSettingsForm           (sección «Mi cuenta»)
     ├── ProfilePanel                 (sección «Mi perfil»)
     ├── GitlabIdentityPanel          (sección «Mi cuenta»)
@@ -53,7 +54,8 @@ App
 - `LoginForm` pide email y contraseña, muestra el error que devuelve el backend y ofrece pasar al alta.
 - `RegisterForm` da de alta la persona y elige entre sus dos caminos excluyentes: sumarse a un equipo con su código de invitación, o abrir uno nuevo. Valida en el navegador las mismas reglas que el backend para avisar antes de enviar.
 - `AccountMenu` concentra detrás de un avatar el nombre visible, el email, el equipo, los accesos separados al perfil y a la cuenta, y el cierre de sesión. Se cierra al elegir una acción, al interactuar fuera o con `Escape`, que devuelve el foco al avatar.
-- `AccountPanel` presenta el equipo: su nombre, cuánta gente lo integra y, para un `admin`, el código de invitación y su renovación.
+- `AccountSettingsSection` presenta el equipo: su nombre y cuánta gente lo integra.
+- `AccountMemberInviteSection` presenta a un `admin` el código de invitación y permite renovarlo; `App` la compone como una sección independiente dentro de «Mi cuenta».
 - `GitlabSettingsForm` resuelve los IDs de los proyectos y el access token de la cuenta. Sólo los edita un `admin`; al resto le presenta la configuración vigente en modo lectura. El campo del token arranca vacío en cada visita, porque el backend nunca lo devuelve: dejarlo así conserva el guardado.
 - `ProfilePanel` permite cambiar el nombre visible y el email propios desde «Mi perfil» y comunica el resultado sin sacar a la persona de la pantalla.
 - `GitlabIdentityPanel` resuelve en «Mi cuenta» el nickname de GitLab propio, lo precarga desde la sesión y permite actualizarlo; de él depende la vista personal.

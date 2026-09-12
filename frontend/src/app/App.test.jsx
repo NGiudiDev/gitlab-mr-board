@@ -28,6 +28,8 @@ const GITLAB_SETTINGS = {
   updatedAt: "2026-08-01T10:00:00.000Z",
 };
 
+const ADMIN_ACCOUNT = { ...TEST_ACCOUNT, inviteCode: "ABCD234XYZ" };
+
 let fetchMock;
 let container;
 /** Respuestas encoladas para las próximas consultas al tablero. */
@@ -526,11 +528,11 @@ describe("alta de cuenta desde el tablero", () => {
 });
 
 describe("navegación entre secciones", () => {
-  function routeApi(users = []) {
+  function routeApi(users = [], account = TEST_ACCOUNT) {
     return vi.fn(async (url) => {
       const path = String(url);
       if (path.endsWith("/api/auth/me")) return jsonResponse({ user: TEST_USER });
-      if (path.includes("/api/account")) return jsonResponse({ account: TEST_ACCOUNT });
+      if (path.includes("/api/account")) return jsonResponse({ account });
       if (path.includes("/api/users")) return jsonResponse({ users });
       if (path.includes("/api/gitlab-settings")) return jsonResponse({ settings: GITLAB_SETTINGS });
       return jsonResponse(buildResponse(MRS));
@@ -565,19 +567,39 @@ describe("navegación entre secciones", () => {
   });
 
   it("reúne en la cuenta el equipo, la configuración y el nickname de GitLab", async () => {
-    fetchMock.mockImplementation(routeApi());
+    fetchMock.mockImplementation(routeApi([], ADMIN_ACCOUNT));
     signInTestUser({ ...TEST_USER, role: "admin" });
     await renderApp();
 
     await openSection("Mi cuenta");
 
     expect(screen.getByRole("heading", { level: 2, name: "Mi equipo" })).toBeDefined();
+    expect(screen.getByRole("heading", { level: 2, name: "Invitar al equipo" })).toBeDefined();
     expect(screen.getByRole("heading", { level: 2, name: "GitLab de la cuenta" })).toBeDefined();
     expect(screen.getByRole("heading", { level: 2, name: "Mi identidad en GitLab" })).toBeDefined();
     expect(screen.getByLabelText("Nickname de GitLab").value).toBe("ana-gitlab");
     expect(screen.queryByRole("heading", { level: 2, name: "Mi perfil" })).toBeNull();
     expect(screen.queryByRole("heading", { level: 2, name: "Mi contraseña" })).toBeNull();
     expect(screen.getByLabelText("IDs de los proyectos").value).toBe("101, 202");
+  });
+
+  it("renueva desde App el código de invitación de un administrador", async () => {
+    fetchMock.mockImplementation(routeApi([], ADMIN_ACCOUNT));
+    signInTestUser({ ...TEST_USER, role: "admin" });
+    await renderApp();
+
+    await openSection("Mi cuenta");
+
+    const inviteCodeField = screen.getByLabelText("Código de invitación");
+    expect(inviteCodeField.value).toBe("ABCD234XYZ");
+    expect(inviteCodeField.readOnly).toBe(true);
+
+    fireEvent.click(screen.getByRole("button", { name: "Renovar el código" }));
+    await flush();
+
+    const rotateCall = fetchMock.mock.calls.find(([url]) => String(url).endsWith("/api/account/invite-code"));
+    expect(rotateCall[1].method).toBe("POST");
+    expect(screen.getByRole("status").textContent).toBe("Código de invitación renovado.");
   });
 
   it("reúne en el perfil los datos personales y la contraseña", async () => {
@@ -602,6 +624,7 @@ describe("navegación entre secciones", () => {
     expect(screen.getByRole("heading", { level: 2, name: "GitLab de la cuenta" })).toBeDefined();
     expect(screen.queryByLabelText("IDs de los proyectos")).toBeNull();
     expect(screen.getByLabelText("Nickname de GitLab").value).toBe("ana-gitlab");
+    expect(screen.queryByRole("heading", { level: 2, name: "Invitar al equipo" })).toBeNull();
   });
 
   it("lleva a la cuenta cuando a un admin le falta configurar GitLab", async () => {

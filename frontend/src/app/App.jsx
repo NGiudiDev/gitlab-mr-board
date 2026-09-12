@@ -2,8 +2,9 @@
 import { useEffect, useState } from "react";
 
 // 6. Imports relativos restantes.
-import AccountPanel from "../features/accounts/components/AccountPanel.jsx";
-import { resetAccountStore } from "../features/accounts/hooks/useAccount.js";
+import { AccountMemberInviteSection } from "../features/accounts/components/AccountMemberInviteSection.jsx";
+import { AccountSettingsSection } from "../features/accounts/components/AccountSettingsSection.jsx";
+import { resetAccountStore, useAccount } from "../features/accounts/hooks/useAccount.js";
 import GitlabIdentityPanel from "../features/auth/components/GitlabIdentityPanel.jsx";
 import LoginForm from "../features/auth/components/LoginForm.jsx";
 import PasswordPanel from "../features/auth/components/PasswordPanel.jsx";
@@ -247,8 +248,9 @@ function AnonymousView({ error, notice, submitting, onLogin, onRegister }) {
 /**
  * Presenta la sección elegida en la barra de navegación.
  *
- * «Mi cuenta» reúne el equipo y los datos de GitLab, incluido el nickname
- * personal. «Mi perfil» conserva la identidad de acceso y la contraseña.
+ * «Mi cuenta» reúne el equipo, su invitación y los datos de GitLab,
+ * incluido el nickname personal. «Mi perfil» conserva la identidad de
+ * acceso y la contraseña.
  */
 function ActiveSection({
   view,
@@ -260,11 +262,24 @@ function ActiveSection({
   onGoToAccount,
 }) {
   const isAdmin = user.role === "admin";
+  const {
+    account,
+    submitting: accountSubmitting,
+    rotateInviteCode,
+  } = useAccount(user.accountId);
 
   if (view === "account") {
     return (
       <div className="mx-auto max-w-xl divide-y divide-border-soft [&>section]:py-5 [&>section:first-child]:pt-0 [&>section:last-child]:pb-0">
-        <AccountPanel user={user} />
+        <AccountSettingsSection user={user} />
+
+        {isAdmin && account?.inviteCode ? (
+          <AccountMemberInviteSection
+            inviteCode={account.inviteCode}
+            submitting={accountSubmitting}
+            onRotate={rotateInviteCode}
+          />
+        ) : null}
 
         <GitlabSettingsForm canEdit={isAdmin} onSaved={() => fetchMergeRequests(true)} />
 

@@ -8,7 +8,6 @@ const FIELD_CLASSES = "block w-full mt-1 rounded-md border border-control bg-sur
 const LABEL_CLASSES = "block text-[12px] font-semibold text-text-muted";
 const HINT_CLASSES = "mt-1 text-[12px] font-normal text-text-faint";
 const BUTTON_CLASSES = "rounded-md bg-accent px-3 py-2 text-[13px] font-semibold text-bg disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
-const SECONDARY_BUTTON_CLASSES = "rounded-md border border-control px-3 py-2 text-[12.5px] text-text-primary hover:border-accent cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
 /** Describe la cantidad de miembros sin dejar el número suelto. */
 function membersLabel(memberCount) {
@@ -16,65 +15,17 @@ function membersLabel(memberCount) {
 }
 
 /**
- * Invitación al equipo: el código con el que alguien se suma a la cuenta.
- *
- * Sólo se muestra a un administrador, porque tener el código alcanza para
- * entrar a ver el tablero.
- */
-function InviteCode({ inviteCode = "", submitting = false, onRotate = () => {} }) {
-  return (
-    <div className="mt-5 border-t border-border-soft pt-4">
-      <h3 className="text-[13px] font-semibold text-text-primary mb-1">
-        Invitar al equipo
-      </h3>
-      
-      <p className="text-[12.5px] text-text-muted mb-3">
-        Quien se registre con este código entra a esta cuenta y ve el mismo tablero, sin cargar ninguna credencial de GitLab.
-      </p>
-
-      {/* El código va en un campo de sólo lectura y no en un párrafo: así se
-          selecciona y se copia de una, y el `label` le da nombre accesible. */}
-      <div className="mb-3">
-        <label className={LABEL_CLASSES} htmlFor="cuenta-invitacion">
-          Código de invitación
-        </label>
-
-        <input
-          id="cuenta-invitacion"
-          type="text"
-          value={inviteCode}
-          readOnly
-          className={`${FIELD_CLASSES} font-mono tracking-widest`}
-        />
-      </div>
-
-      <button
-        type="button"
-        onClick={onRotate}
-        disabled={submitting}
-        className={SECONDARY_BUTTON_CLASSES}
-      >
-        {submitting ? "Renovando..." : "Renovar el código"}
-      </button>
-
-      <p className={HINT_CLASSES}>
-        Al renovarlo, el código anterior deja de servir. Quien ya se sumó no pierde el acceso.
-      </p>
-    </div>
-  );
-}
-
-/**
- * Datos de la cuenta que comparte el tablero: su nombre, cuánta gente la
- * integra y —para quien administra— el código con el que se suma el resto.
+ * Datos de la cuenta que comparte el tablero: su nombre y cuánta gente la
+ * integra.
  *
  * El nombre lo edita sólo un administrador; el backend valida el rol.
  */
-function AccountPanel({ user = null }) {
-  const { account, loading, error, submitting, renameAccount, rotateInviteCode } = useAccount(user?.accountId ?? null);
-  const [name, setName] = useState("");
+export function AccountSettingsSection({ user = null }) {
+  const { account, loading, error, submitting, renameAccount } = useAccount(user?.accountId ?? null);
+
   const [formError, setFormError] = useState(null);
   const [message, setMessage] = useState(null);
+  const [name, setName] = useState("");
 
   // La cuenta llega después del primer render, así que el campo se completa
   // recién cuando el backend responde.
@@ -112,6 +63,7 @@ function AccountPanel({ user = null }) {
       <h2 id="cuenta-heading" className="text-base font-semibold text-text-primary mb-1">
         Mi equipo
       </h2>
+
       <p className="text-[12.5px] text-text-muted mb-4">
         La cuenta agrupa a las personas que ven el mismo tablero, con los mismos proyectos y el mismo access token de GitLab.
       </p>
@@ -165,18 +117,8 @@ function AccountPanel({ user = null }) {
               <dd className="mt-1 text-text-primary">{membersLabel(account.memberCount)}</dd>
             </dl>
           )}
-
-          {isAdmin && account.inviteCode ? (
-            <InviteCode
-              inviteCode={account.inviteCode}
-              submitting={submitting}
-              onRotate={() => runAction(rotateInviteCode, "Código de invitación renovado.")}
-            />
-          ) : null}
         </>
       )}
     </section>
   );
 }
-
-export default AccountPanel;

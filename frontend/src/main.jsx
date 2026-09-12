@@ -1,3 +1,5 @@
+// Revisado: 12/09
+
 // 2. Dependencias externas.
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
