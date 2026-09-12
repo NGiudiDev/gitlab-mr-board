@@ -25,12 +25,12 @@ async function createContext() {
       // Un código fijo rompería la unicidad al crear dos cuentas en un test.
       generateInviteCode: () => `CODIGO${(codeNumber += 1)}`,
     }),
-    addMember: async (accountId, username) => {
+    addMember: async (accountId, email) => {
       await users.insertUser({
-        id: `usuario-${username}`,
+        id: `usuario-${email}`,
         accountId,
-        username,
-        displayName: username,
+        email,
+        displayName: email,
         passwordHash: 'scrypt$16384$8$1$aa$bb',
         role: 'user',
         status: 'active',
@@ -92,8 +92,8 @@ describe('getSummary', () => {
   it('cuenta los miembros y expone el código sólo si se lo pide', async () => {
     const { accountService, addMember } = await createContext();
     const account = await accountService.create('Equipo de prueba');
-    await addMember(account.id, 'ana');
-    await addMember(account.id, 'zoe');
+    await addMember(account.id, 'ana@example.com');
+    await addMember(account.id, 'zoe@example.com');
 
     const forAdmin = await accountService.getSummary(account.id, true);
     const forMember = await accountService.getSummary(account.id, false);
@@ -112,8 +112,8 @@ describe('getSummary', () => {
     const { accountService, addMember } = await createContext();
     const account = await accountService.create('Equipo de prueba');
     const other = await accountService.create('Otro equipo');
-    await addMember(account.id, 'ana');
-    await addMember(other.id, 'beto');
+    await addMember(account.id, 'ana@example.com');
+    await addMember(other.id, 'beto@example.com');
 
     expect((await accountService.getSummary(account.id, false)).memberCount).toBe(1);
   });

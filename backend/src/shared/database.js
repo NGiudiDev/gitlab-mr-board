@@ -18,7 +18,7 @@ const SCHEMA_STATEMENTS = [
   `CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
     account_id TEXT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
-    username TEXT NOT NULL UNIQUE,
+    email TEXT NOT NULL UNIQUE,
     display_name TEXT NOT NULL,
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL CHECK (role IN ('user', 'admin')),
@@ -27,6 +27,22 @@ const SCHEMA_STATEMENTS = [
     created_at TIMESTAMPTZ NOT NULL,
     last_login_at TIMESTAMPTZ
   )`,
+
+  // Conserva el identificador de instalaciones existentes. Puede seguir
+  // usándose para ingresar hasta que la persona lo reemplace por su email en
+  // «Mi perfil»; las altas y modificaciones nuevas sí validan el formato.
+  `DO $$
+   BEGIN
+     IF EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'users' AND column_name = 'username'
+     ) AND NOT EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'users' AND column_name = 'email'
+     ) THEN
+       ALTER TABLE users RENAME COLUMN username TO email;
+     END IF;
+   END $$`,
 
   // `CREATE TABLE IF NOT EXISTS` no toca una tabla que ya existe, así que una
   // columna agregada después necesita su propio `ALTER`. Las dos entran

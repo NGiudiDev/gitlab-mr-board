@@ -10,7 +10,8 @@ import { HttpError } from '../../../shared/httpError.js';
 const DEFAULT_SESSION_DURATION_DAYS = 7;
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 const TOKEN_BYTES = 32;
-const USERNAME_PATTERN = /^[a-z0-9._-]{3,32}$/;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MAXIMUM_EMAIL_LENGTH = 254;
 
 // Freno simple de fuerza bruta. Vive en memoria: alcanza para un tablero
 // interno y se reinicia con el proceso, que es el peor caso aceptable.
@@ -22,7 +23,7 @@ function toAuthenticatedUser(user) {
   return {
     id: user.id,
     accountId: user.accountId,
-    username: user.username,
+    email: user.email,
     displayName: user.displayName,
     role: user.role,
     gitlabUsername: user.gitlabUsername,
@@ -49,29 +50,26 @@ function hashToken(token) {
   return createHash('sha256').update(token).digest('hex');
 }
 
-/** Normaliza el nombre de usuario para que el login no dependa de mayúsculas. */
-function normalizeUsername(username) {
-  return username.trim().toLowerCase();
+/** Normaliza el email para que el login no dependa de mayúsculas. */
+function normalizeEmail(email) {
+  return typeof email === 'string' ? email.trim().toLowerCase() : '';
 }
 
 /**
  * Normaliza y valida el identificador usado para ingresar.
  *
- * @param username Nombre tal como llegó del cliente.
- * @returns Nombre listo para persistir.
+ * @param email Email tal como llegó del cliente.
+ * @returns Email listo para persistir.
  * @throws {HttpError} 400 si no cumple el formato admitido.
  */
-function parseUsername(username) {
-  const normalizedUsername = typeof username === 'string' ? normalizeUsername(username) : '';
+function parseEmail(email) {
+  const normalizedEmail = typeof email === 'string' ? normalizeEmail(email) : '';
 
-  if (!USERNAME_PATTERN.test(normalizedUsername)) {
-    throw new HttpError(
-      'El nombre de usuario debe tener entre 3 y 32 caracteres y usar sólo letras, números, punto, guion o guion bajo.',
-      400,
-    );
+  if (normalizedEmail.length > MAXIMUM_EMAIL_LENGTH || !EMAIL_PATTERN.test(normalizedEmail)) {
+    throw new HttpError('Ingresá un email válido.', 400);
   }
 
-  return normalizedUsername;
+  return normalizedEmail;
 }
 
 /**
@@ -105,19 +103,19 @@ function createAuthService(options) {
     sessionDurationDays = DEFAULT_SESSION_DURATION_DAYS,
   } = options;
 
-  const failedAttemptsByUsername = new Map();
+  const failedAttemptsByEmail = new Map();
 
   /** Informa cuántos milisegundos falta esperar, o cero si no hay bloqueo. */
-  function remainingLockMs(username) {
-    const attempts = failedAttemptsByUsername.get(username);
+  function remainingLockMs(email) {
+    const attempts = failedAttemptsByEmail.get(email);
     if (!attempts) return 0;
 
     return Math.max(0, attempts.lockedUntil - now().getTime());
   }
 
   /** Suma un intento fallido y bloquea al alcanzar el máximo. */
-  function registerFailedAttempt(username) {
-    const attempts = failedAttemptsByUsername.get(username) ?? { count: 0, lockedUntil: 0 };
+  function registerFailedAttempt(email) {
+    const attempts = failedAttemptsByEmail.get(email) ?? { count: 0, lockedUntil: 0 };
     attempts.count += 1;
 
     if (attempts.count >= MAX_FAILED_ATTEMPTS) {
@@ -125,33 +123,33 @@ function createAuthService(options) {
       attempts.lockedUntil = now().getTime() + LOCK_DURATION_MS;
     }
 
-    failedAttemptsByUsername.set(username, attempts);
+    failedAttemptsByEmail.set(email, attempts);
   }
 
   /**
    * Valida un alta y deja la contraseña ya derivada.
    *
    * Se separa del guardado porque el registro necesita rechazar los datos
-   * inválidos **antes** de crear la cuenta: si no, un nombre repetido dejaría
+   * inválidos **antes** de crear la cuenta: si no, un email repetido dejaría
    * una cuenta sin nadie adentro.
    *
-   * @param input Nombre, contraseña y nombre visible tal como llegaron.
+   * @param input Email, contraseña y nombre visible tal como llegaron.
    * @returns Los datos normalizados, con el hash de la contraseña.
-   * @throws {HttpError} 400 si el nombre o la contraseña no cumplen las reglas,
-   * 409 si el nombre ya está tomado.
+   * @throws {HttpError} 400 si el email o la contraseña no cumplen las reglas,
+   * 409 si el email ya está registrado.
    */
   async function prepareNewUser(input) {
-    const username = parseUsername(input.username);
+    const email = parseEmail(input.email);
 
-    // El nombre es único en toda la base, no dentro de la cuenta: el login pide
-    // sólo usuario y contraseña, así que no hay con qué desambiguar.
-    if (await repository.findUserByUsername(username)) {
-      throw new HttpError(`Ya existe un usuario con el nombre «${username}».`, 409);
+    // El email es único en toda la base porque identifica a la persona al
+    // iniciar sesión, sin depender de la cuenta a la que pertenece.
+    if (await repository.findUserByEmail(email)) {
+      throw new HttpError(`Ya existe un usuario con el email «${email}».`, 409);
     }
 
     return {
-      username,
-      displayName: parseDisplayName(input.displayName, username),
+      email,
+      displayName: parseDisplayName(input.displayName, email),
       passwordHash: await hashNewPassword(input.password ?? ''),
     };
   }
@@ -168,7 +166,7 @@ function createAuthService(options) {
     const user = {
       id: randomUUID(),
       accountId,
-      username: prepared.username,
+      email: prepared.email,
       displayName: prepared.displayName,
       passwordHash: prepared.passwordHash,
       role,
@@ -229,7 +227,7 @@ function createAuthService(options) {
    */
   async function register(input) {
     // Primero el usuario, después la cuenta: crear la cuenta y recién entonces
-    // descubrir que el nombre está tomado dejaría una cuenta vacía.
+    // descubrir que el email está registrado dejaría una cuenta vacía.
     const prepared = await prepareNewUser(input);
     const joiningWithCode = Boolean(input.inviteCode?.trim());
     const account = joiningWithCode
@@ -243,32 +241,32 @@ function createAuthService(options) {
   }
 
   async function login(credentials) {
-    const username = normalizeUsername(credentials.username ?? '');
+    const email = normalizeEmail(credentials.email ?? '');
     const password = credentials.password ?? '';
 
-    if (!username || !password) {
-      throw new HttpError('Ingresá tu usuario y tu contraseña.', 400);
+    if (!email || !password) {
+      throw new HttpError('Ingresá tu email y tu contraseña.', 400);
     }
 
-    const lockMs = remainingLockMs(username);
+    const lockMs = remainingLockMs(email);
     if (lockMs > 0) {
       const minutes = Math.ceil(lockMs / 60_000);
       throw new HttpError(`Demasiados intentos fallidos. Probá de nuevo en ${minutes} minutos.`, 429);
     }
 
-    const user = await repository.findUserByUsername(username);
+    const user = await repository.findUserByEmail(email);
     const passwordMatches = await matchesStoredPassword(password, user);
 
     if (!user || !passwordMatches) {
-      registerFailedAttempt(username);
-      throw new HttpError('Usuario o contraseña incorrectos.', 401);
+      registerFailedAttempt(email);
+      throw new HttpError('Email o contraseña incorrectos.', 401);
     }
 
     if (user.status !== 'active') {
       throw new HttpError('Tu usuario está deshabilitado. Pedile acceso a un administrador.', 403);
     }
 
-    failedAttemptsByUsername.delete(username);
+    failedAttemptsByEmail.delete(email);
 
     return await createSessionFor(user);
   }
@@ -297,10 +295,10 @@ function createAuthService(options) {
     if (session) await repository.deleteSession(session.id);
   }
 
-  async function changePassword(username, newPassword) {
-    const user = await repository.findUserByUsername(normalizeUsername(username));
+  async function changePassword(email, newPassword) {
+    const user = await repository.findUserByEmail(normalizeEmail(email));
     if (!user) {
-      throw new HttpError(`No existe el usuario «${username}».`, 404);
+      throw new HttpError(`No existe el usuario con email «${email}».`, 404);
     }
 
     const passwordHash = await hashNewPassword(newPassword);
@@ -309,29 +307,29 @@ function createAuthService(options) {
     // Cambiar la contraseña invalida lo emitido antes: es la única forma de
     // cortar el acceso de una sesión ya robada.
     await repository.deleteSessionsOfUser(user.id);
-    failedAttemptsByUsername.delete(user.username);
+    failedAttemptsByEmail.delete(user.email);
   }
 
   /**
    * Cambia la contraseña de la propia persona, exigiendo la actual.
    *
-   * @param username Usuario de la sesión en curso.
+   * @param email Email del usuario de la sesión en curso.
    * @param currentPassword Contraseña vigente, para confirmar la identidad.
    * @param newPassword Contraseña nueva.
    * @throws {HttpError} 403 si la contraseña actual no coincide, 404 si el
    * usuario no existe y 400 si la nueva no cumple el largo mínimo.
    */
-  async function changeOwnPassword(username, currentPassword, newPassword) {
-    const user = await repository.findUserByUsername(normalizeUsername(username));
+  async function changeOwnPassword(email, currentPassword, newPassword) {
+    const user = await repository.findUserByEmail(normalizeEmail(email));
     if (!user) {
-      throw new HttpError(`No existe el usuario «${username}».`, 404);
+      throw new HttpError(`No existe el usuario con email «${email}».`, 404);
     }
 
     if (!await verifyPassword(currentPassword ?? '', user.passwordHash)) {
       throw new HttpError('La contraseña actual no coincide.', 403);
     }
 
-    await changePassword(user.username, newPassword);
+    await changePassword(user.email, newPassword);
   }
 
   /**
@@ -369,7 +367,7 @@ function createAuthService(options) {
    * @param userId Usuario de la sesión en curso.
    * @param input Campos del perfil recibidos.
    * @returns La identidad ya actualizada.
-   * @throws {HttpError} 400 si el nombre de usuario no es válido, 404 si el
+   * @throws {HttpError} 400 si el email no es válido, 404 si el
    * usuario ya no existe y 409 si el identificador está ocupado.
    */
   async function changeOwnProfile(userId, input) {
@@ -378,45 +376,45 @@ function createAuthService(options) {
       throw new HttpError('No existe el usuario de la sesión.', 404);
     }
 
-    const username = input.username === undefined
-      ? user.username
-      : parseUsername(input.username);
+    const email = input.email === undefined
+      ? user.email
+      : parseEmail(input.email);
     const displayName = input.displayName === undefined
       ? user.displayName
-      : parseDisplayName(input.displayName, username);
+      : parseDisplayName(input.displayName, email);
 
-    if (username !== user.username) {
-      const existingUser = await repository.findUserByUsername(username);
+    if (email !== user.email) {
+      const existingUser = await repository.findUserByEmail(email);
       if (existingUser) {
-        throw new HttpError(`Ya existe un usuario con el nombre «${username}».`, 409);
+        throw new HttpError(`Ya existe un usuario con el email «${email}».`, 409);
       }
     }
 
-    await repository.updateProfile(user.id, username, displayName);
-    failedAttemptsByUsername.delete(user.username);
-    failedAttemptsByUsername.delete(username);
+    await repository.updateProfile(user.id, email, displayName);
+    failedAttemptsByEmail.delete(user.email);
+    failedAttemptsByEmail.delete(email);
 
-    return toAuthenticatedUser({ ...user, username, displayName });
+    return toAuthenticatedUser({ ...user, email, displayName });
   }
 
   /**
    * Comprueba que un usuario pertenezca a una cuenta.
    *
    * Es lo que impide que quien administra una cuenta toque los usuarios de
-   * otra: el nombre es único en toda la base, así que sin este control una
+   * otra: el email es único en toda la base, así que sin este control una
    * ruta de administración alcanzaría a cualquiera.
    *
    * @param accountId Cuenta de quien administra.
-   * @param username Nombre del usuario a administrar.
+   * @param email Email del usuario a administrar.
    * @returns El usuario, si es de esa cuenta.
    * @throws {HttpError} 404 si no existe o pertenece a otra cuenta.
    */
-  async function requireAccountMember(accountId, username) {
-    const normalizedUsername = normalizeUsername(username);
-    const user = await repository.findUserByUsername(normalizedUsername);
+  async function requireAccountMember(accountId, email) {
+    const normalizedEmail = normalizeEmail(email);
+    const user = await repository.findUserByEmail(normalizedEmail);
 
     if (!user || user.accountId !== accountId) {
-      throw new HttpError(`No existe el usuario «${normalizedUsername}» en tu cuenta.`, 404);
+      throw new HttpError(`No existe el usuario con email «${normalizedEmail}» en tu cuenta.`, 404);
     }
 
     return toUserSummary(user);
@@ -428,15 +426,15 @@ function createAuthService(options) {
    * Deshabilitar corta el acceso de inmediato: además de bloquear el login,
    * se borran las sesiones ya emitidas.
    *
-   * @param username Nombre del usuario a modificar.
+   * @param email Email del usuario a modificar.
    * @param status Nuevo estado.
    * @returns El usuario con su estado ya aplicado.
    * @throws {HttpError} 404 si el usuario no existe.
    */
-  async function setUserStatus(username, status) {
-    const user = await repository.findUserByUsername(normalizeUsername(username));
+  async function setUserStatus(email, status) {
+    const user = await repository.findUserByEmail(normalizeEmail(email));
     if (!user) {
-      throw new HttpError(`No existe el usuario «${username}».`, 404);
+      throw new HttpError(`No existe el usuario con email «${email}».`, 404);
     }
 
     await repository.updateStatus(user.id, status);
@@ -452,15 +450,15 @@ function createAuthService(options) {
    * preparación de los E2E— quiere dejar la base en un estado, no comprobar
    * que estuviera.
    *
-   * @param username Nombre del usuario a borrar.
+   * @param email Email del usuario a borrar.
    * @returns `true` si existía y se borró.
    */
-  async function deleteUser(username) {
-    const normalizedUsername = normalizeUsername(username);
-    const user = await repository.findUserByUsername(normalizedUsername);
+  async function deleteUser(email) {
+    const normalizedEmail = normalizeEmail(email);
+    const user = await repository.findUserByEmail(normalizedEmail);
     if (!user) return false;
 
-    failedAttemptsByUsername.delete(normalizedUsername);
+    failedAttemptsByEmail.delete(normalizedEmail);
 
     return await repository.deleteUser(user.id);
   }
@@ -511,11 +509,11 @@ async function hashNewPassword(password) {
  * Compara la contraseña contra el usuario encontrado.
  *
  * Cuando el usuario no existe igual se deriva una clave descartable: sin ese
- * trabajo equivalente, el tiempo de respuesta revelaría qué nombres de usuario
- * están dados de alta.
+ * trabajo equivalente, el tiempo de respuesta revelaría qué emails están
+ * registrados.
  *
  * @param password Contraseña recibida en el login.
- * @param user Usuario encontrado, o `null` si el nombre no existe.
+ * @param user Usuario encontrado, o `null` si el email no existe.
  * @returns `true` sólo si el usuario existe y la contraseña coincide.
  */
 async function matchesStoredPassword(password, user) {
@@ -525,4 +523,4 @@ async function matchesStoredPassword(password, user) {
   return false;
 }
 
-export { createAuthService, normalizeUsername };
+export { createAuthService, normalizeEmail };

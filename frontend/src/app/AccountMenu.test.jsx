@@ -34,7 +34,7 @@ describe('AccountMenu', () => {
     expect(trigger.getAttribute('aria-expanded')).toBe('true')
     expect(trigger.getAttribute('aria-label')).toBe('Cerrar menú de cuenta de Ana Pérez')
     expect(menu.textContent).toContain('Ana Pérez')
-    expect(menu.textContent).toContain('@ana')
+    expect(menu.textContent).toContain('ana@example.com')
     await waitFor(() => expect(menu.textContent).toContain('Equipo de prueba'))
   })
 
@@ -112,10 +112,10 @@ describe('AccountMenu', () => {
 
 describe('initialsFor', () => {
   it('usa el primer y el último nombre', () => {
-    expect(initialsFor({ displayName: 'Ana María Pérez', username: 'ana' })).toBe('AP')
+    expect(initialsFor({ displayName: 'Ana María Pérez', email: 'ana@example.com' })).toBe('AP')
   })
 
-  it('usa el nickname cuando falta el nombre visible', () => {
-    expect(initialsFor({ username: 'ana' })).toBe('AN')
+  it('usa el email cuando falta el nombre visible', () => {
+    expect(initialsFor({ email: 'ana@example.com' })).toBe('AN')
   })
 })

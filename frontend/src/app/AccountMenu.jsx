@@ -7,11 +7,11 @@ import { useAccount } from '../features/accounts/hooks/useAccount.js'
 /**
  * Obtiene hasta dos iniciales para representar a la persona sin una imagen.
  *
- * @param {{ displayName?: string, username?: string } | null} user Usuario de la sesión.
+ * @param {{ displayName?: string, email?: string } | null} user Usuario de la sesión.
  * @returns {string} Iniciales en mayúsculas.
  */
 function initialsFor(user) {
-  const label = user?.displayName?.trim() || user?.username?.trim() || '?'
+  const label = user?.displayName?.trim() || user?.email?.trim() || '?'
   const words = label.split(/\s+/)
   const initials = words.length > 1
     ? `${words[0][0]}${words.at(-1)[0]}`
@@ -131,7 +131,7 @@ function AccountMenu({
             </span>
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-text-primary">{user.displayName}</p>
-              <p className="truncate font-mono text-xs text-text-muted">@{user.username}</p>
+              <p className="truncate text-xs text-text-muted">{user.email}</p>
             </div>
           </div>
 

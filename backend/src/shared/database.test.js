@@ -125,14 +125,14 @@ describe('migración a cuentas', () => {
     await applySchema(database);
 
     const { rows } = await database.query(
-      `SELECT users.username, accounts.name
+      `SELECT users.email, accounts.name
        FROM users JOIN accounts ON accounts.id = users.account_id
-       ORDER BY users.username`,
+       ORDER BY users.email`,
     );
 
     expect(rows).toEqual([
-      { username: 'ana', name: 'Mi equipo' },
-      { username: 'beto', name: 'Mi equipo' },
+      { email: 'ana', name: 'Mi equipo' },
+      { email: 'beto', name: 'Mi equipo' },
     ]);
   });
 
@@ -152,12 +152,12 @@ describe('migración a cuentas', () => {
     await applySchema(database);
 
     const { rows } = await database.query(
-      'SELECT username, gitlab_username FROM users ORDER BY username',
+      'SELECT email, gitlab_username FROM users ORDER BY email',
     );
 
     expect(rows).toEqual([
-      { username: 'ana', gitlab_username: 'ana-gitlab' },
-      { username: 'beto', gitlab_username: 'beto-gitlab' },
+      { email: 'ana', gitlab_username: 'ana-gitlab' },
+      { email: 'beto', gitlab_username: 'beto-gitlab' },
     ]);
   });
 

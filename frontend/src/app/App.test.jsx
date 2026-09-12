@@ -362,8 +362,8 @@ describe('portero de sesión', () => {
   }
 
   /** Completa y envía el formulario de ingreso. */
-  function submitCredentials(username = 'ana', password = 'contrasena-de-prueba') {
-    fireEvent.change(screen.getByLabelText('Usuario'), { target: { value: username } })
+  function submitCredentials(email = 'ana@example.com', password = 'contrasena-de-prueba') {
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: email } })
     fireEvent.change(screen.getByLabelText('Contraseña'), { target: { value: password } })
     fireEvent.click(loginForm())
   }
@@ -412,14 +412,14 @@ describe('portero de sesión', () => {
   it('vuelve al login con el mensaje del backend si las credenciales no sirven', async () => {
     fetchMock.mockImplementation(routeApi({
       me: jsonResponse({ error: 'Iniciá sesión.' }, 401),
-      login: jsonResponse({ error: 'Usuario o contraseña incorrectos.' }, 401),
+      login: jsonResponse({ error: 'Email o contraseña incorrectos.' }, 401),
     }))
     await renderApp()
 
-    submitCredentials('ana', 'incorrecta')
+    submitCredentials('ana@example.com', 'incorrecta')
     await flush()
 
-    expect(screen.getByRole('alert').textContent).toBe('Usuario o contraseña incorrectos.')
+    expect(screen.getByRole('alert').textContent).toBe('Email o contraseña incorrectos.')
     expect(loginForm()).not.toBeNull()
   })
 
@@ -469,7 +469,7 @@ describe('alta de cuenta desde el tablero', () => {
   /** Completa el formulario de alta y lo envía, sumándose con un código. */
   function submitRegistration() {
     fireEvent.change(screen.getByLabelText('Código de invitación'), { target: { value: 'ABCD234XYZ' } })
-    fireEvent.change(screen.getByLabelText('Usuario'), { target: { value: 'ana' } })
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'ana@example.com' } })
     fireEvent.change(screen.getByLabelText('Contraseña'), { target: { value: 'contrasena-de-prueba' } })
     fireEvent.change(screen.getByLabelText('Repetí la contraseña'), { target: { value: 'contrasena-de-prueba' } })
     fireEvent.click(screen.getByRole('button', { name: /Crear cuenta|Creando/ }))
@@ -512,7 +512,7 @@ describe('alta de cuenta desde el tablero', () => {
 
   it('muestra el error del backend sin salir del alta', async () => {
     fetchMock.mockImplementation(routeApi({
-      register: jsonResponse({ error: 'Ya existe un usuario con el nombre «ana».' }, 409),
+      register: jsonResponse({ error: 'Ya existe un usuario con el email «ana@example.com».' }, 409),
     }))
     await renderApp()
     fireEvent.click(screen.getByRole('button', { name: 'Crear una cuenta' }))
@@ -520,7 +520,7 @@ describe('alta de cuenta desde el tablero', () => {
     submitRegistration()
     await flush()
 
-    expect(screen.getByRole('alert').textContent).toBe('Ya existe un usuario con el nombre «ana».')
+    expect(screen.getByRole('alert').textContent).toBe('Ya existe un usuario con el email «ana@example.com».')
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Crear una cuenta')
   })
 })

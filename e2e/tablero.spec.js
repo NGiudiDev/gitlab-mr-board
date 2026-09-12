@@ -49,11 +49,11 @@ test.describe('Tablero de merge requests', () => {
       await page.goto('/');
       await expect(page.getByRole('heading', { name: 'Tablero de MRs', level: 1 })).toBeVisible();
 
-      await page.getByLabel('Usuario').fill(e2eConfig.username);
+      await page.getByLabel('Email').fill(e2eConfig.email);
       await page.getByLabel('Contraseña').fill(e2eConfig.password);
       await page.getByRole('button', { name: 'Ingresar' }).click();
 
-      await expect(page.getByText(`@${e2eConfig.username}`)).toBeVisible();
+      await expect(page.getByText(e2eConfig.email)).toBeVisible();
       // La base se recrea en cada corrida, así que el usuario arranca sin
       // proyectos ni token: el tablero todavía no tiene qué consultar.
       await expect(page.getByText('Todavía no configuraste GitLab')).toBeVisible();
@@ -200,7 +200,7 @@ test.describe('Tablero de merge requests', () => {
       // El usuario del recorrido es administrador, así que ve la tabla de usuarios.
       await page.getByRole('button', { name: 'Usuarios' }).click();
       await expect(page.getByRole('heading', { level: 2, name: 'Usuarios' })).toBeVisible();
-      await expect(page.getByRole('rowheader', { name: `@${e2eConfig.username}` })).toBeVisible();
+      await expect(page.getByRole('rowheader', { name: e2eConfig.email })).toBeVisible();
 
       await page.getByRole('button', { name: 'Tablero' }).click();
       await expect(page.getByRole('button', { name: 'Refrescar ahora' })).toBeEnabled();
@@ -221,7 +221,7 @@ test.describe('Tablero de merge requests', () => {
     await test.step('alguien invitado ve el mismo tablero sin cargar credenciales', async () => {
       await page.getByRole('button', { name: 'Crear una cuenta' }).click();
       await page.getByLabel('Código de invitación').fill(inviteCode);
-      await page.getByLabel('Usuario').fill(e2eConfig.guestUsername);
+      await page.getByLabel('Email').fill(e2eConfig.guestEmail);
       await page.getByLabel('Contraseña', { exact: true }).fill(e2eConfig.password);
       await page.getByLabel('Repetí la contraseña').fill(e2eConfig.password);
 

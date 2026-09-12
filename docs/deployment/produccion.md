@@ -26,7 +26,7 @@ En Vercel, crear un proyecto con `backend/` como Root Directory y dejar que dete
 
 Proporcionar las variables de entorno y almacenar `ENCRYPTION_KEY` como secreto. Los PAT de GitLab ya no son configuración del despliegue: los carga un administrador de cada cuenta desde «Mi cuenta» y se guardan cifrados en la base ([configuración de GitLab](../domains/configuracion-gitlab.md)).
 
-El login guarda usuarios, sesiones y la configuración de GitLab en la base Postgres de `DATABASE_URL`, alojada en Neon ([ADR 0009](../decisions/0009-neon-como-base-de-datos.md)). Al ser una base administrada, el despliegue ya no necesita volumen persistente y el sistema de archivos puede ser efímero. El esquema se aplica solo al arrancar. El primer usuario se crea registrándose en el tablero —queda administrador— o con `npm run users --prefix backend -- create <usuario>`, según el [dominio de autenticación](../domains/autenticacion.md).
+El login guarda usuarios, sesiones y la configuración de GitLab en la base Postgres de `DATABASE_URL`, alojada en Neon ([ADR 0009](../decisions/0009-neon-como-base-de-datos.md)). Al ser una base administrada, el despliegue ya no necesita volumen persistente y el sistema de archivos puede ser efímero. El esquema se aplica solo al arrancar. El primer usuario se crea registrándose en el tablero —queda administrador— o con `npm run users --prefix backend -- create <email>`, según el [dominio de autenticación](../domains/autenticacion.md).
 
 ## Operación
 

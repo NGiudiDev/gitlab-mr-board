@@ -290,7 +290,7 @@ function ActiveSection({
     )
   }
 
-  if (view === 'users') return <UserAdmin currentUsername={user.username} />
+  if (view === 'users') return <UserAdmin currentEmail={user.email} />
 
   // Sólo un admin puede mirar el tablero de otra persona; el resto ve el suyo.
   return (

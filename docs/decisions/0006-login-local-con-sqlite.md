@@ -11,7 +11,7 @@ Hacía falta una barrera de acceso con estado propio: quién puede entrar y qué
 
 ## Decisión
 
-Autenticar con usuario y contraseña propios del tablero, y persistir usuarios y sesiones en una base **SQLite local** abierta con el módulo `node:sqlite`, incluido en Node desde 22.13 sin flags.
+Autenticar con email y contraseña propios del tablero, y persistir usuarios y sesiones en una base **SQLite local** abierta con el módulo `node:sqlite`, incluido en Node desde 22.13 sin flags.
 
 - Las contraseñas se guardan derivadas con **scrypt** (`node:crypto`), con la sal y los parámetros dentro del propio hash.
 - La sesión viaja en una **cookie `HttpOnly`** y en la base sólo se guarda el hash SHA-256 del token.

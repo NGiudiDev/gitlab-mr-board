@@ -16,7 +16,7 @@ const TEST_ACCOUNT = {
 const TEST_USER = {
   id: 'usuario-1',
   accountId: TEST_ACCOUNT.id,
-  username: 'ana',
+  email: 'ana@example.com',
   displayName: 'Ana Pérez',
   role: 'user',
   gitlabUsername: 'ana-gitlab',

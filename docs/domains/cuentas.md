@@ -12,7 +12,7 @@ En la misma base Postgres de la [autenticación](autenticacion.md):
 - **`users.account_id`**: clave foránea obligatoria a `accounts`. Borrar una cuenta arrastra sus usuarios, y con ellos sus sesiones.
 - **`account_gitlab_settings`**: la [configuración de GitLab](configuracion-gitlab.md) de la cuenta.
 
-El `username` sigue siendo **único en toda la base** y no dentro de la cuenta: el login pide sólo usuario y contraseña, así que no habría con qué desambiguar dos personas con el mismo nombre en cuentas distintas.
+El `email` es **único en toda la base** y no dentro de la cuenta: identifica a la persona al iniciar sesión.
 
 ### Nombre
 
@@ -40,7 +40,7 @@ Quien tenga el código puede registrarse y ver los merge requests del equipo. Es
 | Pantalla de usuarios | Un `admin` | La suya, sin poder elegir otra | El que elija |
 | `npm run users -- create` | Quien tenga acceso al servidor | Una nueva, o la de `--invite` | `admin`, o el de `--role` |
 
-Que quien abre una cuenta quede su administrador es lo que permite que un equipo empiece a usar el tablero sin intervención de nadie. El alta valida el usuario y la contraseña **antes** de crear la cuenta, para que un nombre repetido no deje una cuenta sin nadie adentro.
+Que quien abre una cuenta quede su administrador es lo que permite que un equipo empiece a usar el tablero sin intervención de nadie. El alta valida el email y la contraseña **antes** de crear la cuenta, para que un email repetido no deje una cuenta sin nadie adentro.
 
 ## Qué puede cada rol
 
@@ -83,11 +83,12 @@ Los datos inválidos responden **HTTP 400** con el motivo en español; una cuent
 El esquema se aplica en cada arranque, así que la migración corre sola la primera vez ([ADR 0009](../decisions/0009-neon-como-base-de-datos.md)):
 
 1. Si hay usuarios sin cuenta, se crea **una sola** llamada «Mi equipo» y se los suma a todos: ya eran un equipo que miraba el mismo tablero.
-2. El `gitlab_username` de cada persona pasa de su vieja configuración a su usuario.
-3. La configuración de GitLab **guardada más recientemente** pasa a ser la de la cuenta.
-4. Se elimina la tabla `gitlab_settings`. Los demás access token quedaban de más —ahora hay uno por cuenta— y no tiene sentido conservarlos cifrados sin que nada los use.
+2. Si todavía existe `users.username`, se renombra a `email` conservando su valor para que nadie pierda el acceso antes de actualizarlo desde «Mi perfil».
+3. El `gitlab_username` de cada persona pasa de su vieja configuración a su usuario.
+4. La configuración de GitLab **guardada más recientemente** pasa a ser la de la cuenta.
+5. Se elimina la tabla `gitlab_settings`. Los demás access token quedaban de más —ahora hay uno por cuenta— y no tiene sentido conservarlos cifrados sin que nada los use.
 
-El paso 4 descarta datos, así que conviene saberlo antes del primer arranque: si la configuración que tiene que quedar no es la última guardada, alcanza con que quien corresponda guarde la suya de nuevo justo antes de actualizar. Después del cambio, cualquier `admin` la puede volver a cargar desde «Mi cuenta».
+El paso 5 descarta datos, así que conviene saberlo antes del primer arranque: si la configuración que tiene que quedar no es la última guardada, alcanza con que quien corresponda guarde la suya de nuevo justo antes de actualizar. Después del cambio, cualquier `admin` la puede volver a cargar desde «Mi cuenta».
 
 Un arranque posterior no repite nada: ya no quedan usuarios sin cuenta ni tabla vieja que leer.
 

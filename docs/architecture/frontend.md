@@ -50,12 +50,12 @@ App
 ```
 
 - `AppShell` presenta la barra superior con el nombre del tablero, la navegación principal y el avatar que abre el menú de cuenta, y envuelve el contenido en el único `main` de la aplicación. «Mi perfil» se abre desde «Editar perfil» y «Mi cuenta» desde «Editar cuenta» —o «Ver cuenta» sin permisos de escritura—; ninguna ocupa un botón propio en la barra. La barra aparece sólo con la sesión abierta, porque el ingreso y el alta son pantallas completas con su propio encabezado principal.
-- `LoginForm` pide usuario y contraseña, muestra el error que devuelve el backend y ofrece pasar al alta.
+- `LoginForm` pide email y contraseña, muestra el error que devuelve el backend y ofrece pasar al alta.
 - `RegisterForm` da de alta la persona y elige entre sus dos caminos excluyentes: sumarse a un equipo con su código de invitación, o abrir uno nuevo. Valida en el navegador las mismas reglas que el backend para avisar antes de enviar.
-- `AccountMenu` concentra detrás de un avatar el nombre visible, el usuario, el equipo, los accesos separados al perfil y a la cuenta, y el cierre de sesión. Se cierra al elegir una acción, al interactuar fuera o con `Escape`, que devuelve el foco al avatar.
+- `AccountMenu` concentra detrás de un avatar el nombre visible, el email, el equipo, los accesos separados al perfil y a la cuenta, y el cierre de sesión. Se cierra al elegir una acción, al interactuar fuera o con `Escape`, que devuelve el foco al avatar.
 - `AccountPanel` presenta el equipo: su nombre, cuánta gente lo integra y, para un `admin`, el código de invitación y su renovación.
 - `GitlabSettingsForm` resuelve los IDs de los proyectos y el access token de la cuenta. Sólo los edita un `admin`; al resto le presenta la configuración vigente en modo lectura. El campo del token arranca vacío en cada visita, porque el backend nunca lo devuelve: dejarlo así conserva el guardado.
-- `ProfilePanel` permite cambiar el nombre visible y el nombre de usuario propios desde una tarjeta de «Mi perfil» y comunica el resultado sin sacar a la persona de la pantalla.
+- `ProfilePanel` permite cambiar el nombre visible y el email propios desde «Mi perfil» y comunica el resultado sin sacar a la persona de la pantalla.
 - `GitlabIdentityPanel` resuelve en «Mi cuenta» el nickname de GitLab propio, lo precarga desde la sesión y permite actualizarlo; de él depende la vista personal.
 - `PasswordPanel` resuelve el cambio de la propia contraseña.
 - `UserAdmin` lista los usuarios de la cuenta y permite dar de alta, habilitar y deshabilitar. No ofrece restablecer contraseñas: eso se hace por línea de comandos.

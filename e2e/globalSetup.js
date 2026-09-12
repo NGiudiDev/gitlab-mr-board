@@ -51,9 +51,9 @@ export default function globalSetup() {
   // El invitado se borra primero: se da de alta durante el recorrido con el
   // código de la cuenta, y sin borrarlo la corrida siguiente choca con su
   // nombre ya tomado.
-  const removedGuest = runUsersCommand(['delete', e2eConfig.guestUsername]);
+  const removedGuest = runUsersCommand(['delete', e2eConfig.guestEmail]);
   const removed = removedGuest.status === 0
-    ? runUsersCommand(['delete', e2eConfig.username])
+    ? runUsersCommand(['delete', e2eConfig.email])
     : removedGuest;
 
   if (removed.status !== 0) {
@@ -70,7 +70,7 @@ export default function globalSetup() {
   // GitLab y llegar a la pantalla de usuarios.
   const created = runUsersCommand(
     [
-      'create', e2eConfig.username,
+      'create', e2eConfig.email,
       '--name', 'Usuario E2E',
       '--account', e2eConfig.accountName,
     ],

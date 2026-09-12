@@ -255,11 +255,11 @@ describe('caché de GET /api/pull-requests', () => {
     });
     const other = await authService.createUser({
       accountId: account.id,
-      username: 'bruno',
+      email: 'bruno@example.com',
       password: TEST_PASSWORD,
     });
     await authService.changeGitlabUsername(other.id, 'bruno-gitlab');
-    const { token } = await authService.login({ username: 'bruno', password: TEST_PASSWORD });
+    const { token } = await authService.login({ email: 'bruno@example.com', password: TEST_PASSWORD });
 
     const mine = await get('/api/pull-requests');
     const theirs = await get('/api/pull-requests', `${SESSION_COOKIE_NAME}=${token}`);
@@ -282,14 +282,14 @@ describe('caché de GET /api/pull-requests', () => {
     const otherAccount = await accountService.create('Otro equipo');
     await authService.createUser({
       accountId: otherAccount.id,
-      username: 'beto',
+      email: 'beto@example.com',
       password: TEST_PASSWORD,
     });
     await gitlabSettingsService.save(otherAccount.id, {
       projectIds: ['303'],
       accessToken: TEST_TOKEN,
     });
-    const { token } = await authService.login({ username: 'beto', password: TEST_PASSWORD });
+    const { token } = await authService.login({ email: 'beto@example.com', password: TEST_PASSWORD });
 
     await get('/api/pull-requests');
     await get('/api/pull-requests', `${SESSION_COOKIE_NAME}=${token}`);

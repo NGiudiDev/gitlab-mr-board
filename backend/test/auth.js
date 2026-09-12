@@ -1,5 +1,5 @@
 // 4. Módulos de constantes.
-import { TEST_ACCOUNT_NAME, TEST_DISPLAY_NAME, TEST_ENCRYPTION_KEY, TEST_GITLAB_USERNAME, TEST_PASSWORD, TEST_PROJECT_IDS, TEST_TOKEN, TEST_USERNAME } from './constants.js';
+import { TEST_ACCOUNT_NAME, TEST_DISPLAY_NAME, TEST_EMAIL, TEST_ENCRYPTION_KEY, TEST_GITLAB_USERNAME, TEST_PASSWORD, TEST_PROJECT_IDS, TEST_TOKEN } from './constants.js';
 
 // 5. Utilidades.
 import { createSecretCipher } from '../src/features/gitlabSettings/utils/encryption.js';
@@ -73,7 +73,7 @@ async function createEmptyServices() {
  *
  * @param role Rol del usuario de prueba; `admin` para las rutas de gestión.
  * @returns Servicios y la cuenta creada, lista para iniciar sesión con
- * `TEST_USERNAME`.
+ * `TEST_EMAIL`.
  */
 async function createTestServicesWithUser(role = 'user') {
   const services = await createEmptyServices();
@@ -81,7 +81,7 @@ async function createTestServicesWithUser(role = 'user') {
 
   await services.authService.createUser({
     accountId: account.id,
-    username: TEST_USERNAME,
+    email: TEST_EMAIL,
     password: TEST_PASSWORD,
     displayName: TEST_DISPLAY_NAME,
     role,
@@ -106,7 +106,7 @@ async function createAuthenticatedApp(options = {}, role = 'user') {
   const { account, accountService, authService, gitlabSettingsService } = await createTestServicesWithUser(role);
 
   const { user, token } = await authService.login({
-    username: TEST_USERNAME,
+    email: TEST_EMAIL,
     password: TEST_PASSWORD,
   });
 

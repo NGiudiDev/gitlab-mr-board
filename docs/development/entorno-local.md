@@ -60,7 +60,7 @@ El tablero exige sesión. En una instalación nueva alcanza con abrir el fronten
 Si preferís crearlo por línea de comandos, desde la raíz:
 
 ```bash
-npm run users --prefix backend -- create ana --name "Ana Pérez" --role admin
+npm run users --prefix backend -- create ana@example.com --name "Ana Pérez" --role admin
 ```
 
 La contraseña se pide por teclado. El esquema se crea solo en la base de `DATABASE_URL`; para empezar de cero, lo más rápido es descartar la rama de Neon y crear otra. Los tres caminos de alta, los subcomandos —incluido `delete`, que borra un usuario con sus sesiones y su configuración de GitLab— y las reglas de contraseñas están en el [dominio de autenticación](../domains/autenticacion.md).

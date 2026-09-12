@@ -22,7 +22,7 @@ Cada usuario pertenece a una **cuenta**, que es la que comparte el tablero y sus
 | `PATCH /api/account` y `POST /api/account/invite-code` | Sesión con rol `admin` |
 | `PUT` y `DELETE /api/gitlab-settings` | Sesión con rol `admin` |
 | `GET` y `POST /api/users` | Sesión con rol `admin`; sólo alcanzan a la cuenta propia |
-| `PATCH /api/users/:username/status` | Sesión con rol `admin`; sólo alcanza a la cuenta propia |
+| `PATCH /api/users/:email/status` | Sesión con rol `admin`; sólo alcanza a la cuenta propia |
 
 Sin sesión válida, las rutas protegidas responden **HTTP 401** con `{ "error": "Iniciá sesión para ver el tablero." }`. Con sesión pero sin permisos, **HTTP 403**. Sobre un usuario de otra cuenta, **HTTP 404**: para quien administra, ese usuario no existe.
 
@@ -34,19 +34,21 @@ La separación de permisos se valida en el backend, ruta por ruta. Que la interf
 
 La base Postgres vive en Neon, en la instancia que indica `DATABASE_URL`, y tiene cuatro tablas; las dos de la autenticación son:
 
-- **`users`**: `id`, `account_id`, `username`, `display_name`, `password_hash`, `role`, `status`, `gitlab_username`, `created_at`, `last_login_at`. Las dos marcas temporales son `TIMESTAMPTZ` y el dominio las expone como cadenas ISO.
+- **`users`**: `id`, `account_id`, `email`, `display_name`, `password_hash`, `role`, `status`, `gitlab_username`, `created_at`, `last_login_at`. Las dos marcas temporales son `TIMESTAMPTZ` y el dominio las expone como cadenas ISO.
 - **`sessions`**: `id`, `user_id`, `token_hash`, `created_at`, `expires_at`. Se borran en cascada al eliminar el usuario.
 
 Las otras dos, `accounts` y `account_gitlab_settings`, pertenecen al [dominio de cuentas](cuentas.md) y a la [configuración de GitLab](configuracion-gitlab.md).
 
 El esquema se aplica en cada arranque con sentencias `IF NOT EXISTS`, así que no hay una herramienta de migraciones. Los cambios de forma que eso no cubre —como el paso a cuentas— van como sentencias idempotentes en la misma lista.
 
-### Usuario
+Al actualizar una instalación que todavía tiene `users.username`, el esquema renombra esa columna a `email` y conserva las sesiones y los identificadores existentes. Esos valores anteriores siguen sirviendo para un primer ingreso; al guardar el perfil se exige reemplazarlos por un email válido. Las altas nuevas siempre requieren email.
 
-- El `username` se normaliza a minúsculas y sin espacios: `Ana` y `ana` son la misma persona.
-- Debe tener entre 3 y 32 caracteres, y sólo letras, números, punto, guion o guion bajo.
-- Es **único en toda la base**, no dentro de la cuenta: el login pide sólo usuario y contraseña, así que no habría con qué desambiguar.
-- Cada persona puede cambiar su nombre visible y su `username` desde el menú del avatar. La sesión continúa abierta porque referencia el ID inmutable; si cambia el `username`, debe usar el nuevo en el próximo ingreso.
+### Email
+
+- El `email` se normaliza a minúsculas y sin espacios en los extremos: `Ana@Example.com` y `ana@example.com` son la misma persona.
+- Debe tener formato de email y no puede superar los 254 caracteres.
+- Es **único en toda la base**, no dentro de la cuenta: identifica a la persona al iniciar sesión.
+- Cada persona puede cambiar su nombre visible y su email desde el menú del avatar. La sesión continúa abierta porque referencia el ID inmutable; si cambia el email, debe usar el nuevo en el próximo ingreso.
 - `account_id` es obligatorio: no hay usuarios sin cuenta.
 - `role` vale `user` o `admin`, y siempre **dentro de su cuenta**. Ambos roles ven el mismo tablero; el detalle de qué puede cada uno está en el [dominio de cuentas](cuentas.md#qué-puede-cada-rol).
 - `status` vale `active` o `disabled`. Deshabilitar corta el acceso de inmediato, incluso el de las sesiones ya emitidas.
@@ -64,7 +66,7 @@ El esquema se aplica en cada arranque con sentencias `IF NOT EXISTS`, así que n
 
 - Mínimo 8 caracteres.
 - Se guarda derivada con scrypt, con formato `scrypt$N$r$p$sal$clave`. La sal es distinta en cada alta y los parámetros viajan en el propio hash, para poder endurecerlos sin invalidar lo ya guardado.
-- La comparación es de tiempo constante. Cuando el usuario no existe igual se deriva una clave descartable, de modo que el tiempo de respuesta no revele qué nombres están dados de alta.
+- La comparación es de tiempo constante. Cuando el email no existe igual se deriva una clave descartable, de modo que el tiempo de respuesta no revele qué emails están registrados.
 - Cambiar la contraseña cierra todas las sesiones abiertas de esa persona.
 
 ### Sesión
@@ -76,7 +78,7 @@ El esquema se aplica en cada arranque con sentencias `IF NOT EXISTS`, así que n
 
 ### Freno de fuerza bruta
 
-Cinco intentos fallidos seguidos sobre el mismo nombre de usuario bloquean el ingreso durante 15 minutos, con **HTTP 429**. El contador vive en memoria del proceso: se reinicia al reiniciar el backend, y es una defensa contra el ensayo automático, no contra un atacante con acceso al servidor.
+Cinco intentos fallidos seguidos sobre el mismo email bloquean el ingreso durante 15 minutos, con **HTTP 429**. El contador vive en memoria del proceso: se reinicia al reiniciar el backend, y es una defensa contra el ensayo automático, no contra un atacante con acceso al servidor.
 
 ## Altas
 
@@ -102,7 +104,7 @@ La barra superior ofrece el tablero y, para un `admin`, la administración de us
 
 - **«Mi perfil»**, desde «Editar perfil», reúne el perfil propio y el cambio de la propia contraseña indicando la actual como confirmación. Al cambiar la contraseña se cierran todas sus sesiones y la app vuelve al ingreso.
 - **«Mi cuenta»**, desde «Editar cuenta» para un `admin` o «Ver cuenta» para el resto, reúne el equipo y su invitación ([cuentas](cuentas.md#pantalla-mi-equipo)), la configuración de GitLab compartida ([configuración de GitLab](configuracion-gitlab.md)) y el nickname personal de GitLab. Sólo un `admin` puede modificar los datos compartidos; cada persona puede cambiar su nickname.
-- **«Usuarios»**, sólo para un `admin`, lista **los usuarios de su cuenta** con su rol, estado y último ingreso, y permite dar de alta, habilitar y deshabilitar. Restablecer una contraseña ajena quedó fuera de la interfaz: se hace con `npm run users -- password <usuario>`.
+- **«Usuarios»**, sólo para un `admin`, lista **los usuarios de su cuenta** con su email, rol, estado y último ingreso, y permite dar de alta, habilitar y deshabilitar. Restablecer una contraseña ajena quedó fuera de la interfaz: se hace con `npm run users -- password <email>`.
 
 Deshabilitar la propia cuenta está impedido: dejaría a la cuenta sin ningún administrador si es el único, y en cualquier caso cerraría la sesión en curso.
 
@@ -111,18 +113,18 @@ Deshabilitar la propia cuenta está impedido: dejaría a la cuenta sin ningún a
 La línea de comandos sigue siendo el camino de recuperación cuando nadie puede entrar.
 
 ```bash
-npm run users --prefix backend -- create ana --name "Ana Pérez" --account "Mi equipo"
+npm run users --prefix backend -- create ana@example.com --name "Ana Pérez" --account "Mi equipo"
 ```
 
 | Subcomando | Efecto |
 |---|---|
-| `create <usuario> [--name "Nombre"] [--account "Cuenta"]` | Abre una cuenta nueva y deja al usuario como su administrador |
-| `create <usuario> --invite <código> [--name "Nombre"] [--role admin]` | Suma al usuario a la cuenta de ese código |
-| `password <usuario>` | Cambia la contraseña y cierra sus sesiones |
-| `disable <usuario>` | Corta el acceso, incluidas las sesiones abiertas |
-| `enable <usuario>` | Vuelve a habilitarlo |
-| `delete <usuario>` | Lo borra junto con sus sesiones; no falla si no existe |
-| `list` | Lista usuario, rol, estado, cuenta y nombre visible de toda la base |
+| `create <email> [--name "Nombre"] [--account "Cuenta"]` | Abre una cuenta nueva y deja al usuario como su administrador |
+| `create <email> --invite <código> [--name "Nombre"] [--role admin]` | Suma al usuario a la cuenta de ese código |
+| `password <email>` | Cambia la contraseña y cierra sus sesiones |
+| `disable <email>` | Corta el acceso, incluidas las sesiones abiertas |
+| `enable <email>` | Vuelve a habilitarlo |
+| `delete <email>` | Lo borra junto con sus sesiones; no falla si no existe |
+| `list` | Lista email, rol, estado, cuenta y nombre visible de toda la base |
 | `accounts` | Lista las cuentas con su código de invitación y cuánta gente las integra |
 
 `accounts` es el camino para recuperar un código de invitación cuando no queda nadie que pueda entrar a verlo. Borrar es la única operación que quita datos de forma irreversible; la interfaz no la ofrece, porque para cortar el acceso alcanza con deshabilitar, que además conserva el historial. Borrar al último miembro de una cuenta la deja vacía: nadie puede entrar a ella, y su configuración de GitLab queda intacta por si se suma alguien con el código.
@@ -137,7 +139,7 @@ El estado de la sesión vive en el store `features/auth/hooks/useSession.js`, co
 
 1. Al abrir la app se consulta `GET /api/auth/me`. Mientras tanto se muestra «Verificando tu sesión...», para no hacer parpadear el formulario.
 2. Sin sesión se presenta `LoginForm`, que ofrece cambiar a `RegisterForm`; ese formulario elige entre sumarse a un equipo con su código o abrir uno nuevo. Con sesión, el tablero, que recién se monta autenticado para que el polling no dispare peticiones que el backend vaya a rechazar.
-3. `AccountMenu` reúne detrás de un avatar quién está conectado, su usuario, el equipo, los accesos separados a «Mi perfil» y «Mi cuenta», y la acción para cerrar sesión; al cerrarla se descartan también los datos del tablero y de la cuenta. La navegación visible del layout ofrece el tablero y, según el rol, `UserAdmin`, según la [arquitectura del frontend](../architecture/frontend.md#navegación-entre-secciones).
+3. `AccountMenu` reúne detrás de un avatar quién está conectado, su email, el equipo, los accesos separados a «Mi perfil» y «Mi cuenta», y la acción para cerrar sesión; al cerrarla se descartan también los datos del tablero y de la cuenta. La navegación visible del layout ofrece el tablero y, según el rol, `UserAdmin`, según la [arquitectura del frontend](../architecture/frontend.md#navegación-entre-secciones).
 4. Si el tablero recibe un 401, el store da la sesión por terminada y la app vuelve al login con el aviso correspondiente.
 
 La lista de usuarios es lo único que no vive en un store compartido: la consume una sola pantalla, así que `useUsers` la mantiene en estado local.

@@ -11,18 +11,18 @@ const TEST_ENCRYPTION_KEY = 'clave-de-cifrado-solo-para-los-test';
 
 /** Cuenta y credenciales que crean los helpers de `test/auth.ts`. */
 const TEST_ACCOUNT_NAME = 'Equipo de prueba';
-const TEST_USERNAME = 'ana';
 const TEST_DISPLAY_NAME = 'Ana Prueba';
+const TEST_EMAIL = 'ana@example.com';
 const TEST_PASSWORD = 'contrasena-de-prueba';
 
 export {
   TEST_ACCOUNT_NAME,
   TEST_BASE_URL,
   TEST_DISPLAY_NAME,
+  TEST_EMAIL,
   TEST_ENCRYPTION_KEY,
   TEST_GITLAB_USERNAME,
   TEST_PASSWORD,
   TEST_PROJECT_IDS,
   TEST_TOKEN,
-  TEST_USERNAME,
 };

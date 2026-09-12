@@ -10,8 +10,8 @@ function renderLoginForm(props = {}) {
   return render(<LoginForm {...props} />)
 }
 
-function usernameField() {
-  return screen.getByLabelText('Usuario')
+function emailField() {
+  return screen.getByLabelText('Email')
 }
 
 function passwordField() {
@@ -27,7 +27,7 @@ describe('LoginForm', () => {
     renderLoginForm()
 
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Tablero de MRs')
-    expect(usernameField()).toBeDefined()
+    expect(emailField()).toBeDefined()
     expect(passwordField()).toBeDefined()
   })
 
@@ -40,7 +40,7 @@ describe('LoginForm', () => {
   it('ayuda al gestor de contraseñas con los autocomplete correctos', () => {
     renderLoginForm()
 
-    expect(usernameField().getAttribute('autocomplete')).toBe('username')
+    expect(emailField().getAttribute('autocomplete')).toBe('email')
     expect(passwordField().getAttribute('autocomplete')).toBe('current-password')
   })
 
@@ -48,28 +48,28 @@ describe('LoginForm', () => {
     const onSubmit = vi.fn()
     renderLoginForm({ onSubmit })
 
-    await userEvent.type(usernameField(), 'ana')
+    await userEvent.type(emailField(), 'ana@example.com')
     await userEvent.type(passwordField(), 'contrasena-de-prueba')
     await userEvent.click(submitButton())
 
-    expect(onSubmit).toHaveBeenCalledWith({ username: 'ana', password: 'contrasena-de-prueba' })
+    expect(onSubmit).toHaveBeenCalledWith({ email: 'ana@example.com', password: 'contrasena-de-prueba' })
   })
 
-  it('recorta los espacios sobrantes del usuario', async () => {
+  it('recorta los espacios sobrantes del email', async () => {
     const onSubmit = vi.fn()
     renderLoginForm({ onSubmit })
 
-    await userEvent.type(usernameField(), '  ana  ')
+    await userEvent.type(emailField(), '  ana@example.com  ')
     await userEvent.type(passwordField(), 'contrasena-de-prueba')
     await userEvent.click(submitButton())
 
-    expect(onSubmit).toHaveBeenCalledWith({ username: 'ana', password: 'contrasena-de-prueba' })
+    expect(onSubmit).toHaveBeenCalledWith({ email: 'ana@example.com', password: 'contrasena-de-prueba' })
   })
 
   it('anuncia el error como alerta y no sólo con color', () => {
-    renderLoginForm({ error: 'Usuario o contraseña incorrectos.' })
+    renderLoginForm({ error: 'Email o contraseña incorrectos.' })
 
-    expect(screen.getByRole('alert').textContent).toBe('Usuario o contraseña incorrectos.')
+    expect(screen.getByRole('alert').textContent).toBe('Email o contraseña incorrectos.')
   })
 
   it('no muestra ninguna alerta cuando no hay error', () => {
@@ -88,7 +88,7 @@ describe('LoginForm', () => {
   it('no falla si se envía sin recibir un manejador', async () => {
     renderLoginForm()
 
-    await userEvent.type(usernameField(), 'ana')
+    await userEvent.type(emailField(), 'ana@example.com')
     await userEvent.type(passwordField(), 'contrasena-de-prueba')
 
     await expect(userEvent.click(submitButton())).resolves.toBeUndefined()

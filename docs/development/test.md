@@ -104,12 +104,13 @@ Los E2E corren contra GitLab real, así que necesitan estas variables. Copiar `.
 | `E2E_MR_COLUMN` | Sí | Columna donde debe aparecer ese merge request |
 | `E2E_DATABASE_URL` | Sí | Base de Neon dedicada a test; el usuario del recorrido se borra y se recrea en cada corrida |
 | `E2E_GITLAB_BASE_URL` | No | Instancia de GitLab; por omisión `https://gitlab.com` |
+| `E2E_EMAIL` | No | Email del usuario del recorrido; por omisión `e2e@example.com` |
 
 Usar proyectos creados para test, nunca los de trabajo real: el recorrido depende de que ese merge request siga abierto y en su columna.
 
 Playwright levanta ambos servicios con `webServer`, sin reutilizar procesos existentes: el backend en el puerto 3101 con una `ENCRYPTION_KEY` fija —la base es descartable—, y el build del frontend servido con `vite preview` en 4173, uno de los dos orígenes que acepta el CORS del backend.
 
-Antes de levantarlos, `e2e/globalSetup.js` borra y vuelve a crear con `npm run users` el usuario del recorrido —y borra el invitado que ese recorrido da de alta—, para que cada corrida arranque siempre igual: el usuario se recrea con una cuenta nueva, sin proyectos ni token. Sólo toca esos dos usuarios, nunca el resto de la base; las cuentas de corridas anteriores quedan vacías y sin nadie que pueda entrar. `E2E_DATABASE_URL` es obligatoria y nunca cae en `DATABASE_URL`, para que un descuido no toque la base de trabajo. Las credenciales se pueden cambiar con `E2E_USERNAME` y `E2E_PASSWORD`.
+Antes de levantarlos, `e2e/globalSetup.js` borra y vuelve a crear con `npm run users` el usuario del recorrido —y borra el invitado que ese recorrido da de alta—, para que cada corrida arranque siempre igual: el usuario se recrea con una cuenta nueva, sin proyectos ni token. Sólo toca esos dos usuarios, nunca el resto de la base; las cuentas de corridas anteriores quedan vacías y sin nadie que pueda entrar. `E2E_DATABASE_URL` es obligatoria y nunca cae en `DATABASE_URL`, para que un descuido no toque la base de trabajo. Las credenciales se pueden cambiar con `E2E_EMAIL` y `E2E_PASSWORD`.
 
 El recorrido crítico ingresa con ese usuario, comprueba que el tablero reclame la configuración de GitLab, carga `GITLAB_TOKEN`, `E2E_PROJECT_IDS` y su nickname con `E2E_GITLAB_USERNAME` en «Mi cuenta», y espera una respuesta real de GitLab; después expande el proyecto configurado, verifica la columna y los bloqueadores del merge request conocido, fuerza una actualización que omite la caché, recorre los controles principales con teclado hasta la vista personal, comprueba las dos pantallas del dropdown y que el nickname guardado siga precargado, copia el código de invitación, cierra la sesión comprobando que recargar no devuelva el tablero y, con ese código, da de alta un segundo usuario que ve el mismo tablero sin cargar ninguna credencial.
 

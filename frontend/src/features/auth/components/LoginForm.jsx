@@ -17,12 +17,12 @@ function LoginForm({
   onSubmit = () => {},
   onShowRegister = () => {},
 }) {
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
   function handleSubmit(event) {
     event.preventDefault()
-    onSubmit({ username: username.trim(), password })
+    onSubmit({ email: email.trim(), password })
   }
 
   return (
@@ -34,7 +34,7 @@ function LoginForm({
       <h1 id="login-heading" className="text-lg font-semibold text-text-primary mb-1">
         Tablero de MRs
       </h1>
-      <p className="text-[12.5px] text-text-muted mb-5">Ingresá con tu usuario para ver el tablero.</p>
+      <p className="text-[12.5px] text-text-muted mb-5">Ingresá con tu email para ver el tablero.</p>
 
       {error ? (
         <p role="alert" className="mb-4 rounded-md border border-conflict bg-conflict-soft px-3 py-2 text-[12.5px] text-text-primary">
@@ -48,15 +48,16 @@ function LoginForm({
         </p>
       ) : null}
 
-      <label className={LABEL_CLASSES} htmlFor="login-username">
-        Usuario
+      <label className={LABEL_CLASSES} htmlFor="login-email">
+        Email
         <input
-          id="login-username"
-          name="username"
+          id="login-email"
+          name="email"
           type="text"
-          value={username}
-          onChange={(event) => setUsername(event.target.value)}
-          autoComplete="username"
+          inputMode="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          autoComplete="email"
           autoCapitalize="none"
           spellCheck="false"
           required

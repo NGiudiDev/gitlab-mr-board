@@ -17,7 +17,7 @@ Se introduce la **cuenta** como unidad que comparte un tablero. Cada usuario per
 - `gitlab_settings` se reemplaza por `account_gitlab_settings`, con `account_id` como clave primaria. **Sólo un `admin` de la cuenta** puede escribirla; cualquier miembro puede leerla, porque necesita saber si el tablero ya tiene de dónde alimentarse.
 - El **nickname de GitLab pasa a `users`**: es la identidad de cada persona dentro de GitLab y de él depende la [vista personal](../domains/vista-personal.md). Es el único dato de GitLab que sigue cargando cada uno.
 - **Quien se registra sin código de invitación crea una cuenta nueva y queda su administrador.** Con código, se suma a esa cuenta con rol `user`. El código lo ve y lo renueva un `admin` desde «Mi cuenta».
-- La administración de usuarios queda **acotada a la cuenta** de quien administra. El `username` sigue siendo único en toda la base —el login pide sólo usuario y contraseña, así que no hay con qué desambiguar—, y por eso cada operación comprueba además que el usuario pertenezca a la cuenta.
+- La administración de usuarios queda **acotada a la cuenta** de quien administra. El `email` es único en toda la base y cada operación comprueba además que el usuario pertenezca a la cuenta.
 - La caché del tablero pasa a ser **por cuenta**: una consulta a GitLab alcanza para todo el equipo. Lo único propio de cada persona es `meta.viewerUsername`, que la ruta completa al responder.
 
 El modelo y las reglas se documentan en el [dominio de cuentas](../domains/cuentas.md).

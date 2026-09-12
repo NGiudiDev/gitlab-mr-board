@@ -128,7 +128,7 @@ Devuelve el estado del proceso. Sirve como chequeo de vida, pero no comprueba la
 
 ### `/api/auth/*`
 
-Administran la sesión y los datos propios. `register` da de alta un usuario y abre su sesión, sumándolo a la cuenta de `inviteCode` o creando una nueva con `accountName`; `login` recibe `{ username, password }` y responde con el usuario, entregando el token en una cookie `HttpOnly`; `logout` la invalida; `me` devuelve el usuario de la sesión vigente; `profile` cambia el nombre visible y el identificador propios sin cerrar la sesión; `password` cambia la contraseña propia exigiendo la actual; `gitlab-username` guarda el nickname de GitLab propio sin cerrar la sesión.
+Administran la sesión y los datos propios. `register` da de alta un usuario y abre su sesión, sumándolo a la cuenta de `inviteCode` o creando una nueva con `accountName`; `login` recibe `{ email, password }` y responde con el usuario, entregando el token en una cookie `HttpOnly`; `logout` la invalida; `me` devuelve el usuario de la sesión vigente; `profile` cambia el nombre visible y el email propios sin cerrar la sesión; `password` cambia la contraseña propia exigiendo la actual; `gitlab-username` guarda el nickname de GitLab propio sin cerrar la sesión.
 
 ### `/api/account`
 
@@ -136,7 +136,7 @@ La cuenta de la sesión: su nombre, cuánta gente la integra y, sólo para un `a
 
 ### `/api/users/*`
 
-Administración de usuarios: listado, alta con rol, habilitación y deshabilitación. Exigen rol `admin`, no sólo sesión, y alcanzan **sólo a la cuenta de quien administra**: el `username` es único en toda la base, así que sin ese límite un administrador llegaría a los usuarios de otra cuenta. Sobre alguien de otra cuenta responden 404.
+Administración de usuarios: listado, alta con rol, habilitación y deshabilitación. Exigen rol `admin`, no sólo sesión, y alcanzan **sólo a la cuenta de quien administra**: el `email` es único en toda la base, así que sin ese límite un administrador llegaría a los usuarios de otra cuenta. Sobre alguien de otra cuenta responden 404.
 
 No hay ruta para restablecer la contraseña de otra persona: fijarle la contraseña a alguien equivale a poder entrar como esa persona, así que la operación quedó sólo en `npm run users -- password`, que exige acceso al servidor.
 

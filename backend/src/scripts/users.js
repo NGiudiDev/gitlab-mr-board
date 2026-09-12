@@ -12,12 +12,12 @@ import { applySchema, createNeonDatabase } from '../shared/database.js';
 
 const USAGE = `Gestión de cuentas y usuarios del tablero.
 
-  npm run users --prefix backend -- create <usuario> [--name "Nombre visible"] [--account "Nombre de la cuenta"]
-  npm run users --prefix backend -- create <usuario> --invite <código> [--name "Nombre visible"] [--role admin]
-  npm run users --prefix backend -- password <usuario>
-  npm run users --prefix backend -- disable <usuario>
-  npm run users --prefix backend -- enable <usuario>
-  npm run users --prefix backend -- delete <usuario>
+  npm run users --prefix backend -- create <email> [--name "Nombre visible"] [--account "Nombre de la cuenta"]
+  npm run users --prefix backend -- create <email> --invite <código> [--name "Nombre visible"] [--role admin]
+  npm run users --prefix backend -- password <email>
+  npm run users --prefix backend -- disable <email>
+  npm run users --prefix backend -- enable <email>
+  npm run users --prefix backend -- delete <email>
   npm run users --prefix backend -- list
   npm run users --prefix backend -- accounts
 
@@ -153,9 +153,9 @@ async function askNewPassword() {
  * `--invite` se suma a la cuenta de ese código y el rol lo decide `--role`.
  */
 async function createUserCommand(authService, accountService, args) {
-  const username = args[0];
-  if (!username || username.startsWith('--')) {
-    throw new Error('Indicá el nombre de usuario. Ejemplo: create ana --account "Mi equipo"');
+  const email = args[0];
+  if (!email || email.startsWith('--')) {
+    throw new Error('Indicá el email. Ejemplo: create ana@example.com --account "Mi equipo"');
   }
 
   const inviteCode = readOption(args, 'invite');
@@ -166,13 +166,13 @@ async function createUserCommand(authService, accountService, args) {
 
   const user = await authService.createUser({
     accountId: account.id,
-    username,
+    email,
     password: await askNewPassword(),
     displayName: readOption(args, 'name'),
     role: role,
   });
 
-  console.log(`Usuario «${user.username}» creado con el rol ${user.role} en la cuenta «${account.name}».`);
+  console.log(`Usuario «${user.email}» creado con el rol ${user.role} en la cuenta «${account.name}».`);
   if (!inviteCode) {
     console.log(`Código de invitación de la cuenta: ${account.inviteCode}`);
   }
@@ -180,42 +180,42 @@ async function createUserCommand(authService, accountService, args) {
 
 /** Cambia la contraseña de un usuario existente y cierra sus sesiones. */
 async function changePasswordCommand(authService, args) {
-  const username = args[0];
-  if (!username) {
-    throw new Error('Indicá el nombre de usuario. Ejemplo: password ana');
+  const email = args[0];
+  if (!email) {
+    throw new Error('Indicá el email. Ejemplo: password ana@example.com');
   }
 
-  await authService.changePassword(username, await askNewPassword());
+  await authService.changePassword(email, await askNewPassword());
 
-  console.log(`Contraseña actualizada. Se cerraron las sesiones abiertas de «${username}».`);
+  console.log(`Contraseña actualizada. Se cerraron las sesiones abiertas de «${email}».`);
 }
 
 /** Habilita o deshabilita el acceso de un usuario. */
 async function setStatusCommand(authService, args, status) {
-  const username = args[0];
-  if (!username) {
-    throw new Error('Indicá el nombre de usuario. Ejemplo: disable ana');
+  const email = args[0];
+  if (!email) {
+    throw new Error('Indicá el email. Ejemplo: disable ana@example.com');
   }
 
-  const user = await authService.setUserStatus(username, status);
+  const user = await authService.setUserStatus(email, status);
 
   console.log(status === 'disabled'
-    ? `Usuario «${user.username}» deshabilitado. Se cerraron sus sesiones abiertas.`
-    : `Usuario «${user.username}» habilitado de nuevo.`);
+    ? `Usuario «${user.email}» deshabilitado. Se cerraron sus sesiones abiertas.`
+    : `Usuario «${user.email}» habilitado de nuevo.`);
 }
 
 /** Borra un usuario junto con sus sesiones. */
 async function deleteUserCommand(authService, args) {
-  const username = args[0];
-  if (!username) {
-    throw new Error('Indicá el nombre de usuario. Ejemplo: delete ana');
+  const email = args[0];
+  if (!email) {
+    throw new Error('Indicá el email. Ejemplo: delete ana@example.com');
   }
 
-  const deleted = await authService.deleteUser(username);
+  const deleted = await authService.deleteUser(email);
 
   console.log(deleted
-    ? `Usuario «${username}» borrado, junto con sus sesiones.`
-    : `No existía el usuario «${username}»; no había nada que borrar.`);
+    ? `Usuario «${email}» borrado, junto con sus sesiones.`
+    : `No existía el usuario «${email}»; no había nada que borrar.`);
 }
 
 /** Lista los usuarios de todas las cuentas, indicando a cuál pertenece cada uno. */
@@ -234,7 +234,7 @@ async function listUsersCommand(authService, accountService) {
   for (const user of users) {
     const accountName = accountNamesById.get(user.accountId) ?? '(sin cuenta)';
 
-    console.log(`${user.username}\t${user.role}\t${user.status}\t${accountName}\t${user.displayName}`);
+    console.log(`${user.email}\t${user.role}\t${user.status}\t${accountName}\t${user.displayName}`);
   }
 }
 

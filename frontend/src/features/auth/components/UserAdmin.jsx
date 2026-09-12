@@ -8,7 +8,7 @@ const FIELD_CLASSES = 'block w-full mt-1 rounded-md border border-control bg-sur
 const LABEL_CLASSES = 'block text-[12px] font-semibold text-text-muted'
 const ACTION_CLASSES = 'px-2.5 py-1 rounded-md border border-control text-[12px] text-text-primary hover:border-accent cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
 
-const EMPTY_FORM = { username: '', displayName: '', password: '', role: 'user' }
+const EMPTY_FORM = { email: '', displayName: '', password: '', role: 'user' }
 
 /** Formatea una fecha ISO para la tabla, o avisa que nunca ocurrió. */
 function formatDate(isoDate) {
@@ -28,7 +28,7 @@ function CreateUserForm({ submitting = false, onCreate = () => {} }) {
   async function handleSubmit(event) {
     event.preventDefault()
 
-    const created = await onCreate({ ...form, username: form.username.trim(), displayName: form.displayName.trim() })
+    const created = await onCreate({ ...form, email: form.email.trim(), displayName: form.displayName.trim() })
     if (created) setForm(EMPTY_FORM)
   }
 
@@ -39,18 +39,19 @@ function CreateUserForm({ submitting = false, onCreate = () => {} }) {
       </h3>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <label className={LABEL_CLASSES} htmlFor="alta-username">
-          Usuario
+        <label className={LABEL_CLASSES} htmlFor="alta-email">
+          Email
           <input
-            id="alta-username"
-            type="text"
-            value={form.username}
-            onChange={updateField('username')}
+            id="alta-email"
+            type="email"
+            name="email"
+            value={form.email}
+            onChange={updateField('email')}
+            autoComplete="email"
             autoCapitalize="none"
             spellCheck="false"
             required
-            minLength={3}
-            maxLength={32}
+            maxLength={254}
             className={FIELD_CLASSES}
           />
         </label>
@@ -114,21 +115,21 @@ function CreateUserForm({ submitting = false, onCreate = () => {} }) {
  * valida el rol y la cuenta en cada ruta; esconder los controles es sólo una
  * cortesía de la interfaz.
  */
-function UserAdmin({ currentUsername = '' }) {
+function UserAdmin({ currentEmail = '' }) {
   const { users, loading, error, createUser, setStatus } = useUsers()
   const [actionError, setActionError] = useState(null)
   const [message, setMessage] = useState(null)
-  const [busyUsername, setBusyUsername] = useState(null)
+  const [busyEmail, setBusyEmail] = useState(null)
 
   /** Ejecuta una acción sobre un usuario y presenta su resultado. */
-  async function runAction(username, action, successMessage) {
-    setBusyUsername(username)
+  async function runAction(email, action, successMessage) {
+    setBusyEmail(email)
     setActionError(null)
     setMessage(null)
 
     const failure = await action()
 
-    setBusyUsername(null)
+    setBusyEmail(null)
     if (failure) {
       setActionError(failure)
       return false
@@ -140,9 +141,9 @@ function UserAdmin({ currentUsername = '' }) {
 
   async function handleCreate(user) {
     return await runAction(
-      user.username,
+      user.email,
       () => createUser(user),
-      `Usuario «${user.username}» creado.`,
+      `Usuario «${user.email}» creado.`,
     )
   }
 
@@ -150,11 +151,11 @@ function UserAdmin({ currentUsername = '' }) {
     const nextStatus = user.status === 'active' ? 'disabled' : 'active'
 
     return runAction(
-      user.username,
-      () => setStatus(user.username, nextStatus),
+      user.email,
+      () => setStatus(user.email, nextStatus),
       nextStatus === 'disabled'
-        ? `Usuario «${user.username}» deshabilitado.`
-        : `Usuario «${user.username}» habilitado.`,
+        ? `Usuario «${user.email}» deshabilitado.`
+        : `Usuario «${user.email}» habilitado.`,
     )
   }
 
@@ -179,7 +180,7 @@ function UserAdmin({ currentUsername = '' }) {
         </p>
       ) : null}
 
-      <CreateUserForm submitting={busyUsername !== null} onCreate={handleCreate} />
+      <CreateUserForm submitting={busyEmail !== null} onCreate={handleCreate} />
 
       {loading ? (
         <p role="status" className="text-[13px] text-text-muted">Cargando usuarios...</p>
@@ -189,7 +190,7 @@ function UserAdmin({ currentUsername = '' }) {
             <caption className="sr-only">Personas de la cuenta y sus permisos</caption>
             <thead className="text-text-muted">
               <tr>
-                <th scope="col" className="py-2 pr-4 font-semibold">Usuario</th>
+                <th scope="col" className="py-2 pr-4 font-semibold">Email</th>
                 <th scope="col" className="py-2 pr-4 font-semibold">Nombre</th>
                 <th scope="col" className="py-2 pr-4 font-semibold">Rol</th>
                 <th scope="col" className="py-2 pr-4 font-semibold">Estado</th>
@@ -199,12 +200,12 @@ function UserAdmin({ currentUsername = '' }) {
             </thead>
             <tbody>
               {users.map((user) => {
-                const isCurrentUser = user.username === currentUsername
+                const isCurrentUser = user.email === currentEmail
 
                 return (
-                  <tr key={user.username} className="border-t border-border-soft">
+                  <tr key={user.email} className="border-t border-border-soft">
                     <th scope="row" className="py-2 pr-4 font-mono font-normal text-text-primary">
-                      @{user.username}
+                      {user.email}
                     </th>
                     <td className="py-2 pr-4 text-text-primary">{user.displayName}</td>
                     <td className="py-2 pr-4 text-text-muted">
@@ -218,7 +219,7 @@ function UserAdmin({ currentUsername = '' }) {
                       <button
                         type="button"
                         onClick={() => handleToggleStatus(user)}
-                        disabled={isCurrentUser || busyUsername === user.username}
+                        disabled={isCurrentUser || busyEmail === user.email}
                         title={isCurrentUser ? 'No podés cambiar el estado de tu propia cuenta.' : undefined}
                         className={ACTION_CLASSES}
                       >
