@@ -1,25 +1,25 @@
 // 6. Imports relativos restantes.
-import BlockerBadge from './BlockerBadge.jsx'
+import BlockerBadge from "./BlockerBadge.jsx";
 
 const COLOR_BY_MERGEABILITY = {
-  ready_to_merge: 'border-l-ready',
-  mr_warning: 'border-l-draft',
-  in_progress: 'border-l-text-faint',
-  review: 'border-l-blue-400',
-  qa: 'border-l-purple-400',
-  backlog: 'border-l-text-muted',
-}
+  ready_to_merge: "border-l-ready",
+  mr_warning: "border-l-draft",
+  in_progress: "border-l-text-faint",
+  review: "border-l-blue-400",
+  qa: "border-l-purple-400",
+  backlog: "border-l-text-muted",
+};
 
 function timeAgo(iso) {
-  const diff = (Date.now() - new Date(iso).getTime()) / 1000
-  if (diff < 3600) return `${Math.max(1, Math.round(diff / 60))}m`
-  if (diff < 86400) return `${Math.round(diff / 3600)}h`
-  return `${Math.round(diff / 86400)}d`
+  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (diff < 3600) return `${Math.max(1, Math.round(diff / 60))}m`;
+  if (diff < 86400) return `${Math.round(diff / 3600)}h`;
+  return `${Math.round(diff / 86400)}d`;
 }
 
 function MrCard({ mr }) {
-  const assignee = mr.responsiblePeople.map((person) => person.name).join(', ')
-  const color = COLOR_BY_MERGEABILITY[mr.mergeability] || 'border-l-text-faint'
+  const assignee = mr.responsiblePeople.map((person) => person.name).join(", ");
+  const color = COLOR_BY_MERGEABILITY[mr.mergeability] || "border-l-text-faint";
 
   return (
     <article className={`bg-surface-raised border-l-[3px] ${color} rounded-md p-2.5 px-3 border border-border-soft`}>
@@ -57,7 +57,7 @@ function MrCard({ mr }) {
         </span>
       </div>
     </article>
-  )
+  );
 }
 
-export default MrCard
+export default MrCard;

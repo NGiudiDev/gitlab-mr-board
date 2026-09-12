@@ -1,9 +1,9 @@
 // 2. Dependencias externas.
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from "react";
 
-const FIELD_CLASSES = 'block w-full mt-1 rounded-md border border-control bg-surface-raised px-3 py-2 text-[13px] font-normal text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
-const LABEL_CLASSES = 'block text-[12px] font-semibold text-text-muted'
-const HINT_CLASSES = 'mt-1 text-[12px] font-normal text-text-faint'
+const FIELD_CLASSES = "block w-full mt-1 rounded-md border border-control bg-surface-raised px-3 py-2 text-[13px] font-normal text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+const LABEL_CLASSES = "block text-[12px] font-semibold text-text-muted";
+const HINT_CLASSES = "mt-1 text-[12px] font-normal text-text-faint";
 
 /**
  * Nickname de GitLab de la propia persona.
@@ -13,32 +13,32 @@ const HINT_CLASSES = 'mt-1 text-[12px] font-normal text-text-faint'
  * suyo, y de eso depende la vista personal.
  */
 function GitlabIdentityPanel({ user = null, submitting = false, onSave = () => {} }) {
-  const [gitlabUsername, setGitlabUsername] = useState(user?.gitlabUsername ?? '')
-  const [error, setError] = useState(null)
-  const [message, setMessage] = useState(null)
+  const [gitlabUsername, setGitlabUsername] = useState(user?.gitlabUsername ?? "");
+  const [error, setError] = useState(null);
+  const [message, setMessage] = useState(null);
 
   // La sesión puede llegar después del primer render, y también cambia al
   // guardar: el campo sigue a lo que dice el backend.
   useEffect(() => {
-    setGitlabUsername(user?.gitlabUsername ?? '')
-  }, [user?.gitlabUsername])
+    setGitlabUsername(user?.gitlabUsername ?? "");
+  }, [user?.gitlabUsername]);
 
   async function handleSubmit(event) {
-    event.preventDefault()
-    setError(null)
-    setMessage(null)
+    event.preventDefault();
+    setError(null);
+    setMessage(null);
 
-    const failure = await onSave(gitlabUsername.trim())
+    const failure = await onSave(gitlabUsername.trim());
 
     if (failure) {
-      setError(failure)
-      return
+      setError(failure);
+      return;
     }
 
-    setMessage('Nickname de GitLab guardado.')
+    setMessage("Nickname de GitLab guardado.");
   }
 
-  if (!user) return null
+  if (!user) return null;
 
   return (
     <section aria-labelledby="identidad-heading">
@@ -89,11 +89,11 @@ function GitlabIdentityPanel({ user = null, submitting = false, onSave = () => {
           disabled={submitting}
           className="rounded-md bg-accent px-3 py-2 text-[13px] font-semibold text-bg disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
-          {submitting ? 'Guardando...' : 'Guardar mi nickname'}
+          {submitting ? "Guardando..." : "Guardar mi nickname"}
         </button>
       </form>
     </section>
-  )
+  );
 }
 
-export default GitlabIdentityPanel
+export default GitlabIdentityPanel;

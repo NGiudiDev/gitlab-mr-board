@@ -1,9 +1,9 @@
 // 2. Dependencias externas.
-import express from 'express';
+import express from "express";
 
 // 6. Imports relativos restantes.
-import { respondWithHttpError } from '../../../shared/httpError.js';
-import { createRequireAdmin, createRequireSession } from '../../auth/routes/auth.js';
+import { respondWithHttpError } from "../../../shared/httpError.js";
+import { createRequireAdmin, createRequireSession } from "../../auth/routes/auth.js";
 
 /**
  * Crea el router de la cuenta a la que pertenece la sesión.
@@ -20,34 +20,34 @@ function createAccountsRouter(authService, accountService) {
   const router = express.Router();
   const requireAdmin = createRequireAdmin(authService);
 
-  router.get('/', createRequireSession(authService), async (_request, response) => {
+  router.get("/", createRequireSession(authService), async (_request, response) => {
     const { accountId, role } = response.locals.user;
 
     try {
-      response.json({ account: await accountService.getSummary(accountId, role === 'admin') });
+      response.json({ account: await accountService.getSummary(accountId, role === "admin") });
     } catch (error) {
-      respondWithHttpError(response, error, 'al leer la cuenta');
+      respondWithHttpError(response, error, "al leer la cuenta");
     }
   });
 
-  router.patch('/', ...requireAdmin, async (request, response) => {
+  router.patch("/", ...requireAdmin, async (request, response) => {
     const { accountId } = response.locals.user;
     const { name } = request.body ?? {};
 
     try {
       response.json({ account: await accountService.rename(accountId, name) });
     } catch (error) {
-      respondWithHttpError(response, error, 'al renombrar la cuenta');
+      respondWithHttpError(response, error, "al renombrar la cuenta");
     }
   });
 
-  router.post('/invite-code', ...requireAdmin, async (_request, response) => {
+  router.post("/invite-code", ...requireAdmin, async (_request, response) => {
     const { accountId } = response.locals.user;
 
     try {
       response.json({ account: await accountService.rotateInviteCode(accountId) });
     } catch (error) {
-      respondWithHttpError(response, error, 'al renovar el código de invitación');
+      respondWithHttpError(response, error, "al renovar el código de invitación");
     }
   });
 

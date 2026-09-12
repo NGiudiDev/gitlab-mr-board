@@ -1,10 +1,10 @@
 // 5. Utilidades.
-import RateLimiter from '../utils/rateLimiter.js';
+import RateLimiter from "../utils/rateLimiter.js";
 
 // 6. Imports relativos restantes.
-import config from '../../../config.js';
+import config from "../../../config.js";
 
-const GITLAB_API_PATH = '/api/v4';
+const GITLAB_API_PATH = "/api/v4";
 const MAX_CONCURRENT_REQUESTS = 6;
 const MAX_PAGES = 10;
 const ITEMS_PER_PAGE = 100;
@@ -34,7 +34,7 @@ function buildUrl(resourcePath, params = {}) {
 /** Traduce un error HTTP de GitLab a un mensaje seguro y diagnosticable. */
 function buildGitLabErrorMessage(status, resourcePath, responseBody) {
   if (status === 401) {
-    return 'Token inválido o sin permisos (se requiere el alcance read_api).';
+    return "Token inválido o sin permisos (se requiere el alcance read_api).";
   }
 
   if (status === 404) {
@@ -58,11 +58,11 @@ function createGitLabClient(accessToken) {
   async function fetchJson(resourcePath, params = {}) {
     const url = buildUrl(resourcePath, params);
     const response = await fetch(url, {
-      headers: { 'PRIVATE-TOKEN': accessToken },
+      headers: { "PRIVATE-TOKEN": accessToken },
     });
 
     if (!response.ok) {
-      const responseBody = await response.text().catch(() => '');
+      const responseBody = await response.text().catch(() => "");
       throw new Error(buildGitLabErrorMessage(response.status, resourcePath, responseBody));
     }
 
@@ -82,7 +82,7 @@ function createGitLabClient(accessToken) {
       });
       results.push(...data);
 
-      const nextPage = headers.get('x-next-page');
+      const nextPage = headers.get("x-next-page");
       if (!nextPage) break;
       page = Number.parseInt(nextPage, 10);
     }

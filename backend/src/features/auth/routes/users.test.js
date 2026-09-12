@@ -1,12 +1,12 @@
 // 2. Dependencias externas.
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // 4. Módulos de constantes.
-import { TEST_EMAIL, TEST_PASSWORD } from '../../../../test/constants.js';
+import { TEST_EMAIL, TEST_PASSWORD } from "../../../../test/constants.js";
 
 // 6. Imports relativos restantes.
-import { createAuthenticatedApp } from '../../../../test/auth.js';
-import { requestApp } from '../../../../test/httpClient.js';
+import { createAuthenticatedApp } from "../../../../test/auth.js";
+import { requestApp } from "../../../../test/httpClient.js";
 
 let session;
 
@@ -27,7 +27,7 @@ async function createClient(role) {
 }
 
 beforeEach(() => {
-  vi.spyOn(console, 'error').mockImplementation(() => {});
+  vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
 afterEach(async () => {
@@ -35,224 +35,224 @@ afterEach(async () => {
   vi.restoreAllMocks();
 });
 
-describe('permisos de /api/users', () => {
-  it('responde 401 sin sesión', async () => {
-    const { app } = await createClient('admin');
+describe("permisos de /api/users", () => {
+  it("responde 401 sin sesión", async () => {
+    const { app } = await createClient("admin");
 
-    const response = await requestApp(app, '/api/users');
+    const response = await requestApp(app, "/api/users");
 
     expect(response.status).toBe(401);
   });
 
-  it('responde 403 a una sesión sin rol admin', async () => {
-    const { request } = await createClient('user');
+  it("responde 403 a una sesión sin rol admin", async () => {
+    const { request } = await createClient("user");
 
-    const response = await request('/api/users');
+    const response = await request("/api/users");
 
     expect(response.status).toBe(403);
-    expect(response.json().error).toBe('Necesitás permisos de administrador.');
+    expect(response.json().error).toBe("Necesitás permisos de administrador.");
   });
 
-  it('no deja crear usuarios a quien no es admin', async () => {
-    const { request } = await createClient('user');
+  it("no deja crear usuarios a quien no es admin", async () => {
+    const { request } = await createClient("user");
 
-    const response = await request('/api/users', {
-      method: 'POST',
-      body: { email: 'zoe@example.com', password: TEST_PASSWORD },
+    const response = await request("/api/users", {
+      method: "POST",
+      body: { email: "zoe@example.com", password: TEST_PASSWORD },
     });
 
     expect(response.status).toBe(403);
   });
 });
 
-describe('GET /api/users', () => {
-  it('lista los usuarios con su rol y estado, sin credenciales', async () => {
-    const { request } = await createClient('admin');
+describe("GET /api/users", () => {
+  it("lista los usuarios con su rol y estado, sin credenciales", async () => {
+    const { request } = await createClient("admin");
 
-    const response = await request('/api/users');
+    const response = await request("/api/users");
     const { users } = response.json();
 
     expect(response.status).toBe(200);
     expect(users).toHaveLength(1);
-    expect(users[0]).toMatchObject({ email: TEST_EMAIL, role: 'admin', status: 'active' });
-    expect(response.body).not.toContain('scrypt');
+    expect(users[0]).toMatchObject({ email: TEST_EMAIL, role: "admin", status: "active" });
+    expect(response.body).not.toContain("scrypt");
   });
 
-  it('no incluye los usuarios de otra cuenta', async () => {
-    const { request } = await createClient('admin');
-    const otherAccount = await session.accountService.create('Otro equipo');
+  it("no incluye los usuarios de otra cuenta", async () => {
+    const { request } = await createClient("admin");
+    const otherAccount = await session.accountService.create("Otro equipo");
     await session.authService.createUser({
       accountId: otherAccount.id,
-      email: 'beto@example.com',
+      email: "beto@example.com",
       password: TEST_PASSWORD,
     });
 
-    const { users } = (await request('/api/users')).json();
+    const { users } = (await request("/api/users")).json();
 
     expect(users.map((user) => user.email)).toEqual([TEST_EMAIL]);
   });
 });
 
-describe('POST /api/users', () => {
-  it('crea un usuario con el rol indicado', async () => {
-    const { request } = await createClient('admin');
+describe("POST /api/users", () => {
+  it("crea un usuario con el rol indicado", async () => {
+    const { request } = await createClient("admin");
 
-    const response = await request('/api/users', {
-      method: 'POST',
-      body: { email: 'zoe@example.com', password: TEST_PASSWORD, displayName: 'Zoe Ruiz', role: 'admin' },
+    const response = await request("/api/users", {
+      method: "POST",
+      body: { email: "zoe@example.com", password: TEST_PASSWORD, displayName: "Zoe Ruiz", role: "admin" },
     });
 
     expect(response.status).toBe(201);
     expect(response.json().user).toMatchObject({
       accountId: session.account.id,
-      email: 'zoe@example.com',
-      displayName: 'Zoe Ruiz',
-      role: 'admin',
+      email: "zoe@example.com",
+      displayName: "Zoe Ruiz",
+      role: "admin",
     });
   });
 
-  it('suma el usuario a la cuenta de quien administra, sin poder elegir otra', async () => {
-    const { request } = await createClient('admin');
-    const otherAccount = await session.accountService.create('Otro equipo');
+  it("suma el usuario a la cuenta de quien administra, sin poder elegir otra", async () => {
+    const { request } = await createClient("admin");
+    const otherAccount = await session.accountService.create("Otro equipo");
 
-    const response = await request('/api/users', {
-      method: 'POST',
-      body: { email: 'zoe@example.com', password: TEST_PASSWORD, accountId: otherAccount.id },
+    const response = await request("/api/users", {
+      method: "POST",
+      body: { email: "zoe@example.com", password: TEST_PASSWORD, accountId: otherAccount.id },
     });
 
     expect(response.json().user.accountId).toBe(session.account.id);
   });
 
-  it('usa el rol user ante cualquier valor desconocido', async () => {
-    const { request } = await createClient('admin');
+  it("usa el rol user ante cualquier valor desconocido", async () => {
+    const { request } = await createClient("admin");
 
-    const response = await request('/api/users', {
-      method: 'POST',
-      body: { email: 'zoe@example.com', password: TEST_PASSWORD, role: 'root' },
+    const response = await request("/api/users", {
+      method: "POST",
+      body: { email: "zoe@example.com", password: TEST_PASSWORD, role: "root" },
     });
 
-    expect(response.json().user.role).toBe('user');
+    expect(response.json().user.role).toBe("user");
   });
 
-  it('responde 409 cuando el email ya está registrado', async () => {
-    const { request } = await createClient('admin');
+  it("responde 409 cuando el email ya está registrado", async () => {
+    const { request } = await createClient("admin");
 
-    const response = await request('/api/users', {
-      method: 'POST',
+    const response = await request("/api/users", {
+      method: "POST",
       body: { email: TEST_EMAIL, password: TEST_PASSWORD },
     });
 
     expect(response.status).toBe(409);
   });
 
-  it('responde 400 cuando los datos no cumplen las reglas', async () => {
-    const { request } = await createClient('admin');
+  it("responde 400 cuando los datos no cumplen las reglas", async () => {
+    const { request } = await createClient("admin");
 
-    const response = await request('/api/users', {
-      method: 'POST',
-      body: { email: 'zoe@example.com', password: 'corta' },
+    const response = await request("/api/users", {
+      method: "POST",
+      body: { email: "zoe@example.com", password: "corta" },
     });
 
     expect(response.status).toBe(400);
   });
 });
 
-describe('PATCH /api/users/:email/status', () => {
-  it('deshabilita a otro usuario y le cierra las sesiones', async () => {
-    const { request } = await createClient('admin');
-    await request('/api/users', { method: 'POST', body: { email: 'zoe@example.com', password: TEST_PASSWORD } });
-    const { token } = await session.authService.login({ email: 'zoe@example.com', password: TEST_PASSWORD });
+describe("PATCH /api/users/:email/status", () => {
+  it("deshabilita a otro usuario y le cierra las sesiones", async () => {
+    const { request } = await createClient("admin");
+    await request("/api/users", { method: "POST", body: { email: "zoe@example.com", password: TEST_PASSWORD } });
+    const { token } = await session.authService.login({ email: "zoe@example.com", password: TEST_PASSWORD });
 
-    const response = await request('/api/users/zoe@example.com/status', {
-      method: 'PATCH',
-      body: { status: 'disabled' },
+    const response = await request("/api/users/zoe@example.com/status", {
+      method: "PATCH",
+      body: { status: "disabled" },
     });
 
     expect(response.status).toBe(200);
-    expect(response.json().user.status).toBe('disabled');
+    expect(response.json().user.status).toBe("disabled");
     expect(await session.authService.authenticate(token)).toBeNull();
   });
 
-  it('vuelve a habilitar a un usuario', async () => {
-    const { request } = await createClient('admin');
-    await request('/api/users', { method: 'POST', body: { email: 'zoe@example.com', password: TEST_PASSWORD } });
-    await request('/api/users/zoe@example.com/status', { method: 'PATCH', body: { status: 'disabled' } });
+  it("vuelve a habilitar a un usuario", async () => {
+    const { request } = await createClient("admin");
+    await request("/api/users", { method: "POST", body: { email: "zoe@example.com", password: TEST_PASSWORD } });
+    await request("/api/users/zoe@example.com/status", { method: "PATCH", body: { status: "disabled" } });
 
-    const response = await request('/api/users/zoe@example.com/status', {
-      method: 'PATCH',
-      body: { status: 'active' },
+    const response = await request("/api/users/zoe@example.com/status", {
+      method: "PATCH",
+      body: { status: "active" },
     });
 
-    expect(response.json().user.status).toBe('active');
+    expect(response.json().user.status).toBe("active");
   });
 
-  it('impide cambiar el estado de la propia cuenta', async () => {
-    const { request } = await createClient('admin');
+  it("impide cambiar el estado de la propia cuenta", async () => {
+    const { request } = await createClient("admin");
 
     const response = await request(`/api/users/${TEST_EMAIL}/status`, {
-      method: 'PATCH',
-      body: { status: 'disabled' },
+      method: "PATCH",
+      body: { status: "disabled" },
     });
 
     expect(response.status).toBe(409);
-    expect(response.json().error).toBe('No podés cambiar el estado de tu propio usuario.');
+    expect(response.json().error).toBe("No podés cambiar el estado de tu propio usuario.");
   });
 
-  it('responde 400 ante un estado fuera del contrato', async () => {
-    const { request } = await createClient('admin');
-    await request('/api/users', { method: 'POST', body: { email: 'zoe@example.com', password: TEST_PASSWORD } });
+  it("responde 400 ante un estado fuera del contrato", async () => {
+    const { request } = await createClient("admin");
+    await request("/api/users", { method: "POST", body: { email: "zoe@example.com", password: TEST_PASSWORD } });
 
-    const response = await request('/api/users/zoe@example.com/status', {
-      method: 'PATCH',
-      body: { status: 'vacaciones' },
+    const response = await request("/api/users/zoe@example.com/status", {
+      method: "PATCH",
+      body: { status: "vacaciones" },
     });
 
     expect(response.status).toBe(400);
   });
 
-  it('responde 404 cuando el usuario no existe', async () => {
-    const { request } = await createClient('admin');
+  it("responde 404 cuando el usuario no existe", async () => {
+    const { request } = await createClient("admin");
 
-    const response = await request('/api/users/fantasma@example.com/status', {
-      method: 'PATCH',
-      body: { status: 'disabled' },
+    const response = await request("/api/users/fantasma@example.com/status", {
+      method: "PATCH",
+      body: { status: "disabled" },
     });
 
     expect(response.status).toBe(404);
   });
 
-  it('responde 404 y no toca al usuario cuando es de otra cuenta', async () => {
-    const { request } = await createClient('admin');
-    const otherAccount = await session.accountService.create('Otro equipo');
+  it("responde 404 y no toca al usuario cuando es de otra cuenta", async () => {
+    const { request } = await createClient("admin");
+    const otherAccount = await session.accountService.create("Otro equipo");
     await session.authService.createUser({
       accountId: otherAccount.id,
-      email: 'beto@example.com',
+      email: "beto@example.com",
       password: TEST_PASSWORD,
     });
 
-    const response = await request('/api/users/beto@example.com/status', {
-      method: 'PATCH',
-      body: { status: 'disabled' },
+    const response = await request("/api/users/beto@example.com/status", {
+      method: "PATCH",
+      body: { status: "disabled" },
     });
 
     expect(response.status).toBe(404);
-    await expect(session.authService.login({ email: 'beto@example.com', password: TEST_PASSWORD }))
+    await expect(session.authService.login({ email: "beto@example.com", password: TEST_PASSWORD }))
       .resolves.toBeDefined();
   });
 });
 
-describe('restablecimiento de contraseñas ajenas', () => {
-  it('ya no se expone por HTTP: sólo queda en la línea de comandos', async () => {
-    const { request } = await createClient('admin');
-    await request('/api/users', { method: 'POST', body: { email: 'zoe@example.com', password: TEST_PASSWORD } });
+describe("restablecimiento de contraseñas ajenas", () => {
+  it("ya no se expone por HTTP: sólo queda en la línea de comandos", async () => {
+    const { request } = await createClient("admin");
+    await request("/api/users", { method: "POST", body: { email: "zoe@example.com", password: TEST_PASSWORD } });
 
-    const response = await request('/api/users/zoe@example.com/password', {
-      method: 'PUT',
-      body: { password: 'contrasena-restablecida' },
+    const response = await request("/api/users/zoe@example.com/password", {
+      method: "PUT",
+      body: { password: "contrasena-restablecida" },
     });
 
     expect(response.status).toBe(404);
-    await expect(session.authService.login({ email: 'zoe@example.com', password: TEST_PASSWORD }))
+    await expect(session.authService.login({ email: "zoe@example.com", password: TEST_PASSWORD }))
       .resolves.toBeDefined();
   });
 });

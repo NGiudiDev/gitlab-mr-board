@@ -1,8 +1,8 @@
 // 2. Dependencias externas.
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from "vitest";
 
 // 6. Imports relativos restantes.
-import RateLimiter from './rateLimiter.js';
+import RateLimiter from "./rateLimiter.js";
 
 /** Promesa que se resuelve desde fuera, para controlar el orden de ejecución. */
 function createDeferred() {
@@ -15,14 +15,14 @@ function createDeferred() {
   return { promise, resolve, reject };
 }
 
-describe('RateLimiter', () => {
-  it('devuelve el resultado de la operación', async () => {
+describe("RateLimiter", () => {
+  it("devuelve el resultado de la operación", async () => {
     const limiter = new RateLimiter(2);
 
-    await expect(limiter.run(async () => 'listo')).resolves.toBe('listo');
+    await expect(limiter.run(async () => "listo")).resolves.toBe("listo");
   });
 
-  it('no ejecuta más operaciones que el máximo concurrente', async () => {
+  it("no ejecuta más operaciones que el máximo concurrente", async () => {
     const limiter = new RateLimiter(2);
     const gates = [createDeferred(), createDeferred(), createDeferred()];
     let started = 0;
@@ -45,7 +45,7 @@ describe('RateLimiter', () => {
     await Promise.all(operations);
   });
 
-  it('respeta el orden de llegada de la cola', async () => {
+  it("respeta el orden de llegada de la cola", async () => {
     const limiter = new RateLimiter(1);
     const order = [];
 
@@ -57,16 +57,16 @@ describe('RateLimiter', () => {
     expect(order).toEqual([1, 2, 3]);
   });
 
-  it('libera el turno aunque la operación falle', async () => {
+  it("libera el turno aunque la operación falle", async () => {
     const limiter = new RateLimiter(1);
 
-    await expect(limiter.run(async () => { throw new Error('falló la llamada'); }))
-      .rejects.toThrow('falló la llamada');
+    await expect(limiter.run(async () => { throw new Error("falló la llamada"); }))
+      .rejects.toThrow("falló la llamada");
 
-    await expect(limiter.run(async () => 'siguiente')).resolves.toBe('siguiente');
+    await expect(limiter.run(async () => "siguiente")).resolves.toBe("siguiente");
   });
 
-  it('permite ejecutar todas las operaciones encoladas', async () => {
+  it("permite ejecutar todas las operaciones encoladas", async () => {
     const limiter = new RateLimiter(3);
     const total = 12;
 

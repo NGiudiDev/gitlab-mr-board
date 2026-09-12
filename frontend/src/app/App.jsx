@@ -1,36 +1,36 @@
 // 2. Dependencias externas.
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from "react";
 
 // 6. Imports relativos restantes.
-import AccountPanel from '../features/accounts/components/AccountPanel.jsx'
-import { resetAccountStore } from '../features/accounts/hooks/useAccount.js'
-import GitlabIdentityPanel from '../features/auth/components/GitlabIdentityPanel.jsx'
-import LoginForm from '../features/auth/components/LoginForm.jsx'
-import PasswordPanel from '../features/auth/components/PasswordPanel.jsx'
-import ProfilePanel from '../features/auth/components/ProfilePanel.jsx'
-import RegisterForm from '../features/auth/components/RegisterForm.jsx'
-import UserAdmin from '../features/auth/components/UserAdmin.jsx'
-import { useSession } from '../features/auth/hooks/useSession.js'
-import GitlabSettingsForm from '../features/gitlabSettings/components/GitlabSettingsForm.jsx'
-import MrBoard from '../features/mergeRequests/components/MrBoard.jsx'
-import TopBar from '../features/mergeRequests/components/TopBar.jsx'
-import ViewControls from '../features/mergeRequests/components/ViewControls.jsx'
+import AccountPanel from "../features/accounts/components/AccountPanel.jsx";
+import { resetAccountStore } from "../features/accounts/hooks/useAccount.js";
+import GitlabIdentityPanel from "../features/auth/components/GitlabIdentityPanel.jsx";
+import LoginForm from "../features/auth/components/LoginForm.jsx";
+import PasswordPanel from "../features/auth/components/PasswordPanel.jsx";
+import ProfilePanel from "../features/auth/components/ProfilePanel.jsx";
+import RegisterForm from "../features/auth/components/RegisterForm.jsx";
+import UserAdmin from "../features/auth/components/UserAdmin.jsx";
+import { useSession } from "../features/auth/hooks/useSession.js";
+import GitlabSettingsForm from "../features/gitlabSettings/components/GitlabSettingsForm.jsx";
+import MrBoard from "../features/mergeRequests/components/MrBoard.jsx";
+import TopBar from "../features/mergeRequests/components/TopBar.jsx";
+import ViewControls from "../features/mergeRequests/components/ViewControls.jsx";
 import {
   fetchMergeRequests,
   resetStore,
   useMergeRequests,
-} from '../features/mergeRequests/hooks/useMergeRequests.js'
+} from "../features/mergeRequests/hooks/useMergeRequests.js";
 import {
   findPersonByUsername,
   mergeRequestsForPerson,
-} from '../features/mergeRequests/personalView.js'
-import AppShell, { sectionsFor } from './AppShell.jsx'
+} from "../features/mergeRequests/personalView.js";
+import AppShell, { sectionsFor } from "./AppShell.jsx";
 
-const PLACEHOLDER_CLASSES = 'text-center text-text-muted text-[13px] py-16 border border-dashed border-border rounded-lg bg-surface'
+const PLACEHOLDER_CLASSES = "text-center text-text-muted text-[13px] py-16 border border-dashed border-border rounded-lg bg-surface";
 
 /** Presenta de forma consistente los estados informativos del tablero. */
 function BoardStatus({ children }) {
-  return <div role="status" className={PLACEHOLDER_CLASSES}>{children}</div>
+  return <div role="status" className={PLACEHOLDER_CLASSES}>{children}</div>;
 }
 
 function announcementFor({
@@ -43,19 +43,19 @@ function announcementFor({
   selectedPerson,
   canChoosePerson,
 }) {
-  if (loading) return 'Actualizando merge requests.'
-  if (error) return `No se pudieron actualizar los datos: ${error}`
-  if (needsGitlabSettings) return 'Falta configurar GitLab en la cuenta.'
-  if (!lastFetched) return ''
-  if (viewMode === 'personal' && !selectedPerson) {
+  if (loading) return "Actualizando merge requests.";
+  if (error) return `No se pudieron actualizar los datos: ${error}`;
+  if (needsGitlabSettings) return "Falta configurar GitLab en la cuenta.";
+  if (!lastFetched) return "";
+  if (viewMode === "personal" && !selectedPerson) {
     return canChoosePerson
-      ? 'Vista personal. Elegí una persona.'
-      : 'Vista personal. Falta tu nickname de GitLab en «Mi cuenta».'
+      ? "Vista personal. Elegí una persona."
+      : "Vista personal. Falta tu nickname de GitLab en «Mi cuenta».";
   }
-  if (viewMode === 'personal') {
-    return `Vista personal de ${selectedPerson.name}. Se muestran ${total} merge requests.`
+  if (viewMode === "personal") {
+    return `Vista personal de ${selectedPerson.name}. Se muestran ${total} merge requests.`;
   }
-  return `Actualización completa. Se muestran ${total} merge requests.`
+  return `Actualización completa. Se muestran ${total} merge requests.`;
 }
 
 /**
@@ -70,8 +70,8 @@ function MissingGitlabSettings({ canConfigure = false, onGoToAccount = () => {} 
     <div role="status" className={PLACEHOLDER_CLASSES}>
       <p className="mb-3">
         {canConfigure
-          ? 'Todavía no configuraste GitLab en tu cuenta.'
-          : 'Tu cuenta todavía no tiene datos de GitLab. Pedile a quien la administra que cargue los proyectos y el access token.'}
+          ? "Todavía no configuraste GitLab en tu cuenta."
+          : "Tu cuenta todavía no tiene datos de GitLab. Pedile a quien la administra que cargue los proyectos y el access token."}
       </p>
       {canConfigure ? (
         <button
@@ -83,7 +83,7 @@ function MissingGitlabSettings({ canConfigure = false, onGoToAccount = () => {} 
         </button>
       ) : null}
     </div>
-  )
+  );
 }
 
 /**
@@ -103,21 +103,21 @@ function Board({ canChoosePerson = false, canConfigureGitlab = false, onGoToAcco
     fetchMRs,
     selectPerson,
     setViewMode,
-  } = useMergeRequests()
-  const people = meta?.people ?? []
+  } = useMergeRequests();
+  const people = meta?.people ?? [];
   // Quien no puede elegir sólo ve lo suyo: la identidad sale del nickname de
   // GitLab que configuró, no de la selección del tablero.
-  const personalUsername = canChoosePerson ? selectedUsername : meta?.viewerUsername ?? null
+  const personalUsername = canChoosePerson ? selectedUsername : meta?.viewerUsername ?? null;
   const selectedPerson = findPersonByUsername(people, personalUsername)
-    ?? (personalUsername ? { name: `@${personalUsername}`, username: personalUsername } : null)
-  const personalMergeRequests = mergeRequestsForPerson(mergeRequests, personalUsername)
-  const visibleMergeRequests = viewMode === 'personal' ? personalMergeRequests : mergeRequests
-  const visibleProjects = new Set(visibleMergeRequests.map((mr) => mr.projectPath)).size
+    ?? (personalUsername ? { name: `@${personalUsername}`, username: personalUsername } : null);
+  const personalMergeRequests = mergeRequestsForPerson(mergeRequests, personalUsername);
+  const visibleMergeRequests = viewMode === "personal" ? personalMergeRequests : mergeRequests;
+  const visibleProjects = new Set(visibleMergeRequests.map((mr) => mr.projectPath)).size;
   const visibleMeta = meta ? {
     ...meta,
-    projectCount: viewMode === 'personal' ? visibleProjects : meta.projectCount,
+    projectCount: viewMode === "personal" ? visibleProjects : meta.projectCount,
     totalMRs: visibleMergeRequests.length,
-  } : null
+  } : null;
 
   const statusAnnouncement = announcementFor({
     loading,
@@ -128,16 +128,16 @@ function Board({ canChoosePerson = false, canConfigureGitlab = false, onGoToAcco
     viewMode,
     selectedPerson,
     canChoosePerson,
-  })
+  });
 
-  const failedWithoutData = error && mergeRequests.length === 0
+  const failedWithoutData = error && mergeRequests.length === 0;
 
   // Sin configuración no hay nada que consultar: los controles del tablero
   // sobran y lo único útil es explicar cómo se completa.
   if (needsGitlabSettings) {
     return (
       <MissingGitlabSettings canConfigure={canConfigureGitlab} onGoToAccount={onGoToAccount} />
-    )
+    );
   }
 
   return (
@@ -148,8 +148,8 @@ function Board({ canChoosePerson = false, canConfigureGitlab = false, onGoToAcco
         <ViewControls
           viewMode={viewMode}
           people={people}
-          selectedUsername={selectedUsername || ''}
-          selectedPersonName={selectedPerson?.name || ''}
+          selectedUsername={selectedUsername || ""}
+          selectedPersonName={selectedPerson?.name || ""}
           canChoosePerson={canChoosePerson}
           onViewChange={setViewMode}
           onPersonChange={selectPerson}
@@ -174,29 +174,29 @@ function Board({ canChoosePerson = false, canConfigureGitlab = false, onGoToAcco
           <section aria-labelledby="tablero-heading">
             <h2
               id="tablero-heading"
-              className={viewMode === 'personal' && selectedPerson
-                ? 'text-base font-semibold text-text-primary mb-3'
-                : 'sr-only'}
+              className={viewMode === "personal" && selectedPerson
+                ? "text-base font-semibold text-text-primary mb-3"
+                : "sr-only"}
             >
-              {viewMode === 'personal' && selectedPerson
+              {viewMode === "personal" && selectedPerson
                 ? `Tareas de ${selectedPerson.name} por estado`
-                : 'Merge requests por proyecto y estado'}
+                : "Merge requests por proyecto y estado"}
             </h2>
             {loading && mergeRequests.length === 0 ? (
               <BoardStatus>Cargando merge requests...</BoardStatus>
             ) : mergeRequests.length === 0 ? (
               <BoardStatus>No hay merge requests abiertos.</BoardStatus>
-            ) : viewMode === 'personal' && !personalUsername ? (
+            ) : viewMode === "personal" && !personalUsername ? (
               <BoardStatus>
                 {canChoosePerson
-                  ? 'Elegí una persona para ver sus tareas pendientes.'
-                  : 'Configurá tu nickname de GitLab en «Mi cuenta» para ver tus tareas.'}
+                  ? "Elegí una persona para ver sus tareas pendientes."
+                  : "Configurá tu nickname de GitLab en «Mi cuenta» para ver tus tareas."}
               </BoardStatus>
-            ) : viewMode === 'personal' && personalMergeRequests.length === 0 ? (
+            ) : viewMode === "personal" && personalMergeRequests.length === 0 ? (
               <BoardStatus>
                 {canChoosePerson
-                  ? 'No hay tareas pendientes para esta persona.'
-                  : 'No tenés tareas pendientes.'}
+                  ? "No hay tareas pendientes para esta persona."
+                  : "No tenés tareas pendientes."}
               </BoardStatus>
             ) : (
               <MrBoard
@@ -208,19 +208,19 @@ function Board({ canChoosePerson = false, canConfigureGitlab = false, onGoToAcco
 
           {lastFetched ? (
             <p className="text-[12px] text-text-faint mt-4">
-              Última actualización: {lastFetched.toLocaleTimeString('es-AR')} · {visibleMergeRequests.length} MRs {viewMode === 'personal' ? 'visibles' : 'en total'} · Próxima actualización automática en 5 min
+              Última actualización: {lastFetched.toLocaleTimeString("es-AR")} · {visibleMergeRequests.length} MRs {viewMode === "personal" ? "visibles" : "en total"} · Próxima actualización automática en 5 min
             </p>
           ) : null}
         </>
       )}
       <p className="sr-only" aria-live="polite" aria-atomic="true">{statusAnnouncement}</p>
     </>
-  )
+  );
 }
 
 /** Presenta el ingreso o el alta de cuenta según lo que pida la persona. */
 function AnonymousView({ error, notice, submitting, onLogin, onRegister }) {
-  const [showRegister, setShowRegister] = useState(false)
+  const [showRegister, setShowRegister] = useState(false);
 
   if (showRegister) {
     return (
@@ -230,7 +230,7 @@ function AnonymousView({ error, notice, submitting, onLogin, onRegister }) {
         onSubmit={onRegister}
         onShowLogin={() => setShowRegister(false)}
       />
-    )
+    );
   }
 
   return (
@@ -241,7 +241,7 @@ function AnonymousView({ error, notice, submitting, onLogin, onRegister }) {
       onSubmit={onLogin}
       onShowRegister={() => setShowRegister(true)}
     />
-  )
+  );
 }
 
 /**
@@ -259,9 +259,9 @@ function ActiveSection({
   onSaveProfile,
   onGoToAccount,
 }) {
-  const isAdmin = user.role === 'admin'
+  const isAdmin = user.role === "admin";
 
-  if (view === 'account') {
+  if (view === "account") {
     return (
       <div className="mx-auto max-w-xl divide-y divide-border-soft [&>section]:py-5 [&>section:first-child]:pt-0 [&>section:last-child]:pb-0">
         <AccountPanel user={user} />
@@ -274,10 +274,10 @@ function ActiveSection({
           onSave={onSaveGitlabUsername}
         />
       </div>
-    )
+    );
   }
 
-  if (view === 'profile') {
+  if (view === "profile") {
     return (
       <div className="mx-auto max-w-xl divide-y divide-border-soft [&>section]:py-5 [&>section:first-child]:pt-0 [&>section:last-child]:pb-0">
         <ProfilePanel user={user} submitting={submitting} onSave={onSaveProfile} />
@@ -287,10 +287,10 @@ function ActiveSection({
           onChangePassword={onChangePassword}
         />
       </div>
-    )
+    );
   }
 
-  if (view === 'users') return <UserAdmin currentEmail={user.email} />
+  if (view === "users") return <UserAdmin currentEmail={user.email} />;
 
   // Sólo un admin puede mirar el tablero de otra persona; el resto ve el suyo.
   return (
@@ -299,7 +299,7 @@ function ActiveSection({
       canConfigureGitlab={isAdmin}
       onGoToAccount={onGoToAccount}
     />
-  )
+  );
 }
 
 /** Decide si mostrar el ingreso o el layout con la sección activa. */
@@ -316,25 +316,25 @@ function App() {
     register,
     saveGitlabUsername,
     saveProfile,
-  } = useSession()
-  const [view, setView] = useState('board')
-  const isAuthenticated = status === 'authenticated'
+  } = useSession();
+  const [view, setView] = useState("board");
+  const isAuthenticated = status === "authenticated";
   // Una sección que el usuario actual no tiene habilitada —la de usuarios si no
   // es admin— cae en el tablero en lugar de dejar la pantalla vacía.
-  const availableSections = sectionsFor(user)
-  const activeView = availableSections.some((section) => section.id === view) ? view : 'board'
+  const availableSections = sectionsFor(user);
+  const activeView = availableSections.some((section) => section.id === view) ? view : "board";
 
   // Al terminar la sesión, la próxima empieza en el tablero y no donde quedó
   // la anterior.
   useEffect(() => {
-    if (!isAuthenticated) setView('board')
-  }, [isAuthenticated])
+    if (!isAuthenticated) setView("board");
+  }, [isAuthenticated]);
 
   /** Cierra la sesión y descarta los datos de la cuenta y del tablero. */
   async function handleLogout() {
-    await logout()
-    resetStore()
-    resetAccountStore()
+    await logout();
+    resetStore();
+    resetAccountStore();
   }
 
   return (
@@ -344,7 +344,7 @@ function App() {
       onChangeView={setView}
       onLogout={handleLogout}
     >
-      {status === 'checking' ? (
+      {status === "checking" ? (
         <BoardStatus>Verificando tu sesión...</BoardStatus>
       ) : isAuthenticated ? (
         <ActiveSection
@@ -354,7 +354,7 @@ function App() {
           onChangePassword={changeOwnPassword}
           onSaveGitlabUsername={saveGitlabUsername}
           onSaveProfile={saveProfile}
-          onGoToAccount={() => setView('account')}
+          onGoToAccount={() => setView("account")}
         />
       ) : (
         <AnonymousView
@@ -366,7 +366,7 @@ function App() {
         />
       )}
     </AppShell>
-  )
+  );
 }
 
-export default App
+export default App;

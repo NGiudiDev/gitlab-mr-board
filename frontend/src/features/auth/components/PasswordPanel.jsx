@@ -1,8 +1,8 @@
 // 2. Dependencias externas.
-import { useState } from 'react'
+import { useState } from "react";
 
-const FIELD_CLASSES = 'block w-full mt-1 rounded-md border border-control bg-surface-raised px-3 py-2 text-[13px] font-normal text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
-const LABEL_CLASSES = 'block text-[12px] font-semibold text-text-muted mb-3'
+const FIELD_CLASSES = "block w-full mt-1 rounded-md border border-control bg-surface-raised px-3 py-2 text-[13px] font-normal text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+const LABEL_CLASSES = "block text-[12px] font-semibold text-text-muted mb-3";
 
 /**
  * Cambio de la propia contraseña, pidiendo la actual como confirmación.
@@ -14,24 +14,24 @@ const LABEL_CLASSES = 'block text-[12px] font-semibold text-text-muted mb-3'
  * debe sobrevivir al envío.
  */
 function PasswordPanel({ user = null, submitting = false, onChangePassword = () => {} }) {
-  const [currentPassword, setCurrentPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmation, setConfirmation] = useState('')
-  const [error, setError] = useState(null)
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmation, setConfirmation] = useState("");
+  const [error, setError] = useState(null);
 
   async function handleSubmit(event) {
-    event.preventDefault()
+    event.preventDefault();
 
     if (newPassword !== confirmation) {
-      setError('Las contraseñas no coinciden.')
-      return
+      setError("Las contraseñas no coinciden.");
+      return;
     }
 
-    setError(null)
-    setError(await onChangePassword({ currentPassword, newPassword }))
+    setError(null);
+    setError(await onChangePassword({ currentPassword, newPassword }));
   }
 
-  if (!user) return null
+  if (!user) return null;
 
   return (
     <section aria-labelledby="contrasena-heading">
@@ -95,11 +95,11 @@ function PasswordPanel({ user = null, submitting = false, onChangePassword = () 
           disabled={submitting}
           className="rounded-md bg-accent px-3 py-2 text-[13px] font-semibold text-bg disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
-          {submitting ? 'Guardando...' : 'Cambiar contraseña'}
+          {submitting ? "Guardando..." : "Cambiar contraseña"}
         </button>
       </form>
     </section>
-  )
+  );
 }
 
-export default PasswordPanel
+export default PasswordPanel;

@@ -1,4 +1,4 @@
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath } from "node:url";
 
 /**
  * Configuración de los test E2E. Se resuelve al cargar `playwright.config.js`
@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
  * servidores, en lugar de hacerlo a mitad del recorrido.
  */
 
-const environmentFilePath = fileURLToPath(new URL('../.env', import.meta.url));
+const environmentFilePath = fileURLToPath(new URL("../.env", import.meta.url));
 
 /**
  * Carga el `.env` de la raíz si existe. Node no lo sobrescribe con lo que ya
@@ -22,13 +22,13 @@ function loadEnvironmentFile() {
 
 /** Variables obligatorias y para qué sirve cada una. */
 const REQUIRED_VARIABLES = {
-  GITLAB_TOKEN: 'PAT de GitLab con alcance read_api sobre los proyectos de test',
-  E2E_PROJECT_IDS: 'IDs de los proyectos de GitLab dedicados a test, separados por comas',
-  E2E_PROJECT_PATH: 'Ruta `grupo/proyecto` de la sección que expande el recorrido',
-  E2E_GITLAB_USERNAME: 'Nickname de GitLab con el que el recorrido configura la cuenta',
-  E2E_MR_TITLE: 'Título exacto del merge request abierto que verifica el recorrido',
-  E2E_MR_COLUMN: 'Columna del tablero donde debe aparecer ese merge request',
-  E2E_DATABASE_URL: 'Cadena de conexión de una base Neon dedicada a test; el usuario del recorrido se borra y se recrea en cada corrida',
+  GITLAB_TOKEN: "PAT de GitLab con alcance read_api sobre los proyectos de test",
+  E2E_PROJECT_IDS: "IDs de los proyectos de GitLab dedicados a test, separados por comas",
+  E2E_PROJECT_PATH: "Ruta `grupo/proyecto` de la sección que expande el recorrido",
+  E2E_GITLAB_USERNAME: "Nickname de GitLab con el que el recorrido configura la cuenta",
+  E2E_MR_TITLE: "Título exacto del merge request abierto que verifica el recorrido",
+  E2E_MR_COLUMN: "Columna del tablero donde debe aparecer ese merge request",
+  E2E_DATABASE_URL: "Cadena de conexión de una base Neon dedicada a test; el usuario del recorrido se borra y se recrea en cada corrida",
 };
 
 // El backend sólo acepta CORS desde 5173 y 4173. La suite usa 4173 —el puerto
@@ -38,17 +38,17 @@ const BACKEND_PORT = 3101;
 
 // El tablero exige sesión. La suite usa una base descartable y un usuario
 // propio, que se recrean en cada corrida desde `globalSetup.js`.
-const DEFAULT_EMAIL = 'e2e@example.com';
+const DEFAULT_EMAIL = "e2e@example.com";
 // La cuenta del recorrido se crea junto con el usuario en cada corrida.
-const ACCOUNT_NAME = 'Equipo E2E';
-const DEFAULT_PASSWORD = 'contrasena-de-test-e2e'
+const ACCOUNT_NAME = "Equipo E2E";
+const DEFAULT_PASSWORD = "contrasena-de-test-e2e";
 // Segundo usuario del recorrido: se suma a la cuenta con el código de
 // invitación y comprueba que ve el tablero sin cargar ninguna credencial.
-const GUEST_EMAIL = 'e2e-invitado@example.com';
+const GUEST_EMAIL = "e2e-invitado@example.com";
 
 // La base es descartable y se recrea en cada corrida, así que la clave con
 // la que se cifra el token de GitLab puede ser fija.
-const ENCRYPTION_KEY = 'clave-de-cifrado-solo-para-los-e2e';
+const ENCRYPTION_KEY = "clave-de-cifrado-solo-para-los-e2e";
 
 /** Lee una variable obligatoria y acumula las que falten. */
 function readRequiredVariables() {
@@ -58,12 +58,12 @@ function readRequiredVariables() {
     const detail = missing.map((name) => `  - ${name}: ${REQUIRED_VARIABLES[name]}`);
 
     throw new Error([
-      'Los test E2E no pueden ejecutarse: faltan variables de entorno.',
+      "Los test E2E no pueden ejecutarse: faltan variables de entorno.",
       ...detail,
-      '',
-      'Los E2E corren contra GitLab real: usá proyectos creados para test.',
-      'Copiá .env.example como .env en la raíz o exportá las variables.',
-    ].join('\n'));
+      "",
+      "Los E2E corren contra GitLab real: usá proyectos creados para test.",
+      "Copiá .env.example como .env en la raíz o exportá las variables.",
+    ].join("\n"));
   }
 }
 
@@ -72,7 +72,7 @@ readRequiredVariables();
 
 const e2eConfig = {
   gitlabToken: process.env.GITLAB_TOKEN.trim(),
-  gitlabBaseUrl: process.env.E2E_GITLAB_BASE_URL?.trim() || 'https://gitlab.com',
+  gitlabBaseUrl: process.env.E2E_GITLAB_BASE_URL?.trim() || "https://gitlab.com",
   projectIds: process.env.E2E_PROJECT_IDS.trim(),
   projectPath: process.env.E2E_PROJECT_PATH.trim(),
   gitlabUsername: process.env.E2E_GITLAB_USERNAME.trim(),

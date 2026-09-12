@@ -1,16 +1,16 @@
 // 1. Módulos estándar de Node.js.
-import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'node:crypto';
+import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "node:crypto";
 
 // AES-256-GCM cifra y autentica en un solo paso: sin la etiqueta correcta el
 // descifrado falla, así que un valor manipulado en la base no pasa desapercibido.
-const ALGORITHM = 'aes-256-gcm';
+const ALGORITHM = "aes-256-gcm";
 const KEY_LENGTH = 32;
 const IV_LENGTH = 12;
-const VERSION = 'v1';
+const VERSION = "v1";
 
 // La sal es fija a propósito: la clave se deriva una sola vez por proceso y
 // tiene que dar el mismo resultado en cada arranque para poder descifrar.
-const KEY_SALT = 'gitlab-mr-board.secret.v1';
+const KEY_SALT = "gitlab-mr-board.secret.v1";
 const MINIMUM_SECRET_LENGTH = 32;
 const PART_COUNT = 4;
 
@@ -52,14 +52,14 @@ function createSecretCipher(secret) {
     encrypt(plainText) {
       const iv = randomBytes(IV_LENGTH);
       const cipher = createCipheriv(ALGORITHM, key, iv);
-      const encrypted = Buffer.concat([cipher.update(plainText, 'utf8'), cipher.final()]);
+      const encrypted = Buffer.concat([cipher.update(plainText, "utf8"), cipher.final()]);
 
       return [
         VERSION,
-        iv.toString('base64'),
-        cipher.getAuthTag().toString('base64'),
-        encrypted.toString('base64'),
-      ].join('.');
+        iv.toString("base64"),
+        cipher.getAuthTag().toString("base64"),
+        encrypted.toString("base64"),
+      ].join(".");
     },
 
     /**
@@ -71,20 +71,20 @@ function createSecretCipher(secret) {
      * con la que se cifró.
      */
     decrypt(payload) {
-      const parts = payload.split('.');
+      const parts = payload.split(".");
 
       if (parts.length !== PART_COUNT || parts[0] !== VERSION) {
-        throw new Error('El valor cifrado no tiene el formato esperado.');
+        throw new Error("El valor cifrado no tiene el formato esperado.");
       }
 
-      const [, ivBase64 = '', authTagBase64 = '', encryptedBase64 = ''] = parts;
-      const decipher = createDecipheriv(ALGORITHM, key, Buffer.from(ivBase64, 'base64'));
-      decipher.setAuthTag(Buffer.from(authTagBase64, 'base64'));
+      const [, ivBase64 = "", authTagBase64 = "", encryptedBase64 = ""] = parts;
+      const decipher = createDecipheriv(ALGORITHM, key, Buffer.from(ivBase64, "base64"));
+      decipher.setAuthTag(Buffer.from(authTagBase64, "base64"));
 
       return Buffer.concat([
-        decipher.update(Buffer.from(encryptedBase64, 'base64')),
+        decipher.update(Buffer.from(encryptedBase64, "base64")),
         decipher.final(),
-      ]).toString('utf8');
+      ]).toString("utf8");
     },
   };
 }

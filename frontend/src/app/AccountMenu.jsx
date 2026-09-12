@@ -1,8 +1,8 @@
 // 2. Dependencias externas.
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from "react";
 
 // 6. Imports relativos restantes.
-import { useAccount } from '../features/accounts/hooks/useAccount.js'
+import { useAccount } from "../features/accounts/hooks/useAccount.js";
 
 /**
  * Obtiene hasta dos iniciales para representar a la persona sin una imagen.
@@ -11,13 +11,13 @@ import { useAccount } from '../features/accounts/hooks/useAccount.js'
  * @returns {string} Iniciales en mayúsculas.
  */
 function initialsFor(user) {
-  const label = user?.displayName?.trim() || user?.email?.trim() || '?'
-  const words = label.split(/\s+/)
+  const label = user?.displayName?.trim() || user?.email?.trim() || "?";
+  const words = label.split(/\s+/);
   const initials = words.length > 1
     ? `${words[0][0]}${words.at(-1)[0]}`
-    : label.slice(0, 2)
+    : label.slice(0, 2);
 
-  return initials.toLocaleUpperCase('es')
+  return initials.toLocaleUpperCase("es");
 }
 
 /**
@@ -29,54 +29,54 @@ function AccountMenu({
   onEditProfile = () => {},
   onLogout = () => {},
 }) {
-  const [isOpen, setIsOpen] = useState(false)
-  const menuId = useId()
-  const containerRef = useRef(null)
-  const triggerRef = useRef(null)
-  const { account, loading } = useAccount(user?.accountId ?? null)
+  const [isOpen, setIsOpen] = useState(false);
+  const menuId = useId();
+  const containerRef = useRef(null);
+  const triggerRef = useRef(null);
+  const { account, loading } = useAccount(user?.accountId ?? null);
 
   function closeMenu() {
-    setIsOpen(false)
+    setIsOpen(false);
   }
 
   useEffect(() => {
-    if (!isOpen) return undefined
+    if (!isOpen) return undefined;
 
     function handlePointerDown(event) {
-      if (!containerRef.current?.contains(event.target)) closeMenu()
+      if (!containerRef.current?.contains(event.target)) closeMenu();
     }
 
     function handleKeyDown(event) {
-      if (event.key !== 'Escape') return
+      if (event.key !== "Escape") return;
 
-      closeMenu()
-      triggerRef.current?.focus()
+      closeMenu();
+      triggerRef.current?.focus();
     }
 
-    document.addEventListener('pointerdown', handlePointerDown)
-    document.addEventListener('keydown', handleKeyDown)
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.removeEventListener('pointerdown', handlePointerDown)
-      document.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [isOpen])
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen]);
 
-  if (!user) return null
+  if (!user) return null;
 
   function handleLogout() {
-    closeMenu()
-    onLogout()
+    closeMenu();
+    onLogout();
   }
 
   function openProfileScreen() {
-    closeMenu()
-    onEditProfile()
+    closeMenu();
+    onEditProfile();
   }
 
   function openAccountScreen() {
-    closeMenu()
-    onEditAccount()
+    closeMenu();
+    onEditAccount();
   }
 
   return (
@@ -84,16 +84,16 @@ function AccountMenu({
       <button
         ref={triggerRef}
         type="button"
-        aria-label={`${isOpen ? 'Cerrar' : 'Abrir'} menú de cuenta de ${user.displayName}`}
+        aria-label={`${isOpen ? "Cerrar" : "Abrir"} menú de cuenta de ${user.displayName}`}
         aria-expanded={isOpen}
         aria-controls={isOpen ? menuId : undefined}
         onClick={() => {
           if (isOpen) {
-            closeMenu()
-            return
+            closeMenu();
+            return;
           }
 
-          setIsOpen(true)
+          setIsOpen(true);
         }}
         className="flex min-h-10 items-center gap-1.5 rounded-full border border-control bg-surface px-1.5 py-1 text-text-primary hover:border-accent hover:bg-surface-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
@@ -104,7 +104,7 @@ function AccountMenu({
           {initialsFor(user)}
         </span>
         <svg
-          className={`h-4 w-4 text-text-muted transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`h-4 w-4 text-text-muted transition-transform ${isOpen ? "rotate-180" : ""}`}
           viewBox="0 0 20 20"
           fill="none"
           stroke="currentColor"
@@ -138,7 +138,7 @@ function AccountMenu({
           <dl className="border-y border-border-soft px-4 py-3">
             <dt className="text-[11px] font-semibold uppercase tracking-wide text-text-faint">Equipo</dt>
             <dd className="mt-0.5 truncate text-sm text-text-primary">
-              {account?.name ?? (loading ? 'Cargando…' : 'No disponible')}
+              {account?.name ?? (loading ? "Cargando…" : "No disponible")}
             </dd>
           </dl>
 
@@ -175,7 +175,7 @@ function AccountMenu({
               >
                 <path d="M3.5 16.5h13M5 16.5v-9h10v9M7.5 10h1m3 0h1m-5 3h1m3 0h1M4 7.5 10 3l6 4.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              {user.role === 'admin' ? 'Editar cuenta' : 'Ver cuenta'}
+              {user.role === "admin" ? "Editar cuenta" : "Ver cuenta"}
             </button>
             <button
               type="button"
@@ -198,8 +198,8 @@ function AccountMenu({
         </div>
       ) : null}
     </div>
-  )
+  );
 }
 
-export { initialsFor }
-export default AccountMenu
+export { initialsFor };
+export default AccountMenu;

@@ -1,10 +1,10 @@
 // 2. Dependencias externas.
-import { useEffect, useSyncExternalStore } from 'react'
+import { useEffect, useSyncExternalStore } from "react";
 
 // 6. Imports relativos restantes.
-import config from '../../../config.js'
+import { config } from "../../../config.js";
 
-const NETWORK_ERROR_MESSAGE = 'No se pudo conectar al backend.'
+const NETWORK_ERROR_MESSAGE = "No se pudo conectar al backend.";
 
 const INITIAL_STATE = {
   /** Cuenta de la sesión, o `null` mientras no se cargó. */
@@ -12,35 +12,35 @@ const INITIAL_STATE = {
   loading: false,
   error: null,
   submitting: false,
-}
+};
 
 /**
  * La cuenta la miran dos lugares —la barra superior y la pantalla de cuenta—,
  * así que vive en un store con el mismo patrón que la sesión y el tablero, y
  * no en el estado local de un componente.
  */
-let state = INITIAL_STATE
-const listeners = new Set()
+let state = INITIAL_STATE;
+const listeners = new Set();
 
 function getState() {
-  return state
+  return state;
 }
 
 function setState(patch) {
-  state = { ...state, ...patch }
-  listeners.forEach((listener) => listener())
+  state = { ...state, ...patch };
+  listeners.forEach((listener) => listener());
 }
 
 function subscribe(listener) {
-  listeners.add(listener)
+  listeners.add(listener);
   return () => {
-    listeners.delete(listener)
-  }
+    listeners.delete(listener);
+  };
 }
 
 // Carga en curso. Evita que el doble montaje de StrictMode, o un segundo
 // consumidor del hook, disparen dos peticiones para la misma cuenta.
-let pendingLoad = null
+let pendingLoad = null;
 
 /**
  * Llama a la API de la cuenta con la cookie de sesión.
@@ -49,17 +49,17 @@ let pendingLoad = null
  * @param {RequestInit & { body?: object }} [options] Método y cuerpo.
  * @returns {Promise<Response>} Respuesta cruda.
  */
-function requestAccount(path = '', options = {}) {
-  const { body, ...rest } = options
+function requestAccount(path = "", options = {}) {
+  const { body, ...rest } = options;
 
   return fetch(`${config.apiBaseUrl}/api/account${path}`, {
-    credentials: 'include',
+    credentials: "include",
     ...(body === undefined ? {} : {
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     }),
     ...rest,
-  })
+  });
 }
 
 /**
@@ -69,29 +69,29 @@ function requestAccount(path = '', options = {}) {
  * @returns {Promise<string>} Mensaje en español para mostrar en la UI.
  */
 async function readErrorMessage(response) {
-  const body = await response.json().catch(() => ({}))
+  const body = await response.json().catch(() => ({}));
 
-  return body.error || `Error ${response.status}`
+  return body.error || `Error ${response.status}`;
 }
 
 /** Trae la cuenta de la sesión abierta. */
 async function loadAccount() {
-  setState({ loading: true })
+  setState({ loading: true });
 
   try {
-    const response = await requestAccount()
+    const response = await requestAccount();
 
     if (!response.ok) {
-      setState({ error: await readErrorMessage(response) })
-      return
+      setState({ error: await readErrorMessage(response) });
+      return;
     }
 
-    const { account } = await response.json()
-    setState({ account, error: null })
+    const { account } = await response.json();
+    setState({ account, error: null });
   } catch {
-    setState({ error: NETWORK_ERROR_MESSAGE })
+    setState({ error: NETWORK_ERROR_MESSAGE });
   } finally {
-    setState({ loading: false })
+    setState({ loading: false });
   }
 }
 
@@ -106,14 +106,14 @@ async function loadAccount() {
  * @returns {Promise<void>} Se resuelve cuando la carga termina.
  */
 function loadAccountOnce(accountId) {
-  if (!accountId) return Promise.resolve()
-  if (state.account?.id === accountId) return Promise.resolve()
-  if (pendingLoad) return pendingLoad
+  if (!accountId) return Promise.resolve();
+  if (state.account?.id === accountId) return Promise.resolve();
+  if (pendingLoad) return pendingLoad;
 
   pendingLoad = loadAccount().finally(() => {
-    pendingLoad = null
-  })
-  return pendingLoad
+    pendingLoad = null;
+  });
+  return pendingLoad;
 }
 
 /**
@@ -123,20 +123,20 @@ function loadAccountOnce(accountId) {
  * @param {string} [path] Ruta bajo `/api/account`.
  * @returns {Promise<string | null>} El mensaje de error, o `null` si se aplicó.
  */
-async function submitChange(options, path = '') {
-  setState({ submitting: true })
+async function submitChange(options, path = "") {
+  setState({ submitting: true });
 
   try {
-    const response = await requestAccount(path, options)
-    if (!response.ok) return await readErrorMessage(response)
+    const response = await requestAccount(path, options);
+    if (!response.ok) return await readErrorMessage(response);
 
-    const { account } = await response.json()
-    setState({ account, error: null })
-    return null
+    const { account } = await response.json();
+    setState({ account, error: null });
+    return null;
   } catch {
-    return NETWORK_ERROR_MESSAGE
+    return NETWORK_ERROR_MESSAGE;
   } finally {
-    setState({ submitting: false })
+    setState({ submitting: false });
   }
 }
 
@@ -147,7 +147,7 @@ async function submitChange(options, path = '') {
  * @returns {Promise<string | null>} El mensaje de error, o `null` si se aplicó.
  */
 function renameAccount(name) {
-  return submitChange({ method: 'PATCH', body: { name } })
+  return submitChange({ method: "PATCH", body: { name } });
 }
 
 /**
@@ -156,13 +156,13 @@ function renameAccount(name) {
  * @returns {Promise<string | null>} El mensaje de error, o `null` si se aplicó.
  */
 function rotateInviteCode() {
-  return submitChange({ method: 'POST' }, '/invite-code')
+  return submitChange({ method: "POST" }, "/invite-code");
 }
 
 /** Deja el store como al arrancar la app: se usa al cerrar sesión y en los test. */
 function resetAccountStore() {
-  pendingLoad = null
-  setState(INITIAL_STATE)
+  pendingLoad = null;
+  setState(INITIAL_STATE);
 }
 
 /**
@@ -173,13 +173,13 @@ function resetAccountStore() {
  * @returns {object} Cuenta, estado de carga y acciones.
  */
 function useAccount(accountId = null) {
-  const snapshot = useSyncExternalStore(subscribe, getState)
+  const snapshot = useSyncExternalStore(subscribe, getState);
 
   useEffect(() => {
-    loadAccountOnce(accountId)
-  }, [accountId])
+    loadAccountOnce(accountId);
+  }, [accountId]);
 
-  return { ...snapshot, renameAccount, rotateInviteCode }
+  return { ...snapshot, renameAccount, rotateInviteCode };
 }
 
-export { getState, renameAccount, resetAccountStore, rotateInviteCode, useAccount }
+export { getState, renameAccount, resetAccountStore, rotateInviteCode, useAccount };

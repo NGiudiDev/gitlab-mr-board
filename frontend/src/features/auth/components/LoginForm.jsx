@@ -1,8 +1,8 @@
 // 2. Dependencias externas.
-import { useState } from 'react'
+import { useState } from "react";
 
-const FIELD_CLASSES = 'block w-full mt-1 rounded-md border border-control bg-surface-raised px-3 py-2 text-[13px] font-normal text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
-const LABEL_CLASSES = 'block text-[12px] font-semibold text-text-muted mb-3'
+const FIELD_CLASSES = "block w-full mt-1 rounded-md border border-control bg-surface-raised px-3 py-2 text-[13px] font-normal text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+const LABEL_CLASSES = "block text-[12px] font-semibold text-text-muted mb-3";
 
 /**
  * Formulario de ingreso al tablero.
@@ -17,12 +17,12 @@ function LoginForm({
   onSubmit = () => {},
   onShowRegister = () => {},
 }) {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   function handleSubmit(event) {
-    event.preventDefault()
-    onSubmit({ email: email.trim(), password })
+    event.preventDefault();
+    onSubmit({ email: email.trim(), password });
   }
 
   return (
@@ -84,11 +84,11 @@ function LoginForm({
         disabled={submitting}
         className="w-full mt-2 rounded-md bg-accent px-3 py-2 text-[13px] font-semibold text-bg disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
-        {submitting ? 'Ingresando...' : 'Ingresar'}
+        {submitting ? "Ingresando..." : "Ingresar"}
       </button>
 
       <p className="mt-4 text-center text-[12.5px] text-text-muted">
-        ¿No tenés cuenta?{' '}
+        ¿No tenés cuenta?{" "}
         <button
           type="button"
           onClick={onShowRegister}
@@ -98,7 +98,7 @@ function LoginForm({
         </button>
       </p>
     </form>
-  )
+  );
 }
 
-export default LoginForm
+export default LoginForm;

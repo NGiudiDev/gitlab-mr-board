@@ -1,10 +1,10 @@
 // 2. Dependencias externas.
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from "react";
 
 // 6. Imports relativos restantes.
-import config from '../../../config.js'
+import { config } from "../../../config.js";
 
-const NETWORK_ERROR_MESSAGE = 'No se pudo conectar al backend.'
+const NETWORK_ERROR_MESSAGE = "No se pudo conectar al backend.";
 
 /**
  * Llama a la API de administración de usuarios con la cookie de sesión.
@@ -14,16 +14,16 @@ const NETWORK_ERROR_MESSAGE = 'No se pudo conectar al backend.'
  * @returns {Promise<Response>} Respuesta cruda.
  */
 function requestUsers(path, options = {}) {
-  const { body, ...rest } = options
+  const { body, ...rest } = options;
 
   return fetch(`${config.apiBaseUrl}/api/users${path}`, {
-    credentials: 'include',
+    credentials: "include",
     ...(body === undefined ? {} : {
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     }),
     ...rest,
-  })
+  });
 }
 
 /**
@@ -33,9 +33,9 @@ function requestUsers(path, options = {}) {
  * @returns {Promise<string>} Mensaje en español para mostrar en la UI.
  */
 async function readErrorMessage(response) {
-  const body = await response.json().catch(() => ({}))
+  const body = await response.json().catch(() => ({}));
 
-  return body.error || `Error ${response.status}`
+  return body.error || `Error ${response.status}`;
 }
 
 /**
@@ -47,34 +47,34 @@ async function readErrorMessage(response) {
  * @returns {object} Lista, estado de carga y acciones de administración.
  */
 function useUsers() {
-  const [users, setUsers] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const load = useCallback(async () => {
-    setLoading(true)
+    setLoading(true);
 
     try {
-      const response = await requestUsers('')
+      const response = await requestUsers("");
 
       if (!response.ok) {
-        setError(await readErrorMessage(response))
-        return
+        setError(await readErrorMessage(response));
+        return;
       }
 
-      const body = await response.json()
-      setUsers(body.users)
-      setError(null)
+      const body = await response.json();
+      setUsers(body.users);
+      setError(null);
     } catch {
-      setError(NETWORK_ERROR_MESSAGE)
+      setError(NETWORK_ERROR_MESSAGE);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    load()
-  }, [load])
+    load();
+  }, [load]);
 
   /**
    * Ejecuta una acción de escritura y recarga la lista si salió bien.
@@ -85,13 +85,13 @@ function useUsers() {
    */
   async function submit(path, options) {
     try {
-      const response = await requestUsers(path, options)
-      if (!response.ok) return await readErrorMessage(response)
+      const response = await requestUsers(path, options);
+      if (!response.ok) return await readErrorMessage(response);
 
-      await load()
-      return null
+      await load();
+      return null;
     } catch {
-      return NETWORK_ERROR_MESSAGE
+      return NETWORK_ERROR_MESSAGE;
     }
   }
 
@@ -100,9 +100,9 @@ function useUsers() {
     loading,
     error,
     reload: load,
-    createUser: (user) => submit('', { method: 'POST', body: user }),
-    setStatus: (email, status) => submit(`/${encodeURIComponent(email)}/status`, { method: 'PATCH', body: { status } }),
-  }
+    createUser: (user) => submit("", { method: "POST", body: user }),
+    setStatus: (email, status) => submit(`/${encodeURIComponent(email)}/status`, { method: "PATCH", body: { status } }),
+  };
 }
 
-export { useUsers }
+export { useUsers };

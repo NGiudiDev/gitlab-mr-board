@@ -1,5 +1,5 @@
 // 6. Imports relativos restantes.
-import { toIsoString } from '../../../shared/database.js';
+import { toIsoString } from "../../../shared/database.js";
 
 /** Traduce una fila de `accounts` al contrato del dominio. */
 function toStoredAccount(row) {
@@ -22,20 +22,20 @@ function createAccountRepository(database) {
   return {
     async insert(account) {
       await database.query(
-        'INSERT INTO accounts (id, name, invite_code, created_at) VALUES ($1, $2, $3, $4)',
+        "INSERT INTO accounts (id, name, invite_code, created_at) VALUES ($1, $2, $3, $4)",
         [account.id, account.name, account.inviteCode, account.createdAt],
       );
     },
 
     async findById(id) {
-      const { rows } = await database.query('SELECT * FROM accounts WHERE id = $1', [id]);
+      const { rows } = await database.query("SELECT * FROM accounts WHERE id = $1", [id]);
 
       return rows[0] ? toStoredAccount(rows[0]) : null;
     },
 
     async findByInviteCode(inviteCode) {
       const { rows } = await database.query(
-        'SELECT * FROM accounts WHERE upper(invite_code) = upper($1)',
+        "SELECT * FROM accounts WHERE upper(invite_code) = upper($1)",
         [inviteCode],
       );
 
@@ -43,22 +43,22 @@ function createAccountRepository(database) {
     },
 
     async listAll() {
-      const { rows } = await database.query('SELECT * FROM accounts ORDER BY created_at');
+      const { rows } = await database.query("SELECT * FROM accounts ORDER BY created_at");
 
       return rows.map(toStoredAccount);
     },
 
     async updateName(id, name) {
-      await database.query('UPDATE accounts SET name = $1 WHERE id = $2', [name, id]);
+      await database.query("UPDATE accounts SET name = $1 WHERE id = $2", [name, id]);
     },
 
     async updateInviteCode(id, inviteCode) {
-      await database.query('UPDATE accounts SET invite_code = $1 WHERE id = $2', [inviteCode, id]);
+      await database.query("UPDATE accounts SET invite_code = $1 WHERE id = $2", [inviteCode, id]);
     },
 
     async countMembers(id) {
       const { rows } = await database.query(
-        'SELECT COUNT(*) AS total FROM users WHERE account_id = $1',
+        "SELECT COUNT(*) AS total FROM users WHERE account_id = $1",
         [id],
       );
 

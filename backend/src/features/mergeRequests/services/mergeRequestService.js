@@ -1,7 +1,7 @@
 // 6. Imports relativos restantes.
-import config from '../../../config.js';
-import { createGitLabClient } from './gitlabApi.js';
-import { collectPeople, computeMergeability, computeResponsiblePeople, extractProjectPath } from './mergeRequestRules.js';
+import config from "../../../config.js";
+import { createGitLabClient } from "./gitlabApi.js";
+import { collectPeople, computeMergeability, computeResponsiblePeople, extractProjectPath } from "./mergeRequestRules.js";
 
 /** Construye la ruta común de un merge request en la API de GitLab. */
 function mergeRequestPath(projectId, mergeRequestIid) {
@@ -11,10 +11,10 @@ function mergeRequestPath(projectId, mergeRequestIid) {
 /** Obtiene los merge requests abiertos de un proyecto. */
 async function fetchOpenMRsForProject(client, projectId) {
   return client.fetchPaginatedWithLimit(`/projects/${projectId}/merge_requests`, {
-    state: 'opened',
-    scope: 'all',
-    order_by: 'updated_at',
-    sort: 'desc',
+    state: "opened",
+    scope: "all",
+    order_by: "updated_at",
+    sort: "desc",
   });
 }
 
@@ -33,14 +33,14 @@ async function fetchApprovals(client, projectId, mergeRequestIid) {
     const hasRequiredApprovals = approvedBy.length >= config.minApprovals;
 
     return {
-      status: hasRequiredApprovals && hasLeadApproval ? 'approved' : 'pending',
+      status: hasRequiredApprovals && hasLeadApproval ? "approved" : "pending",
       required: config.minApprovals,
       given: approvedBy.length,
       approvers,
       hasLeadApproval,
     };
   } catch {
-    return { status: 'unknown', required: 0, given: 0 };
+    return { status: "unknown", required: 0, given: 0 };
   }
 }
 
@@ -57,9 +57,9 @@ async function fetchUnresolvedThreads(client, projectId, mergeRequestIid) {
     );
     const unresolvedCount = discussions.filter(hasUnresolvedNote).length;
 
-    return { status: unresolvedCount > 0 ? 'open' : 'resolved', unresolvedCount };
+    return { status: unresolvedCount > 0 ? "open" : "resolved", unresolvedCount };
   } catch {
-    return { status: 'unknown', unresolvedCount: 0 };
+    return { status: "unknown", unresolvedCount: 0 };
   }
 }
 
@@ -70,14 +70,14 @@ async function fetchPipeline(client, projectId, mergeRequestIid) {
       `${mergeRequestPath(projectId, mergeRequestIid)}/pipelines`,
     );
     const latestPipeline = data[0];
-    if (!latestPipeline) return { status: 'none', pipelineUrl: null };
+    if (!latestPipeline) return { status: "none", pipelineUrl: null };
 
     return {
-      status: latestPipeline.status ?? 'unknown',
+      status: latestPipeline.status ?? "unknown",
       pipelineUrl: latestPipeline.web_url ?? null,
     };
   } catch {
-    return { status: 'none', pipelineUrl: null };
+    return { status: "none", pipelineUrl: null };
   }
 }
 
@@ -105,7 +105,7 @@ async function enrichMergeRequest(client, mergeRequest) {
     iid: mergeRequest.iid,
     title: mergeRequest.title,
     url: mergeRequest.web_url,
-    author: mergeRequest.author?.name ?? 'desconocido',
+    author: mergeRequest.author?.name ?? "desconocido",
     authorUsername: mergeRequest.author?.username ?? null,
     authorAvatar: mergeRequest.author?.avatar_url ?? null,
     projectPath: extractProjectPath(mergeRequest),

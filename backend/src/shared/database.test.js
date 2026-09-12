@@ -1,9 +1,9 @@
 // 2. Dependencias externas.
-import { PGlite } from '@electric-sql/pglite';
-import { afterEach, describe, expect, it } from 'vitest';
+import { PGlite } from "@electric-sql/pglite";
+import { afterEach, describe, expect, it } from "vitest";
 
 // 6. Imports relativos restantes.
-import { applySchema } from './database.js';
+import { applySchema } from "./database.js";
 
 // Esquema tal como quedó antes de las cuentas: los usuarios no pertenecían a
 // ninguna y la configuración de GitLab era de cada persona.
@@ -89,8 +89,8 @@ afterEach(async () => {
   openInstances = [];
 });
 
-describe('applySchema', () => {
-  it('crea las cuatro tablas en una base vacía', async () => {
+describe("applySchema", () => {
+  it("crea las cuatro tablas en una base vacía", async () => {
     const database = await openEmptyDatabase();
 
     await applySchema(database);
@@ -101,25 +101,25 @@ describe('applySchema', () => {
     );
 
     expect(rows.map((row) => row.table_name))
-      .toEqual(['account_gitlab_settings', 'accounts', 'sessions', 'users']);
+      .toEqual(["account_gitlab_settings", "accounts", "sessions", "users"]);
   });
 
-  it('es idempotente: aplicarlo dos veces no falla ni duplica cuentas', async () => {
+  it("es idempotente: aplicarlo dos veces no falla ni duplica cuentas", async () => {
     const database = await openPreviousDatabase();
 
     await applySchema(database);
     await applySchema(database);
 
     const { rows } = await database.query(
-      'SELECT COUNT(*) AS total FROM accounts',
+      "SELECT COUNT(*) AS total FROM accounts",
     );
 
     expect(Number(rows[0]?.total)).toBe(1);
   });
 });
 
-describe('migración a cuentas', () => {
-  it('agrupa en una sola cuenta a los usuarios que no tenían ninguna', async () => {
+describe("migración a cuentas", () => {
+  it("agrupa en una sola cuenta a los usuarios que no tenían ninguna", async () => {
     const database = await openPreviousDatabase();
 
     await applySchema(database);
@@ -131,51 +131,51 @@ describe('migración a cuentas', () => {
     );
 
     expect(rows).toEqual([
-      { email: 'ana', name: 'Mi equipo' },
-      { email: 'beto', name: 'Mi equipo' },
+      { email: "ana", name: "Mi equipo" },
+      { email: "beto", name: "Mi equipo" },
     ]);
   });
 
-  it('deja la cuenta con un código de invitación usable', async () => {
+  it("deja la cuenta con un código de invitación usable", async () => {
     const database = await openPreviousDatabase();
 
     await applySchema(database);
 
-    const { rows } = await database.query('SELECT invite_code FROM accounts');
+    const { rows } = await database.query("SELECT invite_code FROM accounts");
 
     expect(rows[0]?.invite_code).toMatch(/^[0-9A-F]{10}$/);
   });
 
-  it('conserva el nickname de GitLab de cada persona', async () => {
+  it("conserva el nickname de GitLab de cada persona", async () => {
     const database = await openPreviousDatabase();
 
     await applySchema(database);
 
     const { rows } = await database.query(
-      'SELECT email, gitlab_username FROM users ORDER BY email',
+      "SELECT email, gitlab_username FROM users ORDER BY email",
     );
 
     expect(rows).toEqual([
-      { email: 'ana', gitlab_username: 'ana-gitlab' },
-      { email: 'beto', gitlab_username: 'beto-gitlab' },
+      { email: "ana", gitlab_username: "ana-gitlab" },
+      { email: "beto", gitlab_username: "beto-gitlab" },
     ]);
   });
 
-  it('pasa a la cuenta la configuración de GitLab guardada más recientemente', async () => {
+  it("pasa a la cuenta la configuración de GitLab guardada más recientemente", async () => {
     const database = await openPreviousDatabase();
 
     await applySchema(database);
 
     const { rows } = await database.query(
-      'SELECT project_ids, encrypted_access_token FROM account_gitlab_settings',
+      "SELECT project_ids, encrypted_access_token FROM account_gitlab_settings",
     );
 
     expect(rows).toHaveLength(1);
-    expect(rows[0]?.project_ids).toEqual(['202', '303']);
-    expect(rows[0]?.encrypted_access_token).toBe('v1.token-de-beto');
+    expect(rows[0]?.project_ids).toEqual(["202", "303"]);
+    expect(rows[0]?.encrypted_access_token).toBe("v1.token-de-beto");
   });
 
-  it('descarta la tabla vieja, para no dejar tokens sueltos', async () => {
+  it("descarta la tabla vieja, para no dejar tokens sueltos", async () => {
     const database = await openPreviousDatabase();
 
     await applySchema(database);
@@ -188,7 +188,7 @@ describe('migración a cuentas', () => {
     expect(rows).toHaveLength(0);
   });
 
-  it('conserva las sesiones abiertas: nadie tiene que volver a ingresar', async () => {
+  it("conserva las sesiones abiertas: nadie tiene que volver a ingresar", async () => {
     const database = await openPreviousDatabase();
     await database.query(
       `INSERT INTO sessions (id, user_id, token_hash, created_at, expires_at)
@@ -197,8 +197,8 @@ describe('migración a cuentas', () => {
 
     await applySchema(database);
 
-    const { rows } = await database.query('SELECT id FROM sessions');
+    const { rows } = await database.query("SELECT id FROM sessions");
 
-    expect(rows.map((row) => row.id)).toEqual(['sesion-1']);
+    expect(rows.map((row) => row.id)).toEqual(["sesion-1"]);
   });
 });

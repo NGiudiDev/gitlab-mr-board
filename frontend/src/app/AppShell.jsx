@@ -1,5 +1,5 @@
 // 6. Imports relativos restantes.
-import AccountMenu from './AccountMenu.jsx'
+import AccountMenu from "./AccountMenu.jsx";
 
 /**
  * Secciones navegables con la sesión abierta, en el orden en que aparecen en la
@@ -7,13 +7,13 @@ import AccountMenu from './AccountMenu.jsx'
  * única fuente de verdad de la navegación.
  */
 const SECTIONS = [
-  { id: 'board', label: 'Tablero' },
-  { id: 'profile', label: 'Mi perfil', menuOnly: true },
-  { id: 'account', label: 'Mi cuenta', menuOnly: true },
-  { id: 'users', label: 'Usuarios', adminOnly: true },
-]
+  { id: "board", label: "Tablero" },
+  { id: "profile", label: "Mi perfil", menuOnly: true },
+  { id: "account", label: "Mi cuenta", menuOnly: true },
+  { id: "users", label: "Usuarios", adminOnly: true },
+];
 
-const NAV_ITEM_CLASSES = 'block rounded-md px-2.5 py-1 text-[13px] cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
+const NAV_ITEM_CLASSES = "block rounded-md px-2.5 py-1 text-[13px] cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
 /**
  * Secciones que puede abrir un usuario.
@@ -25,9 +25,9 @@ const NAV_ITEM_CLASSES = 'block rounded-md px-2.5 py-1 text-[13px] cursor-pointe
  * @returns {Array<{ id: string, label: string, menuOnly?: boolean }>} Secciones permitidas.
  */
 function sectionsFor(user) {
-  if (user?.role === 'admin') return SECTIONS
+  if (user?.role === "admin") return SECTIONS;
 
-  return SECTIONS.filter((section) => !section.adminOnly)
+  return SECTIONS.filter((section) => !section.adminOnly);
 }
 
 /**
@@ -40,7 +40,7 @@ function sectionsFor(user) {
  */
 function AppShell({
   user = null,
-  view = 'board',
+  view = "board",
   onChangeView = () => {},
   onLogout = () => {},
   children,
@@ -62,30 +62,30 @@ function AppShell({
             <nav aria-label="Secciones">
               <ul className="flex flex-wrap items-center gap-1">
                 {sectionsFor(user).filter((section) => !section.menuOnly).map((section) => {
-                  const isActive = section.id === view
+                  const isActive = section.id === view;
 
                   return (
                     <li key={section.id}>
                       <button
                         type="button"
-                        aria-current={isActive ? 'page' : undefined}
+                        aria-current={isActive ? "page" : undefined}
                         onClick={() => onChangeView(section.id)}
                         className={`${NAV_ITEM_CLASSES} ${isActive
-                          ? 'bg-surface-raised font-semibold text-text-primary'
-                          : 'text-text-muted hover:text-text-primary'}`}
+                          ? "bg-surface-raised font-semibold text-text-primary"
+                          : "text-text-muted hover:text-text-primary"}`}
                       >
                         {section.label}
                       </button>
                     </li>
-                  )
+                  );
                 })}
               </ul>
             </nav>
 
             <AccountMenu
               user={user}
-              onEditProfile={() => onChangeView('profile')}
-              onEditAccount={() => onChangeView('account')}
+              onEditProfile={() => onChangeView("profile")}
+              onEditAccount={() => onChangeView("account")}
               onLogout={onLogout}
             />
           </div>
@@ -102,8 +102,8 @@ function AppShell({
         {children}
       </main>
     </>
-  )
+  );
 }
 
-export { sectionsFor }
-export default AppShell
+export { sectionsFor };
+export default AppShell;

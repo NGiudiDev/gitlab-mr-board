@@ -1,12 +1,12 @@
 // 6. Imports relativos restantes.
-import { findPersonByUsername } from '../personalView.js'
+import { findPersonByUsername } from "../personalView.js";
 
 const VIEW_OPTIONS = [
-  { id: 'general', label: 'General' },
-  { id: 'personal', label: 'Personal' },
-]
+  { id: "general", label: "General" },
+  { id: "personal", label: "Personal" },
+];
 
-const OPTION_CLASSES = 'px-3 py-1 text-[13px] rounded cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
+const OPTION_CLASSES = "px-3 py-1 text-[13px] rounded cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
 /**
  * Controles de la vista del tablero.
@@ -16,15 +16,15 @@ const OPTION_CLASSES = 'px-3 py-1 text-[13px] rounded cursor-pointer focus-visib
  * selector sobra.
  */
 function ViewControls({
-  viewMode = 'general',
+  viewMode = "general",
   people = [],
-  selectedUsername = '',
-  selectedPersonName = '',
+  selectedUsername = "",
+  selectedPersonName = "",
   canChoosePerson = false,
   onViewChange = () => {},
   onPersonChange = () => {},
 }) {
-  const selectedPersonIsAvailable = Boolean(findPersonByUsername(people, selectedUsername))
+  const selectedPersonIsAvailable = Boolean(findPersonByUsername(people, selectedUsername));
 
   return (
     <section className="flex items-center gap-3 flex-wrap" aria-label="Configuración de la vista">
@@ -34,7 +34,7 @@ function ViewControls({
         aria-label="Tipo de vista"
       >
         {VIEW_OPTIONS.map((option) => {
-          const isSelected = viewMode === option.id
+          const isSelected = viewMode === option.id;
 
           return (
             <button
@@ -43,16 +43,16 @@ function ViewControls({
               aria-pressed={isSelected}
               onClick={() => onViewChange(option.id)}
               className={`${OPTION_CLASSES} ${isSelected
-                ? 'bg-surface-raised font-semibold text-text-primary'
-                : 'text-text-muted hover:text-text-primary'}`}
+                ? "bg-surface-raised font-semibold text-text-primary"
+                : "text-text-muted hover:text-text-primary"}`}
             >
               {option.label}
             </button>
-          )
+          );
         })}
       </div>
 
-      {viewMode === 'personal' && canChoosePerson ? (
+      {viewMode === "personal" && canChoosePerson ? (
         <label className="flex items-center gap-2 text-[12px] font-semibold text-text-muted">
           Persona
           <select
@@ -75,7 +75,7 @@ function ViewControls({
         </label>
       ) : null}
     </section>
-  )
+  );
 }
 
-export default ViewControls
+export default ViewControls;

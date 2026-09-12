@@ -1,5 +1,5 @@
 // 5. Utilidades.
-import { HttpError } from '../../../shared/httpError.js';
+import { HttpError } from "../../../shared/httpError.js";
 
 // GitLab admite letras, números, guiones, guiones bajos y puntos, y exige que
 // el nombre empiece con letra o número.
@@ -17,10 +17,10 @@ const MAX_GITLAB_USERNAME_LENGTH = 255;
  * @throws {HttpError} 400 si está vacío o tiene caracteres que GitLab no acepta.
  */
 function parseGitlabUsername(value) {
-  const gitlabUsername = String(value ?? '').trim();
+  const gitlabUsername = String(value ?? "").trim();
 
   if (!gitlabUsername) {
-    throw new HttpError('Indicá tu nickname de GitLab.', 400);
+    throw new HttpError("Indicá tu nickname de GitLab.", 400);
   }
 
   if (gitlabUsername.length > MAX_GITLAB_USERNAME_LENGTH) {

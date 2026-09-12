@@ -1,12 +1,12 @@
 // 2. Dependencias externas.
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from "react";
 
 // 6. Imports relativos restantes.
-import { useGitlabSettings } from '../hooks/useGitlabSettings.js'
+import { useGitlabSettings } from "../hooks/useGitlabSettings.js";
 
-const FIELD_CLASSES = 'block w-full mt-1 rounded-md border border-control bg-surface-raised px-3 py-2 text-[13px] font-normal text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
-const LABEL_CLASSES = 'block text-[12px] font-semibold text-text-muted'
-const HINT_CLASSES = 'mt-1 text-[12px] font-normal text-text-faint'
+const FIELD_CLASSES = "block w-full mt-1 rounded-md border border-control bg-surface-raised px-3 py-2 text-[13px] font-normal text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+const LABEL_CLASSES = "block text-[12px] font-semibold text-text-muted";
+const HINT_CLASSES = "mt-1 text-[12px] font-normal text-text-faint";
 
 /**
  * Estado de la configuración para quien no administra la cuenta.
@@ -21,19 +21,19 @@ function SettingsSummary({ settings = null }) {
       <p role="status" className="text-[13px] text-text-muted">
         Todavía no hay proyectos ni access token cargados. Pedíselo a quien administra la cuenta.
       </p>
-    )
+    );
   }
 
   return (
     <dl className="text-[13px]">
       <dt className={LABEL_CLASSES}>Proyectos</dt>
-      <dd className="mb-3 mt-1 font-mono text-text-primary">{settings.projectIds.join(', ')}</dd>
+      <dd className="mb-3 mt-1 font-mono text-text-primary">{settings.projectIds.join(", ")}</dd>
       <dt className={LABEL_CLASSES}>Access token</dt>
       <dd className="mt-1 text-text-primary">
         Guardado, terminado en «{settings.tokenHint}».
       </dd>
     </dl>
-  )
+  );
 }
 
 /**
@@ -46,36 +46,36 @@ function SettingsSummary({ settings = null }) {
  * si se escribe uno nuevo.
  */
 function GitlabSettingsForm({ canEdit = false, onSaved = () => {} }) {
-  const { settings, loading, error, saving, save } = useGitlabSettings()
-  const [projectIds, setProjectIds] = useState('')
-  const [accessToken, setAccessToken] = useState('')
-  const [formError, setFormError] = useState(null)
-  const [message, setMessage] = useState(null)
+  const { settings, loading, error, saving, save } = useGitlabSettings();
+  const [projectIds, setProjectIds] = useState("");
+  const [accessToken, setAccessToken] = useState("");
+  const [formError, setFormError] = useState(null);
+  const [message, setMessage] = useState(null);
 
   // La configuración llega después del primer render, así que los campos se
   // completan recién cuando el backend responde.
   useEffect(() => {
-    setProjectIds(settings?.projectIds.join(', ') ?? '')
-  }, [settings])
+    setProjectIds(settings?.projectIds.join(", ") ?? "");
+  }, [settings]);
 
-  const hasStoredToken = Boolean(settings?.tokenHint)
+  const hasStoredToken = Boolean(settings?.tokenHint);
 
   async function handleSubmit(event) {
-    event.preventDefault()
-    setFormError(null)
-    setMessage(null)
+    event.preventDefault();
+    setFormError(null);
+    setMessage(null);
 
-    const failure = await save({ projectIds, accessToken: accessToken.trim() })
+    const failure = await save({ projectIds, accessToken: accessToken.trim() });
 
     if (failure) {
-      setFormError(failure)
-      return
+      setFormError(failure);
+      return;
     }
 
     // El token guardado no se recupera, así que el campo vuelve a quedar vacío.
-    setAccessToken('')
-    setMessage('Configuración de GitLab guardada.')
-    onSaved()
+    setAccessToken("");
+    setMessage("Configuración de GitLab guardada.");
+    onSaved();
   }
 
   return (
@@ -85,8 +85,8 @@ function GitlabSettingsForm({ canEdit = false, onSaved = () => {} }) {
       </h2>
       <p className="text-[12.5px] text-text-muted mb-4">
         {canEdit
-          ? 'El tablero muestra los merge requests de estos proyectos. Los cargás una vez y los ve todo el equipo.'
-          : 'El tablero se alimenta de estos proyectos. Los carga quien administra la cuenta, así que no tenés que cargar tu propio access token.'}
+          ? "El tablero muestra los merge requests de estos proyectos. Los cargás una vez y los ve todo el equipo."
+          : "El tablero se alimenta de estos proyectos. Los carga quien administra la cuenta, así que no tenés que cargar tu propio access token."}
       </p>
 
       {formError || error ? (
@@ -147,7 +147,7 @@ function GitlabSettingsForm({ canEdit = false, onSaved = () => {} }) {
             <p id="gitlab-token-ayuda" className={HINT_CLASSES}>
               {hasStoredToken
                 ? `Ya hay uno guardado, terminado en «${settings.tokenHint}». Dejá el campo vacío para conservarlo.`
-                : 'PAT de GitLab con el alcance read_api. Se guarda cifrado y no se muestra nunca más.'}
+                : "PAT de GitLab con el alcance read_api. Se guarda cifrado y no se muestra nunca más."}
             </p>
           </div>
 
@@ -156,12 +156,12 @@ function GitlabSettingsForm({ canEdit = false, onSaved = () => {} }) {
             disabled={saving}
             className="rounded-md bg-accent px-3 py-2 text-[13px] font-semibold text-bg disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
-            {saving ? 'Guardando...' : 'Guardar configuración'}
+            {saving ? "Guardando..." : "Guardar configuración"}
           </button>
         </form>
       )}
     </section>
-  )
+  );
 }
 
-export default GitlabSettingsForm
+export default GitlabSettingsForm;

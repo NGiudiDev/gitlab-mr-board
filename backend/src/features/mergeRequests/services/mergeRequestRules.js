@@ -1,12 +1,12 @@
 // 5. Utilidades.
-import { hasMergeRequestWarning } from '../utils/isMergeRequestBlocked.js';
+import { hasMergeRequestWarning } from "../utils/isMergeRequestBlocked.js";
 
 /** Estados donde la acción pendiente corresponde al autor del merge request. */
 const AUTHOR_RESPONSIBILITY_STATES = new Set([
-  'in_progress',
-  'mr_warning',
-  'qa',
-  'ready_to_merge',
+  "in_progress",
+  "mr_warning",
+  "qa",
+  "ready_to_merge",
 ]);
 
 /**
@@ -17,14 +17,14 @@ const AUTHOR_RESPONSIBILITY_STATES = new Set([
 function computeMergeability(mr, approvals, threads, pipeline) {
   const labels = (mr.labels ?? []).map((label) => label.toLowerCase());
 
-  if (labels.includes('backlog')) return 'backlog';
-  if (mr.draft || mr.work_in_progress) return 'in_progress';
-  if (hasMergeRequestWarning(mr, threads, pipeline)) return 'mr_warning';
-  if (labels.includes('qa_approved')) return 'ready_to_merge';
-  if (approvals.status === 'pending') return 'review';
-  if (labels.includes('qa_pending')) return 'qa';
+  if (labels.includes("backlog")) return "backlog";
+  if (mr.draft || mr.work_in_progress) return "in_progress";
+  if (hasMergeRequestWarning(mr, threads, pipeline)) return "mr_warning";
+  if (labels.includes("qa_approved")) return "ready_to_merge";
+  if (approvals.status === "pending") return "review";
+  if (labels.includes("qa_pending")) return "qa";
 
-  return 'unknown';
+  return "unknown";
 }
 
 /**
@@ -37,13 +37,13 @@ function extractProjectPath(mr) {
   const reference = mr.references?.full;
 
   if (reference) {
-    const separatorIndex = reference.lastIndexOf('!');
+    const separatorIndex = reference.lastIndexOf("!");
     if (separatorIndex > -1) return reference.slice(0, separatorIndex);
   }
 
   try {
-    const [projectPath] = new URL(mr.web_url).pathname.split('/-/merge_requests/');
-    return projectPath?.replace(/^\//, '') || fallbackProjectPath;
+    const [projectPath] = new URL(mr.web_url).pathname.split("/-/merge_requests/");
+    return projectPath?.replace(/^\//, "") || fallbackProjectPath;
   } catch {
     return fallbackProjectPath;
   }
@@ -51,7 +51,7 @@ function extractProjectPath(mr) {
 
 /** Normaliza un username para comparaciones estables entre personas. */
 function normalizeUsername(username) {
-  return username?.trim().toLowerCase() ?? '';
+  return username?.trim().toLowerCase() ?? "";
 }
 
 /** Construye la identidad del autor cuando GitLab la informa. */
@@ -72,7 +72,7 @@ function computeResponsiblePeople(mr, mergeability, approvals) {
   const author = authorOf(mr);
 
   if (AUTHOR_RESPONSIBILITY_STATES.has(mergeability)) return author ? [author] : [];
-  if (mergeability !== 'review') return [];
+  if (mergeability !== "review") return [];
 
   const reviewers = mr.reviewers ?? [];
   if (reviewers.length === 0) return [];
@@ -91,8 +91,8 @@ function computeResponsiblePeople(mr, mergeability, approvals) {
 
 /** Ordena a las personas por nombre visible y desempata por username. */
 function comparePeople(first, second) {
-  return first.name.localeCompare(second.name, 'es', { sensitivity: 'base' })
-    || first.username.localeCompare(second.username, 'es', { sensitivity: 'base' });
+  return first.name.localeCompare(second.name, "es", { sensitivity: "base" })
+    || first.username.localeCompare(second.username, "es", { sensitivity: "base" });
 }
 
 /**

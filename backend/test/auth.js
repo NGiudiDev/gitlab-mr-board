@@ -1,19 +1,19 @@
 // 4. Módulos de constantes.
-import { TEST_ACCOUNT_NAME, TEST_DISPLAY_NAME, TEST_EMAIL, TEST_ENCRYPTION_KEY, TEST_GITLAB_USERNAME, TEST_PASSWORD, TEST_PROJECT_IDS, TEST_TOKEN } from './constants.js';
+import { TEST_ACCOUNT_NAME, TEST_DISPLAY_NAME, TEST_EMAIL, TEST_ENCRYPTION_KEY, TEST_GITLAB_USERNAME, TEST_PASSWORD, TEST_PROJECT_IDS, TEST_TOKEN } from "./constants.js";
 
 // 5. Utilidades.
-import { createSecretCipher } from '../src/features/gitlabSettings/utils/encryption.js';
+import { createSecretCipher } from "../src/features/gitlabSettings/utils/encryption.js";
 
 // 6. Imports relativos restantes.
-import { createApp } from '../src/app.js';
-import { createAccountRepository } from '../src/features/accounts/services/accountRepository.js';
-import { createAccountService } from '../src/features/accounts/services/accountService.js';
-import { SESSION_COOKIE_NAME } from '../src/features/auth/routes/auth.js';
-import { createAuthRepository } from '../src/features/auth/services/authRepository.js';
-import { createAuthService } from '../src/features/auth/services/authService.js';
-import { createGitLabSettingsRepository } from '../src/features/gitlabSettings/services/gitlabSettingsRepository.js';
-import { createGitLabSettingsService } from '../src/features/gitlabSettings/services/gitlabSettingsService.js';
-import { createTestDatabase } from './database.js';
+import { createApp } from "../src/app.js";
+import { createAccountRepository } from "../src/features/accounts/services/accountRepository.js";
+import { createAccountService } from "../src/features/accounts/services/accountService.js";
+import { SESSION_COOKIE_NAME } from "../src/features/auth/routes/auth.js";
+import { createAuthRepository } from "../src/features/auth/services/authRepository.js";
+import { createAuthService } from "../src/features/auth/services/authService.js";
+import { createGitLabSettingsRepository } from "../src/features/gitlabSettings/services/gitlabSettingsRepository.js";
+import { createGitLabSettingsService } from "../src/features/gitlabSettings/services/gitlabSettingsService.js";
+import { createTestDatabase } from "./database.js";
 
 /** Abre un repositorio de autenticación en memoria, aislado por test. */
 async function createTestRepository() {
@@ -75,7 +75,7 @@ async function createEmptyServices() {
  * @returns Servicios y la cuenta creada, lista para iniciar sesión con
  * `TEST_EMAIL`.
  */
-async function createTestServicesWithUser(role = 'user') {
+async function createTestServicesWithUser(role = "user") {
   const services = await createEmptyServices();
   const account = await services.accountService.create(TEST_ACCOUNT_NAME);
 
@@ -102,7 +102,7 @@ async function createTestServicesWithUser(role = 'user') {
  * @param role Rol del usuario de la sesión.
  * @returns App, servicios, cuenta, usuario y la cookie de sesión a reenviar.
  */
-async function createAuthenticatedApp(options = {}, role = 'user') {
+async function createAuthenticatedApp(options = {}, role = "user") {
   const { account, accountService, authService, gitlabSettingsService } = await createTestServicesWithUser(role);
 
   const { user, token } = await authService.login({

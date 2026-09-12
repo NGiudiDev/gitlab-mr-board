@@ -1,8 +1,8 @@
 // 6. Imports relativos restantes.
-import MrCard from './MrCard.jsx'
+import MrCard from "./MrCard.jsx";
 
 function BoardColumn({ title, idPrefix, mergeRequests }) {
-  const headingId = `columna-${idPrefix}-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
+  const headingId = `columna-${idPrefix}-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
 
   return (
     <section
@@ -24,7 +24,7 @@ function BoardColumn({ title, idPrefix, mergeRequests }) {
         ))}
       </ul>
     </section>
-  )
+  );
 }
 
-export default BoardColumn
+export default BoardColumn;

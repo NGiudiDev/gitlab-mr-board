@@ -1,11 +1,11 @@
 // 2. Dependencias externas.
-import { useState } from 'react'
+import { useState } from "react";
 
-const FIELD_CLASSES = 'block w-full mt-1 rounded-md border border-control bg-surface-raised px-3 py-2 text-[13px] font-normal text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
-const LABEL_CLASSES = 'block text-[12px] font-semibold text-text-muted mb-3'
-const CHOICE_CLASSES = 'flex-1 rounded-md border px-3 py-2 text-[12.5px] cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
+const FIELD_CLASSES = "block w-full mt-1 rounded-md border border-control bg-surface-raised px-3 py-2 text-[13px] font-normal text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+const LABEL_CLASSES = "block text-[12px] font-semibold text-text-muted mb-3";
+const CHOICE_CLASSES = "flex-1 rounded-md border px-3 py-2 text-[12.5px] cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
-const MINIMUM_PASSWORD_LENGTH = 8
+const MINIMUM_PASSWORD_LENGTH = 8;
 
 /**
  * Formulario de alta de cuenta.
@@ -18,24 +18,24 @@ const MINIMUM_PASSWORD_LENGTH = 8
  * pero la regla que manda es la del backend.
  */
 function RegisterForm({ error = null, submitting = false, onSubmit = () => {}, onShowLogin = () => {} }) {
-  const [joinExisting, setJoinExisting] = useState(true)
-  const [inviteCode, setInviteCode] = useState('')
-  const [accountName, setAccountName] = useState('')
-  const [email, setEmail] = useState('')
-  const [displayName, setDisplayName] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmation, setConfirmation] = useState('')
-  const [localError, setLocalError] = useState(null)
+  const [joinExisting, setJoinExisting] = useState(true);
+  const [inviteCode, setInviteCode] = useState("");
+  const [accountName, setAccountName] = useState("");
+  const [email, setEmail] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmation, setConfirmation] = useState("");
+  const [localError, setLocalError] = useState(null);
 
   function handleSubmit(event) {
-    event.preventDefault()
+    event.preventDefault();
 
     if (password !== confirmation) {
-      setLocalError('Las contraseñas no coinciden.')
-      return
+      setLocalError("Las contraseñas no coinciden.");
+      return;
     }
 
-    setLocalError(null)
+    setLocalError(null);
     onSubmit({
       email: email.trim(),
       password,
@@ -43,16 +43,16 @@ function RegisterForm({ error = null, submitting = false, onSubmit = () => {}, o
       // Sólo viaja el dato del camino elegido: con código el backend ignora el
       // nombre, y sin código no hay cuenta a la que sumarse.
       ...(joinExisting ? { inviteCode: inviteCode.trim() } : { accountName: accountName.trim() }),
-    })
+    });
   }
 
-  const visibleError = localError ?? error
+  const visibleError = localError ?? error;
 
   /** Clases del botón que elige el camino, según esté activo o no. */
   function choiceClasses(isActive) {
     return `${CHOICE_CLASSES} ${isActive
-      ? 'border-accent bg-surface-raised font-semibold text-text-primary'
-      : 'border-control text-text-muted hover:text-text-primary'}`
+      ? "border-accent bg-surface-raised font-semibold text-text-primary"
+      : "border-control text-text-muted hover:text-text-primary"}`;
   }
 
   return (
@@ -205,11 +205,11 @@ function RegisterForm({ error = null, submitting = false, onSubmit = () => {}, o
         disabled={submitting}
         className="w-full mt-2 rounded-md bg-accent px-3 py-2 text-[13px] font-semibold text-bg disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
-        {submitting ? 'Creando la cuenta...' : 'Crear cuenta'}
+        {submitting ? "Creando la cuenta..." : "Crear cuenta"}
       </button>
 
       <p className="mt-4 text-center text-[12.5px] text-text-muted">
-        ¿Ya tenés cuenta?{' '}
+        ¿Ya tenés cuenta?{" "}
         <button
           type="button"
           onClick={onShowLogin}
@@ -219,7 +219,7 @@ function RegisterForm({ error = null, submitting = false, onSubmit = () => {}, o
         </button>
       </p>
     </form>
-  )
+  );
 }
 
-export default RegisterForm
+export default RegisterForm;

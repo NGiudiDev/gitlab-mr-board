@@ -1,9 +1,9 @@
 // 2. Dependencias externas.
-import express from 'express';
+import express from "express";
 
 // 6. Imports relativos restantes.
-import config from '../../../config.js';
-import { getAllMergeRequests } from '../services/mergeRequestService.js';
+import config from "../../../config.js";
+import { getAllMergeRequests } from "../services/mergeRequestService.js";
 
 /**
  * Crea el router con una caché aislada y dependencias reemplazables para los
@@ -61,7 +61,7 @@ export function createMergeRequestsRouter(params) {
     return { ...data, meta: { ...data.meta, viewerUsername } };
   }
 
-  router.get('/pull-requests', async (request, response) => {
+  router.get("/pull-requests", async (request, response) => {
     const { accountId, gitlabUsername } = response.locals.user;
 
     // La configuración vive en una base remota: si no se puede leer, el
@@ -71,20 +71,20 @@ export function createMergeRequestsRouter(params) {
     try {
       credentials = await gitlabSettingsService.getCredentials(accountId);
     } catch (error) {
-      console.error('Error al leer la configuración de GitLab:', error);
-      response.status(503).json({ error: 'No se pudo leer la configuración de GitLab de tu cuenta.' });
+      console.error("Error al leer la configuración de GitLab:", error);
+      response.status(503).json({ error: "No se pudo leer la configuración de GitLab de tu cuenta." });
       return;
     }
 
     if (!credentials) {
       response.status(409).json({
-        error: 'Todavía no hay datos de GitLab configurados en esta cuenta.',
-        code: 'gitlab_settings_missing',
+        error: "Todavía no hay datos de GitLab configurados en esta cuenta.",
+        code: "gitlab_settings_missing",
       });
       return;
     }
 
-    const forceRefresh = request.query.force === 'true';
+    const forceRefresh = request.query.force === "true";
     const freshCache = forceRefresh ? null : getFreshCache(accountId, credentials);
 
     if (freshCache) {
@@ -99,8 +99,8 @@ export function createMergeRequestsRouter(params) {
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
 
-      console.error('Error al obtener los merge requests:', error);
-      response.status(502).json({ error: 'No se pudieron obtener los merge requests de GitLab.', detail });
+      console.error("Error al obtener los merge requests:", error);
+      response.status(502).json({ error: "No se pudieron obtener los merge requests de GitLab.", detail });
     }
   });
 

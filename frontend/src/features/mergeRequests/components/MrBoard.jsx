@@ -1,41 +1,41 @@
 // 2. Dependencias externas.
-import { useState } from 'react'
+import { useState } from "react";
 
 // 6. Imports relativos restantes.
-import { columnsOf } from '../mergeRequestColumns.js'
-import BoardColumn from './BoardColumn.jsx'
+import { columnsOf } from "../mergeRequestColumns.js";
+import BoardColumn from "./BoardColumn.jsx";
 
 function repoDomId(repo) {
-  return repo.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+  return repo.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
 function groupByRepo(mergeRequests, allProjects) {
-  const byRepo = {}
-  allProjects.forEach((project) => { byRepo[project] = [] })
+  const byRepo = {};
+  allProjects.forEach((project) => { byRepo[project] = []; });
   mergeRequests.forEach((mr) => {
-    if (!byRepo[mr.projectPath]) byRepo[mr.projectPath] = []
-    byRepo[mr.projectPath].push(mr)
-  })
+    if (!byRepo[mr.projectPath]) byRepo[mr.projectPath] = [];
+    byRepo[mr.projectPath].push(mr);
+  });
 
   return Object.keys(byRepo)
     .sort()
-    .map((repo) => ({ repo, mrs: byRepo[repo] }))
+    .map((repo) => ({ repo, mrs: byRepo[repo] }));
 }
 
 function MrBoard({ mergeRequests, allProjects = [] }) {
-  const [expanded, setExpanded] = useState({})
+  const [expanded, setExpanded] = useState({});
 
   function toggle(repo) {
-    setExpanded((current) => ({ ...current, [repo]: !current[repo] }))
+    setExpanded((current) => ({ ...current, [repo]: !current[repo] }));
   }
 
   return (
     <div className="flex flex-col gap-4">
       {groupByRepo(mergeRequests, allProjects).map((group) => {
-        const domId = repoDomId(group.repo)
-        const headingId = `proyecto-${domId}`
-        const panelId = `panel-${domId}`
-        const isExpanded = !!expanded[group.repo]
+        const domId = repoDomId(group.repo);
+        const headingId = `proyecto-${domId}`;
+        const panelId = `panel-${domId}`;
+        const isExpanded = !!expanded[group.repo];
 
         return (
           <section
@@ -51,7 +51,7 @@ function MrBoard({ mergeRequests, allProjects = [] }) {
               className="w-full flex items-center gap-2 px-4 py-2.5 cursor-pointer hover:bg-surface-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent"
             >
               <span
-                className={`text-[11px] text-text-faint transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                className={`text-[11px] text-text-faint transition-transform ${isExpanded ? "rotate-90" : ""}`}
                 aria-hidden="true"
               >
                 ▶
@@ -67,7 +67,7 @@ function MrBoard({ mergeRequests, allProjects = [] }) {
                 `v-show`: `aria-controls` debe apuntar a un elemento existente. */}
             <div
               id={panelId}
-              className={`${isExpanded ? 'flex' : 'hidden'} gap-3 overflow-x-auto p-3 border-t border-border-soft`}
+              className={`${isExpanded ? "flex" : "hidden"} gap-3 overflow-x-auto p-3 border-t border-border-soft`}
               tabIndex={0}
               aria-label="Columnas del proyecto"
             >
@@ -81,10 +81,10 @@ function MrBoard({ mergeRequests, allProjects = [] }) {
               ))}
             </div>
           </section>
-        )
+        );
       })}
     </div>
-  )
+  );
 }
 
-export default MrBoard
+export default MrBoard;

@@ -1,11 +1,11 @@
 // 1. Módulos estándar de Node.js.
-import { createHash, randomBytes, randomUUID } from 'node:crypto';
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 
-import { parseGitlabUsername } from '../utils/gitlabUsername.js';
-import { hashPassword, verifyPassword } from '../utils/password.js';
+import { parseGitlabUsername } from "../utils/gitlabUsername.js";
+import { hashPassword, verifyPassword } from "../utils/password.js";
 
 // 5. Utilidades.
-import { HttpError } from '../../../shared/httpError.js';
+import { HttpError } from "../../../shared/httpError.js";
 
 const DEFAULT_SESSION_DURATION_DAYS = 7;
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -47,12 +47,12 @@ function toUserSummary(user) {
  * @returns Hash SHA-256 en hexadecimal; es lo único que toca la base.
  */
 function hashToken(token) {
-  return createHash('sha256').update(token).digest('hex');
+  return createHash("sha256").update(token).digest("hex");
 }
 
 /** Normaliza el email para que el login no dependa de mayúsculas. */
 function normalizeEmail(email) {
-  return typeof email === 'string' ? email.trim().toLowerCase() : '';
+  return typeof email === "string" ? email.trim().toLowerCase() : "";
 }
 
 /**
@@ -63,10 +63,10 @@ function normalizeEmail(email) {
  * @throws {HttpError} 400 si no cumple el formato admitido.
  */
 function parseEmail(email) {
-  const normalizedEmail = typeof email === 'string' ? normalizeEmail(email) : '';
+  const normalizedEmail = typeof email === "string" ? normalizeEmail(email) : "";
 
   if (normalizedEmail.length > MAXIMUM_EMAIL_LENGTH || !EMAIL_PATTERN.test(normalizedEmail)) {
-    throw new HttpError('Ingresá un email válido.', 400);
+    throw new HttpError("Ingresá un email válido.", 400);
   }
 
   return normalizedEmail;
@@ -82,8 +82,8 @@ function parseEmail(email) {
  */
 function parseDisplayName(displayName, fallback) {
   if (displayName === undefined) return fallback;
-  if (typeof displayName !== 'string') {
-    throw new HttpError('El nombre visible debe ser texto.', 400);
+  if (typeof displayName !== "string") {
+    throw new HttpError("El nombre visible debe ser texto.", 400);
   }
 
   return displayName.trim() || fallback;
@@ -150,7 +150,7 @@ function createAuthService(options) {
     return {
       email,
       displayName: parseDisplayName(input.displayName, email),
-      passwordHash: await hashNewPassword(input.password ?? ''),
+      passwordHash: await hashNewPassword(input.password ?? ""),
     };
   }
 
@@ -170,7 +170,7 @@ function createAuthService(options) {
       displayName: prepared.displayName,
       passwordHash: prepared.passwordHash,
       role,
-      status: 'active',
+      status: "active",
       gitlabUsername: null,
       createdAt: now().toISOString(),
       lastLoginAt: null,
@@ -185,7 +185,7 @@ function createAuthService(options) {
     const prepared = await prepareNewUser(input);
 
     return toAuthenticatedUser(
-      await insertPreparedUser(prepared, input.accountId, input.role ?? 'user'),
+      await insertPreparedUser(prepared, input.accountId, input.role ?? "user"),
     );
   }
 
@@ -198,7 +198,7 @@ function createAuthService(options) {
   async function createSessionFor(user) {
     const currentDate = now();
     const expiresAt = new Date(currentDate.getTime() + sessionDurationDays * MILLISECONDS_PER_DAY);
-    const token = randomBytes(TOKEN_BYTES).toString('base64url');
+    const token = randomBytes(TOKEN_BYTES).toString("base64url");
 
     await repository.deleteExpiredSessions(currentDate.toISOString());
     await repository.insertSession({
@@ -234,18 +234,18 @@ function createAuthService(options) {
       ? await accountService.findByInviteCode(input.inviteCode)
       : await accountService.create(input.accountName);
 
-    const user = await insertPreparedUser(prepared, account.id, joiningWithCode ? 'user' : 'admin');
+    const user = await insertPreparedUser(prepared, account.id, joiningWithCode ? "user" : "admin");
 
     // Se abre la sesión en el mismo paso: quien se registra ya probó quién es.
     return await createSessionFor(user);
   }
 
   async function login(credentials) {
-    const email = normalizeEmail(credentials.email ?? '');
-    const password = credentials.password ?? '';
+    const email = normalizeEmail(credentials.email ?? "");
+    const password = credentials.password ?? "";
 
     if (!email || !password) {
-      throw new HttpError('Ingresá tu email y tu contraseña.', 400);
+      throw new HttpError("Ingresá tu email y tu contraseña.", 400);
     }
 
     const lockMs = remainingLockMs(email);
@@ -259,11 +259,11 @@ function createAuthService(options) {
 
     if (!user || !passwordMatches) {
       registerFailedAttempt(email);
-      throw new HttpError('Email o contraseña incorrectos.', 401);
+      throw new HttpError("Email o contraseña incorrectos.", 401);
     }
 
-    if (user.status !== 'active') {
-      throw new HttpError('Tu usuario está deshabilitado. Pedile acceso a un administrador.', 403);
+    if (user.status !== "active") {
+      throw new HttpError("Tu usuario está deshabilitado. Pedile acceso a un administrador.", 403);
     }
 
     failedAttemptsByEmail.delete(email);
@@ -283,7 +283,7 @@ function createAuthService(options) {
     }
 
     const user = await repository.findUserById(session.userId);
-    if (!user || user.status !== 'active') return null;
+    if (!user || user.status !== "active") return null;
 
     return toAuthenticatedUser(user);
   }
@@ -325,8 +325,8 @@ function createAuthService(options) {
       throw new HttpError(`No existe el usuario con email «${email}».`, 404);
     }
 
-    if (!await verifyPassword(currentPassword ?? '', user.passwordHash)) {
-      throw new HttpError('La contraseña actual no coincide.', 403);
+    if (!await verifyPassword(currentPassword ?? "", user.passwordHash)) {
+      throw new HttpError("La contraseña actual no coincide.", 403);
     }
 
     await changePassword(user.email, newPassword);
@@ -348,7 +348,7 @@ function createAuthService(options) {
   async function changeGitlabUsername(userId, gitlabUsername) {
     const user = await repository.findUserById(userId);
     if (!user) {
-      throw new HttpError('No existe el usuario de la sesión.', 404);
+      throw new HttpError("No existe el usuario de la sesión.", 404);
     }
 
     const parsedUsername = parseGitlabUsername(gitlabUsername);
@@ -373,7 +373,7 @@ function createAuthService(options) {
   async function changeOwnProfile(userId, input) {
     const user = await repository.findUserById(userId);
     if (!user) {
-      throw new HttpError('No existe el usuario de la sesión.', 404);
+      throw new HttpError("No existe el usuario de la sesión.", 404);
     }
 
     const email = input.email === undefined
@@ -438,7 +438,7 @@ function createAuthService(options) {
     }
 
     await repository.updateStatus(user.id, status);
-    if (status === 'disabled') await repository.deleteSessionsOfUser(user.id);
+    if (status === "disabled") await repository.deleteSessionsOfUser(user.id);
 
     return toUserSummary({ ...user, status });
   }
@@ -501,7 +501,7 @@ async function hashNewPassword(password) {
   try {
     return await hashPassword(password);
   } catch (error) {
-    throw new HttpError(error instanceof Error ? error.message : 'Contraseña inválida.', 400);
+    throw new HttpError(error instanceof Error ? error.message : "Contraseña inválida.", 400);
   }
 }
 
@@ -519,7 +519,7 @@ async function hashNewPassword(password) {
 async function matchesStoredPassword(password, user) {
   if (user) return await verifyPassword(password, user.passwordHash);
 
-  await hashPassword(password.padEnd(8, '.')).catch(() => undefined);
+  await hashPassword(password.padEnd(8, ".")).catch(() => undefined);
   return false;
 }
 

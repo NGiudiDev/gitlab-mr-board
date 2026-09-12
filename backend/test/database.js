@@ -1,8 +1,8 @@
 // 2. Dependencias externas.
-import { PGlite } from '@electric-sql/pglite';
+import { PGlite } from "@electric-sql/pglite";
 
 // 6. Imports relativos restantes.
-import { applySchema } from '../src/shared/database.js';
+import { applySchema } from "../src/shared/database.js";
 
 // Arrancar PGlite cuesta alrededor de un segundo, así que se reutiliza una
 // única instancia. Vitest aísla el registro de módulos por archivo de test, con
@@ -57,7 +57,7 @@ async function createTestDatabase() {
 
   // `accounts` arrastra en cascada sus usuarios y su configuración de GitLab,
   // y cada usuario sus sesiones.
-  await pglite.exec('TRUNCATE accounts CASCADE');
+  await pglite.exec("TRUNCATE accounts CASCADE");
 
   return toDatabase(pglite);
 }

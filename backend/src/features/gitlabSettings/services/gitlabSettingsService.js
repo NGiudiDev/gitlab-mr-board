@@ -1,5 +1,5 @@
 // 6. Imports relativos restantes.
-import { HttpError } from '../../../shared/httpError.js';
+import { HttpError } from "../../../shared/httpError.js";
 
 // Los IDs viajan dentro de la ruta de la API de GitLab: aceptar sólo números
 // evita además que un valor arbitrario altere la URL consultada.
@@ -22,11 +22,11 @@ const TOKEN_HINT_LENGTH = 4;
 function parseProjectIds(value) {
   const rawValues = Array.isArray(value)
     ? value.map((item) => String(item))
-    : String(value ?? '').split(/[\s,;]+/);
+    : String(value ?? "").split(/[\s,;]+/);
   const projectIds = [...new Set(rawValues.map((item) => item.trim()).filter(Boolean))];
 
   if (projectIds.length === 0) {
-    throw new HttpError('Indicá al menos un ID de proyecto.', 400);
+    throw new HttpError("Indicá al menos un ID de proyecto.", 400);
   }
 
   if (projectIds.length > MAX_PROJECT_IDS) {
@@ -96,7 +96,7 @@ function createGitLabSettingsService(options) {
 
     return {
       projectIds: settings.projectIds,
-      tokenHint: accessToken ? accessToken.slice(-TOKEN_HINT_LENGTH) : '',
+      tokenHint: accessToken ? accessToken.slice(-TOKEN_HINT_LENGTH) : "",
       updatedAt: settings.updatedAt,
     };
   }
@@ -135,10 +135,10 @@ function createGitLabSettingsService(options) {
   async function save(accountId, input) {
     const projectIds = parseProjectIds(input.projectIds);
     const existingSettings = await repository.findByAccountId(accountId);
-    const receivedToken = input.accessToken?.trim() ?? '';
+    const receivedToken = input.accessToken?.trim() ?? "";
 
     if (!receivedToken && !existingSettings) {
-      throw new HttpError('Indicá el access token de GitLab.', 400);
+      throw new HttpError("Indicá el access token de GitLab.", 400);
     }
 
     const encryptedAccessToken = receivedToken

@@ -1,14 +1,14 @@
 // 1. Módulos estándar de Node.js.
-import readline from 'node:readline';
-import { Writable } from 'node:stream';
+import readline from "node:readline";
+import { Writable } from "node:stream";
 
 // 6. Imports relativos restantes.
-import config from '../config.js';
-import { createAccountRepository } from '../features/accounts/services/accountRepository.js';
-import { createAccountService } from '../features/accounts/services/accountService.js';
-import { createAuthRepository } from '../features/auth/services/authRepository.js';
-import { createAuthService } from '../features/auth/services/authService.js';
-import { applySchema, createNeonDatabase } from '../shared/database.js';
+import config from "../config.js";
+import { createAccountRepository } from "../features/accounts/services/accountRepository.js";
+import { createAccountService } from "../features/accounts/services/accountService.js";
+import { createAuthRepository } from "../features/auth/services/authRepository.js";
+import { createAuthService } from "../features/auth/services/authService.js";
+import { applySchema, createNeonDatabase } from "../shared/database.js";
 
 const USAGE = `Gestión de cuentas y usuarios del tablero.
 
@@ -53,13 +53,13 @@ function readOption(args, name) {
  * @throws {Error} Si la entrada trae menos líneas de las necesarias.
  */
 async function readSecretsFromPipe(count) {
-  let input = '';
-  process.stdin.setEncoding('utf8');
+  let input = "";
+  process.stdin.setEncoding("utf8");
 
   for await (const chunk of process.stdin) input += chunk;
 
   const lines = input.split(/\r?\n/).slice(0, count);
-  if (lines.length < count || lines.some((line) => line === '')) {
+  if (lines.length < count || lines.some((line) => line === "")) {
     throw new Error(`La entrada debe traer ${count} líneas, una por cada dato pedido.`);
   }
 
@@ -94,17 +94,17 @@ async function askSecretsInTerminal(questions) {
   try {
     for (const question of questions) {
       const answer = await new Promise((resolve) => {
-        rl.once('close', () => resolve(null));
+        rl.once("close", () => resolve(null));
         rl.question(question, (value) => {
           hideInput = false;
-          process.stdout.write('\n');
+          process.stdout.write("\n");
           resolve(value);
         });
 
         hideInput = true;
       });
 
-      if (answer === null) throw new Error('Entrada cancelada.');
+      if (answer === null) throw new Error("Entrada cancelada.");
 
       answers.push(answer);
     }
@@ -136,13 +136,13 @@ function askSecrets(questions) {
  * @throws {Error} Si las dos entradas no coinciden.
  */
 async function askNewPassword() {
-  const [password, confirmation] = await askSecrets(['Contraseña: ', 'Repetí la contraseña: ']);
+  const [password, confirmation] = await askSecrets(["Contraseña: ", "Repetí la contraseña: "]);
 
   if (password !== confirmation) {
-    throw new Error('Las contraseñas no coinciden.');
+    throw new Error("Las contraseñas no coinciden.");
   }
 
-  return password ?? '';
+  return password ?? "";
 }
 
 /**
@@ -154,21 +154,21 @@ async function askNewPassword() {
  */
 async function createUserCommand(authService, accountService, args) {
   const email = args[0];
-  if (!email || email.startsWith('--')) {
-    throw new Error('Indicá el email. Ejemplo: create ana@example.com --account "Mi equipo"');
+  if (!email || email.startsWith("--")) {
+    throw new Error("Indicá el email. Ejemplo: create ana@example.com --account \"Mi equipo\"");
   }
 
-  const inviteCode = readOption(args, 'invite');
+  const inviteCode = readOption(args, "invite");
   const account = inviteCode
     ? await accountService.findByInviteCode(inviteCode)
-    : await accountService.create(readOption(args, 'account'));
-  const role = inviteCode && readOption(args, 'role') !== 'admin' ? 'user' : 'admin';
+    : await accountService.create(readOption(args, "account"));
+  const role = inviteCode && readOption(args, "role") !== "admin" ? "user" : "admin";
 
   const user = await authService.createUser({
     accountId: account.id,
     email,
     password: await askNewPassword(),
-    displayName: readOption(args, 'name'),
+    displayName: readOption(args, "name"),
     role: role,
   });
 
@@ -182,7 +182,7 @@ async function createUserCommand(authService, accountService, args) {
 async function changePasswordCommand(authService, args) {
   const email = args[0];
   if (!email) {
-    throw new Error('Indicá el email. Ejemplo: password ana@example.com');
+    throw new Error("Indicá el email. Ejemplo: password ana@example.com");
   }
 
   await authService.changePassword(email, await askNewPassword());
@@ -194,12 +194,12 @@ async function changePasswordCommand(authService, args) {
 async function setStatusCommand(authService, args, status) {
   const email = args[0];
   if (!email) {
-    throw new Error('Indicá el email. Ejemplo: disable ana@example.com');
+    throw new Error("Indicá el email. Ejemplo: disable ana@example.com");
   }
 
   const user = await authService.setUserStatus(email, status);
 
-  console.log(status === 'disabled'
+  console.log(status === "disabled"
     ? `Usuario «${user.email}» deshabilitado. Se cerraron sus sesiones abiertas.`
     : `Usuario «${user.email}» habilitado de nuevo.`);
 }
@@ -208,7 +208,7 @@ async function setStatusCommand(authService, args, status) {
 async function deleteUserCommand(authService, args) {
   const email = args[0];
   if (!email) {
-    throw new Error('Indicá el email. Ejemplo: delete ana@example.com');
+    throw new Error("Indicá el email. Ejemplo: delete ana@example.com");
   }
 
   const deleted = await authService.deleteUser(email);
@@ -223,7 +223,7 @@ async function listUsersCommand(authService, accountService) {
   const users = await authService.listAllUsers();
 
   if (users.length === 0) {
-    console.log('Todavía no hay usuarios. Creá el primero acá, o registrate en el tablero: quien abre una cuenta queda su administrador.');
+    console.log("Todavía no hay usuarios. Creá el primero acá, o registrate en el tablero: quien abre una cuenta queda su administrador.");
     return;
   }
 
@@ -232,7 +232,7 @@ async function listUsersCommand(authService, accountService) {
   );
 
   for (const user of users) {
-    const accountName = accountNamesById.get(user.accountId) ?? '(sin cuenta)';
+    const accountName = accountNamesById.get(user.accountId) ?? "(sin cuenta)";
 
     console.log(`${user.email}\t${user.role}\t${user.status}\t${accountName}\t${user.displayName}`);
   }
@@ -243,19 +243,19 @@ async function listAccountsCommand(accountService) {
   const accounts = await accountService.list();
 
   if (accounts.length === 0) {
-    console.log('Todavía no hay cuentas. La primera se crea al registrarse en el tablero o con «create».');
+    console.log("Todavía no hay cuentas. La primera se crea al registrarse en el tablero o con «create».");
     return;
   }
 
   for (const account of accounts) {
-    const members = account.memberCount === 1 ? '1 miembro' : `${account.memberCount} miembros`;
+    const members = account.memberCount === 1 ? "1 miembro" : `${account.memberCount} miembros`;
 
-    console.log(`${account.name}\t${account.inviteCode ?? ''}\t${members}`);
+    console.log(`${account.name}\t${account.inviteCode ?? ""}\t${members}`);
   }
 }
 
 async function main() {
-  const [command = '', ...args] = process.argv.slice(2);
+  const [command = "", ...args] = process.argv.slice(2);
   const database = createNeonDatabase(config.databaseUrl);
 
   // El script puede ser lo primero que corra contra una base recién creada.
@@ -269,32 +269,32 @@ async function main() {
   });
 
   try {
-    if (command === 'create') {
+    if (command === "create") {
       await createUserCommand(authService, accountService, args);
       return;
     }
 
-    if (command === 'password') {
+    if (command === "password") {
       await changePasswordCommand(authService, args);
       return;
     }
 
-    if (command === 'disable' || command === 'enable') {
-      await setStatusCommand(authService, args, command === 'disable' ? 'disabled' : 'active');
+    if (command === "disable" || command === "enable") {
+      await setStatusCommand(authService, args, command === "disable" ? "disabled" : "active");
       return;
     }
 
-    if (command === 'delete') {
+    if (command === "delete") {
       await deleteUserCommand(authService, args);
       return;
     }
 
-    if (command === 'list') {
+    if (command === "list") {
       await listUsersCommand(authService, accountService);
       return;
     }
 
-    if (command === 'accounts') {
+    if (command === "accounts") {
       await listAccountsCommand(accountService);
       return;
     }

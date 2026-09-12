@@ -1,5 +1,9 @@
 # Calidad de código
 
+## Estilo de código
+
+ESLint exige comillas dobles para los strings y punto y coma al final de cada sentencia. Ambas reglas se aplican automáticamente con `npm run lint:fix`.
+
 ## Orden automático de imports
 
 La raíz configura ESLint con `eslint-plugin-simple-import-sort` para ordenar imports y exports en el backend, el frontend React y los archivos de configuración. Todo el proyecto es JavaScript ([ADR 0012](../decisions/0012-javascript-sin-typescript.md)), así que alcanza con el parser propio de ESLint. Esta responsabilidad no depende de un formateador.
@@ -22,26 +26,26 @@ El resultado esperado sigue esta estructura:
 
 ```js
 // 1. Módulos estándar de Node.js.
-import path from 'node:path'
+import path from "node:path";
 
 // 2. Dependencias externas.
-import express from 'express'
-import { describe, expect, it } from 'vitest'
+import express from "express";
+import { describe, expect, it } from "vitest";
 
 // 3. Módulos internos con el alias `@/`.
-import config from '@/config.js'
+import config from "@/config.js";
 
 // 4. Módulos de constantes.
-import { DEFAULT_PAGE_SIZE } from '../constants.js'
+import { DEFAULT_PAGE_SIZE } from "../constants.js";
 
 // 5. Utilidades.
-import { normalizeUsername } from '../utils/users.js'
+import { normalizeUsername } from "../utils/users.js";
 
 // 6. Imports relativos restantes.
-import { buildResponse } from './response.js'
+import { buildResponse } from "./response.js";
 
 // 7. Hojas de estilo.
-import './styles.css'
+import "./styles.css";
 ```
 
 El ejemplo es ilustrativo: un archivo incluye únicamente los grupos que necesita. No se agregan bloques vacíos ni imports artificiales para completar el orden.
@@ -53,7 +57,7 @@ Los imports con efectos secundarios se mantienen en el grupo correspondiente a s
 | Comando | Uso |
 |---|---|
 | `npm run lint` | Valida el orden sin modificar archivos |
-| `npm run lint:fix` | Ordena imports y exports automáticamente |
+| `npm run lint:fix` | Corrige comillas, punto y coma y orden de imports y exports automáticamente |
 
 ## VS Code
 

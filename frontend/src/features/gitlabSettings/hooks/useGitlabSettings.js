@@ -1,10 +1,10 @@
 // 2. Dependencias externas.
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from "react";
 
 // 6. Imports relativos restantes.
-import config from '../../../config.js'
+import { config } from "../../../config.js";
 
-const NETWORK_ERROR_MESSAGE = 'No se pudo conectar al backend.'
+const NETWORK_ERROR_MESSAGE = "No se pudo conectar al backend.";
 
 /**
  * Llama a la API de configuración de GitLab con la cookie de sesión.
@@ -13,16 +13,16 @@ const NETWORK_ERROR_MESSAGE = 'No se pudo conectar al backend.'
  * @returns {Promise<Response>} Respuesta cruda.
  */
 function requestSettings(options = {}) {
-  const { body, ...rest } = options
+  const { body, ...rest } = options;
 
   return fetch(`${config.apiBaseUrl}/api/gitlab-settings`, {
-    credentials: 'include',
+    credentials: "include",
     ...(body === undefined ? {} : {
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     }),
     ...rest,
-  })
+  });
 }
 
 /**
@@ -32,9 +32,9 @@ function requestSettings(options = {}) {
  * @returns {Promise<string>} Mensaje en español para mostrar en la UI.
  */
 async function readErrorMessage(response) {
-  const body = await response.json().catch(() => ({}))
+  const body = await response.json().catch(() => ({}));
 
-  return body.error || `Error ${response.status}`
+  return body.error || `Error ${response.status}`;
 }
 
 /**
@@ -48,35 +48,35 @@ async function readErrorMessage(response) {
  * @returns {object} Configuración guardada, estado de carga y el guardado.
  */
 function useGitlabSettings() {
-  const [settings, setSettings] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [saving, setSaving] = useState(false)
+  const [settings, setSettings] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
-    setLoading(true)
+    setLoading(true);
 
     try {
-      const response = await requestSettings()
+      const response = await requestSettings();
 
       if (!response.ok) {
-        setError(await readErrorMessage(response))
-        return
+        setError(await readErrorMessage(response));
+        return;
       }
 
-      const body = await response.json()
-      setSettings(body.settings)
-      setError(null)
+      const body = await response.json();
+      setSettings(body.settings);
+      setError(null);
     } catch {
-      setError(NETWORK_ERROR_MESSAGE)
+      setError(NETWORK_ERROR_MESSAGE);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    load()
-  }, [load])
+    load();
+  }, [load]);
 
   /**
    * Guarda los proyectos y, si se escribió uno nuevo, el access token.
@@ -85,29 +85,29 @@ function useGitlabSettings() {
    * @returns {Promise<string | null>} El mensaje de error, o `null` si se guardó.
    */
   async function save({ projectIds, accessToken }) {
-    setSaving(true)
+    setSaving(true);
 
     try {
       const response = await requestSettings({
-        method: 'PUT',
+        method: "PUT",
         // Sin token nuevo no se manda el campo: el backend conserva el guardado.
         body: accessToken ? { projectIds, accessToken } : { projectIds },
-      })
+      });
 
-      if (!response.ok) return await readErrorMessage(response)
+      if (!response.ok) return await readErrorMessage(response);
 
-      const body = await response.json()
-      setSettings(body.settings)
-      setError(null)
-      return null
+      const body = await response.json();
+      setSettings(body.settings);
+      setError(null);
+      return null;
     } catch {
-      return NETWORK_ERROR_MESSAGE
+      return NETWORK_ERROR_MESSAGE;
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
   }
 
-  return { settings, loading, error, saving, reload: load, save }
+  return { settings, loading, error, saving, reload: load, save };
 }
 
-export { useGitlabSettings }
+export { useGitlabSettings };

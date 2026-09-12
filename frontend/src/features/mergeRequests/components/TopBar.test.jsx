@@ -1,93 +1,93 @@
 // 2. Dependencias externas.
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
 
 // 6. Imports relativos restantes.
-import TopBar from './TopBar.jsx'
+import TopBar from "./TopBar.jsx";
 
 function renderTopBar(props = {}) {
-  return render(<TopBar onRefresh={() => {}} {...props} />)
+  return render(<TopBar onRefresh={() => {}} {...props} />);
 }
 
 /** Región de estado de la barra superior. */
 function status() {
-  return screen.getByRole('status')
+  return screen.getByRole("status");
 }
 
-describe('TopBar', () => {
-  it('no repite el título de la aplicación, que ya presenta el layout', () => {
-    renderTopBar()
+describe("TopBar", () => {
+  it("no repite el título de la aplicación, que ya presenta el layout", () => {
+    renderTopBar();
 
-    expect(screen.queryByRole('heading')).toBeNull()
-  })
+    expect(screen.queryByRole("heading")).toBeNull();
+  });
 
-  it('resume los proyectos y merge requests cuando hay metadatos', () => {
-    const { container } = renderTopBar({ meta: { projectCount: 2, totalMRs: 5 } })
+  it("resume los proyectos y merge requests cuando hay metadatos", () => {
+    const { container } = renderTopBar({ meta: { projectCount: 2, totalMRs: 5 } });
 
-    expect(container.textContent).toContain('2 proyectos')
-    expect(container.textContent).toContain('5 MRs abiertas')
-  })
+    expect(container.textContent).toContain("2 proyectos");
+    expect(container.textContent).toContain("5 MRs abiertas");
+  });
 
-  it('indica que está cargando mientras no hay metadatos', () => {
-    const { container } = renderTopBar()
+  it("indica que está cargando mientras no hay metadatos", () => {
+    const { container } = renderTopBar();
 
-    expect(container.textContent).toContain('Cargando...')
-  })
+    expect(container.textContent).toContain("Cargando...");
+  });
 
-  it('anuncia el estado de actualización en una región de estado', () => {
-    renderTopBar({ loading: true })
+  it("anuncia el estado de actualización en una región de estado", () => {
+    renderTopBar({ loading: true });
 
-    expect(status().textContent).toContain('Actualizando...')
-  })
+    expect(status().textContent).toContain("Actualizando...");
+  });
 
-  it('anuncia el error con texto y no sólo con color', () => {
-    renderTopBar({ error: 'No se pudo conectar al backend.' })
+  it("anuncia el error con texto y no sólo con color", () => {
+    renderTopBar({ error: "No se pudo conectar al backend." });
 
-    expect(status().textContent).toContain('Error')
-  })
+    expect(status().textContent).toContain("Error");
+  });
 
-  it('muestra la hora de la última actualización', () => {
-    renderTopBar({ lastFetched: new Date('2026-08-28T15:30:00.000Z') })
+  it("muestra la hora de la última actualización", () => {
+    renderTopBar({ lastFetched: new Date("2026-08-28T15:30:00.000Z") });
 
-    expect(status().textContent).toMatch(/\d{2}:\d{2}/)
-  })
+    expect(status().textContent).toMatch(/\d{2}:\d{2}/);
+  });
 
-  it('informa que no hay datos todavía', () => {
-    renderTopBar()
+  it("informa que no hay datos todavía", () => {
+    renderTopBar();
 
-    expect(status().textContent).toContain('Sin datos')
-  })
+    expect(status().textContent).toContain("Sin datos");
+  });
 
-  it('avisa al padre al usar el botón de actualización manual', async () => {
-    const user = userEvent.setup()
-    const onRefresh = vi.fn()
-    renderTopBar({ onRefresh })
+  it("avisa al padre al usar el botón de actualización manual", async () => {
+    const user = userEvent.setup();
+    const onRefresh = vi.fn();
+    renderTopBar({ onRefresh });
 
-    await user.click(screen.getByRole('button', { name: 'Refrescar ahora' }))
+    await user.click(screen.getByRole("button", { name: "Refrescar ahora" }));
 
-    expect(onRefresh).toHaveBeenCalledTimes(1)
-  })
+    expect(onRefresh).toHaveBeenCalledTimes(1);
+  });
 
-  it('deshabilita el botón mientras carga', () => {
-    renderTopBar({ loading: true })
+  it("deshabilita el botón mientras carga", () => {
+    renderTopBar({ loading: true });
 
-    expect(screen.getByRole('button', { name: 'Refrescar ahora' }).disabled).toBe(true)
-  })
+    expect(screen.getByRole("button", { name: "Refrescar ahora" }).disabled).toBe(true);
+  });
 
-  it('no avisa al padre con el botón deshabilitado', async () => {
-    const user = userEvent.setup()
-    const onRefresh = vi.fn()
-    renderTopBar({ loading: true, onRefresh })
+  it("no avisa al padre con el botón deshabilitado", async () => {
+    const user = userEvent.setup();
+    const onRefresh = vi.fn();
+    renderTopBar({ loading: true, onRefresh });
 
-    await user.click(screen.getByRole('button', { name: 'Refrescar ahora' }))
+    await user.click(screen.getByRole("button", { name: "Refrescar ahora" }));
 
-    expect(onRefresh).not.toHaveBeenCalled()
-  })
+    expect(onRefresh).not.toHaveBeenCalled();
+  });
 
-  it('oculta el indicador decorativo a las tecnologías de asistencia', () => {
-    renderTopBar({ loading: true })
+  it("oculta el indicador decorativo a las tecnologías de asistencia", () => {
+    renderTopBar({ loading: true });
 
-    expect(status().querySelector('[aria-hidden="true"]')).not.toBeNull()
-  })
-})
+    expect(status().querySelector("[aria-hidden=\"true\"]")).not.toBeNull();
+  });
+});

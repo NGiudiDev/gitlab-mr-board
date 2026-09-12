@@ -1,9 +1,9 @@
-import { spawnSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
-import e2eConfig from './config.js';
+import e2eConfig from "./config.js";
 
-const repositoryRoot = fileURLToPath(new URL('..', import.meta.url));
+const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
 
 /**
  * Ejecuta un subcomando de la CLI de usuarios contra la base de los E2E.
@@ -15,14 +15,14 @@ const repositoryRoot = fileURLToPath(new URL('..', import.meta.url));
  * @param {string} [input] Lo que se manda por la entrada estándar.
  * @returns {import('node:child_process').SpawnSyncReturns<string>} El resultado.
  */
-function runUsersCommand(args, input = '') {
+function runUsersCommand(args, input = "") {
   return spawnSync(
-    'npm',
-    ['run', 'users', '--prefix', 'backend', '--', ...args],
+    "npm",
+    ["run", "users", "--prefix", "backend", "--", ...args],
     {
       cwd: repositoryRoot,
       input,
-      encoding: 'utf8',
+      encoding: "utf8",
       // `npm` es un script, no un ejecutable: en Windows necesita la shell.
       shell: true,
       env: {
@@ -51,18 +51,18 @@ export default function globalSetup() {
   // El invitado se borra primero: se da de alta durante el recorrido con el
   // código de la cuenta, y sin borrarlo la corrida siguiente choca con su
   // nombre ya tomado.
-  const removedGuest = runUsersCommand(['delete', e2eConfig.guestEmail]);
+  const removedGuest = runUsersCommand(["delete", e2eConfig.guestEmail]);
   const removed = removedGuest.status === 0
-    ? runUsersCommand(['delete', e2eConfig.email])
+    ? runUsersCommand(["delete", e2eConfig.email])
     : removedGuest;
 
   if (removed.status !== 0) {
     throw new Error([
-      'No se pudo limpiar el usuario de los test E2E.',
-      'Revisá E2E_DATABASE_URL y que la base esté disponible.',
+      "No se pudo limpiar el usuario de los test E2E.",
+      "Revisá E2E_DATABASE_URL y que la base esté disponible.",
       removed.stdout,
       removed.stderr,
-    ].filter(Boolean).join('\n'));
+    ].filter(Boolean).join("\n"));
   }
 
   // Sin `--invite` se abre una cuenta nueva y el usuario queda su
@@ -70,18 +70,18 @@ export default function globalSetup() {
   // GitLab y llegar a la pantalla de usuarios.
   const created = runUsersCommand(
     [
-      'create', e2eConfig.email,
-      '--name', 'Usuario E2E',
-      '--account', e2eConfig.accountName,
+      "create", e2eConfig.email,
+      "--name", "Usuario E2E",
+      "--account", e2eConfig.accountName,
     ],
     `${e2eConfig.password}\n${e2eConfig.password}\n`,
   );
 
   if (created.status !== 0) {
     throw new Error([
-      'No se pudo crear el usuario de los test E2E.',
+      "No se pudo crear el usuario de los test E2E.",
       created.stdout,
       created.stderr,
-    ].filter(Boolean).join('\n'));
+    ].filter(Boolean).join("\n"));
   }
 }

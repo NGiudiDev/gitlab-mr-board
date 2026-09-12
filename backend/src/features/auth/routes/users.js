@@ -1,12 +1,12 @@
 // 2. Dependencias externas.
-import express from 'express';
+import express from "express";
 
 // 6. Imports relativos restantes.
-import { HttpError, respondWithHttpError } from '../../../shared/httpError.js';
-import { normalizeEmail } from '../services/authService.js';
-import { createRequireAdmin } from './auth.js';
+import { HttpError, respondWithHttpError } from "../../../shared/httpError.js";
+import { normalizeEmail } from "../services/authService.js";
+import { createRequireAdmin } from "./auth.js";
 
-const VALID_STATUSES = ['active', 'disabled'];
+const VALID_STATUSES = ["active", "disabled"];
 
 /**
  * Crea el router de administración de usuarios.
@@ -28,56 +28,56 @@ function createUsersRouter(authService) {
 
   router.use(createRequireAdmin(authService));
 
-  router.get('/', async (_request, response) => {
+  router.get("/", async (_request, response) => {
     const { accountId } = response.locals.user;
 
     try {
       response.json({ users: await authService.listUsers(accountId) });
     } catch (error) {
-      respondWithHttpError(response, error, 'al listar los usuarios');
+      respondWithHttpError(response, error, "al listar los usuarios");
     }
   });
 
-  router.post('/', async (request, response) => {
+  router.post("/", async (request, response) => {
     const { accountId } = response.locals.user;
     const { email, password, displayName, role } = request.body ?? {};
 
     try {
       const user = await authService.createUser({
         accountId,
-        email: email ?? '',
-        password: password ?? '',
+        email: email ?? "",
+        password: password ?? "",
         ...(displayName === undefined ? {} : { displayName }),
-        role: role === 'admin' ? 'admin' : ('user'),
+        role: role === "admin" ? "admin" : ("user"),
       });
 
       response.status(201).json({ user });
     } catch (error) {
-      respondWithHttpError(response, error, 'al crear un usuario');
+      respondWithHttpError(response, error, "al crear un usuario");
     }
   });
 
-  router.patch('/:email/status', async (request, response) => {
-    const { email = '' } = request.params;
+  router.patch("/:email/status", async (request, response) => {
+    const { email = "" } = request.params;
     const { status } = request.body ?? {};
     const currentUser = response.locals.user;
 
     try {
       if (!VALID_STATUSES.includes(status)) {
-        throw new HttpError('El estado debe ser «active» o «disabled».', 400);
+        throw new HttpError("El estado debe ser «active» o «disabled».", 400);
       }
 
       // Deshabilitarse a sí mismo dejaría la cuenta sin administrador si es el
       // único, y en cualquier caso cerraría la sesión en curso.
       if (normalizeEmail(email) === currentUser.email) {
-        throw new HttpError('No podés cambiar el estado de tu propio usuario.', 409);
+        throw new HttpError("No podés cambiar el estado de tu propio usuario.", 409);
       }
 
       await authService.requireAccountMember(currentUser.accountId, email);
 
       response.json({ user: await authService.setUserStatus(email, status) });
     } catch (error) {
-      respondWithHttpError(response, error, 'al cambiar el estado de un usuario');
+      respondWithHttpError(response, error, "al cambiar el estado de un usuario");
     }
   });
 

@@ -1,11 +1,11 @@
 // 2. Dependencias externas.
-import { useEffect, useSyncExternalStore } from 'react'
+import { useEffect, useSyncExternalStore } from "react";
 
 // 6. Imports relativos restantes.
-import config from '../../../config.js'
-import { expireSession } from '../../auth/hooks/useSession.js'
+import { config } from "../../../config.js";
+import { expireSession } from "../../auth/hooks/useSession.js";
 
-const POLL_INTERVAL = 5 * 60 * 1000
+const POLL_INTERVAL = 5 * 60 * 1000;
 
 const INITIAL_STATE = {
   mergeRequests: [],
@@ -15,51 +15,51 @@ const INITIAL_STATE = {
   lastFetched: null,
   /** El backend avisó que todavía falta configurar GitLab en «Mi cuenta». */
   needsGitlabSettings: false,
-  viewMode: 'general',
+  viewMode: "general",
   selectedUsername: null,
-}
+};
 
 /**
  * El estado vive a nivel de módulo, compartido por toda la app.
  * `useSyncExternalStore` lo conecta a React sin provider ni librería de
  * estado: el store es la fuente de verdad y los componentes se suscriben.
  */
-let state = INITIAL_STATE
-const listeners = new Set()
+let state = INITIAL_STATE;
+const listeners = new Set();
 
 function getState() {
-  return state
+  return state;
 }
 
 function setState(patch) {
-  state = { ...state, ...patch }
-  listeners.forEach((listener) => listener())
+  state = { ...state, ...patch };
+  listeners.forEach((listener) => listener());
 }
 
 function subscribe(listener) {
-  listeners.add(listener)
+  listeners.add(listener);
   return () => {
-    listeners.delete(listener)
-  }
+    listeners.delete(listener);
+  };
 }
 
-let pollTimer = null
-let consumers = 0
+let pollTimer = null;
+let consumers = 0;
 // Carga inicial en curso. Evita que el doble montaje de StrictMode, o un
 // segundo consumidor del hook, disparen dos peticiones para el mismo arranque.
-let initialLoad = null
+let initialLoad = null;
 
 async function fetchMergeRequests(force = false) {
-  setState({ loading: true, error: null })
+  setState({ loading: true, error: null });
   try {
-    const url = `${config.apiBaseUrl}/api/pull-requests${force ? '?force=true' : ''}`
+    const url = `${config.apiBaseUrl}/api/pull-requests${force ? "?force=true" : ""}`;
     // El tablero exige sesión, y la cookie sólo viaja con `credentials`.
-    const response = await fetch(url, { credentials: 'include' })
+    const response = await fetch(url, { credentials: "include" });
     if (response.status === 401) {
       // La sesión venció: el error lo comunica la pantalla de login, no el tablero.
-      expireSession()
-      setState({ mergeRequests: [], meta: null, error: null, lastFetched: null })
-      return
+      expireSession();
+      setState({ mergeRequests: [], meta: null, error: null, lastFetched: null });
+      return;
     }
     if (response.status === 409) {
       // Falta la configuración de GitLab: no es un fallo, es un paso pendiente.
@@ -69,87 +69,87 @@ async function fetchMergeRequests(force = false) {
         error: null,
         lastFetched: null,
         needsGitlabSettings: true,
-      })
-      return
+      });
+      return;
     }
     if (!response.ok) {
-      const body = await response.json().catch(() => ({}))
-      throw new Error(body.error || `Error ${response.status}`)
+      const body = await response.json().catch(() => ({}));
+      throw new Error(body.error || `Error ${response.status}`);
     }
-    const data = await response.json()
+    const data = await response.json();
     setState({
       mergeRequests: data.mergeRequests,
       meta: data.meta,
       lastFetched: new Date(),
       needsGitlabSettings: false,
-    })
+    });
   } catch (err) {
-    setState({ error: err.message })
+    setState({ error: err.message });
   } finally {
-    setState({ loading: false })
+    setState({ loading: false });
   }
 }
 
 function loadOnce() {
-  if (initialLoad) return initialLoad
+  if (initialLoad) return initialLoad;
 
   initialLoad = fetchMergeRequests().finally(() => {
-    initialLoad = null
-  })
-  return initialLoad
+    initialLoad = null;
+  });
+  return initialLoad;
 }
 
 function startPolling() {
-  if (pollTimer) return
-  pollTimer = setInterval(() => fetchMergeRequests(), POLL_INTERVAL)
+  if (pollTimer) return;
+  pollTimer = setInterval(() => fetchMergeRequests(), POLL_INTERVAL);
 }
 
 function stopPolling() {
-  if (!pollTimer) return
-  clearInterval(pollTimer)
-  pollTimer = null
+  if (!pollTimer) return;
+  clearInterval(pollTimer);
+  pollTimer = null;
 }
 
 /** Cambia entre la vista general y la personal. */
 function setViewMode(viewMode) {
-  setState({ viewMode })
+  setState({ viewMode });
 }
 
 /** Conserva la identidad seleccionada durante la sesión actual. */
 function selectPerson(username) {
-  setState({ selectedUsername: username || null })
+  setState({ selectedUsername: username || null });
 }
 
 /** Deja el store como al arrancar la app: se usa al cerrar sesión y en los test. */
 function resetStore() {
-  stopPolling()
-  consumers = 0
-  initialLoad = null
-  setState(INITIAL_STATE)
+  stopPolling();
+  consumers = 0;
+  initialLoad = null;
+  setState(INITIAL_STATE);
 }
 
 function useMergeRequests() {
-  const snapshot = useSyncExternalStore(subscribe, getState)
+  const snapshot = useSyncExternalStore(subscribe, getState);
 
   useEffect(() => {
-    consumers += 1
-    loadOnce()
-    startPolling()
+    consumers += 1;
+    loadOnce();
+    startPolling();
 
     return () => {
-      consumers -= 1
+      consumers -= 1;
       // El polling es del store, no del componente: sólo se detiene cuando ya
       // no queda nadie escuchando.
-      if (consumers === 0) stopPolling()
-    }
-  }, [])
+      if (consumers === 0) stopPolling();
+    };
+  }, []);
 
   return {
     ...snapshot,
     fetchMRs: fetchMergeRequests,
     selectPerson,
     setViewMode,
-  }
+  };
 }
 
 export {
@@ -159,4 +159,4 @@ export {
   selectPerson,
   setViewMode,
   useMergeRequests,
-}
+};

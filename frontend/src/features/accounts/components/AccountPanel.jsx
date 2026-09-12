@@ -1,18 +1,18 @@
 // 2. Dependencias externas.
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from "react";
 
 // 6. Imports relativos restantes.
-import { useAccount } from '../hooks/useAccount.js'
+import { useAccount } from "../hooks/useAccount.js";
 
-const FIELD_CLASSES = 'block w-full mt-1 rounded-md border border-control bg-surface-raised px-3 py-2 text-[13px] font-normal text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
-const LABEL_CLASSES = 'block text-[12px] font-semibold text-text-muted'
-const HINT_CLASSES = 'mt-1 text-[12px] font-normal text-text-faint'
-const BUTTON_CLASSES = 'rounded-md bg-accent px-3 py-2 text-[13px] font-semibold text-bg disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
-const SECONDARY_BUTTON_CLASSES = 'rounded-md border border-control px-3 py-2 text-[12.5px] text-text-primary hover:border-accent cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
+const FIELD_CLASSES = "block w-full mt-1 rounded-md border border-control bg-surface-raised px-3 py-2 text-[13px] font-normal text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+const LABEL_CLASSES = "block text-[12px] font-semibold text-text-muted";
+const HINT_CLASSES = "mt-1 text-[12px] font-normal text-text-faint";
+const BUTTON_CLASSES = "rounded-md bg-accent px-3 py-2 text-[13px] font-semibold text-bg disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+const SECONDARY_BUTTON_CLASSES = "rounded-md border border-control px-3 py-2 text-[12.5px] text-text-primary hover:border-accent cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
 /** Describe la cantidad de miembros sin dejar el número suelto. */
 function membersLabel(memberCount) {
-  return memberCount === 1 ? '1 persona' : `${memberCount} personas`
+  return memberCount === 1 ? "1 persona" : `${memberCount} personas`;
 }
 
 /**
@@ -21,7 +21,7 @@ function membersLabel(memberCount) {
  * Sólo se muestra a un administrador, porque tener el código alcanza para
  * entrar a ver el tablero.
  */
-function InviteCode({ inviteCode = '', submitting = false, onRotate = () => {} }) {
+function InviteCode({ inviteCode = "", submitting = false, onRotate = () => {} }) {
   return (
     <div className="mt-5 border-t border-border-soft pt-4">
       <h3 className="text-[13px] font-semibold text-text-primary mb-1">
@@ -54,14 +54,14 @@ function InviteCode({ inviteCode = '', submitting = false, onRotate = () => {} }
         disabled={submitting}
         className={SECONDARY_BUTTON_CLASSES}
       >
-        {submitting ? 'Renovando...' : 'Renovar el código'}
+        {submitting ? "Renovando..." : "Renovar el código"}
       </button>
 
       <p className={HINT_CLASSES}>
         Al renovarlo, el código anterior deja de servir. Quien ya se sumó no pierde el acceso.
       </p>
     </div>
-  )
+  );
 }
 
 /**
@@ -71,41 +71,41 @@ function InviteCode({ inviteCode = '', submitting = false, onRotate = () => {} }
  * El nombre lo edita sólo un administrador; el backend valida el rol.
  */
 function AccountPanel({ user = null }) {
-  const { account, loading, error, submitting, renameAccount, rotateInviteCode } = useAccount(user?.accountId ?? null)
-  const [name, setName] = useState('')
-  const [formError, setFormError] = useState(null)
-  const [message, setMessage] = useState(null)
+  const { account, loading, error, submitting, renameAccount, rotateInviteCode } = useAccount(user?.accountId ?? null);
+  const [name, setName] = useState("");
+  const [formError, setFormError] = useState(null);
+  const [message, setMessage] = useState(null);
 
   // La cuenta llega después del primer render, así que el campo se completa
   // recién cuando el backend responde.
   useEffect(() => {
-    setName(account?.name ?? '')
-  }, [account])
+    setName(account?.name ?? "");
+  }, [account]);
 
-  const isAdmin = user?.role === 'admin'
+  const isAdmin = user?.role === "admin";
 
   /** Ejecuta una acción sobre la cuenta y presenta su resultado. */
   async function runAction(action, successMessage) {
-    setFormError(null)
-    setMessage(null)
+    setFormError(null);
+    setMessage(null);
 
-    const failure = await action()
+    const failure = await action();
 
     if (failure) {
-      setFormError(failure)
-      return
+      setFormError(failure);
+      return;
     }
 
-    setMessage(successMessage)
+    setMessage(successMessage);
   }
 
   function handleSubmit(event) {
-    event.preventDefault()
+    event.preventDefault();
 
-    return runAction(() => renameAccount(name), 'Nombre de la cuenta actualizado.')
+    return runAction(() => renameAccount(name), "Nombre de la cuenta actualizado.");
   }
 
-  if (!user) return null
+  if (!user) return null;
 
   return (
     <section aria-labelledby="cuenta-heading">
@@ -154,7 +154,7 @@ function AccountPanel({ user = null }) {
               </div>
 
               <button type="submit" disabled={submitting} className={BUTTON_CLASSES}>
-                {submitting ? 'Guardando...' : 'Guardar el nombre'}
+                {submitting ? "Guardando..." : "Guardar el nombre"}
               </button>
             </form>
           ) : (
@@ -170,13 +170,13 @@ function AccountPanel({ user = null }) {
             <InviteCode
               inviteCode={account.inviteCode}
               submitting={submitting}
-              onRotate={() => runAction(rotateInviteCode, 'Código de invitación renovado.')}
+              onRotate={() => runAction(rotateInviteCode, "Código de invitación renovado.")}
             />
           ) : null}
         </>
       )}
     </section>
-  )
+  );
 }
 
-export default AccountPanel
+export default AccountPanel;

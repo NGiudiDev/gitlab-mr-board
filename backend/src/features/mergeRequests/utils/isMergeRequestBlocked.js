@@ -2,10 +2,10 @@
  * Estados de pipeline que cuentan como bloqueo. `running` y `pending` quedan
  * fuera a propósito: no bloquean el MR, sólo indican que todavía no terminó.
  */
-const BLOCKING_PIPELINE_STATUSES = ['failed', 'canceled'];
+const BLOCKING_PIPELINE_STATUSES = ["failed", "canceled"];
 
 /** Estados de pipeline que aún no dieron un resultado. */
-const UNFINISHED_PIPELINE_STATUSES = ['running', 'pending'];
+const UNFINISHED_PIPELINE_STATUSES = ["running", "pending"];
 
 /**
  * Indica si un MR tiene un bloqueo técnico que impide avanzar: conflictos con
@@ -16,7 +16,7 @@ function isMergeRequestBlocked(mr, threads, pipeline) {
 
   if (BLOCKING_PIPELINE_STATUSES.includes(pipeline.status)) return true;
 
-  return threads.status === 'open';
+  return threads.status === "open";
 }
 
 /**

@@ -1,62 +1,62 @@
 // 2. Dependencias externas.
-import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 
 // 6. Imports relativos restantes.
-import ViewControls from './ViewControls.jsx'
+import ViewControls from "./ViewControls.jsx";
 
 const PEOPLE = [
-  { name: 'Ana Pérez', username: 'ana' },
-  { name: 'Beto Ruiz', username: 'beto' },
-]
+  { name: "Ana Pérez", username: "ana" },
+  { name: "Beto Ruiz", username: "beto" },
+];
 
-describe('ViewControls', () => {
-  it('expone las dos vistas como botones con estado accesible', () => {
-    render(<ViewControls viewMode="general" />)
+describe("ViewControls", () => {
+  it("expone las dos vistas como botones con estado accesible", () => {
+    render(<ViewControls viewMode="general" />);
 
-    expect(screen.getByRole('button', { name: 'General' }).getAttribute('aria-pressed')).toBe('true')
-    expect(screen.getByRole('button', { name: 'Personal' }).getAttribute('aria-pressed')).toBe('false')
-  })
+    expect(screen.getByRole("button", { name: "General" }).getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByRole("button", { name: "Personal" }).getAttribute("aria-pressed")).toBe("false");
+  });
 
-  it('notifica el cambio a la vista personal', () => {
-    const onViewChange = vi.fn()
-    render(<ViewControls onViewChange={onViewChange} />)
+  it("notifica el cambio a la vista personal", () => {
+    const onViewChange = vi.fn();
+    render(<ViewControls onViewChange={onViewChange} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Personal' }))
+    fireEvent.click(screen.getByRole("button", { name: "Personal" }));
 
-    expect(onViewChange).toHaveBeenCalledWith('personal')
-  })
+    expect(onViewChange).toHaveBeenCalledWith("personal");
+  });
 
-  it('muestra un selector etiquetado con nombre y username', () => {
-    render(<ViewControls viewMode="personal" people={PEOPLE} canChoosePerson />)
+  it("muestra un selector etiquetado con nombre y username", () => {
+    render(<ViewControls viewMode="personal" people={PEOPLE} canChoosePerson />);
 
-    const select = screen.getByRole('combobox', { name: 'Persona' })
-    expect(select.textContent).toContain('Ana Pérez (@ana)')
-    expect(select.textContent).toContain('Beto Ruiz (@beto)')
-  })
+    const select = screen.getByRole("combobox", { name: "Persona" });
+    expect(select.textContent).toContain("Ana Pérez (@ana)");
+    expect(select.textContent).toContain("Beto Ruiz (@beto)");
+  });
 
-  it('notifica la persona seleccionada', () => {
-    const onPersonChange = vi.fn()
-    render(<ViewControls viewMode="personal" people={PEOPLE} canChoosePerson onPersonChange={onPersonChange} />)
+  it("notifica la persona seleccionada", () => {
+    const onPersonChange = vi.fn();
+    render(<ViewControls viewMode="personal" people={PEOPLE} canChoosePerson onPersonChange={onPersonChange} />);
 
-    fireEvent.change(screen.getByRole('combobox', { name: 'Persona' }), { target: { value: 'beto' } })
+    fireEvent.change(screen.getByRole("combobox", { name: "Persona" }), { target: { value: "beto" } });
 
-    expect(onPersonChange).toHaveBeenCalledWith('beto')
-  })
+    expect(onPersonChange).toHaveBeenCalledWith("beto");
+  });
 
-  it('no ofrece el selector a quien no puede elegir persona', () => {
-    render(<ViewControls viewMode="personal" people={PEOPLE} />)
+  it("no ofrece el selector a quien no puede elegir persona", () => {
+    render(<ViewControls viewMode="personal" people={PEOPLE} />);
 
-    expect(screen.queryByRole('combobox', { name: 'Persona' })).toBeNull()
-  })
+    expect(screen.queryByRole("combobox", { name: "Persona" })).toBeNull();
+  });
 
-  it('tampoco lo ofrece en la vista general a quien sí puede elegir', () => {
-    render(<ViewControls viewMode="general" people={PEOPLE} canChoosePerson />)
+  it("tampoco lo ofrece en la vista general a quien sí puede elegir", () => {
+    render(<ViewControls viewMode="general" people={PEOPLE} canChoosePerson />);
 
-    expect(screen.queryByRole('combobox', { name: 'Persona' })).toBeNull()
-  })
+    expect(screen.queryByRole("combobox", { name: "Persona" })).toBeNull();
+  });
 
-  it('conserva una selección que ya no aparece en los datos actuales', () => {
+  it("conserva una selección que ya no aparece en los datos actuales", () => {
     render(
       <ViewControls
         viewMode="personal"
@@ -64,10 +64,10 @@ describe('ViewControls', () => {
         selectedPersonName="Ana Pérez"
         canChoosePerson
       />,
-    )
+    );
 
-    const select = screen.getByRole('combobox', { name: 'Persona' })
-    expect(select.value).toBe('ana')
-    expect(select.textContent).toContain('Ana Pérez (sin tareas actuales)')
-  })
-})
+    const select = screen.getByRole("combobox", { name: "Persona" });
+    expect(select.value).toBe("ana");
+    expect(select.textContent).toContain("Ana Pérez (sin tareas actuales)");
+  });
+});

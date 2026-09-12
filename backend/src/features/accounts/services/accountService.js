@@ -1,12 +1,12 @@
 // 1. Módulos estándar de Node.js.
-import { randomUUID } from 'node:crypto';
+import { randomUUID } from "node:crypto";
 
-import { generateInviteCode as generateRandomInviteCode, normalizeInviteCode } from '../utils/inviteCode.js';
+import { generateInviteCode as generateRandomInviteCode, normalizeInviteCode } from "../utils/inviteCode.js";
 
 // 5. Utilidades.
-import { HttpError } from '../../../shared/httpError.js';
+import { HttpError } from "../../../shared/httpError.js";
 
-const DEFAULT_ACCOUNT_NAME = 'Mi equipo';
+const DEFAULT_ACCOUNT_NAME = "Mi equipo";
 const MAX_ACCOUNT_NAME_LENGTH = 80;
 
 /**
@@ -20,7 +20,7 @@ const MAX_ACCOUNT_NAME_LENGTH = 80;
  * @throws {HttpError} 400 si supera el largo máximo.
  */
 function parseAccountName(value) {
-  const name = String(value ?? '').trim();
+  const name = String(value ?? "").trim();
 
   if (name.length > MAX_ACCOUNT_NAME_LENGTH) {
     throw new HttpError(
@@ -71,7 +71,7 @@ function createAccountService(options) {
    */
   async function requireAccount(accountId) {
     const account = await repository.findById(accountId);
-    if (!account) throw new HttpError('La cuenta no existe.', 404);
+    if (!account) throw new HttpError("La cuenta no existe.", 404);
 
     return account;
   }
@@ -93,12 +93,12 @@ function createAccountService(options) {
     const normalizedCode = normalizeInviteCode(inviteCode);
 
     if (!normalizedCode) {
-      throw new HttpError('Indicá el código de invitación.', 400);
+      throw new HttpError("Indicá el código de invitación.", 400);
     }
 
     const account = await repository.findByInviteCode(normalizedCode);
     if (!account) {
-      throw new HttpError('El código de invitación no es válido. Pedile uno nuevo a quien administra la cuenta.', 404);
+      throw new HttpError("El código de invitación no es válido. Pedile uno nuevo a quien administra la cuenta.", 404);
     }
 
     return account;

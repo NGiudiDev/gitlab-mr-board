@@ -1,6 +1,6 @@
 // 6. Imports relativos restantes.
-import { createConfiguredApp } from './app.js';
-import config from './config.js';
+import { createConfiguredApp } from "./app.js";
+import config from "./config.js";
 
 /**
  * Abre la base, deja el esquema aplicado y recién entonces atiende pedidos.
@@ -14,12 +14,12 @@ async function main() {
   app.listen(config.port, () => {
     console.log(`Backend disponible en http://localhost:${config.port}`);
     console.log(`Instancia de GitLab: ${config.gitlabBaseUrl}`);
-    console.log('Cada cuenta configura sus proyectos y su access token desde «Mi cuenta»; los carga un administrador para todo el equipo.');
+    console.log("Cada cuenta configura sus proyectos y su access token desde «Mi cuenta»; los carga un administrador para todo el equipo.");
   });
 }
 
 main().catch((error) => {
-  console.error('No se pudo iniciar el backend:', error);
-  console.error('Revisá DATABASE_URL y que la base de Neon esté disponible.');
+  console.error("No se pudo iniciar el backend:", error);
+  console.error("Revisá DATABASE_URL y que la base de Neon esté disponible.");
   process.exitCode = 1;
 });

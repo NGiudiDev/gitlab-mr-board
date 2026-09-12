@@ -8,7 +8,7 @@
 class HttpError extends Error {
   constructor(message, status) {
     super(message);
-    this.name = 'HttpError';
+    this.name = "HttpError";
     this.status = status;
   }
 }
@@ -31,7 +31,7 @@ function respondWithHttpError(response, error, context) {
   }
 
   console.error(`Error inesperado ${context}:`, error);
-  response.status(500).json({ error: 'Error interno del servidor.' });
+  response.status(500).json({ error: "Error interno del servidor." });
 }
 
 export { HttpError, respondWithHttpError };

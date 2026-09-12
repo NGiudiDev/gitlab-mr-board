@@ -1,33 +1,33 @@
 // 2. Dependencias externas.
-import cors from 'cors';
-import express from 'express';
+import cors from "cors";
+import express from "express";
 
 // 5. Utilidades.
-import { createSecretCipher } from './features/gitlabSettings/utils/encryption.js';
+import { createSecretCipher } from "./features/gitlabSettings/utils/encryption.js";
 
 // 6. Imports relativos restantes.
-import config from './config.js';
-import { createAccountsRouter } from './features/accounts/routes/accounts.js';
-import { createAccountRepository } from './features/accounts/services/accountRepository.js';
-import { createAccountService } from './features/accounts/services/accountService.js';
-import { createAuthRouter, createRequireSession } from './features/auth/routes/auth.js';
-import { createUsersRouter } from './features/auth/routes/users.js';
-import { createAuthRepository } from './features/auth/services/authRepository.js';
-import { createAuthService } from './features/auth/services/authService.js';
-import { createGitLabSettingsRouter } from './features/gitlabSettings/routes/gitlabSettings.js';
-import { createGitLabSettingsRepository } from './features/gitlabSettings/services/gitlabSettingsRepository.js';
-import { createGitLabSettingsService } from './features/gitlabSettings/services/gitlabSettingsService.js';
-import { createMergeRequestsRouter } from './features/mergeRequests/routes/mergeRequests.js';
-import { applySchema, createNeonDatabase } from './shared/database.js';
+import config from "./config.js";
+import { createAccountsRouter } from "./features/accounts/routes/accounts.js";
+import { createAccountRepository } from "./features/accounts/services/accountRepository.js";
+import { createAccountService } from "./features/accounts/services/accountService.js";
+import { createAuthRouter, createRequireSession } from "./features/auth/routes/auth.js";
+import { createUsersRouter } from "./features/auth/routes/users.js";
+import { createAuthRepository } from "./features/auth/services/authRepository.js";
+import { createAuthService } from "./features/auth/services/authService.js";
+import { createGitLabSettingsRouter } from "./features/gitlabSettings/routes/gitlabSettings.js";
+import { createGitLabSettingsRepository } from "./features/gitlabSettings/services/gitlabSettingsRepository.js";
+import { createGitLabSettingsService } from "./features/gitlabSettings/services/gitlabSettingsService.js";
+import { createMergeRequestsRouter } from "./features/mergeRequests/routes/mergeRequests.js";
+import { applySchema, createNeonDatabase } from "./shared/database.js";
 
 let configuredAppPromise;
 
-const ALLOWED_ORIGINS = ['http://localhost:5173', 'http://localhost:4173'];
+const ALLOWED_ORIGINS = ["http://localhost:5173", "http://localhost:4173"];
 
 /** Convierte cualquier error no controlado en una respuesta HTTP segura. */
 const errorHandler = (error, _request, response, _next) => {
-  console.error('Error no controlado:', error);
-  response.status(500).json({ error: 'Error interno del servidor.' });
+  console.error("Error no controlado:", error);
+  response.status(500).json({ error: "Error interno del servidor." });
 };
 
 /**
@@ -99,16 +99,16 @@ function createApp(options = {}) {
   app.use(cors({ origin: ALLOWED_ORIGINS, credentials: true }));
   app.use(express.json());
 
-  app.get('/health', (_request, response) => {
-    response.json({ status: 'ok' });
+  app.get("/health", (_request, response) => {
+    response.json({ status: "ok" });
   });
 
-  app.use('/api/auth', createAuthRouter(authService));
-  app.use('/api/account', createAccountsRouter(authService, accountService));
-  app.use('/api/users', createUsersRouter(authService));
-  app.use('/api/gitlab-settings', createGitLabSettingsRouter(authService, gitlabSettingsService));
+  app.use("/api/auth", createAuthRouter(authService));
+  app.use("/api/account", createAccountsRouter(authService, accountService));
+  app.use("/api/users", createUsersRouter(authService));
+  app.use("/api/gitlab-settings", createGitLabSettingsRouter(authService, gitlabSettingsService));
   app.use(
-    '/api',
+    "/api",
     createRequireSession(authService),
     createMergeRequestsRouter({ fetchMergeRequests, now, gitlabSettingsService }),
   );
@@ -133,7 +133,7 @@ async function createConfiguredApp() {
     return createApp(createServices(database));
   } catch (error) {
     await database.close().catch((closeError) => {
-      console.error('No se pudo cerrar la conexión después de un arranque fallido:', closeError);
+      console.error("No se pudo cerrar la conexión después de un arranque fallido:", closeError);
     });
 
     throw error;
@@ -165,10 +165,10 @@ function createVercelHandler(loadApp = getConfiguredApp) {
 
       return app(request, response);
     } catch (error) {
-      console.error('No se pudo preparar el backend para atender la solicitud:', error);
+      console.error("No se pudo preparar el backend para atender la solicitud:", error);
       response.statusCode = 503;
-      response.setHeader('Content-Type', 'application/json; charset=utf-8');
-      response.end(JSON.stringify({ error: 'El backend no pudo conectarse con la base de datos.' }));
+      response.setHeader("Content-Type", "application/json; charset=utf-8");
+      response.end(JSON.stringify({ error: "El backend no pudo conectarse con la base de datos." }));
     }
   };
 }

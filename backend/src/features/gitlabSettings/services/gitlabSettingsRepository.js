@@ -1,5 +1,5 @@
 // 6. Imports relativos restantes.
-import { toIsoString } from '../../../shared/database.js';
+import { toIsoString } from "../../../shared/database.js";
 
 /** Traduce una fila de `account_gitlab_settings` al contrato del dominio. */
 function toStoredSettings(row) {
@@ -25,7 +25,7 @@ function createGitLabSettingsRepository(database) {
   return {
     async findByAccountId(accountId) {
       const { rows } = await database.query(
-        'SELECT * FROM account_gitlab_settings WHERE account_id = $1',
+        "SELECT * FROM account_gitlab_settings WHERE account_id = $1",
         [accountId],
       );
 
@@ -52,7 +52,7 @@ function createGitLabSettingsRepository(database) {
     },
 
     async deleteByAccountId(accountId) {
-      await database.query('DELETE FROM account_gitlab_settings WHERE account_id = $1', [accountId]);
+      await database.query("DELETE FROM account_gitlab_settings WHERE account_id = $1", [accountId]);
     },
   };
 }

@@ -1,5 +1,5 @@
 // 2. Dependencias externas.
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from "react";
 
 /**
  * Permite editar el nombre visible y el email de la propia persona.
@@ -9,35 +9,35 @@ function ProfilePanel({
   submitting = false,
   onSave = async () => null,
 }) {
-  const [profile, setProfile] = useState({ displayName: '', email: '' })
-  const [error, setError] = useState(null)
-  const [notice, setNotice] = useState(null)
+  const [profile, setProfile] = useState({ displayName: "", email: "" });
+  const [error, setError] = useState(null);
+  const [notice, setNotice] = useState(null);
 
   useEffect(() => {
     setProfile({
-      displayName: user?.displayName ?? '',
-      email: user?.email ?? '',
-    })
-  }, [user?.displayName, user?.email])
+      displayName: user?.displayName ?? "",
+      email: user?.email ?? "",
+    });
+  }, [user?.displayName, user?.email]);
 
-  if (!user) return null
+  if (!user) return null;
 
   async function handleSubmit(event) {
-    event.preventDefault()
-    setError(null)
-    setNotice(null)
+    event.preventDefault();
+    setError(null);
+    setNotice(null);
 
     const failure = await onSave({
       displayName: profile.displayName.trim(),
       email: profile.email.trim(),
-    })
+    });
 
     if (failure) {
-      setError(failure)
-      return
+      setError(failure);
+      return;
     }
 
-    setNotice('Perfil actualizado.')
+    setNotice("Perfil actualizado.");
   }
 
   return (
@@ -91,11 +91,11 @@ function ProfilePanel({
           disabled={submitting}
           className="mt-4 rounded-md bg-accent px-3 py-2 text-[13px] font-semibold text-bg disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
-          {submitting ? 'Guardando…' : 'Guardar perfil'}
+          {submitting ? "Guardando…" : "Guardar perfil"}
         </button>
       </form>
     </section>
-  )
+  );
 }
 
-export default ProfilePanel
+export default ProfilePanel;

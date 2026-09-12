@@ -1,5 +1,5 @@
 // 1. Módulos estándar de Node.js.
-import { randomBytes, scrypt, timingSafeEqual } from 'node:crypto';
+import { randomBytes, scrypt, timingSafeEqual } from "node:crypto";
 
 // Parámetros de scrypt. Se guardan junto al hash para poder endurecerlos más
 // adelante sin invalidar las contraseñas ya almacenadas.
@@ -8,7 +8,7 @@ const BLOCK_SIZE = 8;
 const PARALLELIZATION = 1;
 const KEY_LENGTH = 64;
 const SALT_LENGTH = 16;
-const ALGORITHM = 'scrypt';
+const ALGORITHM = "scrypt";
 
 const MINIMUM_PASSWORD_LENGTH = 8;
 
@@ -59,9 +59,9 @@ async function hashPassword(password) {
     COST,
     BLOCK_SIZE,
     PARALLELIZATION,
-    salt.toString('hex'),
-    key.toString('hex'),
-  ].join('$');
+    salt.toString("hex"),
+    key.toString("hex"),
+  ].join("$");
 }
 
 /**
@@ -72,7 +72,7 @@ async function hashPassword(password) {
  * @returns `true` sólo si coinciden; `false` ante cualquier hash inválido.
  */
 async function verifyPassword(password, storedHash) {
-  const parts = storedHash.split('$');
+  const parts = storedHash.split("$");
   if (parts.length !== 6 || parts[0] !== ALGORITHM) return false;
 
   const [, cost, blockSize, parallelization, saltHex, keyHex] = parts;
@@ -82,8 +82,8 @@ async function verifyPassword(password, storedHash) {
 
   if (!parsedCost || !parsedBlockSize || !parsedParallelization) return false;
 
-  const salt = Buffer.from(saltHex, 'hex');
-  const expectedKey = Buffer.from(keyHex, 'hex');
+  const salt = Buffer.from(saltHex, "hex");
+  const expectedKey = Buffer.from(keyHex, "hex");
   if (salt.length === 0 || expectedKey.length === 0) return false;
 
   try {
@@ -92,7 +92,7 @@ async function verifyPassword(password, storedHash) {
     // La comparación es de tiempo constante para no filtrar el prefijo correcto.
     return key.length === expectedKey.length && timingSafeEqual(key, expectedKey);
   } catch (error) {
-    console.error('No se pudo verificar la contraseña:', error);
+    console.error("No se pudo verificar la contraseña:", error);
     return false;
   }
 }
