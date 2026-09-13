@@ -1,34 +1,12 @@
+// 2. Dependencias externas.
+import { NavLink } from "react-router";
+
 // 6. Imports relativos restantes.
 import { AccountMenu } from "./AccountMenu.jsx";
-
-/**
- * Secciones navegables con la sesión abierta, en el orden en que aparecen en la
- * barra. `App` resuelve el contenido con el mismo `id`, así que esta lista es la
- * única fuente de verdad de la navegación.
- */
-const SECTIONS = [
-  { id: "board", label: "Tablero" },
-  { id: "profile", label: "Mi perfil", menuOnly: true },
-  { id: "account", label: "Mi cuenta", menuOnly: true },
-  { id: "users", label: "Usuarios", adminOnly: true },
-];
+import { sectionsFor } from "./routes.js";
 
 const NAV_ITEM_CLASSES = "block rounded-md px-2.5 py-1 text-[13px] cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
-/**
- * Secciones que puede abrir un usuario.
- *
- * Esconder la administración de usuarios es sólo una cortesía de la interfaz:
- * el backend valida el rol ruta por ruta.
- *
- * @param {{ role?: string } | null} user Usuario de la sesión, o `null`.
- * @returns {Array<{ id: string, label: string, menuOnly?: boolean }>} Secciones permitidas.
- */
-export function sectionsFor(user) {
-  if (user?.role === "admin") return SECTIONS;
-
-  return SECTIONS.filter((section) => !section.adminOnly);
-}
 /**
  * Layout de la aplicación: una barra superior mínima con el nombre del tablero,
  * la navegación principal y un menú con la cuenta, el acceso al perfil y la
@@ -39,10 +17,8 @@ export function sectionsFor(user) {
  */
 export function AppShell({
   children,
-  onChangeView = () => {},
   onLogout = () => {},
   user = null,
-  view = "board",
 }) {
   return (
     <>
@@ -61,20 +37,16 @@ export function AppShell({
             <nav aria-label="Secciones">
               <ul className="flex flex-wrap items-center gap-1">
                 {sectionsFor(user).filter((section) => !section.menuOnly).map((section) => {
-                  const isActive = section.id === view;
-
                   return (
                     <li key={section.id}>
-                      <button
-                        aria-current={isActive ? "page" : undefined}
-                        className={`${NAV_ITEM_CLASSES} ${isActive
+                      <NavLink
+                        className={({ isActive }) => `${NAV_ITEM_CLASSES} ${isActive
                           ? "bg-surface-raised font-semibold text-text-primary"
                           : "text-text-muted hover:text-text-primary"}`}
-                        onClick={() => onChangeView(section.id)}
-                        type="button"
+                        to={section.path}
                       >
                         {section.label}
-                      </button>
+                      </NavLink>
                     </li>
                   );
                 })}
@@ -82,8 +54,6 @@ export function AppShell({
             </nav>
 
             <AccountMenu
-              onEditAccount={() => onChangeView("account")}
-              onEditProfile={() => onChangeView("profile")}
               onLogout={onLogout}
               user={user}
             />

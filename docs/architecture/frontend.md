@@ -4,16 +4,17 @@ El frontend es una aplicación de página única construida con React 19, Vite y
 
 La lógica de negocio vive en el backend. El frontend presenta lo que recibe resuelto —clasificación, responsables y personas— y sólo conserva decisiones de presentación: qué columnas mostrar y en qué orden, agrupar, ordenar visualmente, formatear y filtrar por lo que ya viene calculado.
 
-La aplicación usa componentes de función en archivos `.jsx`, módulos ES y estado compartido basado en las primitivas nativas de React. No incorpora un router, un provider global ni una biblioteca externa de gestión de estado.
+La aplicación usa componentes de función en archivos `.jsx`, módulos ES, React Router en modo declarativo y estado compartido basado en las primitivas nativas de React. No incorpora un provider global ni una biblioteca externa de gestión de estado.
 
 ## Organización del código
 
 El código se divide entre la composición general y las funcionalidades del dominio:
 
-- `src/main.jsx`: carga los estilos globales y monta React mediante `createRoot` y `StrictMode`.
+- `src/main.jsx`: carga los estilos globales y monta React mediante `createRoot`, `StrictMode` y `BrowserRouter`.
 - `src/config.js`: centraliza y valida la configuración expuesta por Vite.
-- `src/app/App.jsx`: decide si mostrar el ingreso o el layout según la sesión, conserva la sección activa y resuelve qué presentar durante la carga, los errores y la ausencia de datos.
-- `src/app/AppShell.jsx`: define el layout —barra superior, navegación entre secciones y contenido— y declara en `SECTIONS` las secciones navegables; `AccountMenu.jsx` reúne allí la identidad, el equipo y el cierre de sesión.
+- `src/app/App.jsx`: decide si mostrar las rutas públicas o privadas según la sesión y resuelve qué presentar durante la carga, los errores y la ausencia de datos.
+- `src/app/AppShell.jsx`: define el layout —barra superior, navegación entre secciones y contenido—; `AccountMenu.jsx` reúne allí la identidad, el equipo y el cierre de sesión.
+- `src/app/routes.js`: mantiene las URLs y los metadatos de navegación como única fuente de verdad.
 - `src/features/accounts/`: contiene el store de la cuenta y el panel que la presenta, descritos en el [dominio de cuentas](../domains/cuentas.md).
 - `src/features/auth/`: contiene el store de la sesión, el hook de la lista de usuarios y los componentes de ingreso, alta, administración, perfil y contraseña, descritos en el [dominio de autenticación](../domains/autenticacion.md).
 - `src/features/gitlabAccount/`: contiene la sección, el formulario, los estados de carga y lectura, y el hook de la configuración de GitLab de la cuenta, descritos en la [configuración de GitLab](../domains/configuracion-gitlab.md).
@@ -28,7 +29,7 @@ Las funcionalidades nuevas deben seguir la estructura `src/features/<feature>/co
 
 ## Composición de componentes
 
-`App` consume `useSession()`, monta el tablero sólo con la sesión abierta y resuelve qué sección presentar; `AppShell` aporta el layout y la navegación; `Board` consume `useMergeRequests()` y distribuye datos y callbacks mediante props explícitas. El árbol principal es:
+`App` consume `useSession()`, monta el tablero sólo con la sesión abierta y resuelve las rutas públicas o privadas; `AppShell` aporta el layout y la navegación; `Board` consume `useMergeRequests()` y distribuye datos y callbacks mediante props explícitas. El árbol principal es:
 
 ```text
 App
@@ -57,7 +58,7 @@ App
 - `LoginForm` pide email y contraseña, muestra el error que devuelve el backend y ofrece pasar al alta.
 - `RegisterForm` da de alta la persona y elige entre sus dos caminos excluyentes: sumarse a un equipo con su código de invitación, o abrir uno nuevo. Valida en el navegador las mismas reglas que el backend para avisar antes de enviar.
 - `AccountMenu` concentra detrás de un avatar el nombre visible, el email, el equipo, los accesos separados al perfil y a la cuenta, y el cierre de sesión. Se cierra al elegir una acción, al interactuar fuera o con `Escape`, que devuelve el foco al avatar.
-- `AccountView` y `ProfileView` componen exclusivamente las secciones de cuenta y perfil; `ActiveSection` sólo elige cuál presentar.
+- `AccountView` y `ProfileView` componen exclusivamente las secciones de cuenta y perfil; `AuthenticatedRoutes` asocia cada una con su URL.
 - `AccountSettingsSection` presenta el equipo: su nombre y cuánta gente lo integra.
 - `AccountMemberInviteSection` presenta a un `admin` el código de invitación y permite renovarlo; `App` la compone como una sección independiente dentro de «Mi cuenta».
 - `GitlabAccountSettingsSection` carga los IDs de los proyectos y el estado del access token de la cuenta, presenta un skeleton accesible mientras espera y decide entre la edición para un `admin` o el resumen de sólo lectura. `GitlabAccountSettingsForm` concentra los campos, el envío y sus mensajes; el token arranca vacío en cada visita porque el backend nunca lo devuelve, y dejarlo así conserva el guardado.
@@ -78,9 +79,11 @@ Los componentes presentacionales reciben valores mediante props y notifican acci
 
 ## Navegación entre secciones
 
-No hay router: la sección activa es estado local de `App`, porque nadie más la observa. `AppShell` declara las secciones en `SECTIONS` —`board`, `profile`, `account` y `users`— y `App` resuelve el contenido con el mismo `id`, así que agregar una sección es sumarla a esa lista y contemplarla en `ActiveSection`. `profile` y `account` llevan `menuOnly` porque se abren desde el avatar y no se muestran en la navegación principal.
+React Router mantiene una URL por pantalla: `/ingresar`, `/registro`, `/tablero`, `/perfil`, `/cuenta` y `/usuarios`. `BrowserRouter` envuelve la aplicación; `App` declara los `Routes`; y los enlaces de `AppShell` y `AccountMenu` permiten historial, recarga y acceso directo. El rewrite de `frontend/vercel.json` devuelve `index.html` para esas rutas en producción.
 
-`sectionsFor(user)` decide qué secciones puede abrir cada persona: `users` sólo está disponible con rol `admin`; la barra omite además las marcadas como `menuOnly`. «Mi perfil» siempre es editable por su titular; dentro de «Mi cuenta», el rol decide si el contenido compartido se edita o se consulta, mientras que el nickname personal siempre puede actualizarse. Si la sección activa deja de estar disponible, `App` cae en el tablero en lugar de dejar la pantalla vacía. Esconder la sección es una cortesía de la interfaz: el backend valida el rol ruta por ruta, según el [dominio de autenticación](../domains/autenticacion.md).
+`routes.js` define `APP_PATHS` y `NAVIGATION_SECTIONS` como única fuente de verdad. `profile` y `account` llevan `menuOnly` porque se abren desde el avatar y no se muestran en la navegación principal. Al agregar una pantalla hay que sumar su URL, su metadato de navegación si corresponde y su `Route` pública o privada.
+
+Las rutas privadas redirigen a `/ingresar` sin sesión y las públicas redirigen a `/tablero` con una sesión abierta. `sectionsFor(user)` decide qué enlaces puede ver cada persona y `/usuarios` redirige al tablero si el rol no es `admin`. «Mi perfil» siempre es editable por su titular; dentro de «Mi cuenta», el rol decide si el contenido compartido se edita o se consulta, mientras que el nickname personal siempre puede actualizarse. Esconder o redirigir una sección es una cortesía de la interfaz: el backend valida el rol ruta por ruta, según el [dominio de autenticación](../domains/autenticacion.md).
 
 Al cerrar la sesión la app vuelve al tablero, para que la próxima no empiece donde quedó la anterior, y descarta los stores del tablero y de la cuenta.
 

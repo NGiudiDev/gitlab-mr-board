@@ -1,11 +1,13 @@
 // 2. Dependencias externas.
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import { MemoryRouter, useLocation } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // 6. Imports relativos restantes.
 import { buildMergeRequest, buildResponse } from "../../test/fixtures/mergeRequests.js";
 import { jsonResponse, resetSharedState, signInTestUser, TEST_ACCOUNT, TEST_USER } from "../../test/sharedState.js";
 import { App } from "./App.jsx";
+import { APP_PATHS } from "./routes.js";
 
 const MRS = [
   buildMergeRequest({
@@ -58,10 +60,26 @@ async function flush() {
 }
 
 /** Monta la app y espera a que termine la carga inicial. */
-async function renderApp() {
-  container = render(<App />).container;
+function LocationProbe() {
+  const { pathname } = useLocation();
+
+  return <output data-testid="current-path">{pathname}</output>;
+}
+
+/** Monta la app en una URL y espera a que termine la carga inicial. */
+async function renderApp(path = APP_PATHS.board) {
+  container = render(
+    <MemoryRouter initialEntries={[path]}>
+      <App />
+      <LocationProbe />
+    </MemoryRouter>,
+  ).container;
   await flush();
   return container;
+}
+
+function currentPath() {
+  return screen.getByTestId("current-path").textContent;
 }
 
 /**
@@ -377,7 +395,11 @@ describe("portero de sesión", () => {
 
   it("avisa que está verificando la sesión antes de decidir qué mostrar", async () => {
     fetchMock.mockImplementation(() => new Promise(() => {}));
-    container = render(<App />).container;
+    container = render(
+      <MemoryRouter initialEntries={[APP_PATHS.board]}>
+        <App />
+      </MemoryRouter>,
+    ).container;
 
     expect(container.textContent).toContain("Verificando tu sesión...");
     expect(loginForm()).toBeNull();
@@ -388,6 +410,7 @@ describe("portero de sesión", () => {
     await renderApp();
 
     expect(loginForm()).not.toBeNull();
+    expect(currentPath()).toBe(APP_PATHS.login);
     expect(container.textContent).not.toContain("Tablero de MRs · ");
   });
 
@@ -488,6 +511,15 @@ describe("alta de cuenta desde el tablero", () => {
     fireEvent.click(screen.getByRole("button", { name: "Crear una cuenta" }));
 
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Crear una cuenta");
+    expect(currentPath()).toBe(APP_PATHS.register);
+  });
+
+  it("permite abrir el alta desde su URL", async () => {
+    fetchMock.mockImplementation(routeApi());
+    await renderApp(APP_PATHS.register);
+
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Crear una cuenta");
+    expect(currentPath()).toBe(APP_PATHS.register);
   });
 
   it("vuelve al ingreso desde el alta", async () => {
@@ -543,11 +575,11 @@ describe("navegación entre secciones", () => {
   async function openSection(label) {
     if (label === "Mi perfil" || label === "Mi cuenta") {
       fireEvent.click(screen.getByRole("button", { name: "Abrir menú de cuenta de Ana Pérez" }));
-      fireEvent.click(screen.getByRole("button", {
+      fireEvent.click(screen.getByRole("link", {
         name: label === "Mi perfil" ? "Editar perfil" : /^(Editar|Ver) cuenta$/,
       }));
     } else {
-      fireEvent.click(screen.getByRole("button", { name: label }));
+      fireEvent.click(screen.getByRole("link", { name: label }));
     }
     await flush();
   }
@@ -559,11 +591,21 @@ describe("navegación entre secciones", () => {
     await openSection("Mi cuenta");
 
     expect(screen.getByRole("heading", { level: 2, name: "Mi cuenta" })).toBeDefined();
+    expect(currentPath()).toBe(APP_PATHS.account);
     expect(container.textContent).not.toContain("equipo/tablero");
 
     await openSection("Tablero");
 
+    expect(currentPath()).toBe(APP_PATHS.board);
     expect(container.textContent).toContain("equipo/tablero");
+  });
+
+  it("abre el perfil directamente desde su URL", async () => {
+    fetchMock.mockImplementation(routeApi());
+    await renderApp(APP_PATHS.profile);
+
+    expect(screen.getByRole("heading", { level: 2, name: "Mi perfil" })).toBeDefined();
+    expect(currentPath()).toBe(APP_PATHS.profile);
   });
 
   it("muestra el error si no se puede cargar la cuenta", async () => {
@@ -642,7 +684,7 @@ describe("navegación entre secciones", () => {
 
     expect(container.textContent).toContain("Todavía no configuraste GitLab en tu cuenta");
 
-    fireEvent.click(screen.getByRole("button", { name: "Configurar en Mi cuenta" }));
+    fireEvent.click(screen.getByRole("link", { name: "Configurar en Mi cuenta" }));
     await flush();
 
     expect(screen.getByRole("heading", { level: 2, name: "Cuenta de GitLab" })).toBeDefined();
@@ -659,7 +701,7 @@ describe("navegación entre secciones", () => {
     await renderApp();
 
     expect(container.textContent).toContain("Pedile a quien la administra");
-    expect(screen.queryByRole("button", { name: "Configurar en Mi cuenta" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Configurar en Mi cuenta" })).toBeNull();
   });
 
   it("actualiza el tablero apenas se guarda la configuración de GitLab", async () => {
@@ -678,14 +720,14 @@ describe("navegación entre secciones", () => {
     signInTestUser({ ...TEST_USER, role: "admin" });
     await renderApp();
 
-    fireEvent.click(screen.getByRole("button", { name: "Configurar en Mi cuenta" }));
+    fireEvent.click(screen.getByRole("link", { name: "Configurar en Mi cuenta" }));
     await flush();
     fireEvent.change(screen.getByLabelText("IDs de los proyectos"), { target: { value: "101" } });
     fireEvent.change(screen.getByLabelText("Access token"), { target: { value: "glpat-token-de-prueba" } });
     fireEvent.click(screen.getByRole("button", { name: "Guardar configuración" }));
     await flush();
 
-    fireEvent.click(screen.getByRole("button", { name: "Tablero" }));
+    fireEvent.click(screen.getByRole("link", { name: "Tablero" }));
     await flush();
 
     expect(container.textContent).toContain("equipo/tablero");
@@ -695,7 +737,16 @@ describe("navegación entre secciones", () => {
     fetchMock.mockImplementation(routeApi());
     await renderApp();
 
-    expect(screen.queryByRole("button", { name: "Usuarios" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Usuarios" })).toBeNull();
+  });
+
+  it("redirige al tablero si una persona sin permiso abre Usuarios por URL", async () => {
+    fetchMock.mockImplementation(routeApi());
+    await renderApp(APP_PATHS.users);
+
+    expect(currentPath()).toBe(APP_PATHS.board);
+    expect(container.textContent).toContain("equipo/tablero");
+    expect(screen.queryByRole("heading", { level: 2, name: "Usuarios" })).toBeNull();
   });
 
   it("abre la administración de usuarios para un admin", async () => {
@@ -706,6 +757,7 @@ describe("navegación entre secciones", () => {
     await openSection("Usuarios");
 
     expect(screen.getByRole("heading", { level: 2, name: "Usuarios" })).toBeDefined();
+    expect(currentPath()).toBe(APP_PATHS.users);
     expect(container.textContent).not.toContain("equipo/tablero");
   });
 
@@ -716,7 +768,7 @@ describe("navegación entre secciones", () => {
     await openSection("Mi cuenta");
 
     expect(screen.queryByRole("button", { name: "Mi cuenta" })).toBeNull();
-    expect(screen.getByRole("button", { name: "Tablero" }).getAttribute("aria-current")).toBeNull();
+    expect(screen.getByRole("link", { name: "Tablero" }).getAttribute("aria-current")).toBeNull();
   });
 
   it("vuelve al tablero al abrir una sesión nueva", async () => {

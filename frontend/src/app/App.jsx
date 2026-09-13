@@ -1,5 +1,5 @@
 // 2. Dependencias externas.
-import { useEffect, useState } from "react";
+import { Link, Navigate, Route, Routes, useNavigate } from "react-router";
 
 // 6. Imports relativos restantes.
 import { AccountMemberInviteSection } from "../features/accounts/components/AccountMemberInviteSection.jsx";
@@ -25,7 +25,8 @@ import {
   findPersonByUsername,
   mergeRequestsForPerson,
 } from "../features/mergeRequests/personalView.js";
-import { AppShell, sectionsFor } from "./AppShell.jsx";
+import { AppShell } from "./AppShell.jsx";
+import { APP_PATHS } from "./routes.js";
 
 const PLACEHOLDER_CLASSES = "text-center text-text-muted text-[13px] py-16 border border-dashed border-border rounded-lg bg-surface";
 
@@ -65,7 +66,7 @@ function announcementFor({
  * ahí, porque el backend le va a rechazar el guardado: lo que necesita es
  * saber a quién pedírselo.
  */
-function MissingGitlabSettings({ canConfigure = false, onGoToAccount = () => {} }) {
+function MissingGitlabSettings({ canConfigure = false }) {
   return (
     <div className={PLACEHOLDER_CLASSES} role="status">
       <p className="mb-3">
@@ -74,13 +75,12 @@ function MissingGitlabSettings({ canConfigure = false, onGoToAccount = () => {} 
           : "Tu cuenta todavía no tiene datos de GitLab. Pedile a quien la administra que cargue los proyectos y el access token."}
       </p>
       {canConfigure ? (
-        <button
+        <Link
           className="rounded-md bg-accent px-3 py-2 text-[13px] font-semibold text-bg cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-          onClick={onGoToAccount}
-          type="button"
+          to={APP_PATHS.account}
         >
           Configurar en Mi cuenta
-        </button>
+        </Link>
       ) : null}
     </div>
   );
@@ -90,7 +90,7 @@ function MissingGitlabSettings({ canConfigure = false, onGoToAccount = () => {} 
  * Tablero de merge requests. Se monta sólo con la sesión abierta, así el
  * polling arranca recién cuando el backend va a aceptar las peticiones.
  */
-function Board({ canChoosePerson = false, canConfigureGitlab = false, onGoToAccount = () => {} }) {
+function Board({ canChoosePerson = false, canConfigureGitlab = false }) {
   const {
     mergeRequests,
     meta,
@@ -136,7 +136,7 @@ function Board({ canChoosePerson = false, canConfigureGitlab = false, onGoToAcco
   // sobran y lo único útil es explicar cómo se completa.
   if (needsGitlabSettings) {
     return (
-      <MissingGitlabSettings canConfigure={canConfigureGitlab} onGoToAccount={onGoToAccount} />
+      <MissingGitlabSettings canConfigure={canConfigureGitlab} />
     );
   }
 
@@ -218,29 +218,37 @@ function Board({ canChoosePerson = false, canConfigureGitlab = false, onGoToAcco
   );
 }
 
-/** Presenta el ingreso o el alta de cuenta según lo que pida la persona. */
-function AnonymousView({ error, notice, onLogin, onRegister, submitting }) {
-  const [showRegister, setShowRegister] = useState(false);
-
-  if (showRegister) {
-    return (
-      <RegisterForm
-        error={error}
-        onShowLogin={() => setShowRegister(false)}
-        onSubmit={onRegister}
-        submitting={submitting}
-      />
-    );
-  }
+/** Declara las pantallas disponibles sin una sesión abierta. */
+function AnonymousRoutes({ error, notice, onLogin, onRegister, submitting }) {
+  const navigate = useNavigate();
 
   return (
-    <LoginForm
-      error={error}
-      notice={notice}
-      onShowRegister={() => setShowRegister(true)}
-      onSubmit={onLogin}
-      submitting={submitting}
-    />
+    <Routes>
+      <Route
+        element={(
+          <LoginForm
+            error={error}
+            notice={notice}
+            onShowRegister={() => navigate(APP_PATHS.register)}
+            onSubmit={onLogin}
+            submitting={submitting}
+          />
+        )}
+        path={APP_PATHS.login}
+      />
+      <Route
+        element={(
+          <RegisterForm
+            error={error}
+            onShowLogin={() => navigate(APP_PATHS.login)}
+            onSubmit={onRegister}
+            submitting={submitting}
+          />
+        )}
+        path={APP_PATHS.register}
+      />
+      <Route element={<Navigate replace to={APP_PATHS.login} />} path="*" />
+    </Routes>
   );
 }
 
@@ -317,114 +325,123 @@ function ProfileView({ onChangePassword, onSaveProfile, submitting, user }) {
   );
 }
 
-/** Presenta la sección elegida en la barra de navegación. */
-function ActiveSection({
+/** Declara las pantallas privadas y aplica sus permisos de acceso. */
+function AuthenticatedRoutes({
   onChangePassword,
-  onGoToAccount,
   onSaveGitlabUsername,
   onSaveProfile,
   submitting,
   user,
-  view,
 }) {
   const isAdmin = user.role === "admin";
 
-  if (view === "account") {
-    return (
-      <AccountView
-        onSaveGitlabUsername={onSaveGitlabUsername}
-        submitting={submitting}
-        user={user}
-      />
-    );
-  }
-
-  if (view === "profile") {
-    return (
-      <ProfileView
-        onChangePassword={onChangePassword}
-        onSaveProfile={onSaveProfile}
-        submitting={submitting}
-        user={user}
-      />
-    );
-  }
-
-  if (view === "users") return <UserAdmin currentEmail={user.email} />;
-
-  // Sólo un admin puede mirar el tablero de otra persona; el resto ve el suyo.
   return (
-    <Board
-      canChoosePerson={isAdmin}
-      canConfigureGitlab={isAdmin}
-      onGoToAccount={onGoToAccount}
-    />
+    <Routes>
+      <Route
+        element={(
+          <Board
+            canChoosePerson={isAdmin}
+            canConfigureGitlab={isAdmin}
+          />
+        )}
+        path={APP_PATHS.board}
+      />
+      <Route
+        element={(
+          <AccountView
+            onSaveGitlabUsername={onSaveGitlabUsername}
+            submitting={submitting}
+            user={user}
+          />
+        )}
+        path={APP_PATHS.account}
+      />
+      <Route
+        element={(
+          <ProfileView
+            onChangePassword={onChangePassword}
+            onSaveProfile={onSaveProfile}
+            submitting={submitting}
+            user={user}
+          />
+        )}
+        path={APP_PATHS.profile}
+      />
+      <Route
+        element={isAdmin
+          ? <UserAdmin currentEmail={user.email} />
+          : <Navigate replace to={APP_PATHS.board} />}
+        path={APP_PATHS.users}
+      />
+      <Route element={<Navigate replace to={APP_PATHS.board} />} path="*" />
+    </Routes>
   );
 }
 
-/** Decide si mostrar el ingreso o el layout con la sección activa. */
-export function App() {
-  const {
-    user,
-    status,
-    error,
-    notice,
-    submitting,
-    changeOwnPassword,
-    login,
-    logout,
-    register,
-    saveGitlabUsername,
-    saveProfile,
-  } = useSession();
-  const [view, setView] = useState("board");
-  const isAuthenticated = status === "authenticated";
-  // Una sección que el usuario actual no tiene habilitada —la de usuarios si no
-  // es admin— cae en el tablero en lugar de dejar la pantalla vacía.
-  const availableSections = sectionsFor(user);
-  const activeView = availableSections.some((section) => section.id === view) ? view : "board";
+/** Compone el layout privado y limpia los stores al cerrar la sesión. */
+function AuthenticatedApp({
+  changeOwnPassword,
+  logout,
+  saveGitlabUsername,
+  saveProfile,
+  submitting,
+  user,
+}) {
+  const navigate = useNavigate();
 
-  // Al terminar la sesión, la próxima empieza en el tablero y no donde quedó
-  // la anterior.
-  useEffect(() => {
-    if (!isAuthenticated) setView("board");
-  }, [isAuthenticated]);
-
-  /** Cierra la sesión y descarta los datos de la cuenta y del tablero. */
   async function handleLogout() {
     await logout();
     resetStore();
     resetAccountStore();
+    navigate(APP_PATHS.login, { replace: true });
   }
 
   return (
-    <AppShell
-      onChangeView={setView}
-      onLogout={handleLogout}
-      user={isAuthenticated ? user : null}
-      view={activeView}
-    >
-      {status === "checking" ? (
+    <AppShell onLogout={handleLogout} user={user}>
+      <AuthenticatedRoutes
+        onChangePassword={changeOwnPassword}
+        onSaveGitlabUsername={saveGitlabUsername}
+        onSaveProfile={saveProfile}
+        submitting={submitting}
+        user={user}
+      />
+    </AppShell>
+  );
+}
+
+export function App() {
+  const session = useSession();
+
+  if (session.status === "checking") {
+    return (
+      <AppShell>
         <BoardStatus>Verificando tu sesión...</BoardStatus>
-      ) : isAuthenticated ? (
-        <ActiveSection
-          onChangePassword={changeOwnPassword}
-          onGoToAccount={() => setView("account")}
-          onSaveGitlabUsername={saveGitlabUsername}
-          onSaveProfile={saveProfile}
-          submitting={submitting}
-          user={user}
-          view={activeView}
-        />
-      ) : (
-        <AnonymousView
-          error={error}
-          notice={notice}
-          onLogin={login}
-          onRegister={register}
-          submitting={submitting}
-        />
-      )}
+      </AppShell>
+    );
+  }
+
+  if (session.status === "authenticated") {
+    return (
+      <AuthenticatedApp
+        changeOwnPassword={session.changeOwnPassword}
+        logout={session.logout}
+        saveGitlabUsername={session.saveGitlabUsername}
+        saveProfile={session.saveProfile}
+        submitting={session.submitting}
+        user={session.user}
+      />
+    );
+  }
+
+  return (
+    <AppShell>
+      <AnonymousRoutes
+        error={session.error}
+        notice={session.notice}
+        onLogin={session.login}
+        onRegister={session.register}
+        submitting={session.submitting}
+      />
     </AppShell>
   );
 }

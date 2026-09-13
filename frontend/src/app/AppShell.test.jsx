@@ -1,11 +1,13 @@
 // 2. Dependencias externas.
 import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter, useLocation } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // 6. Imports relativos restantes.
 import { jsonResponse, resetSharedState, TEST_ACCOUNT, TEST_USER } from "../../test/sharedState.js";
-import { AppShell, sectionsFor } from "./AppShell.jsx";
+import { AppShell } from "./AppShell.jsx";
+import { APP_PATHS, sectionsFor } from "./routes.js";
 
 const ADMIN_USER = { ...TEST_USER, role: "admin" };
 
@@ -20,15 +22,26 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-function renderShell(props = {}) {
-  return render(<AppShell {...props}><p>Contenido de la sección</p></AppShell>);
+function LocationProbe() {
+  const { pathname } = useLocation();
+
+  return <output data-testid="current-path">{pathname}</output>;
+}
+
+function renderShell(props = {}, path = APP_PATHS.board) {
+  return render(
+    <MemoryRouter initialEntries={[path]}>
+      <AppShell {...props}><p>Contenido de la sección</p></AppShell>
+      <LocationProbe />
+    </MemoryRouter>,
+  );
 }
 
 /** Etiquetas de la barra de navegación, en el orden en que aparecen. */
 function navLabels() {
-  return screen.getAllByRole("button")
-    .filter((button) => button.closest("nav"))
-    .map((button) => button.textContent);
+  return screen.getAllByRole("link")
+    .filter((link) => link.closest("nav"))
+    .map((link) => link.textContent);
 }
 
 describe("AppShell", () => {
@@ -89,48 +102,44 @@ describe("AppShell: navegación", () => {
   });
 
   it("no marca el tablero cuando la cuenta está activa desde el menú", () => {
-    renderShell({ user: TEST_USER, view: "account" });
+    renderShell({ user: TEST_USER }, APP_PATHS.account);
 
-    expect(screen.queryByRole("button", { name: "Mi cuenta" })).toBeNull();
-    expect(screen.getByRole("button", { name: "Tablero" }).getAttribute("aria-current")).toBeNull();
+    expect(screen.queryByRole("link", { name: "Mi cuenta" })).toBeNull();
+    expect(screen.getByRole("link", { name: "Tablero" }).getAttribute("aria-current")).toBeNull();
   });
 
-  it("avisa al padre la sección elegida", async () => {
-    const onChangeView = vi.fn();
-    renderShell({ user: ADMIN_USER, onChangeView });
+  it("navega a la sección elegida", async () => {
+    renderShell({ user: ADMIN_USER });
 
-    await userEvent.click(screen.getByRole("button", { name: "Usuarios" }));
+    await userEvent.click(screen.getByRole("link", { name: "Usuarios" }));
 
-    expect(onChangeView).toHaveBeenCalledWith("users");
+    expect(screen.getByTestId("current-path").textContent).toBe(APP_PATHS.users);
   });
 
   it("vuelve al tablero desde la cuenta", async () => {
-    const onChangeView = vi.fn();
-    renderShell({ user: TEST_USER, view: "account", onChangeView });
+    renderShell({ user: TEST_USER }, APP_PATHS.account);
 
-    await userEvent.click(screen.getByRole("button", { name: "Tablero" }));
+    await userEvent.click(screen.getByRole("link", { name: "Tablero" }));
 
-    expect(onChangeView).toHaveBeenCalledWith("board");
+    expect(screen.getByTestId("current-path").textContent).toBe(APP_PATHS.board);
   });
 
   it("abre la pantalla personal desde la acción Editar perfil", async () => {
-    const onChangeView = vi.fn();
-    renderShell({ user: TEST_USER, onChangeView });
+    renderShell({ user: TEST_USER });
 
     await userEvent.click(screen.getByRole("button", { name: "Abrir menú de cuenta de Ana Pérez" }));
-    await userEvent.click(screen.getByRole("button", { name: "Editar perfil" }));
+    await userEvent.click(screen.getByRole("link", { name: "Editar perfil" }));
 
-    expect(onChangeView).toHaveBeenCalledWith("profile");
+    expect(screen.getByTestId("current-path").textContent).toBe(APP_PATHS.profile);
   });
 
   it("abre la pantalla compartida desde la acción Editar cuenta", async () => {
-    const onChangeView = vi.fn();
-    renderShell({ user: ADMIN_USER, onChangeView });
+    renderShell({ user: ADMIN_USER });
 
     await userEvent.click(screen.getByRole("button", { name: "Abrir menú de cuenta de Ana Pérez" }));
-    await userEvent.click(screen.getByRole("button", { name: "Editar cuenta" }));
+    await userEvent.click(screen.getByRole("link", { name: "Editar cuenta" }));
 
-    expect(onChangeView).toHaveBeenCalledWith("account");
+    expect(screen.getByTestId("current-path").textContent).toBe(APP_PATHS.account);
   });
 
   it("avisa al padre al cerrar la sesión", async () => {

@@ -46,13 +46,14 @@ test.describe("Tablero de merge requests", () => {
     });
 
     await test.step("ingresa con el usuario de test, todavía sin configurar GitLab", async () => {
-      await page.goto("/");
+      await page.goto("/ingresar");
       await expect(page.getByRole("heading", { name: "Tablero de MRs", level: 1 })).toBeVisible();
 
       await page.getByLabel("Email").fill(e2eConfig.email);
       await page.getByLabel("Contraseña").fill(e2eConfig.password);
       await page.getByRole("button", { name: "Ingresar" }).click();
 
+      await expect(page).toHaveURL(/\/tablero$/);
       await expect(page.getByText(e2eConfig.email)).toBeVisible();
       // La base se recrea en cada corrida, así que el usuario arranca sin
       // proyectos ni token: el tablero todavía no tiene qué consultar.
@@ -60,7 +61,8 @@ test.describe("Tablero de merge requests", () => {
     });
 
     await test.step("carga los proyectos y el access token en «Mi cuenta»", async () => {
-      await page.getByRole("button", { name: "Configurar en Mi cuenta" }).click();
+      await page.getByRole("link", { name: "Configurar en Mi cuenta" }).click();
+      await expect(page).toHaveURL(/\/cuenta$/);
       await expect(page.getByRole("heading", { level: 2, name: "GitLab de la cuenta" })).toBeVisible();
 
       await page.getByLabel("IDs de los proyectos").fill(e2eConfig.projectIds);
@@ -80,9 +82,10 @@ test.describe("Tablero de merge requests", () => {
 
     await test.step("vuelve al tablero y espera los datos de GitLab", async () => {
       const boardResponse = waitForBoardResponse(page);
-      await page.getByRole("button", { name: "Tablero" }).click();
+      await page.getByRole("link", { name: "Tablero" }).click();
       await boardResponse;
 
+      await expect(page).toHaveURL(/\/tablero$/);
       await expect(page.getByRole("button", { name: "Refrescar ahora" })).toBeEnabled();
     });
 
@@ -180,7 +183,8 @@ test.describe("Tablero de merge requests", () => {
 
     await test.step("navega entre la cuenta, los usuarios y el tablero", async () => {
       await page.getByRole("button", { name: "Abrir menú de cuenta" }).click();
-      await page.getByRole("button", { name: "Editar cuenta" }).click();
+      await page.getByRole("link", { name: "Editar cuenta" }).click();
+      await expect(page).toHaveURL(/\/cuenta$/);
       await expect(page.getByRole("heading", { level: 2, name: "Mi equipo" })).toBeVisible();
       await expect(page.getByRole("heading", { level: 2, name: "GitLab de la cuenta" })).toBeVisible();
       await expect(page.getByLabel("Nickname de GitLab")).toHaveValue(e2eConfig.gitlabUsername);
@@ -191,18 +195,21 @@ test.describe("Tablero de merge requests", () => {
       expect(inviteCode).toMatch(/^[A-Z2-9]{10}$/);
 
       await page.getByRole("button", { name: "Abrir menú de cuenta" }).click();
-      await page.getByRole("button", { name: "Editar perfil" }).click();
+      await page.getByRole("link", { name: "Editar perfil" }).click();
+      await expect(page).toHaveURL(/\/perfil$/);
       await expect(page.getByRole("heading", { level: 2, name: "Mi perfil" })).toBeVisible();
       await expect(page.getByRole("heading", { level: 2, name: "Mi contraseña" })).toBeVisible();
       await expect(page.getByRole("heading", { level: 2, name: "Usuario de GitLab" })).toHaveCount(0);
       await expect(page.getByRole("heading", { level: 2, name: "Mi equipo" })).toHaveCount(0);
 
       // El usuario del recorrido es administrador, así que ve la tabla de usuarios.
-      await page.getByRole("button", { name: "Usuarios" }).click();
+      await page.getByRole("link", { name: "Usuarios" }).click();
+      await expect(page).toHaveURL(/\/usuarios$/);
       await expect(page.getByRole("heading", { level: 2, name: "Usuarios" })).toBeVisible();
       await expect(page.getByRole("rowheader", { name: e2eConfig.email })).toBeVisible();
 
-      await page.getByRole("button", { name: "Tablero" }).click();
+      await page.getByRole("link", { name: "Tablero" }).click();
+      await expect(page).toHaveURL(/\/tablero$/);
       await expect(page.getByRole("button", { name: "Refrescar ahora" })).toBeEnabled();
     });
 
@@ -210,6 +217,7 @@ test.describe("Tablero de merge requests", () => {
       await page.getByRole("button", { name: "Abrir menú de cuenta" }).click();
       await page.getByRole("button", { name: "Cerrar sesión" }).click();
 
+      await expect(page).toHaveURL(/\/ingresar$/);
       await expect(page.getByRole("button", { name: "Ingresar" })).toBeVisible();
       await expect(page.getByRole("button", { name: "Refrescar ahora" })).toHaveCount(0);
 
@@ -236,9 +244,10 @@ test.describe("Tablero de merge requests", () => {
 
       // No administra la cuenta, así que no puede tocar esa configuración ni
       // ver la pantalla de usuarios.
-      await expect(page.getByRole("button", { name: "Usuarios" })).toHaveCount(0);
+      await expect(page.getByRole("link", { name: "Usuarios" })).toHaveCount(0);
       await page.getByRole("button", { name: "Abrir menú de cuenta" }).click();
-      await page.getByRole("button", { name: "Ver cuenta" }).click();
+      await page.getByRole("link", { name: "Ver cuenta" }).click();
+      await expect(page).toHaveURL(/\/cuenta$/);
       await expect(page.getByRole("heading", { level: 2, name: "GitLab de la cuenta" })).toBeVisible();
       await expect(page.getByLabel("IDs de los proyectos")).toHaveCount(0);
     });

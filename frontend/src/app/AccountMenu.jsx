@@ -1,8 +1,10 @@
 // 2. Dependencias externas.
 import { useEffect, useId, useRef, useState } from "react";
+import { Link } from "react-router";
 
 // 6. Imports relativos restantes.
 import { useAccount } from "../features/accounts/hooks/useAccount.js";
+import { APP_PATHS } from "./routes.js";
 
 /**
  * Obtiene hasta dos iniciales para representar a la persona sin una imagen.
@@ -23,8 +25,6 @@ export function initialsFor(user) {
  * Reúne la identidad, los accesos al perfil y la cuenta, y el cierre de sesión.
  */
 export function AccountMenu({
-  onEditAccount = () => {},
-  onEditProfile = () => {},
   onLogout = () => {},
   user = null,
 }) {
@@ -66,16 +66,6 @@ export function AccountMenu({
   function handleLogout() {
     closeMenu();
     onLogout();
-  }
-
-  function openProfileScreen() {
-    closeMenu();
-    onEditProfile();
-  }
-
-  function openAccountScreen() {
-    closeMenu();
-    onEditAccount();
   }
 
   return (
@@ -142,10 +132,10 @@ export function AccountMenu({
           </dl>
 
           <div className="p-2">
-            <button
+            <Link
               className="flex min-h-10 w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm text-text-primary hover:bg-surface-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-              onClick={openProfileScreen}
-              type="button"
+              onClick={closeMenu}
+              to={APP_PATHS.profile}
             >
               <svg
                 aria-hidden="true"
@@ -158,11 +148,11 @@ export function AccountMenu({
                 <path d="m13.5 3.5 3 3L7 16H4v-3L13.5 3.5Z" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               Editar perfil
-            </button>
-            <button
+            </Link>
+            <Link
               className="flex min-h-10 w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm text-text-primary hover:bg-surface-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-              onClick={openAccountScreen}
-              type="button"
+              onClick={closeMenu}
+              to={APP_PATHS.account}
             >
               <svg
                 aria-hidden="true"
@@ -175,7 +165,7 @@ export function AccountMenu({
                 <path d="M3.5 16.5h13M5 16.5v-9h10v9M7.5 10h1m3 0h1m-5 3h1m3 0h1M4 7.5 10 3l6 4.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               {user.role === "admin" ? "Editar cuenta" : "Ver cuenta"}
-            </button>
+            </Link>
             <button
               className="flex min-h-10 w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm text-text-primary hover:bg-surface-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
               onClick={handleLogout}
