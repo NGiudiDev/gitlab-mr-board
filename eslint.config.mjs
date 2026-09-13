@@ -1,4 +1,3 @@
-// 2. Dependencias externas.
 import simpleImportSort from "eslint-plugin-simple-import-sort";
 
 export default [
@@ -17,6 +16,7 @@ export default [
       "simple-import-sort": simpleImportSort,
     },
     rules: {
+      "local/jsx-sort-props": "error",
       quotes: ["error", "double"],
       semi: ["error", "always"],
       "simple-import-sort/exports": "error",

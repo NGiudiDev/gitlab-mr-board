@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 
 // 6. Imports relativos restantes.
 import { TEST_USER } from "../../../../test/sharedState.js";
-import PasswordPanel from "./PasswordPanel.jsx";
+import { PasswordPanel } from "./PasswordPanel.jsx";
 
 /** Deja que se resuelvan las promesas pendientes y React vuelva a renderizar. */
 async function flush() {
@@ -52,7 +52,7 @@ describe("PasswordPanel", () => {
 
   it("envía la contraseña actual y la nueva", async () => {
     const onChangePassword = vi.fn(async () => null);
-    render(<PasswordPanel user={TEST_USER} onChangePassword={onChangePassword} />);
+    render(<PasswordPanel onChangePassword={onChangePassword} user={TEST_USER} />);
 
     await submitPasswordChange();
 
@@ -64,7 +64,7 @@ describe("PasswordPanel", () => {
 
   it("avisa y no envía cuando la confirmación no coincide", async () => {
     const onChangePassword = vi.fn(async () => null);
-    render(<PasswordPanel user={TEST_USER} onChangePassword={onChangePassword} />);
+    render(<PasswordPanel onChangePassword={onChangePassword} user={TEST_USER} />);
 
     await submitPasswordChange({ confirmation: "otra-contrasena" });
 
@@ -74,7 +74,7 @@ describe("PasswordPanel", () => {
 
   it("muestra el error que devuelve el backend", async () => {
     const onChangePassword = vi.fn(async () => "La contraseña actual no coincide.");
-    render(<PasswordPanel user={TEST_USER} onChangePassword={onChangePassword} />);
+    render(<PasswordPanel onChangePassword={onChangePassword} user={TEST_USER} />);
 
     await submitPasswordChange();
 
@@ -82,7 +82,7 @@ describe("PasswordPanel", () => {
   });
 
   it("bloquea el botón mientras se guarda", () => {
-    render(<PasswordPanel user={TEST_USER} submitting />);
+    render(<PasswordPanel submitting user={TEST_USER} />);
 
     const button = screen.getByRole("button", { name: "Guardando..." });
     expect(button.disabled).toBe(true);

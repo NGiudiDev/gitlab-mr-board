@@ -2,7 +2,11 @@
 import { describe, expect, it } from "vitest";
 
 // 6. Imports relativos restantes.
-import { DEFAULT_API_BASE_URL, parseApiBaseUrl } from "../../../config.js";
+// 4. Módulos de constantes.
+import { DEFAULT_API_BASE_URL } from "../constants/api.consts.js";
+
+// 6. Imports relativos restantes.
+import { parseApiBaseUrl } from "./api.utils.js";
 
 describe("parseApiBaseUrl", () => {
   it("usa localhost:3001 cuando no se configura un valor", () => {

@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // 6. Imports relativos restantes.
 import { jsonResponse } from "../../../../test/sharedState.js";
-import UserAdmin from "./UserAdmin.jsx";
+import { UserAdmin } from "./UserAdmin.jsx";
 
 const USERS = [
   {

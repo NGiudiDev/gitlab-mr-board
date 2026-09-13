@@ -8,13 +8,11 @@ import {
   SECONDARY_BUTTON_CLASSES,
 } from "../../../assets/constants.js";
 
-export function AccountMemberInviteSection(props) {
-  const {
-    inviteCode = "",
-    onRotate = async () => null,
-    submitting = false,
-  } = props;
-
+export function AccountMemberInviteSection({
+  inviteCode = "",
+  onRotate = async () => null,
+  submitting = false,
+}) {
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
 
@@ -38,7 +36,7 @@ export function AccountMemberInviteSection(props) {
 
   return (
     <section aria-labelledby="invitacion-heading">
-      <h2 id="invitacion-heading" className="mb-1 text-base font-semibold text-text-primary">
+      <h2 className="mb-1 text-base font-semibold text-text-primary" id="invitacion-heading">
         Invitar al equipo
       </h2>
 
@@ -47,13 +45,13 @@ export function AccountMemberInviteSection(props) {
       </p>
 
       {error ? (
-        <p role="alert" className="mb-4 rounded-md border border-conflict bg-conflict-soft px-3 py-2 text-[12.5px] text-text-primary">
+        <p className="mb-4 rounded-md border border-conflict bg-conflict-soft px-3 py-2 text-[12.5px] text-text-primary" role="alert">
           {error}
         </p>
       ) : null}
 
       {message ? (
-        <p role="status" className="mb-4 rounded-md border border-ready bg-ready-soft px-3 py-2 text-[12.5px] text-text-primary">
+        <p className="mb-4 rounded-md border border-ready bg-ready-soft px-3 py-2 text-[12.5px] text-text-primary" role="status">
           {message}
         </p>
       ) : null}

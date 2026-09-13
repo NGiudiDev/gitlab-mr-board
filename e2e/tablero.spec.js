@@ -194,7 +194,7 @@ test.describe("Tablero de merge requests", () => {
       await page.getByRole("button", { name: "Editar perfil" }).click();
       await expect(page.getByRole("heading", { level: 2, name: "Mi perfil" })).toBeVisible();
       await expect(page.getByRole("heading", { level: 2, name: "Mi contraseña" })).toBeVisible();
-      await expect(page.getByRole("heading", { level: 2, name: "Mi identidad en GitLab" })).toHaveCount(0);
+      await expect(page.getByRole("heading", { level: 2, name: "Usuario de GitLab" })).toHaveCount(0);
       await expect(page.getByRole("heading", { level: 2, name: "Mi equipo" })).toHaveCount(0);
 
       // El usuario del recorrido es administrador, así que ve la tabla de usuarios.

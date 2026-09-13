@@ -1,9 +1,13 @@
 // 2. Dependencias externas.
 import { useEffect, useState } from "react";
 
-const FIELD_CLASSES = "block w-full mt-1 rounded-md border border-control bg-surface-raised px-3 py-2 text-[13px] font-normal text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
-const LABEL_CLASSES = "block text-[12px] font-semibold text-text-muted";
-const HINT_CLASSES = "mt-1 text-[12px] font-normal text-text-faint";
+// 6. Imports relativos restantes.
+import {
+  BUTTON_CLASSES,
+  FIELD_CLASSES,
+  HINT_CLASSES,
+  LABEL_CLASSES,
+} from "../../../assets/constants.js";
 
 /**
  * Nickname de GitLab de la propia persona.
@@ -12,7 +16,7 @@ const HINT_CLASSES = "mt-1 text-[12px] font-normal text-text-faint";
  * cuenta, pero con qué nombre aparece cada persona en los merge requests es
  * suyo, y de eso depende la vista personal.
  */
-function GitlabIdentityPanel({ user = null, submitting = false, onSave = () => {} }) {
+export function GitlabUserSettingsSection({ onSave = () => {}, submitting = false, user = null }) {
   const [gitlabUsername, setGitlabUsername] = useState(user?.gitlabUsername ?? "");
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
@@ -42,21 +46,21 @@ function GitlabIdentityPanel({ user = null, submitting = false, onSave = () => {
 
   return (
     <section aria-labelledby="identidad-heading">
-      <h2 id="identidad-heading" className="text-base font-semibold text-text-primary mb-1">
-        Mi identidad en GitLab
+      <h2 className="text-base font-semibold text-text-primary mb-1" id="identidad-heading">
+        Usuario de GitLab
       </h2>
       <p className="text-[12.5px] text-text-muted mb-4">
         Con tu nickname el tablero reconoce cuáles de los merge requests del equipo son tuyos.
       </p>
 
       {error ? (
-        <p role="alert" className="mb-4 rounded-md border border-conflict bg-conflict-soft px-3 py-2 text-[12.5px] text-text-primary">
+        <p className="mb-4 rounded-md border border-conflict bg-conflict-soft px-3 py-2 text-[12.5px] text-text-primary" role="alert">
           {error}
         </p>
       ) : null}
 
       {message ? (
-        <p role="status" className="mb-4 rounded-md border border-ready bg-ready-soft px-3 py-2 text-[12.5px] text-text-primary">
+        <p className="mb-4 rounded-md border border-ready bg-ready-soft px-3 py-2 text-[12.5px] text-text-primary" role="status">
           {message}
         </p>
       ) : null}
@@ -69,25 +73,25 @@ function GitlabIdentityPanel({ user = null, submitting = false, onSave = () => {
             Nickname de GitLab
           </label>
           <input
+            aria-describedby="identidad-nickname-ayuda"
+            autoCapitalize="none"
+            className={FIELD_CLASSES}
             id="identidad-nickname"
+            onChange={(event) => setGitlabUsername(event.target.value)}
+            required
+            spellCheck="false"
             type="text"
             value={gitlabUsername}
-            onChange={(event) => setGitlabUsername(event.target.value)}
-            autoCapitalize="none"
-            spellCheck="false"
-            required
-            aria-describedby="identidad-nickname-ayuda"
-            className={FIELD_CLASSES}
           />
-          <p id="identidad-nickname-ayuda" className={HINT_CLASSES}>
+          <p className={HINT_CLASSES} id="identidad-nickname-ayuda">
             Tu nombre de usuario en GitLab, sin la arroba.
           </p>
         </div>
 
         <button
-          type="submit"
+          className={BUTTON_CLASSES}
           disabled={submitting}
-          className="rounded-md bg-accent px-3 py-2 text-[13px] font-semibold text-bg disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          type="submit"
         >
           {submitting ? "Guardando..." : "Guardar mi nickname"}
         </button>
@@ -96,4 +100,3 @@ function GitlabIdentityPanel({ user = null, submitting = false, onSave = () => {
   );
 }
 
-export default GitlabIdentityPanel;

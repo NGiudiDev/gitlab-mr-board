@@ -4,10 +4,10 @@ import { describe, expect, it, vi } from "vitest";
 
 // 6. Imports relativos restantes.
 import { TEST_USER } from "../../../../test/sharedState.js";
-import GitlabIdentityPanel from "./GitlabIdentityPanel.jsx";
+import { GitlabUserSettingsSection } from "./GitlabUserSettingsSection.jsx";
 
 function renderPanel(props = {}) {
-  return render(<GitlabIdentityPanel user={TEST_USER} {...props} />);
+  return render(<GitlabUserSettingsSection user={TEST_USER} {...props} />);
 }
 
 /** Envía el formulario y espera la respuesta simulada del backend. */
@@ -19,9 +19,9 @@ async function submit() {
   });
 }
 
-describe("GitlabIdentityPanel", () => {
+describe("GitlabUserSettingsSection", () => {
   it("no renderiza nada sin sesión", () => {
-    const { container } = render(<GitlabIdentityPanel />);
+    const { container } = render(<GitlabUserSettingsSection />);
 
     expect(container.textContent).toBe("");
   });

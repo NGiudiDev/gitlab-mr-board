@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 // 6. Imports relativos restantes.
-import RegisterForm from "./RegisterForm.jsx";
+import { RegisterForm } from "./RegisterForm.jsx";
 
 const PASSWORD = "contrasena-de-prueba";
 const INVITE_CODE = "ABCD234XYZ";

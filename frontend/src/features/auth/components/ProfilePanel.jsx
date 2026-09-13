@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 /**
  * Permite editar el nombre visible y el email de la propia persona.
  */
-function ProfilePanel({
-  user = null,
-  submitting = false,
+export function ProfilePanel({
   onSave = async () => null,
+  submitting = false,
+  user = null,
 }) {
   const [profile, setProfile] = useState({ displayName: "", email: "" });
   const [error, setError] = useState(null);
@@ -42,7 +42,7 @@ function ProfilePanel({
 
   return (
     <section aria-labelledby="perfil-heading">
-      <h2 id="perfil-heading" className="mb-1 text-base font-semibold text-text-primary">
+      <h2 className="mb-1 text-base font-semibold text-text-primary" id="perfil-heading">
         Mi perfil
       </h2>
       <p className="mb-4 text-[12.5px] text-text-muted">
@@ -53,43 +53,43 @@ function ProfilePanel({
         <label className="mb-3 block text-[12px] font-semibold text-text-muted" htmlFor="perfil-email">
           Email
           <input
-            id="perfil-email"
-            type="email"
-            name="email"
-            autoComplete="email"
             autoCapitalize="none"
-            spellCheck="false"
-            maxLength={254}
-            required
-            value={profile.email}
-            onChange={(event) => setProfile((current) => ({ ...current, email: event.target.value }))}
-            disabled={submitting}
+            autoComplete="email"
             className="mt-1 block w-full rounded-md border border-control bg-surface-raised px-3 py-2 text-[13px] font-normal text-text-primary disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            disabled={submitting}
+            id="perfil-email"
+            maxLength={254}
+            name="email"
+            onChange={(event) => setProfile((current) => ({ ...current, email: event.target.value }))}
+            required
+            spellCheck="false"
+            type="email"
+            value={profile.email}
           />
         </label>
 
         <label className="mb-1 block text-[12px] font-semibold text-text-muted" htmlFor="perfil-display-name">
           Nombre visible
           <input
-            id="perfil-display-name"
-            type="text"
-            name="displayName"
             autoComplete="name"
-            value={profile.displayName}
-            onChange={(event) => setProfile((current) => ({ ...current, displayName: event.target.value }))}
-            disabled={submitting}
             className="mt-1 block w-full rounded-md border border-control bg-surface-raised px-3 py-2 text-[13px] font-normal text-text-primary disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            disabled={submitting}
+            id="perfil-display-name"
+            name="displayName"
+            onChange={(event) => setProfile((current) => ({ ...current, displayName: event.target.value }))}
+            type="text"
+            value={profile.displayName}
           />
         </label>
 
-        {error ? <p role="alert" className="mt-3 text-xs text-conflict">{error}</p> : null}
+        {error ? <p className="mt-3 text-xs text-conflict" role="alert">{error}</p> : null}
         
-        {notice ? <p role="status" className="mt-3 text-xs text-ready">{notice}</p> : null}
+        {notice ? <p className="mt-3 text-xs text-ready" role="status">{notice}</p> : null}
 
         <button
-          type="submit"
-          disabled={submitting}
           className="mt-4 rounded-md bg-accent px-3 py-2 text-[13px] font-semibold text-bg disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          disabled={submitting}
+          type="submit"
         >
           {submitting ? "Guardando…" : "Guardar perfil"}
         </button>
@@ -97,5 +97,3 @@ function ProfilePanel({
     </section>
   );
 }
-
-export default ProfilePanel;

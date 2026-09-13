@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // 6. Imports relativos restantes.
 import { jsonResponse, resetSharedState, TEST_ACCOUNT, TEST_USER } from "../../test/sharedState.js";
-import AccountMenu, { initialsFor } from "./AccountMenu.jsx";
+import { AccountMenu, initialsFor } from "./AccountMenu.jsx";
 
 const ADMIN_USER = { ...TEST_USER, role: "admin" };
 
@@ -64,7 +64,7 @@ describe("AccountMenu", () => {
 
   it("avisa al padre al cerrar sesión", async () => {
     const onLogout = vi.fn();
-    render(<AccountMenu user={TEST_USER} onLogout={onLogout} />);
+    render(<AccountMenu onLogout={onLogout} user={TEST_USER} />);
 
     await userEvent.click(screen.getByRole("button", { name: "Abrir menú de cuenta de Ana Pérez" }));
     await userEvent.click(screen.getByRole("button", { name: "Cerrar sesión" }));
@@ -74,7 +74,7 @@ describe("AccountMenu", () => {
 
   it("avisa al layout que debe abrir la pantalla del perfil", async () => {
     const onEditProfile = vi.fn();
-    render(<AccountMenu user={TEST_USER} onEditProfile={onEditProfile} />);
+    render(<AccountMenu onEditProfile={onEditProfile} user={TEST_USER} />);
 
     await userEvent.click(screen.getByRole("button", { name: "Abrir menú de cuenta de Ana Pérez" }));
     await userEvent.click(screen.getByRole("button", { name: "Editar perfil" }));
@@ -85,7 +85,7 @@ describe("AccountMenu", () => {
 
   it("ofrece editar la cuenta a un admin y avisa al layout", async () => {
     const onEditAccount = vi.fn();
-    render(<AccountMenu user={ADMIN_USER} onEditAccount={onEditAccount} />);
+    render(<AccountMenu onEditAccount={onEditAccount} user={ADMIN_USER} />);
 
     await userEvent.click(screen.getByRole("button", { name: "Abrir menú de cuenta de Ana Pérez" }));
     await userEvent.click(screen.getByRole("button", { name: "Editar cuenta" }));

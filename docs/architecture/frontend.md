@@ -15,8 +15,9 @@ El código se divide entre la composición general y las funcionalidades del dom
 - `src/app/App.jsx`: decide si mostrar el ingreso o el layout según la sesión, conserva la sección activa y resuelve qué presentar durante la carga, los errores y la ausencia de datos.
 - `src/app/AppShell.jsx`: define el layout —barra superior, navegación entre secciones y contenido— y declara en `SECTIONS` las secciones navegables; `AccountMenu.jsx` reúne allí la identidad, el equipo y el cierre de sesión.
 - `src/features/accounts/`: contiene el store de la cuenta y el panel que la presenta, descritos en el [dominio de cuentas](../domains/cuentas.md).
-- `src/features/auth/`: contiene el store de la sesión, el hook de la lista de usuarios y los componentes de ingreso, alta, administración, perfil, contraseña e identidad en GitLab, descritos en el [dominio de autenticación](../domains/autenticacion.md).
+- `src/features/auth/`: contiene el store de la sesión, el hook de la lista de usuarios y los componentes de ingreso, alta, administración, perfil y contraseña, descritos en el [dominio de autenticación](../domains/autenticacion.md).
 - `src/features/gitlabAccount/`: contiene la sección, el formulario, los estados de carga y lectura, y el hook de la configuración de GitLab de la cuenta, descritos en la [configuración de GitLab](../domains/configuracion-gitlab.md).
+- `src/features/gitlabUser/`: contiene la configuración del nickname de GitLab propio de cada persona.
 - `src/features/mergeRequests/hooks/useMergeRequests.js`: contiene el store compartido, el acceso al backend y el polling.
 - `src/features/mergeRequests/components/`: contiene los componentes del tablero de merge requests.
 - `src/features/mergeRequests/personalView.js`: selecciona los datos de la vista personal a partir del contrato del backend.
@@ -41,12 +42,14 @@ App
     │       └── BoardColumn
     │           └── MrCard
     │               └── BlockerBadge
-    ├── AccountSettingsSection       (sección «Mi cuenta»)
-    ├── AccountMemberInviteSection  (sección «Mi cuenta», sólo admin)
-    ├── GitlabAccountSettingsSection (sección «Mi cuenta»)
-    ├── ProfilePanel                 (sección «Mi perfil»)
-    ├── GitlabIdentityPanel          (sección «Mi cuenta»)
-    ├── PasswordPanel                (sección «Mi perfil»)
+    ├── AccountView                 (sección «Mi cuenta»)
+    │   ├── AccountSettingsSection
+    │   ├── AccountMemberInviteSection  (sólo admin)
+    │   ├── GitlabAccountSettingsSection
+    │   └── GitlabUserSettingsSection
+    ├── ProfileView                 (sección «Mi perfil»)
+    │   ├── ProfilePanel
+    │   └── PasswordPanel
     └── UserAdmin                    (sección «Usuarios», sólo con rol admin)
 ```
 
@@ -54,11 +57,12 @@ App
 - `LoginForm` pide email y contraseña, muestra el error que devuelve el backend y ofrece pasar al alta.
 - `RegisterForm` da de alta la persona y elige entre sus dos caminos excluyentes: sumarse a un equipo con su código de invitación, o abrir uno nuevo. Valida en el navegador las mismas reglas que el backend para avisar antes de enviar.
 - `AccountMenu` concentra detrás de un avatar el nombre visible, el email, el equipo, los accesos separados al perfil y a la cuenta, y el cierre de sesión. Se cierra al elegir una acción, al interactuar fuera o con `Escape`, que devuelve el foco al avatar.
+- `AccountView` y `ProfileView` componen exclusivamente las secciones de cuenta y perfil; `ActiveSection` sólo elige cuál presentar.
 - `AccountSettingsSection` presenta el equipo: su nombre y cuánta gente lo integra.
 - `AccountMemberInviteSection` presenta a un `admin` el código de invitación y permite renovarlo; `App` la compone como una sección independiente dentro de «Mi cuenta».
 - `GitlabAccountSettingsSection` carga los IDs de los proyectos y el estado del access token de la cuenta, presenta un skeleton accesible mientras espera y decide entre la edición para un `admin` o el resumen de sólo lectura. `GitlabAccountSettingsForm` concentra los campos, el envío y sus mensajes; el token arranca vacío en cada visita porque el backend nunca lo devuelve, y dejarlo así conserva el guardado.
 - `ProfilePanel` permite cambiar el nombre visible y el email propios desde «Mi perfil» y comunica el resultado sin sacar a la persona de la pantalla.
-- `GitlabIdentityPanel` resuelve en «Mi cuenta» el nickname de GitLab propio, lo precarga desde la sesión y permite actualizarlo; de él depende la vista personal.
+- `GitlabUserSettingsSection` resuelve en «Mi cuenta» el nickname de GitLab propio, lo precarga desde la sesión y permite actualizarlo; de él depende la vista personal.
 - `PasswordPanel` resuelve el cambio de la propia contraseña.
 - `UserAdmin` lista los usuarios de la cuenta y permite dar de alta, habilitar y deshabilitar. No ofrece restablecer contraseñas: eso se hace por línea de comandos.
 - `TopBar` presenta los totales, el estado de sincronización y la actualización manual del tablero.

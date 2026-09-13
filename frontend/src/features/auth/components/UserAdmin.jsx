@@ -16,9 +16,8 @@ function formatDate(isoDate) {
 
   return new Date(isoDate).toLocaleDateString("es-AR");
 }
-
 /** Alta de usuarios con rol elegible, sólo visible para administradores. */
-function CreateUserForm({ submitting = false, onCreate = () => {} }) {
+function CreateUserForm({ onCreate = () => {}, submitting = false }) {
   const [form, setForm] = useState(EMPTY_FORM);
 
   function updateField(field) {
@@ -33,8 +32,8 @@ function CreateUserForm({ submitting = false, onCreate = () => {} }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} aria-labelledby="alta-heading" className="mb-6">
-      <h3 id="alta-heading" className="text-[13px] font-semibold text-text-primary mb-3">
+    <form aria-labelledby="alta-heading" className="mb-6" onSubmit={handleSubmit}>
+      <h3 className="text-[13px] font-semibold text-text-primary mb-3" id="alta-heading">
         Dar de alta un usuario en el equipo
       </h3>
 
@@ -42,53 +41,53 @@ function CreateUserForm({ submitting = false, onCreate = () => {} }) {
         <label className={LABEL_CLASSES} htmlFor="alta-email">
           Email
           <input
-            id="alta-email"
-            type="email"
-            name="email"
-            value={form.email}
-            onChange={updateField("email")}
-            autoComplete="email"
             autoCapitalize="none"
-            spellCheck="false"
-            required
-            maxLength={254}
+            autoComplete="email"
             className={FIELD_CLASSES}
+            id="alta-email"
+            maxLength={254}
+            name="email"
+            onChange={updateField("email")}
+            required
+            spellCheck="false"
+            type="email"
+            value={form.email}
           />
         </label>
 
         <label className={LABEL_CLASSES} htmlFor="alta-nombre">
           Nombre visible (opcional)
           <input
+            className={FIELD_CLASSES}
             id="alta-nombre"
+            maxLength={80}
+            onChange={updateField("displayName")}
             type="text"
             value={form.displayName}
-            onChange={updateField("displayName")}
-            maxLength={80}
-            className={FIELD_CLASSES}
           />
         </label>
 
         <label className={LABEL_CLASSES} htmlFor="alta-password">
           Contraseña inicial
           <input
+            autoComplete="new-password"
+            className={FIELD_CLASSES}
             id="alta-password"
+            minLength={8}
+            onChange={updateField("password")}
+            required
             type="password"
             value={form.password}
-            onChange={updateField("password")}
-            autoComplete="new-password"
-            required
-            minLength={8}
-            className={FIELD_CLASSES}
           />
         </label>
 
         <label className={LABEL_CLASSES} htmlFor="alta-rol">
           Rol
           <select
-            id="alta-rol"
-            value={form.role}
-            onChange={updateField("role")}
             className={FIELD_CLASSES}
+            id="alta-rol"
+            onChange={updateField("role")}
+            value={form.role}
           >
             <option value="user">Usuario</option>
             <option value="admin">Administrador</option>
@@ -97,9 +96,9 @@ function CreateUserForm({ submitting = false, onCreate = () => {} }) {
       </div>
 
       <button
-        type="submit"
-        disabled={submitting}
         className="mt-3 rounded-md bg-accent px-3 py-2 text-[13px] font-semibold text-bg disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        disabled={submitting}
+        type="submit"
       >
         {submitting ? "Creando..." : "Crear usuario"}
       </button>
@@ -115,7 +114,7 @@ function CreateUserForm({ submitting = false, onCreate = () => {} }) {
  * valida el rol y la cuenta en cada ruta; esconder los controles es sólo una
  * cortesía de la interfaz.
  */
-function UserAdmin({ currentEmail = "" }) {
+export function UserAdmin({ currentEmail = "" }) {
   const { users, loading, error, createUser, setStatus } = useUsers();
   const [actionError, setActionError] = useState(null);
   const [message, setMessage] = useState(null);
@@ -161,7 +160,7 @@ function UserAdmin({ currentEmail = "" }) {
 
   return (
     <section aria-labelledby="usuarios-heading" className="rounded-lg border border-border bg-surface p-5">
-      <h2 id="usuarios-heading" className="text-base font-semibold text-text-primary mb-1">
+      <h2 className="text-base font-semibold text-text-primary mb-1" id="usuarios-heading">
         Usuarios
       </h2>
       <p className="text-[12.5px] text-text-muted mb-4">
@@ -169,33 +168,33 @@ function UserAdmin({ currentEmail = "" }) {
       </p>
 
       {actionError || error ? (
-        <p role="alert" className="mb-4 rounded-md border border-conflict bg-conflict-soft px-3 py-2 text-[12.5px] text-text-primary">
+        <p className="mb-4 rounded-md border border-conflict bg-conflict-soft px-3 py-2 text-[12.5px] text-text-primary" role="alert">
           {actionError ?? error}
         </p>
       ) : null}
 
       {message ? (
-        <p role="status" className="mb-4 rounded-md border border-ready bg-ready-soft px-3 py-2 text-[12.5px] text-text-primary">
+        <p className="mb-4 rounded-md border border-ready bg-ready-soft px-3 py-2 text-[12.5px] text-text-primary" role="status">
           {message}
         </p>
       ) : null}
 
-      <CreateUserForm submitting={busyEmail !== null} onCreate={handleCreate} />
+      <CreateUserForm onCreate={handleCreate} submitting={busyEmail !== null} />
 
       {loading ? (
-        <p role="status" className="text-[13px] text-text-muted">Cargando usuarios...</p>
+        <p className="text-[13px] text-text-muted" role="status">Cargando usuarios...</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-[12.5px]">
             <caption className="sr-only">Personas de la cuenta y sus permisos</caption>
             <thead className="text-text-muted">
               <tr>
-                <th scope="col" className="py-2 pr-4 font-semibold">Email</th>
-                <th scope="col" className="py-2 pr-4 font-semibold">Nombre</th>
-                <th scope="col" className="py-2 pr-4 font-semibold">Rol</th>
-                <th scope="col" className="py-2 pr-4 font-semibold">Estado</th>
-                <th scope="col" className="py-2 pr-4 font-semibold">Último ingreso</th>
-                <th scope="col" className="py-2 font-semibold">Acciones</th>
+                <th className="py-2 pr-4 font-semibold" scope="col">Email</th>
+                <th className="py-2 pr-4 font-semibold" scope="col">Nombre</th>
+                <th className="py-2 pr-4 font-semibold" scope="col">Rol</th>
+                <th className="py-2 pr-4 font-semibold" scope="col">Estado</th>
+                <th className="py-2 pr-4 font-semibold" scope="col">Último ingreso</th>
+                <th className="py-2 font-semibold" scope="col">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -203,8 +202,8 @@ function UserAdmin({ currentEmail = "" }) {
                 const isCurrentUser = user.email === currentEmail;
 
                 return (
-                  <tr key={user.email} className="border-t border-border-soft">
-                    <th scope="row" className="py-2 pr-4 font-mono font-normal text-text-primary">
+                  <tr className="border-t border-border-soft" key={user.email}>
+                    <th className="py-2 pr-4 font-mono font-normal text-text-primary" scope="row">
                       {user.email}
                     </th>
                     <td className="py-2 pr-4 text-text-primary">{user.displayName}</td>
@@ -217,11 +216,11 @@ function UserAdmin({ currentEmail = "" }) {
                     <td className="py-2 pr-4 text-text-muted">{formatDate(user.lastLoginAt)}</td>
                     <td className="py-2">
                       <button
-                        type="button"
-                        onClick={() => handleToggleStatus(user)}
-                        disabled={isCurrentUser || busyEmail === user.email}
-                        title={isCurrentUser ? "No podés cambiar el estado de tu propia cuenta." : undefined}
                         className={ACTION_CLASSES}
+                        disabled={isCurrentUser || busyEmail === user.email}
+                        onClick={() => handleToggleStatus(user)}
+                        title={isCurrentUser ? "No podés cambiar el estado de tu propia cuenta." : undefined}
+                        type="button"
                       >
                         {user.status === "active" ? "Deshabilitar" : "Habilitar"}
                       </button>
@@ -236,5 +235,3 @@ function UserAdmin({ currentEmail = "" }) {
     </section>
   );
 }
-
-export default UserAdmin;

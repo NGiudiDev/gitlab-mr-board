@@ -5,12 +5,12 @@ import { describe, expect, it } from "vitest";
 
 // 6. Imports relativos restantes.
 import { buildMergeRequest } from "../../../../test/fixtures/mergeRequests.js";
-import MrBoard from "./MrBoard.jsx";
+import { MrBoard } from "./MrBoard.jsx";
 
 const COLUMN_NAMES = ["En progreso", "Pendientes", "Code Review", "QA", "Listas para mergear", "Pausados"];
 
 function renderBoard(props = {}) {
-  return render(<MrBoard mergeRequests={[]} allProjects={[]} {...props} />);
+  return render(<MrBoard allProjects={[]} mergeRequests={[]} {...props} />);
 }
 
 /** Secciones de proyecto (las columnas también usan <section>). */

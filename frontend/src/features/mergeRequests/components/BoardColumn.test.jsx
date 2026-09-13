@@ -4,11 +4,11 @@ import { describe, expect, it } from "vitest";
 
 // 6. Imports relativos restantes.
 import { buildMergeRequest } from "../../../../test/fixtures/mergeRequests.js";
-import BoardColumn from "./BoardColumn.jsx";
+import { BoardColumn } from "./BoardColumn.jsx";
 
 function renderColumn(props = {}) {
   return render(
-    <BoardColumn title="Code Review" idPrefix="equipo-tablero" mergeRequests={[]} {...props} />,
+    <BoardColumn idPrefix="equipo-tablero" mergeRequests={[]} title="Code Review" {...props} />,
   );
 }
 

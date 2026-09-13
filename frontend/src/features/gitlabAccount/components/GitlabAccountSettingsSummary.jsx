@@ -1,10 +1,9 @@
 import { LABEL_CLASSES } from "../../../assets/constants.js";
 
-export function GitlabAccountSettingsSummary(props) {
-  const { settings = null } = props;
+export function GitlabAccountSettingsSummary({ settings = null }) {
   if (!settings) {
     return (
-      <p role="status" className="text-[13px] text-text-muted">
+      <p className="text-[13px] text-text-muted" role="status">
         Todavía no hay proyectos ni access token cargados. Pedíselo a quien administra la cuenta.
       </p>
     );

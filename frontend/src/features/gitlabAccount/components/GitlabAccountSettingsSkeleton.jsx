@@ -1,8 +1,6 @@
-export function GitlabAccountSettingsSkeleton(props) {
-  const { canEdit = false } = props;
-
+export function GitlabAccountSettingsSkeleton({ canEdit = false }) {
   return (
-    <div role="status" aria-busy="true">
+    <div aria-busy="true" role="status">
       <span className="sr-only">Cargando la configuración...</span>
 
       <div aria-hidden="true" className="space-y-4 motion-safe:animate-pulse">

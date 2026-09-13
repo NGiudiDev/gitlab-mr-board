@@ -4,6 +4,10 @@
 
 ESLint exige comillas dobles para los strings y punto y coma al final de cada sentencia. Ambas reglas se aplican automáticamente con `npm run lint:fix`.
 
+En JSX, las props de componentes y los atributos de elementos HTML se ordenan alfabéticamente. La regla local `jsx-sort-props` corrige cada grupo sin atravesar un spread: en `<Campo valor="fijo" {...props} />`, mover `valor` después de `{...props}` cambiaría qué dato tiene precedencia.
+
+Los componentes publican exports nombrados. `export default` queda reservado para integraciones que lo exijan, como ciertos archivos de configuración. Cada componente conserva una sola responsabilidad; una parte se extrae cuando tiene un contrato propio o permite reutilización real, no sólo para reducir la cantidad de líneas.
+
 ## Orden automático de imports
 
 La raíz configura ESLint con `eslint-plugin-simple-import-sort` para ordenar imports y exports en el backend, el frontend React y los archivos de configuración. Todo el proyecto es JavaScript ([ADR 0012](../decisions/0012-javascript-sin-typescript.md)), así que alcanza con el parser propio de ESLint. Esta responsabilidad no depende de un formateador.
@@ -57,7 +61,7 @@ Los imports con efectos secundarios se mantienen en el grupo correspondiente a s
 | Comando | Uso |
 |---|---|
 | `npm run lint` | Valida el orden sin modificar archivos |
-| `npm run lint:fix` | Corrige comillas, punto y coma y orden de imports y exports automáticamente |
+| `npm run lint:fix` | Corrige comillas, punto y coma, imports, exports y props JSX automáticamente |
 
 ## VS Code
 

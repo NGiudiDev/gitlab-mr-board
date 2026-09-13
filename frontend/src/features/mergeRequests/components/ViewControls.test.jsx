@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 // 6. Imports relativos restantes.
-import ViewControls from "./ViewControls.jsx";
+import { ViewControls } from "./ViewControls.jsx";
 
 const PEOPLE = [
   { name: "Ana Pérez", username: "ana" },
@@ -28,7 +28,7 @@ describe("ViewControls", () => {
   });
 
   it("muestra un selector etiquetado con nombre y username", () => {
-    render(<ViewControls viewMode="personal" people={PEOPLE} canChoosePerson />);
+    render(<ViewControls canChoosePerson people={PEOPLE} viewMode="personal" />);
 
     const select = screen.getByRole("combobox", { name: "Persona" });
     expect(select.textContent).toContain("Ana Pérez (@ana)");
@@ -37,7 +37,7 @@ describe("ViewControls", () => {
 
   it("notifica la persona seleccionada", () => {
     const onPersonChange = vi.fn();
-    render(<ViewControls viewMode="personal" people={PEOPLE} canChoosePerson onPersonChange={onPersonChange} />);
+    render(<ViewControls canChoosePerson onPersonChange={onPersonChange} people={PEOPLE} viewMode="personal" />);
 
     fireEvent.change(screen.getByRole("combobox", { name: "Persona" }), { target: { value: "beto" } });
 
@@ -45,13 +45,13 @@ describe("ViewControls", () => {
   });
 
   it("no ofrece el selector a quien no puede elegir persona", () => {
-    render(<ViewControls viewMode="personal" people={PEOPLE} />);
+    render(<ViewControls people={PEOPLE} viewMode="personal" />);
 
     expect(screen.queryByRole("combobox", { name: "Persona" })).toBeNull();
   });
 
   it("tampoco lo ofrece en la vista general a quien sí puede elegir", () => {
-    render(<ViewControls viewMode="general" people={PEOPLE} canChoosePerson />);
+    render(<ViewControls canChoosePerson people={PEOPLE} viewMode="general" />);
 
     expect(screen.queryByRole("combobox", { name: "Persona" })).toBeNull();
   });
@@ -59,10 +59,10 @@ describe("ViewControls", () => {
   it("conserva una selección que ya no aparece en los datos actuales", () => {
     render(
       <ViewControls
-        viewMode="personal"
-        selectedUsername="ana"
-        selectedPersonName="Ana Pérez"
         canChoosePerson
+        selectedPersonName="Ana Pérez"
+        selectedUsername="ana"
+        viewMode="personal"
       />,
     );
 

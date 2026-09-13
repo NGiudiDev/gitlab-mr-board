@@ -10,7 +10,7 @@ import { useAccount } from "../features/accounts/hooks/useAccount.js";
  * @param {{ displayName?: string, email?: string } | null} user Usuario de la sesión.
  * @returns {string} Iniciales en mayúsculas.
  */
-function initialsFor(user) {
+export function initialsFor(user) {
   const label = user?.displayName?.trim() || user?.email?.trim() || "?";
   const words = label.split(/\s+/);
   const initials = words.length > 1
@@ -19,15 +19,14 @@ function initialsFor(user) {
 
   return initials.toLocaleUpperCase("es");
 }
-
 /**
  * Reúne la identidad, los accesos al perfil y la cuenta, y el cierre de sesión.
  */
-function AccountMenu({
-  user = null,
+export function AccountMenu({
   onEditAccount = () => {},
   onEditProfile = () => {},
   onLogout = () => {},
+  user = null,
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const menuId = useId();
@@ -80,13 +79,12 @@ function AccountMenu({
   }
 
   return (
-    <div ref={containerRef} className="relative ml-auto">
+    <div className="relative ml-auto" ref={containerRef}>
       <button
-        ref={triggerRef}
-        type="button"
-        aria-label={`${isOpen ? "Cerrar" : "Abrir"} menú de cuenta de ${user.displayName}`}
-        aria-expanded={isOpen}
         aria-controls={isOpen ? menuId : undefined}
+        aria-expanded={isOpen}
+        aria-label={`${isOpen ? "Cerrar" : "Abrir"} menú de cuenta de ${user.displayName}`}
+        className="flex min-h-10 items-center gap-1.5 rounded-full border border-control bg-surface px-1.5 py-1 text-text-primary hover:border-accent hover:bg-surface-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         onClick={() => {
           if (isOpen) {
             closeMenu();
@@ -95,21 +93,22 @@ function AccountMenu({
 
           setIsOpen(true);
         }}
-        className="flex min-h-10 items-center gap-1.5 rounded-full border border-control bg-surface px-1.5 py-1 text-text-primary hover:border-accent hover:bg-surface-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        ref={triggerRef}
+        type="button"
       >
         <span
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-[12px] font-bold text-bg"
           aria-hidden="true"
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-[12px] font-bold text-bg"
         >
           {initialsFor(user)}
         </span>
         <svg
+          aria-hidden="true"
           className={`h-4 w-4 text-text-muted transition-transform ${isOpen ? "rotate-180" : ""}`}
-          viewBox="0 0 20 20"
           fill="none"
           stroke="currentColor"
           strokeWidth="1.8"
-          aria-hidden="true"
+          viewBox="0 0 20 20"
         >
           <path d="m6 8 4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -117,15 +116,15 @@ function AccountMenu({
 
       {isOpen ? (
         <div
-          id={menuId}
-          role="region"
           aria-label="Menú de cuenta"
           className="absolute right-0 top-full z-50 mt-2 w-72 overflow-hidden rounded-lg border border-border bg-surface shadow-2xl"
+          id={menuId}
+          role="region"
         >
           <div className="flex items-center gap-3 px-4 py-3.5">
             <span
-              className="flex h-11 w-11 flex-none items-center justify-center rounded-full bg-accent text-sm font-bold text-bg"
               aria-hidden="true"
+              className="flex h-11 w-11 flex-none items-center justify-center rounded-full bg-accent text-sm font-bold text-bg"
             >
               {initialsFor(user)}
             </span>
@@ -144,51 +143,51 @@ function AccountMenu({
 
           <div className="p-2">
             <button
-              type="button"
-              onClick={openProfileScreen}
               className="flex min-h-10 w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm text-text-primary hover:bg-surface-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              onClick={openProfileScreen}
+              type="button"
             >
               <svg
+                aria-hidden="true"
                 className="h-4 w-4 text-text-muted"
-                viewBox="0 0 20 20"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="1.7"
-                aria-hidden="true"
+                viewBox="0 0 20 20"
               >
                 <path d="m13.5 3.5 3 3L7 16H4v-3L13.5 3.5Z" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               Editar perfil
             </button>
             <button
-              type="button"
-              onClick={openAccountScreen}
               className="flex min-h-10 w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm text-text-primary hover:bg-surface-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              onClick={openAccountScreen}
+              type="button"
             >
               <svg
+                aria-hidden="true"
                 className="h-4 w-4 text-text-muted"
-                viewBox="0 0 20 20"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="1.7"
-                aria-hidden="true"
+                viewBox="0 0 20 20"
               >
                 <path d="M3.5 16.5h13M5 16.5v-9h10v9M7.5 10h1m3 0h1m-5 3h1m3 0h1M4 7.5 10 3l6 4.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               {user.role === "admin" ? "Editar cuenta" : "Ver cuenta"}
             </button>
             <button
-              type="button"
-              onClick={handleLogout}
               className="flex min-h-10 w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm text-text-primary hover:bg-surface-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              onClick={handleLogout}
+              type="button"
             >
               <svg
+                aria-hidden="true"
                 className="h-4 w-4 text-text-muted"
-                viewBox="0 0 20 20"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="1.7"
-                aria-hidden="true"
+                viewBox="0 0 20 20"
               >
                 <path d="M8 4H5.5A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8M12.5 6.5 16 10l-3.5 3.5M7 10h9" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
@@ -200,6 +199,3 @@ function AccountMenu({
     </div>
   );
 }
-
-export { initialsFor };
-export default AccountMenu;

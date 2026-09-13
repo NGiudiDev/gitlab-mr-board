@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // 6. Imports relativos restantes.
 import { jsonResponse, resetSharedState, TEST_ACCOUNT, TEST_USER } from "../../test/sharedState.js";
-import AppShell, { sectionsFor } from "./AppShell.jsx";
+import { AppShell, sectionsFor } from "./AppShell.jsx";
 
 const ADMIN_USER = { ...TEST_USER, role: "admin" };
 

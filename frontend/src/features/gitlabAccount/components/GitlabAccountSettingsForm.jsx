@@ -14,14 +14,12 @@ import { FIELD_CLASSES, HINT_CLASSES, LABEL_CLASSES } from "../../../assets/cons
  * @param {Function} [props.onSaved] Avisa que el guardado terminó correctamente.
  * @returns {import("react").ReactElement} Formulario de configuración de GitLab.
  */
-export function GitlabAccountSettingsForm(props) {
-  const {
-    settings = null,
-    saving = false,
-    save = async () => null,
-    onSaved = () => {},
-  } = props;
-
+export function GitlabAccountSettingsForm({
+  onSaved = () => {},
+  save = async () => null,
+  saving = false,
+  settings = null,
+}) {
   const [accessToken, setAccessToken] = useState("");
   const [formError, setFormError] = useState(null);
   const [message, setMessage] = useState(null);
@@ -57,13 +55,13 @@ export function GitlabAccountSettingsForm(props) {
   return (
     <form onSubmit={handleSubmit}>
       {formError ? (
-        <p role="alert" className="mb-4 rounded-md border border-conflict bg-conflict-soft px-3 py-2 text-[12.5px] text-text-primary">
+        <p className="mb-4 rounded-md border border-conflict bg-conflict-soft px-3 py-2 text-[12.5px] text-text-primary" role="alert">
           {formError}
         </p>
       ) : null}
 
       {message ? (
-        <p role="status" className="mb-4 rounded-md border border-ready bg-ready-soft px-3 py-2 text-[12.5px] text-text-primary">
+        <p className="mb-4 rounded-md border border-ready bg-ready-soft px-3 py-2 text-[12.5px] text-text-primary" role="status">
           {message}
         </p>
       ) : null}
@@ -74,18 +72,18 @@ export function GitlabAccountSettingsForm(props) {
         </label>
 
         <input
-          id="gitlab-proyectos"
-          type="text"
-          value={projectIds}
-          onChange={(event) => setProjectIds(event.target.value)}
-          inputMode="numeric"
-          spellCheck="false"
-          required
           aria-describedby="gitlab-proyectos-ayuda"
           className={FIELD_CLASSES}
+          id="gitlab-proyectos"
+          inputMode="numeric"
+          onChange={(event) => setProjectIds(event.target.value)}
+          required
+          spellCheck="false"
+          type="text"
+          value={projectIds}
         />
 
-        <p id="gitlab-proyectos-ayuda" className={HINT_CLASSES}>
+        <p className={HINT_CLASSES} id="gitlab-proyectos-ayuda">
           Números separados por comas, por ejemplo 123, 456. Los encontrás en la portada de cada proyecto en GitLab.
         </p>
       </div>
@@ -96,17 +94,17 @@ export function GitlabAccountSettingsForm(props) {
         </label>
 
         <input
+          aria-describedby="gitlab-token-ayuda"
+          autoComplete="off"
+          className={FIELD_CLASSES}
           id="gitlab-token"
+          onChange={(event) => setAccessToken(event.target.value)}
+          required={!hasStoredToken}
+          spellCheck="false"
           type="password"
           value={accessToken}
-          onChange={(event) => setAccessToken(event.target.value)}
-          autoComplete="off"
-          spellCheck="false"
-          required={!hasStoredToken}
-          aria-describedby="gitlab-token-ayuda"
-          className={FIELD_CLASSES}
         />
-        <p id="gitlab-token-ayuda" className={HINT_CLASSES}>
+        <p className={HINT_CLASSES} id="gitlab-token-ayuda">
           {hasStoredToken
             ? `Ya hay uno guardado, terminado en «${settings.tokenHint}». Dejá el campo vacío para conservarlo.`
             : "PAT de GitLab con el alcance read_api. Se guarda cifrado y no se muestra nunca más."}
@@ -114,9 +112,9 @@ export function GitlabAccountSettingsForm(props) {
       </div>
 
       <button
-        type="submit"
-        disabled={saving}
         className="rounded-md bg-accent px-3 py-2 text-[13px] font-semibold text-bg disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        disabled={saving}
+        type="submit"
       >
         {saving ? "Guardando..." : "Guardar configuración"}
       </button>

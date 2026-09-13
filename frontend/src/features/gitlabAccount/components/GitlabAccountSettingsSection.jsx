@@ -12,17 +12,15 @@ import { GitlabAccountSettingsSummary } from "./GitlabAccountSettingsSummary.jsx
  * @param {Function} [props.onSaved] Avisa que el tablero debe actualizar sus datos.
  * @returns {import("react").ReactElement} Sección de configuración de GitLab.
  */
-export function GitlabAccountSettingsSection(props) {
-  const {
-    canEdit = false,
-    onSaved = () => {},
-  } = props;
-
+export function GitlabAccountSettingsSection({
+  canEdit = false,
+  onSaved = () => {},
+}) {
   const { settings, loading, error, saving, save } = useGitlabSettings();
 
   return (
     <section aria-labelledby="gitlab-heading">
-      <h2 id="gitlab-heading" className="text-base font-semibold text-text-primary mb-1">
+      <h2 className="text-base font-semibold text-text-primary mb-1" id="gitlab-heading">
         Cuenta de GitLab
       </h2>
 
@@ -33,7 +31,7 @@ export function GitlabAccountSettingsSection(props) {
       </p>
 
       {error ? (
-        <p role="alert" className="mb-4 rounded-md border border-conflict bg-conflict-soft px-3 py-2 text-[12.5px] text-text-primary">
+        <p className="mb-4 rounded-md border border-conflict bg-conflict-soft px-3 py-2 text-[12.5px] text-text-primary" role="alert">
           {error}
         </p>
       ) : null}
@@ -44,10 +42,10 @@ export function GitlabAccountSettingsSection(props) {
         <GitlabAccountSettingsSummary settings={settings} />
       ) : (
         <GitlabAccountSettingsForm
-          settings={settings}
-          saving={saving}
-          save={save}
           onSaved={onSaved}
+          save={save}
+          saving={saving}
+          settings={settings}
         />
       )}
     </section>

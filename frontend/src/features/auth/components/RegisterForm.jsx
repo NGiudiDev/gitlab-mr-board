@@ -17,7 +17,7 @@ const MINIMUM_PASSWORD_LENGTH = 8;
  * Valida en el navegador lo mismo que el backend para avisar antes de enviar,
  * pero la regla que manda es la del backend.
  */
-function RegisterForm({ error = null, submitting = false, onSubmit = () => {}, onShowLogin = () => {} }) {
+export function RegisterForm({ error = null, onShowLogin = () => {}, onSubmit = () => {}, submitting = false }) {
   const [joinExisting, setJoinExisting] = useState(true);
   const [inviteCode, setInviteCode] = useState("");
   const [accountName, setAccountName] = useState("");
@@ -57,11 +57,11 @@ function RegisterForm({ error = null, submitting = false, onSubmit = () => {}, o
 
   return (
     <form
-      onSubmit={handleSubmit}
       aria-labelledby="registro-heading"
       className="w-full max-w-sm mx-auto mt-16 rounded-lg border border-border bg-surface p-6"
+      onSubmit={handleSubmit}
     >
-      <h1 id="registro-heading" className="text-lg font-semibold text-text-primary mb-1">
+      <h1 className="text-lg font-semibold text-text-primary mb-1" id="registro-heading">
         Crear una cuenta
       </h1>
       <p className="text-[12.5px] text-text-muted mb-5">
@@ -69,7 +69,7 @@ function RegisterForm({ error = null, submitting = false, onSubmit = () => {}, o
       </p>
 
       {visibleError ? (
-        <p role="alert" className="mb-4 rounded-md border border-conflict bg-conflict-soft px-3 py-2 text-[12.5px] text-text-primary">
+        <p className="mb-4 rounded-md border border-conflict bg-conflict-soft px-3 py-2 text-[12.5px] text-text-primary" role="alert">
           {visibleError}
         </p>
       ) : null}
@@ -80,18 +80,18 @@ function RegisterForm({ error = null, submitting = false, onSubmit = () => {}, o
         </legend>
         <div className="flex gap-2">
           <button
-            type="button"
             aria-pressed={joinExisting}
-            onClick={() => setJoinExisting(true)}
             className={choiceClasses(joinExisting)}
+            onClick={() => setJoinExisting(true)}
+            type="button"
           >
             Sumarme a un equipo
           </button>
           <button
-            type="button"
             aria-pressed={!joinExisting}
-            onClick={() => setJoinExisting(false)}
             className={choiceClasses(!joinExisting)}
+            onClick={() => setJoinExisting(false)}
+            type="button"
           >
             Crear un equipo
           </button>
@@ -103,19 +103,19 @@ function RegisterForm({ error = null, submitting = false, onSubmit = () => {}, o
           <label className={LABEL_CLASSES} htmlFor="registro-invitacion">
             Código de invitación
             <input
+              aria-describedby="registro-invitacion-ayuda"
+              autoCapitalize="characters"
+              className={FIELD_CLASSES}
               id="registro-invitacion"
               name="inviteCode"
+              onChange={(event) => setInviteCode(event.target.value)}
+              required
+              spellCheck="false"
               type="text"
               value={inviteCode}
-              onChange={(event) => setInviteCode(event.target.value)}
-              autoCapitalize="characters"
-              spellCheck="false"
-              required
-              aria-describedby="registro-invitacion-ayuda"
-              className={FIELD_CLASSES}
             />
           </label>
-          <p id="registro-invitacion-ayuda" className="-mt-2 mb-3 text-[11.5px] font-normal text-text-faint">
+          <p className="-mt-2 mb-3 text-[11.5px] font-normal text-text-faint" id="registro-invitacion-ayuda">
             Te lo da quien administra el tablero de tu equipo. Con él ves los mismos proyectos, sin cargar credenciales de GitLab.
           </p>
         </>
@@ -124,17 +124,17 @@ function RegisterForm({ error = null, submitting = false, onSubmit = () => {}, o
           <label className={LABEL_CLASSES} htmlFor="registro-cuenta">
             Nombre del equipo (opcional)
             <input
-              id="registro-cuenta"
-              name="accountName"
-              type="text"
-              value={accountName}
-              onChange={(event) => setAccountName(event.target.value)}
-              maxLength={80}
               aria-describedby="registro-cuenta-ayuda"
               className={FIELD_CLASSES}
+              id="registro-cuenta"
+              maxLength={80}
+              name="accountName"
+              onChange={(event) => setAccountName(event.target.value)}
+              type="text"
+              value={accountName}
             />
           </label>
-          <p id="registro-cuenta-ayuda" className="-mt-2 mb-3 text-[11.5px] font-normal text-text-faint">
+          <p className="-mt-2 mb-3 text-[11.5px] font-normal text-text-faint" id="registro-cuenta-ayuda">
             Vas a quedar administrador: cargás una vez los proyectos y el access token de GitLab, y el resto del equipo se suma con un código.
           </p>
         </>
@@ -143,67 +143,67 @@ function RegisterForm({ error = null, submitting = false, onSubmit = () => {}, o
       <label className={LABEL_CLASSES} htmlFor="registro-email">
         Email
         <input
+          autoCapitalize="none"
+          autoComplete="email"
+          className={FIELD_CLASSES}
           id="registro-email"
+          maxLength={254}
           name="email"
+          onChange={(event) => setEmail(event.target.value)}
+          required
+          spellCheck="false"
           type="email"
           value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          autoComplete="email"
-          autoCapitalize="none"
-          spellCheck="false"
-          required
-          maxLength={254}
-          className={FIELD_CLASSES}
         />
       </label>
       <label className={LABEL_CLASSES} htmlFor="registro-nombre">
         Nombre visible (opcional)
         <input
+          autoComplete="name"
+          className={FIELD_CLASSES}
           id="registro-nombre"
+          maxLength={80}
           name="displayName"
+          onChange={(event) => setDisplayName(event.target.value)}
           type="text"
           value={displayName}
-          onChange={(event) => setDisplayName(event.target.value)}
-          autoComplete="name"
-          maxLength={80}
-          className={FIELD_CLASSES}
         />
       </label>
 
       <label className={LABEL_CLASSES} htmlFor="registro-password">
         Contraseña
         <input
+          autoComplete="new-password"
+          className={FIELD_CLASSES}
           id="registro-password"
+          minLength={MINIMUM_PASSWORD_LENGTH}
           name="password"
+          onChange={(event) => setPassword(event.target.value)}
+          required
           type="password"
           value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          autoComplete="new-password"
-          required
-          minLength={MINIMUM_PASSWORD_LENGTH}
-          className={FIELD_CLASSES}
         />
       </label>
 
       <label className={LABEL_CLASSES} htmlFor="registro-confirmacion">
         Repetí la contraseña
         <input
+          autoComplete="new-password"
+          className={FIELD_CLASSES}
           id="registro-confirmacion"
+          minLength={MINIMUM_PASSWORD_LENGTH}
           name="passwordConfirmation"
+          onChange={(event) => setConfirmation(event.target.value)}
+          required
           type="password"
           value={confirmation}
-          onChange={(event) => setConfirmation(event.target.value)}
-          autoComplete="new-password"
-          required
-          minLength={MINIMUM_PASSWORD_LENGTH}
-          className={FIELD_CLASSES}
         />
       </label>
 
       <button
-        type="submit"
-        disabled={submitting}
         className="w-full mt-2 rounded-md bg-accent px-3 py-2 text-[13px] font-semibold text-bg disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        disabled={submitting}
+        type="submit"
       >
         {submitting ? "Creando la cuenta..." : "Crear cuenta"}
       </button>
@@ -211,9 +211,9 @@ function RegisterForm({ error = null, submitting = false, onSubmit = () => {}, o
       <p className="mt-4 text-center text-[12.5px] text-text-muted">
         ¿Ya tenés cuenta?{" "}
         <button
-          type="button"
-          onClick={onShowLogin}
           className="text-accent underline cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          onClick={onShowLogin}
+          type="button"
         >
           Ingresar
         </button>
@@ -221,5 +221,3 @@ function RegisterForm({ error = null, submitting = false, onSubmit = () => {}, o
     </form>
   );
 }
-
-export default RegisterForm;

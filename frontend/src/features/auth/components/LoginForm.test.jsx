@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 // 6. Imports relativos restantes.
-import LoginForm from "./LoginForm.jsx";
+import { LoginForm } from "./LoginForm.jsx";
 
 function renderLoginForm(props = {}) {
   return render(<LoginForm {...props} />);

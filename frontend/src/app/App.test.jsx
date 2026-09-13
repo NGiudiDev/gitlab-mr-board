@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 // 6. Imports relativos restantes.
 import { buildMergeRequest, buildResponse } from "../../test/fixtures/mergeRequests.js";
 import { jsonResponse, resetSharedState, signInTestUser, TEST_ACCOUNT, TEST_USER } from "../../test/sharedState.js";
-import App from "./App.jsx";
+import { App } from "./App.jsx";
 
 const MRS = [
   buildMergeRequest({
@@ -594,7 +594,7 @@ describe("navegación entre secciones", () => {
     expect(screen.getByRole("heading", { level: 2, name: "Mi cuenta" })).toBeDefined();
     expect(screen.getByRole("heading", { level: 2, name: "Invitar al equipo" })).toBeDefined();
     expect(screen.getByRole("heading", { level: 2, name: "Cuenta de GitLab" })).toBeDefined();
-    expect(screen.getByRole("heading", { level: 2, name: "Mi identidad en GitLab" })).toBeDefined();
+    expect(screen.getByRole("heading", { level: 2, name: "Usuario de GitLab" })).toBeDefined();
     expect(screen.getByLabelText("Nickname de GitLab").value).toBe("ana-gitlab");
     expect(screen.queryByRole("heading", { level: 2, name: "Mi perfil" })).toBeNull();
     expect(screen.queryByRole("heading", { level: 2, name: "Mi contraseña" })).toBeNull();
@@ -609,7 +609,7 @@ describe("navegación entre secciones", () => {
 
     expect(screen.getByRole("heading", { level: 2, name: "Mi perfil" })).toBeDefined();
     expect(screen.getByRole("heading", { level: 2, name: "Mi contraseña" })).toBeDefined();
-    expect(screen.queryByRole("heading", { level: 2, name: "Mi identidad en GitLab" })).toBeNull();
+    expect(screen.queryByRole("heading", { level: 2, name: "Usuario de GitLab" })).toBeNull();
     expect(screen.queryByRole("heading", { level: 2, name: "Mi cuenta" })).toBeNull();
     expect(screen.queryByRole("heading", { level: 2, name: "Cuenta de GitLab" })).toBeNull();
   });

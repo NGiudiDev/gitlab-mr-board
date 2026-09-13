@@ -10,7 +10,7 @@ import {
 
 import { renameAccount } from "../hooks/useAccount.js";
 
-//TODO: mover esta función.
+/** Describe la cantidad de integrantes con singular y plural correctos. */
 function membersLabel(memberCount) {
   return memberCount === 1 ? "1 persona" : `${memberCount} personas`;
 }
@@ -55,7 +55,7 @@ export function AccountSettingsSection({ account = null }) {
 
   return (
     <section aria-labelledby="cuenta-heading">
-      <h2 id="cuenta-heading" className="text-base font-semibold text-text-primary mb-1">
+      <h2 className="text-base font-semibold text-text-primary mb-1" id="cuenta-heading">
         Mi cuenta
       </h2>
 
@@ -64,13 +64,13 @@ export function AccountSettingsSection({ account = null }) {
       </p>
 
       {formError ? (
-        <p role="alert" className="mb-4 rounded-md border border-conflict bg-conflict-soft px-3 py-2 text-[12.5px] text-text-primary">
+        <p className="mb-4 rounded-md border border-conflict bg-conflict-soft px-3 py-2 text-[12.5px] text-text-primary" role="alert">
           {formError}
         </p>
       ) : null}
 
       {message ? (
-        <p role="status" className="mb-4 rounded-md border border-ready bg-ready-soft px-3 py-2 text-[12.5px] text-text-primary">
+        <p className="mb-4 rounded-md border border-ready bg-ready-soft px-3 py-2 text-[12.5px] text-text-primary" role="status">
           {message}
         </p>
       ) : null}
@@ -83,22 +83,22 @@ export function AccountSettingsSection({ account = null }) {
             </label>
 
             <input
-              id="cuenta-nombre"
-              type="text"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              maxLength={80}
-              required
               aria-describedby="cuenta-nombre-ayuda"
               className={FIELD_CLASSES}
+              id="cuenta-nombre"
+              maxLength={80}
+              onChange={(event) => setName(event.target.value)}
+              required
+              type="text"
+              value={name}
             />
 
-            <p id="cuenta-nombre-ayuda" className={HINT_CLASSES}>
+            <p className={HINT_CLASSES} id="cuenta-nombre-ayuda">
               La integran {membersLabel(account.memberCount)}.
             </p>
           </div>
 
-          <button type="submit" disabled={submitting} className={BUTTON_CLASSES}>
+          <button className={BUTTON_CLASSES} disabled={submitting} type="submit">
             {submitting ? "Guardando..." : "Guardar el nombre"}
           </button>
         </form>

@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // 6. Imports relativos restantes.
 import { buildMergeRequest } from "../../../../test/fixtures/mergeRequests.js";
-import MrCard from "./MrCard.jsx";
+import { MrCard } from "./MrCard.jsx";
 
 function renderCard(overrides = {}) {
   return render(<MrCard mr={buildMergeRequest(overrides)} />);

@@ -13,7 +13,6 @@ function iconFor(type, data) {
   if (type === "conflicts") return data.hasConflicts ? "✗" : "✓";
   return "";
 }
-
 function labelFor(type, data) {
   if (type === "pipeline") {
     const map = { success: "CI OK", failed: "CI Falló", running: "CI...", pending: "CI...", canceled: "CI Cancel", none: "Sin CI" };
@@ -70,7 +69,7 @@ function badgeClasses(type, data) {
   return "bg-surface text-text-muted";
 }
 
-function BlockerBadge({ type, data }) {
+export function BlockerBadge({ data, type }) {
   const linkUrl = type === "pipeline" ? data.pipelineUrl || null : null;
   const tooltip = tooltipFor(type, data);
   // Sólo el badge de pipeline enlaza; el resto es texto, así que el elemento
@@ -79,12 +78,12 @@ function BlockerBadge({ type, data }) {
 
   return (
     <Tag
-      href={linkUrl || undefined}
-      target={linkUrl ? "_blank" : undefined}
-      rel={linkUrl ? "noopener" : undefined}
-      title={tooltip}
       aria-label={`${tooltip}${linkUrl ? ". Abre en una pestaña nueva." : ""}`}
       className={`${badgeClasses(type, data)} inline-flex items-center gap-1 text-[11px] font-semibold px-1.5 py-0.5 rounded no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent`}
+      href={linkUrl || undefined}
+      rel={linkUrl ? "noopener" : undefined}
+      target={linkUrl ? "_blank" : undefined}
+      title={tooltip}
     >
       <span aria-hidden="true">{iconFor(type, data)}</span>
       <span>{labelFor(type, data)}</span>
@@ -92,5 +91,3 @@ function BlockerBadge({ type, data }) {
     </Tag>
   );
 }
-
-export default BlockerBadge;

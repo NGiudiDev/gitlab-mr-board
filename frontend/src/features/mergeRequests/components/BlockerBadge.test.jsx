@@ -3,11 +3,11 @@ import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 // 6. Imports relativos restantes.
-import BlockerBadge from "./BlockerBadge.jsx";
+import { BlockerBadge } from "./BlockerBadge.jsx";
 
 /** El badge es el elemento raíz del componente. */
 function renderBadge(type, data) {
-  const { container } = render(<BlockerBadge type={type} data={data} />);
+  const { container } = render(<BlockerBadge data={data} type={type} />);
   return container.firstChild;
 }
 

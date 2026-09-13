@@ -1,5 +1,5 @@
 // 6. Imports relativos restantes.
-import BlockerBadge from "./BlockerBadge.jsx";
+import { BlockerBadge } from "./BlockerBadge.jsx";
 
 const COLOR_BY_MERGEABILITY = {
   ready_to_merge: "border-l-ready",
@@ -17,17 +17,17 @@ function timeAgo(iso) {
   return `${Math.round(diff / 86400)}d`;
 }
 
-function MrCard({ mr }) {
+export function MrCard({ mr }) {
   const assignee = mr.responsiblePeople.map((person) => person.name).join(", ");
   const color = COLOR_BY_MERGEABILITY[mr.mergeability] || "border-l-text-faint";
 
   return (
     <article className={`bg-surface-raised border-l-[3px] ${color} rounded-md p-2.5 px-3 border border-border-soft`}>
       <a
-        href={mr.url}
-        target="_blank"
-        rel="noopener"
         className="text-[13px] leading-snug block mb-1.5 rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        href={mr.url}
+        rel="noopener"
+        target="_blank"
       >
         {mr.title}
         <span className="sr-only">(abre en una pestaña nueva)</span>
@@ -38,10 +38,10 @@ function MrCard({ mr }) {
       </div>
 
       <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-        <BlockerBadge type="pipeline" data={mr.blockers.pipeline} />
-        <BlockerBadge type="threads" data={mr.blockers.threads} />
-        <BlockerBadge type="approvals" data={mr.blockers.approvals} />
-        <BlockerBadge type="conflicts" data={{ hasConflicts: mr.hasConflicts }} />
+        <BlockerBadge data={mr.blockers.pipeline} type="pipeline" />
+        <BlockerBadge data={mr.blockers.threads} type="threads" />
+        <BlockerBadge data={mr.blockers.approvals} type="approvals" />
+        <BlockerBadge data={{ hasConflicts: mr.hasConflicts }} type="conflicts" />
       </div>
 
       {assignee ? (
@@ -59,5 +59,3 @@ function MrCard({ mr }) {
     </article>
   );
 }
-
-export default MrCard;

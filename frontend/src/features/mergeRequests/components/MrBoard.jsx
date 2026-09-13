@@ -3,7 +3,7 @@ import { useState } from "react";
 
 // 6. Imports relativos restantes.
 import { columnsOf } from "../mergeRequestColumns.js";
-import BoardColumn from "./BoardColumn.jsx";
+import { BoardColumn } from "./BoardColumn.jsx";
 
 function repoDomId(repo) {
   return repo.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -22,7 +22,7 @@ function groupByRepo(mergeRequests, allProjects) {
     .map((repo) => ({ repo, mrs: byRepo[repo] }));
 }
 
-function MrBoard({ mergeRequests, allProjects = [] }) {
+export function MrBoard({ allProjects = [], mergeRequests }) {
   const [expanded, setExpanded] = useState({});
 
   function toggle(repo) {
@@ -39,24 +39,24 @@ function MrBoard({ mergeRequests, allProjects = [] }) {
 
         return (
           <section
-            key={group.repo}
-            className="border border-border rounded-lg bg-surface overflow-hidden"
             aria-labelledby={headingId}
+            className="border border-border rounded-lg bg-surface overflow-hidden"
+            key={group.repo}
           >
             <button
-              type="button"
-              onClick={() => toggle(group.repo)}
-              aria-expanded={isExpanded}
               aria-controls={panelId}
+              aria-expanded={isExpanded}
               className="w-full flex items-center gap-2 px-4 py-2.5 cursor-pointer hover:bg-surface-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent"
+              onClick={() => toggle(group.repo)}
+              type="button"
             >
               <span
-                className={`text-[11px] text-text-faint transition-transform ${isExpanded ? "rotate-90" : ""}`}
                 aria-hidden="true"
+                className={`text-[11px] text-text-faint transition-transform ${isExpanded ? "rotate-90" : ""}`}
               >
                 ▶
               </span>
-              <span id={headingId} className="text-[13px] font-semibold text-text-primary font-mono">
+              <span className="text-[13px] font-semibold text-text-primary font-mono" id={headingId}>
                 {group.repo}
               </span>
               <span className="text-[11px] text-text-muted bg-surface-raised px-2 py-0.5 rounded-full ml-1">
@@ -66,17 +66,17 @@ function MrBoard({ mergeRequests, allProjects = [] }) {
             {/* El panel se mantiene en el DOM aunque esté contraído, como hacía
                 `v-show`: `aria-controls` debe apuntar a un elemento existente. */}
             <div
-              id={panelId}
-              className={`${isExpanded ? "flex" : "hidden"} gap-3 overflow-x-auto p-3 border-t border-border-soft`}
-              tabIndex={0}
               aria-label="Columnas del proyecto"
+              className={`${isExpanded ? "flex" : "hidden"} gap-3 overflow-x-auto p-3 border-t border-border-soft`}
+              id={panelId}
+              tabIndex={0}
             >
               {columnsOf(group.mrs).map((column) => (
                 <BoardColumn
-                  key={column.id}
-                  title={column.name}
                   idPrefix={domId}
+                  key={column.id}
                   mergeRequests={column.mergeRequests}
+                  title={column.name}
                 />
               ))}
             </div>
@@ -86,5 +86,3 @@ function MrBoard({ mergeRequests, allProjects = [] }) {
     </div>
   );
 }
-
-export default MrBoard;

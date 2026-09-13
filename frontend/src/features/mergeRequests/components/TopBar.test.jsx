@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 // 6. Imports relativos restantes.
-import TopBar from "./TopBar.jsx";
+import { TopBar } from "./TopBar.jsx";
 
 function renderTopBar(props = {}) {
   return render(<TopBar onRefresh={() => {}} {...props} />);

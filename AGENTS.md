@@ -80,13 +80,15 @@
 
 - Organizar cada funcionalidad en `frontend/src/features/<feature>/`, con `components/` y `hooks/`. Reservar `frontend/src/app/` para la composición general.
 
-- «Mi cuenta» reúne el equipo (`features/accounts/components/AccountSettingsSection.jsx`), su invitación (`features/accounts/components/AccountMemberInviteSection.jsx`), la configuración compartida de GitLab (`features/gitlabAccount/`) y el nickname propio de GitLab (`features/auth/components/GitlabIdentityPanel.jsx`). `App.jsx` compone la invitación como sección hermana de la configuración de la cuenta. «Mi perfil» reúne los datos de acceso (`features/auth/components/ProfilePanel.jsx`) y la contraseña (`features/auth/components/PasswordPanel.jsx`). Al sumar un dato, ubicarlo según su contexto de edición.
+- «Mi cuenta» reúne el equipo (`features/accounts/components/AccountSettingsSection.jsx`), su invitación (`features/accounts/components/AccountMemberInviteSection.jsx`), la configuración compartida de GitLab (`features/gitlabAccount/`) y el nickname propio de GitLab (`features/gitlabUser/components/GitlabUserSettingsSection.jsx`). `App.jsx` compone estas responsabilidades como secciones hermanas. «Mi perfil» reúne los datos de acceso (`features/auth/components/ProfilePanel.jsx`) y la contraseña (`features/auth/components/PasswordPanel.jsx`). Al sumar un dato, ubicarlo según su contexto de edición.
 
 - **El layout y la navegación viven en `frontend/src/app/`**: `AppShell.jsx` contiene la barra superior, el único `main` y el listado `SECTIONS` de secciones navegables; `AccountMenu.jsx`, el avatar y su desplegable para abrir «Mi perfil» o «Mi cuenta» y cerrar la sesión. Al agregar una sección, sumarla a esa lista, contemplarla en `ActiveSection` de `App.jsx` y actualizar [`docs/architecture/frontend.md`](docs/architecture/frontend.md#navegación-entre-secciones). No hay router: la sección activa es estado local de `App`.
 
 - Centralizar las variables de entorno en `frontend/src/config.js`. Al agregar una, actualizar `frontend/.env.example` y `docs/development/entorno-local.md`.
 
 - Usar **React 19 con componentes de función** en archivos `.jsx` ([ADR 0005](docs/decisions/0005-frontend-en-react.md)), con **una responsabilidad por componente**: si crece demasiado, extraer subcomponentes dentro de su feature.
+
+- Ordenar alfabéticamente las props de componentes y elementos HTML; ESLint valida cada grupo sin atravesar un spread, porque mover una prop a través de `{...props}` puede cambiar su precedencia. Preferir exports nombrados para componentes; usar `export default` sólo cuando una integración lo exija.
 
 - Estilos con **Tailwind CSS** — nada de CSS custom salvo para lo que Tailwind no cubra.
 

@@ -55,7 +55,7 @@ Al actualizar una instalación que todavía tiene `users.username`, el esquema r
 
 ### Nickname de GitLab
 
-- El nombre de usuario de la persona en GitLab, sin la arroba. Se carga en «Mi cuenta», en la tarjeta «Mi identidad en GitLab», y el campo muestra el valor guardado en la sesión.
+- El nombre de usuario de la persona en GitLab, sin la arroba. Se carga en «Mi cuenta», en la tarjeta «Usuario de GitLab», y el campo muestra el valor guardado en la sesión.
 - Es **de cada persona y no de la cuenta**: los proyectos y el access token los carga quien administra, pero con qué nombre aparece cada uno en los merge requests es suyo.
 - De él depende la [vista personal](vista-personal.md): sin nickname el tablero no puede saber cuáles de los merge requests son de quien mira. Es nullable, y hasta que se carga la vista personal lo pide.
 - Se aceptan letras, números, punto, guion y guion bajo, empezando con letra o número, que es lo que admite GitLab. Hasta 255 caracteres.
