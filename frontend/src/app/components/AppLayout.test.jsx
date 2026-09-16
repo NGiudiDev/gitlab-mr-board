@@ -1,11 +1,14 @@
+import { MemoryRouter, useLocation } from "react-router";
+
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter, useLocation } from "react-router";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { AppLayout } from "./AppLayout.jsx";
 
 import { jsonResponse, resetSharedState, TEST_ACCOUNT, TEST_USER } from "../../../test/sharedState.js";
-import { AppLayout } from "./AppLayout.jsx";
-import { APP_PATHS, sectionsFor } from "../constants/routes.consts.js";
+
+import { APP_PATHS, getNavigationSectionsForUser } from "../constants/routes.consts.js";
 
 const ADMIN_USER = { ...TEST_USER, role: "admin" };
 
@@ -151,13 +154,13 @@ describe("AppLayout: navegación", () => {
   });
 });
 
-describe("sectionsFor", () => {
+describe("getNavigationSectionsForUser", () => {
   it("deja la administración de usuarios sólo para el rol admin", () => {
-    expect(sectionsFor(TEST_USER).map((section) => section.id)).toEqual(["board", "profile", "account"]);
-    expect(sectionsFor(ADMIN_USER).map((section) => section.id)).toEqual(["board", "profile", "account", "users"]);
+    expect(getNavigationSectionsForUser(TEST_USER).map((section) => section.id)).toEqual(["board", "profile", "account"]);
+    expect(getNavigationSectionsForUser(ADMIN_USER).map((section) => section.id)).toEqual(["board", "profile", "account", "users"]);
   });
 
   it("sin usuario no ofrece ninguna sección de administración", () => {
-    expect(sectionsFor(null).some((section) => section.id === "users")).toBe(false);
+    expect(getNavigationSectionsForUser(null).some((section) => section.id === "users")).toBe(false);
   });
 });

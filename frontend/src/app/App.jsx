@@ -1,15 +1,18 @@
 import { Navigate, Route, Routes, useNavigate } from "react-router";
 
-import { resetAccountStore } from "../features/accounts/hooks/useAccount.js";
-import { AccountPage } from "../features/accounts/pages/AccountPage.jsx";
 import { useSession } from "../features/auth/hooks/useSession.js";
+
+import { AccountPage } from "../features/accounts/pages/AccountPage.jsx";
+import { AppLayout } from "./components/AppLayout.jsx";
+import { BoardPage } from "../features/mergeRequests/pages/BoardPage.jsx";
 import { LoginPage } from "../features/auth/pages/LoginPage.jsx";
 import { ProfilePage } from "../features/auth/pages/ProfilePage.jsx";
 import { RegisterPage } from "../features/auth/pages/RegisterPage.jsx";
 import { UsersPage } from "../features/auth/pages/UsersPage.jsx";
+
 import { resetStore } from "../features/mergeRequests/hooks/useMergeRequests.js";
-import { BoardPage } from "../features/mergeRequests/pages/BoardPage.jsx";
-import { AppLayout } from "./components/AppLayout.jsx";
+import { resetAccountStore } from "../features/accounts/hooks/useAccount.js";
+
 import { APP_PATHS } from "./constants/routes.consts.js";
 
 const SESSION_STATUS_CLASSES = "text-center text-text-muted text-[13px] py-16 border border-dashed border-border rounded-lg bg-surface";

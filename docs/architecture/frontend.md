@@ -86,7 +86,7 @@ React Router mantiene una URL por pantalla: `/ingresar`, `/registro`, `/tablero`
 
 `routes.consts.js` define `APP_PATHS` y `NAVIGATION_SECTIONS` como única fuente de verdad. `profile` y `account` llevan `menuOnly` porque se abren desde el avatar y no se muestran en la navegación principal. Al agregar una pantalla hay que sumar su URL, su metadato de navegación si corresponde y su `Route` pública o privada.
 
-Las rutas privadas redirigen a `/ingresar` sin sesión y las públicas redirigen a `/tablero` con una sesión abierta. `sectionsFor(user)` decide qué enlaces puede ver cada persona y `/usuarios` redirige al tablero si el rol no es `admin`. «Mi perfil» siempre es editable por su titular; dentro de «Mi cuenta», el rol decide si el contenido compartido se edita o se consulta, mientras que el nickname personal siempre puede actualizarse. Esconder o redirigir una sección es una cortesía de la interfaz: el backend valida el rol ruta por ruta, según el [dominio de autenticación](../domains/autenticacion.md).
+Las rutas privadas redirigen a `/ingresar` sin sesión y las públicas redirigen a `/tablero` con una sesión abierta. `getNavigationSectionsForUser(user)` decide qué enlaces puede ver cada persona y `/usuarios` redirige al tablero si el rol no es `admin`. «Mi perfil» siempre es editable por su titular; dentro de «Mi cuenta», el rol decide si el contenido compartido se edita o se consulta, mientras que el nickname personal siempre puede actualizarse. Esconder o redirigir una sección es una cortesía de la interfaz: el backend valida el rol ruta por ruta, según el [dominio de autenticación](../domains/autenticacion.md).
 
 Al cerrar la sesión la app navega a `/ingresar` y descarta los stores del tablero y de la cuenta.
 

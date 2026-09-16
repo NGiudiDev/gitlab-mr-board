@@ -1,37 +1,27 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { Link } from "react-router";
 
 import { useAccount } from "../../features/accounts/hooks/useAccount.js";
+
+import { Link } from "react-router";
+
+import { getUserInitials } from "../../features/user/utils/user.utils.js";
+
 import { APP_PATHS } from "../constants/routes.consts.js";
 
-/**
- * Obtiene hasta dos iniciales para representar a la persona sin una imagen.
- *
- * @param {{ displayName?: string, email?: string } | null} user Usuario de la sesión.
- * @returns {string} Iniciales en mayúsculas.
- */
-export function initialsFor(user) {
-  const label = user?.displayName?.trim() || user?.email?.trim() || "?";
-  const words = label.split(/\s+/);
-  const initials = words.length > 1
-    ? `${words[0][0]}${words.at(-1)[0]}`
-    : label.slice(0, 2);
+export function AccountMenu(props) {
+  const {
+    onLogout = () => {},
+    user = null,
+  } = props;
 
-  return initials.toLocaleUpperCase("es");
-}
-/**
- * Reúne la identidad, los accesos al perfil y la cuenta, y el cierre de sesión.
- */
-export function AccountMenu({
-  onLogout = () => {},
-  user = null,
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-  const menuId = useId();
+  const { account, loading } = useAccount(user?.accountId ?? null);
+  
   const containerRef = useRef(null);
   const triggerRef = useRef(null);
-  const { account, loading } = useAccount(user?.accountId ?? null);
+  const menuId = useId();
 
+  const [isOpen, setIsOpen] = useState(false);
+  
   function closeMenu() {
     setIsOpen(false);
   }
@@ -88,8 +78,9 @@ export function AccountMenu({
           aria-hidden="true"
           className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-[12px] font-bold text-bg"
         >
-          {initialsFor(user)}
+          {getUserInitials(user)}
         </span>
+
         <svg
           aria-hidden="true"
           className={`h-4 w-4 text-text-muted transition-transform ${isOpen ? "rotate-180" : ""}`}
@@ -114,8 +105,9 @@ export function AccountMenu({
               aria-hidden="true"
               className="flex h-11 w-11 flex-none items-center justify-center rounded-full bg-accent text-sm font-bold text-bg"
             >
-              {initialsFor(user)}
+              {getUserInitials(user)}
             </span>
+
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-text-primary">{user.displayName}</p>
               <p className="truncate text-xs text-text-muted">{user.email}</p>
@@ -147,6 +139,7 @@ export function AccountMenu({
               </svg>
               Editar perfil
             </Link>
+
             <Link
               className="flex min-h-10 w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm text-text-primary hover:bg-surface-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
               onClick={closeMenu}
@@ -164,6 +157,7 @@ export function AccountMenu({
               </svg>
               {user.role === "admin" ? "Editar cuenta" : "Ver cuenta"}
             </Link>
+
             <button
               className="flex min-h-10 w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm text-text-primary hover:bg-surface-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
               onClick={handleLogout}

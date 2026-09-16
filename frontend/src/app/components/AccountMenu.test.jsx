@@ -3,8 +3,9 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, useLocation } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { AccountMenu, getUserInitials } from "./AccountMenu.jsx";
+
 import { jsonResponse, resetSharedState, TEST_ACCOUNT, TEST_USER } from "../../../test/sharedState.js";
-import { AccountMenu, initialsFor } from "./AccountMenu.jsx";
 import { APP_PATHS } from "../constants/routes.consts.js";
 
 const ADMIN_USER = { ...TEST_USER, role: "admin" };
@@ -123,12 +124,12 @@ describe("AccountMenu", () => {
   });
 });
 
-describe("initialsFor", () => {
+describe("getUserInitials", () => {
   it("usa el primer y el último nombre", () => {
-    expect(initialsFor({ displayName: "Ana María Pérez", email: "ana@example.com" })).toBe("AP");
+    expect(getUserInitials({ displayName: "Ana María Pérez", email: "ana@example.com" })).toBe("AP");
   });
 
   it("usa el email cuando falta el nombre visible", () => {
-    expect(initialsFor({ email: "ana@example.com" })).toBe("AN");
+    expect(getUserInitials({ email: "ana@example.com" })).toBe("AN");
   });
 });
