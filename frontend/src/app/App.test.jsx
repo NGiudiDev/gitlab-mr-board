@@ -1,13 +1,11 @@
-// 2. Dependencias externas.
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, useLocation } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-// 6. Imports relativos restantes.
 import { buildMergeRequest, buildResponse } from "../../test/fixtures/mergeRequests.js";
 import { jsonResponse, resetSharedState, signInTestUser, TEST_ACCOUNT, TEST_USER } from "../../test/sharedState.js";
 import { App } from "./App.jsx";
-import { APP_PATHS } from "./routes.js";
+import { APP_PATHS } from "./constants/routes.consts.js";
 
 const MRS = [
   buildMergeRequest({

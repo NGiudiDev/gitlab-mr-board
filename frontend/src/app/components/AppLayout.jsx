@@ -1,9 +1,7 @@
-// 2. Dependencias externas.
 import { NavLink } from "react-router";
 
-// 6. Imports relativos restantes.
 import { AccountMenu } from "./AccountMenu.jsx";
-import { sectionsFor } from "./routes.js";
+import { sectionsFor } from "../constants/routes.consts.js";
 
 const NAV_ITEM_CLASSES = "block rounded-md px-2.5 py-1 text-[13px] cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
@@ -15,7 +13,7 @@ const NAV_ITEM_CLASSES = "block rounded-md px-2.5 py-1 text-[13px] cursor-pointe
  * La barra aparece sólo con la sesión abierta: el ingreso y el alta son
  * pantallas completas que traen su propio encabezado principal.
  */
-export function AppShell({
+export function AppLayout({
   children,
   onLogout = () => {},
   user = null,

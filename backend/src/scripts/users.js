@@ -1,8 +1,6 @@
-// 1. Módulos estándar de Node.js.
 import readline from "node:readline";
 import { Writable } from "node:stream";
 
-// 6. Imports relativos restantes.
 import config from "../config.js";
 import { createAccountRepository } from "../features/accounts/services/accountRepository.js";
 import { createAccountService } from "../features/accounts/services/accountService.js";

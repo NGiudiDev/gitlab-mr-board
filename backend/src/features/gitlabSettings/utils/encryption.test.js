@@ -1,10 +1,7 @@
-// 2. Dependencias externas.
 import { describe, expect, it } from "vitest";
 
-// 4. Módulos de constantes.
 import { TEST_ENCRYPTION_KEY, TEST_TOKEN } from "../../../../test/constants.js";
 
-// 6. Imports relativos restantes.
 import { createSecretCipher, MINIMUM_SECRET_LENGTH } from "./encryption.js";
 
 const OTHER_KEY = "otra-clave-de-cifrado-para-los-test";

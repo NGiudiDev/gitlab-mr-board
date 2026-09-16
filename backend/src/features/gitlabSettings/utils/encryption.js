@@ -1,4 +1,3 @@
-// 1. Módulos estándar de Node.js.
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "node:crypto";
 
 // AES-256-GCM cifra y autentica en un solo paso: sin la etiqueta correcta el

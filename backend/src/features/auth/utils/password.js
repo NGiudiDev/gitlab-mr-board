@@ -1,4 +1,3 @@
-// 1. Módulos estándar de Node.js.
 import { randomBytes, scrypt, timingSafeEqual } from "node:crypto";
 
 // Parámetros de scrypt. Se guardan junto al hash para poder endurecerlos más

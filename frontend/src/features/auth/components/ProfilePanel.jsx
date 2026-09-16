@@ -1,4 +1,3 @@
-// 2. Dependencias externas.
 import { useEffect, useState } from "react";
 
 /**

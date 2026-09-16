@@ -1,8 +1,6 @@
-// 2. Dependencias externas.
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-// 6. Imports relativos restantes.
 import { jsonResponse } from "../../../../test/sharedState.js";
 import { GitlabAccountSettingsSection } from "./GitlabAccountSettingsSection.jsx";
 

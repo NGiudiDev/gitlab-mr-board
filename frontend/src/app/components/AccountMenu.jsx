@@ -1,10 +1,8 @@
-// 2. Dependencias externas.
 import { useEffect, useId, useRef, useState } from "react";
 import { Link } from "react-router";
 
-// 6. Imports relativos restantes.
-import { useAccount } from "../features/accounts/hooks/useAccount.js";
-import { APP_PATHS } from "./routes.js";
+import { useAccount } from "../../features/accounts/hooks/useAccount.js";
+import { APP_PATHS } from "../constants/routes.consts.js";
 
 /**
  * Obtiene hasta dos iniciales para representar a la persona sin una imagen.

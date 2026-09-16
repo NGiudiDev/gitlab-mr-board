@@ -1,4 +1,3 @@
-// 1. Módulos estándar de Node.js.
 import { randomInt } from "node:crypto";
 
 // El alfabeto excluye los caracteres que se confunden al dictar o copiar un

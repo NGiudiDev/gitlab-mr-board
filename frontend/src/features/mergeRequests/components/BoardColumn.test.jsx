@@ -1,8 +1,6 @@
-// 2. Dependencias externas.
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-// 6. Imports relativos restantes.
 import { buildMergeRequest } from "../../../../test/fixtures/mergeRequests.js";
 import { BoardColumn } from "./BoardColumn.jsx";
 

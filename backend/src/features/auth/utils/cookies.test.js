@@ -1,7 +1,5 @@
-// 2. Dependencias externas.
 import { describe, expect, it } from "vitest";
 
-// 6. Imports relativos restantes.
 import { parseCookieHeader } from "./cookies.js";
 
 describe("parseCookieHeader", () => {

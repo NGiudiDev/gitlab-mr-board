@@ -1,7 +1,5 @@
-// 2. Dependencias externas.
 import { useEffect, useState } from "react";
 
-// 6. Imports relativos restantes.
 import {
   BUTTON_CLASSES,
   FIELD_CLASSES,

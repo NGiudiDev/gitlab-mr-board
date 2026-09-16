@@ -1,7 +1,5 @@
-// 2. Dependencias externas.
 import express from "express";
 
-// 6. Imports relativos restantes.
 import config from "../../../config.js";
 import { getAllMergeRequests } from "../services/mergeRequestService.js";
 

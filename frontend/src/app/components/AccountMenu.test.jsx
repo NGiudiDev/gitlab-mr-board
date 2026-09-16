@@ -1,13 +1,11 @@
-// 2. Dependencias externas.
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, useLocation } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-// 6. Imports relativos restantes.
-import { jsonResponse, resetSharedState, TEST_ACCOUNT, TEST_USER } from "../../test/sharedState.js";
+import { jsonResponse, resetSharedState, TEST_ACCOUNT, TEST_USER } from "../../../test/sharedState.js";
 import { AccountMenu, initialsFor } from "./AccountMenu.jsx";
-import { APP_PATHS } from "./routes.js";
+import { APP_PATHS } from "../constants/routes.consts.js";
 
 const ADMIN_USER = { ...TEST_USER, role: "admin" };
 

@@ -1,10 +1,7 @@
-// 2. Dependencias externas.
 import { beforeEach, describe, expect, it } from "vitest";
 
-// 4. Módulos de constantes.
 import { TEST_PROJECT_IDS, TEST_TOKEN } from "../../../../test/constants.js";
 
-// 6. Imports relativos restantes.
 import { createAuthenticatedApp } from "../../../../test/auth.js";
 import { requestApp } from "../../../../test/httpClient.js";
 

@@ -1,4 +1,3 @@
-// 6. Imports relativos restantes.
 import { toIsoString } from "../../../shared/database.js";
 
 const SELECT_USER = "SELECT * FROM users";

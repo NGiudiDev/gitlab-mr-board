@@ -1,8 +1,6 @@
-// 2. Dependencias externas.
 import { PGlite } from "@electric-sql/pglite";
 import { afterEach, describe, expect, it } from "vitest";
 
-// 6. Imports relativos restantes.
 import { applySchema } from "./database.js";
 
 // Esquema tal como quedó antes de las cuentas: los usuarios no pertenecían a

@@ -1,8 +1,6 @@
-// 2. Dependencias externas.
 import { act, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-// 6. Imports relativos restantes.
 import { jsonResponse, resetSharedState, TEST_USER } from "../../../../test/sharedState.js";
 import {
   changeOwnPassword,

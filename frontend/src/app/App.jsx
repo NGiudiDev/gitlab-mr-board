@@ -1,7 +1,5 @@
-// 2. Dependencias externas.
 import { Navigate, Route, Routes, useNavigate } from "react-router";
 
-// 6. Imports relativos restantes.
 import { resetAccountStore } from "../features/accounts/hooks/useAccount.js";
 import { AccountPage } from "../features/accounts/pages/AccountPage.jsx";
 import { useSession } from "../features/auth/hooks/useSession.js";
@@ -11,8 +9,8 @@ import { RegisterPage } from "../features/auth/pages/RegisterPage.jsx";
 import { UsersPage } from "../features/auth/pages/UsersPage.jsx";
 import { resetStore } from "../features/mergeRequests/hooks/useMergeRequests.js";
 import { BoardPage } from "../features/mergeRequests/pages/BoardPage.jsx";
-import { AppShell } from "./AppShell.jsx";
-import { APP_PATHS } from "./routes.js";
+import { AppLayout } from "./components/AppLayout.jsx";
+import { APP_PATHS } from "./constants/routes.consts.js";
 
 const SESSION_STATUS_CLASSES = "text-center text-text-muted text-[13px] py-16 border border-dashed border-border rounded-lg bg-surface";
 
@@ -29,11 +27,11 @@ export function App() {
 
   if (session.status === "checking") {
     return (
-      <AppShell>
+      <AppLayout>
         <div className={SESSION_STATUS_CLASSES} role="status">
           Verificando tu sesión...
         </div>
-      </AppShell>
+      </AppLayout>
     );
   }
 
@@ -41,7 +39,7 @@ export function App() {
     const isAdmin = session.user.role === "admin";
 
     return (
-      <AppShell onLogout={handleLogout} user={session.user}>
+      <AppLayout onLogout={handleLogout} user={session.user}>
         <Routes>
           <Route
             element={(
@@ -52,7 +50,7 @@ export function App() {
             )}
             path={APP_PATHS.board}
           />
-          
+
           <Route
             element={(
               <AccountPage
@@ -75,7 +73,7 @@ export function App() {
             )}
             path={APP_PATHS.profile}
           />
-          
+
           <Route
             element={isAdmin
               ? <UsersPage currentEmail={session.user.email} />
@@ -85,12 +83,12 @@ export function App() {
 
           <Route element={<Navigate replace to={APP_PATHS.board} />} path="*" />
         </Routes>
-      </AppShell>
+      </AppLayout>
     );
   }
 
   return (
-    <AppShell>
+    <AppLayout>
       <Routes>
         <Route
           element={(
@@ -117,6 +115,6 @@ export function App() {
 
         <Route element={<Navigate replace to={APP_PATHS.login} />} path="*" />
       </Routes>
-    </AppShell>
+    </AppLayout>
   );
 }

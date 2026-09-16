@@ -2,7 +2,7 @@ import { useNavigate } from "react-router";
 
 import { LoginForm } from "../components/LoginForm.jsx";
 
-import { APP_PATHS } from "../../../app/routes.js";
+import { APP_PATHS } from "../../../app/constants/routes.consts.js";
 
 export function LoginPage(props) {
   const { error, notice, onLogin, submitting } = props;

@@ -42,8 +42,6 @@
 
 - El proyecto requiere **Node.js 24 y npm 10 o superior**, declarado en `engines` en los tres `package.json`. Mantener estas versiones sincronizadas entre sí y con la documentación.
 
-- Mantener los imports ordenados con ESLint. Ejecutar `npm run lint` para validar o `npm run lint:fix` para corregir; el orden de grupos y la integración con el editor se documentan en [`docs/development/calidad-codigo.md`](docs/development/calidad-codigo.md).
-
 - **No crear archivos innecesarios**: preferir editar los existentes; crear uno nuevo sólo cuando la responsabilidad no encaje en ninguno.
 
 ### Backend
@@ -82,13 +80,13 @@
 
 - «Mi cuenta» reúne el equipo (`features/accounts/components/AccountSettingsSection.jsx`), su invitación (`features/accounts/components/AccountMemberInviteSection.jsx`), la configuración compartida de GitLab (`features/gitlabAccount/`) y el nickname propio de GitLab (`features/gitlabUser/components/GitlabUserSettingsSection.jsx`). `AccountPage.jsx` compone estas responsabilidades como secciones hermanas. «Mi perfil» reúne en `ProfilePage.jsx` los datos de acceso (`features/auth/components/ProfilePanel.jsx`) y la contraseña (`features/auth/components/PasswordPanel.jsx`). Al sumar un dato, ubicarlo según su contexto de edición.
 
-- **El layout y la navegación viven en `frontend/src/app/`**: `AppShell.jsx` contiene la barra superior y el único `main`; `routes.js`, las rutas y secciones navegables; y `AccountMenu.jsx`, el avatar y su desplegable para abrir «Mi perfil» o «Mi cuenta» y cerrar la sesión. `App.jsx` asocia cada URL con una page de su feature mediante React Router. Al agregar una sección, sumar su URL a `APP_PATHS`, su navegación a `NAVIGATION_SECTIONS`, su `Route` a `App.jsx` y actualizar [`docs/architecture/frontend.md`](docs/architecture/frontend.md#navegación-entre-secciones).
+- **El layout y la navegación viven en `frontend/src/app/`**: `components/AppLayout.jsx` contiene la barra superior y el único `main`; `constants/routes.consts.js`, las rutas y secciones navegables; y `components/AccountMenu.jsx`, el avatar y su desplegable para abrir «Mi perfil» o «Mi cuenta» y cerrar la sesión. `App.jsx` asocia cada URL con una page de su feature mediante React Router. Al agregar una sección, sumar su URL a `APP_PATHS`, su navegación a `NAVIGATION_SECTIONS`, su `Route` a `App.jsx` y actualizar [`docs/architecture/frontend.md`](docs/architecture/frontend.md#navegación-entre-secciones).
 
 - Centralizar las variables de entorno en `frontend/src/config.js`. Al agregar una, actualizar `frontend/.env.example` y `docs/development/entorno-local.md`.
 
 - Usar **React 19 con componentes de función** en archivos `.jsx` ([ADR 0005](docs/decisions/0005-frontend-en-react.md)), con **una responsabilidad por componente**: si crece demasiado, extraer subcomponentes dentro de su feature.
 
-- Ordenar alfabéticamente las props de componentes y elementos HTML; ESLint valida cada grupo sin atravesar un spread, porque mover una prop a través de `{...props}` puede cambiar su precedencia. Preferir exports nombrados para componentes; usar `export default` sólo cuando una integración lo exija.
+- Preferir exports nombrados para componentes; usar `export default` sólo cuando una integración lo exija.
 
 - Estilos con **Tailwind CSS** — nada de CSS custom salvo para lo que Tailwind no cubra.
 

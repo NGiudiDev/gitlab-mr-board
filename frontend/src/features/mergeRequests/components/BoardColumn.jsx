@@ -1,4 +1,3 @@
-// 6. Imports relativos restantes.
 import { MrCard } from "./MrCard.jsx";
 
 export function BoardColumn({ idPrefix, mergeRequests, title }) {

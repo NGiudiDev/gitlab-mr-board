@@ -1,7 +1,5 @@
-// 5. Utilidades.
 import RateLimiter from "../utils/rateLimiter.js";
 
-// 6. Imports relativos restantes.
 import config from "../../../config.js";
 
 const GITLAB_API_PATH = "/api/v4";

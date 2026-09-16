@@ -1,4 +1,3 @@
-// 6. Imports relativos restantes.
 import config from "../../../config.js";
 import { createGitLabClient } from "./gitlabApi.js";
 import { collectPeople, computeMergeability, computeResponsiblePeople, extractProjectPath } from "./mergeRequestRules.js";

@@ -13,8 +13,8 @@ El código se divide entre la composición general y las funcionalidades del dom
 - `src/main.jsx`: carga los estilos globales y monta React mediante `createRoot`, `StrictMode` y `BrowserRouter`.
 - `src/config.js`: centraliza y valida la configuración expuesta por Vite.
 - `src/app/App.jsx`: decide si mostrar las rutas públicas o privadas según la sesión y asocia cada URL con una page de su feature.
-- `src/app/AppShell.jsx`: define el layout —barra superior, navegación entre secciones y contenido—; `AccountMenu.jsx` reúne allí la identidad, el equipo y el cierre de sesión.
-- `src/app/routes.js`: mantiene las URLs y los metadatos de navegación como única fuente de verdad.
+- `src/app/components/AppLayout.jsx`: define el layout —barra superior, navegación entre secciones y contenido—; `AccountMenu.jsx` reúne allí la identidad, el equipo y el cierre de sesión.
+- `src/app/constants/routes.consts.js`: mantiene las URLs y los metadatos de navegación como única fuente de verdad.
 - `src/features/accounts/`: contiene el store y los componentes de la cuenta, además de `pages/AccountPage.jsx`, descritos en el [dominio de cuentas](../domains/cuentas.md).
 - `src/features/auth/`: contiene el store de la sesión, el hook de la lista de usuarios, sus componentes y las pages de ingreso, alta, administración y perfil, descritos en el [dominio de autenticación](../domains/autenticacion.md).
 - `src/features/gitlabAccount/`: contiene la sección, el formulario, los estados de carga y lectura, y el hook de la configuración de GitLab de la cuenta, descritos en la [configuración de GitLab](../domains/configuracion-gitlab.md).
@@ -30,11 +30,11 @@ Las funcionalidades nuevas deben seguir la estructura `src/features/<feature>/co
 
 ## Composición de componentes
 
-`App` consume `useSession()`, monta las pages sólo con la sesión correspondiente y resuelve las rutas públicas o privadas; `AppShell` aporta el layout y la navegación; `BoardPage` consume `useMergeRequests()` y distribuye datos y callbacks mediante props explícitas. El árbol principal es:
+`App` consume `useSession()`, monta las pages sólo con la sesión correspondiente y resuelve las rutas públicas o privadas; `AppLayout` aporta el layout y la navegación; `BoardPage` consume `useMergeRequests()` y distribuye datos y callbacks mediante props explícitas. El árbol principal es:
 
 ```text
 App
-└── AppShell
+└── AppLayout
     ├── AccountMenu                  (con sesión)
     ├── LoginPage / RegisterPage     (sin sesión)
     │   └── LoginForm / RegisterForm
@@ -57,7 +57,7 @@ App
         └── UserAdmin
 ```
 
-- `AppShell` presenta la barra superior con el nombre del tablero, la navegación principal y el avatar que abre el menú de cuenta, y envuelve el contenido en el único `main` de la aplicación. «Mi perfil» se abre desde «Editar perfil» y «Mi cuenta» desde «Editar cuenta» —o «Ver cuenta» sin permisos de escritura—; ninguna ocupa un botón propio en la barra. La barra aparece sólo con la sesión abierta, porque el ingreso y el alta son pantallas completas con su propio encabezado principal.
+- `AppLayout` presenta la barra superior con el nombre del tablero, la navegación principal y el avatar que abre el menú de cuenta, y envuelve el contenido en el único `main` de la aplicación. «Mi perfil» se abre desde «Editar perfil» y «Mi cuenta» desde «Editar cuenta» —o «Ver cuenta» sin permisos de escritura—; ninguna ocupa un botón propio en la barra. La barra aparece sólo con la sesión abierta, porque el ingreso y el alta son pantallas completas con su propio encabezado principal.
 - `LoginForm` pide email y contraseña, muestra el error que devuelve el backend y ofrece pasar al alta.
 - `RegisterForm` da de alta la persona y elige entre sus dos caminos excluyentes: sumarse a un equipo con su código de invitación, o abrir uno nuevo. Valida en el navegador las mismas reglas que el backend para avisar antes de enviar.
 - `AccountMenu` concentra detrás de un avatar el nombre visible, el email, el equipo, los accesos separados al perfil y a la cuenta, y el cierre de sesión. Se cierra al elegir una acción, al interactuar fuera o con `Escape`, que devuelve el foco al avatar.
@@ -82,9 +82,9 @@ Los componentes presentacionales reciben valores mediante props y notifican acci
 
 ## Navegación entre secciones
 
-React Router mantiene una URL por pantalla: `/ingresar`, `/registro`, `/tablero`, `/perfil`, `/cuenta` y `/usuarios`. `BrowserRouter` envuelve la aplicación; `App` declara los `Routes`; y los enlaces de `AppShell` y `AccountMenu` permiten historial, recarga y acceso directo. El rewrite de `frontend/vercel.json` devuelve `index.html` para esas rutas en producción.
+React Router mantiene una URL por pantalla: `/ingresar`, `/registro`, `/tablero`, `/perfil`, `/cuenta` y `/usuarios`. `BrowserRouter` envuelve la aplicación; `App` declara los `Routes`; y los enlaces de `AppLayout` y `AccountMenu` permiten historial, recarga y acceso directo. El rewrite de `frontend/vercel.json` devuelve `index.html` para esas rutas en producción.
 
-`routes.js` define `APP_PATHS` y `NAVIGATION_SECTIONS` como única fuente de verdad. `profile` y `account` llevan `menuOnly` porque se abren desde el avatar y no se muestran en la navegación principal. Al agregar una pantalla hay que sumar su URL, su metadato de navegación si corresponde y su `Route` pública o privada.
+`routes.consts.js` define `APP_PATHS` y `NAVIGATION_SECTIONS` como única fuente de verdad. `profile` y `account` llevan `menuOnly` porque se abren desde el avatar y no se muestran en la navegación principal. Al agregar una pantalla hay que sumar su URL, su metadato de navegación si corresponde y su `Route` pública o privada.
 
 Las rutas privadas redirigen a `/ingresar` sin sesión y las públicas redirigen a `/tablero` con una sesión abierta. `sectionsFor(user)` decide qué enlaces puede ver cada persona y `/usuarios` redirige al tablero si el rol no es `admin`. «Mi perfil» siempre es editable por su titular; dentro de «Mi cuenta», el rol decide si el contenido compartido se edita o se consulta, mientras que el nickname personal siempre puede actualizarse. Esconder o redirigir una sección es una cortesía de la interfaz: el backend valida el rol ruta por ruta, según el [dominio de autenticación](../domains/autenticacion.md).
 
@@ -147,7 +147,7 @@ Ambas vistas usan secciones verticales por proyecto. Cada sección despliega sei
 
 La interfaz apunta a WCAG 2.2 nivel AA y aplica estas decisiones:
 
-- `AppShell` incluye un enlace para saltar al contenido principal y presenta la aplicación con un único `main` y un único `h1`.
+- `AppLayout` incluye un enlace para saltar al contenido principal y presenta la aplicación con un único `main` y un único `h1`.
 - La navegación es un `nav` etiquetado y la sección activa se marca con `aria-current="page"`, además del contraste y el peso tipográfico.
 - El menú de cuenta expone su estado con `aria-expanded`, mantiene un recorrido de foco natural y se puede cerrar con `Escape` devolviendo el foco al avatar.
 - Los estados de carga, vacío y error usan roles semánticos.

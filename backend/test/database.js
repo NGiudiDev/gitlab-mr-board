@@ -1,7 +1,5 @@
-// 2. Dependencias externas.
 import { PGlite } from "@electric-sql/pglite";
 
-// 6. Imports relativos restantes.
 import { applySchema } from "../src/shared/database.js";
 
 // Arrancar PGlite cuesta alrededor de un segundo, así que se reutiliza una

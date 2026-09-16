@@ -1,4 +1,3 @@
-// 6. Imports relativos restantes.
 import { toIsoString } from "../../../shared/database.js";
 
 /** Traduce una fila de `accounts` al contrato del dominio. */

@@ -1,7 +1,5 @@
-// 2. Dependencias externas.
 import express from "express";
 
-// 6. Imports relativos restantes.
 import { HttpError, respondWithHttpError } from "../../../shared/httpError.js";
 import { normalizeEmail } from "../services/authService.js";
 import { createRequireAdmin } from "./auth.js";

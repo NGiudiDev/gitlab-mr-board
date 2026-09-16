@@ -1,10 +1,7 @@
-// 4. Módulos de constantes.
 import { TEST_ACCOUNT_NAME, TEST_DISPLAY_NAME, TEST_EMAIL, TEST_ENCRYPTION_KEY, TEST_GITLAB_USERNAME, TEST_PASSWORD, TEST_PROJECT_IDS, TEST_TOKEN } from "./constants.js";
 
-// 5. Utilidades.
 import { createSecretCipher } from "../src/features/gitlabSettings/utils/encryption.js";
 
-// 6. Imports relativos restantes.
 import { createApp } from "../src/app.js";
 import { createAccountRepository } from "../src/features/accounts/services/accountRepository.js";
 import { createAccountService } from "../src/features/accounts/services/accountService.js";

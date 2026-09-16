@@ -1,10 +1,7 @@
-// 2. Dependencias externas.
 import { describe, expect, it, vi } from "vitest";
 
-// 4. Módulos de constantes.
 import { TEST_TOKEN } from "../test/constants.js";
 
-// 6. Imports relativos restantes.
 import { createAuthenticatedApp } from "../test/auth.js";
 import { requestApp } from "../test/httpClient.js";
 import handleVercelRequest, { createApp, createVercelHandler } from "./app.js";

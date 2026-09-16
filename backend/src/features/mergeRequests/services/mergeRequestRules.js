@@ -1,4 +1,3 @@
-// 5. Utilidades.
 import { hasMergeRequestWarning } from "../utils/isMergeRequestBlocked.js";
 
 /** Estados donde la acción pendiente corresponde al autor del merge request. */

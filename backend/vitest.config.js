@@ -1,4 +1,3 @@
-// 2. Dependencias externas.
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({

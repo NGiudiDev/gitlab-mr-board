@@ -1,4 +1,3 @@
-// 6. Imports relativos restantes.
 import { BlockerBadge } from "./BlockerBadge.jsx";
 
 const COLOR_BY_MERGEABILITY = {

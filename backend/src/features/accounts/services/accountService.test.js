@@ -1,7 +1,5 @@
-// 2. Dependencias externas.
 import { describe, expect, it } from "vitest";
 
-// 6. Imports relativos restantes.
 import { createTestDatabase } from "../../../../test/database.js";
 import { createAuthRepository } from "../../auth/services/authRepository.js";
 import { createAccountRepository } from "./accountRepository.js";

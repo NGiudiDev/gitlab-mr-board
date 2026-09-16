@@ -1,13 +1,9 @@
-// 2. Dependencias externas.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-// 4. Módulos de constantes.
 import { TEST_ACCOUNT_NAME, TEST_TOKEN } from "../../../../test/constants.js";
 
-// 5. Utilidades.
 import { createSecretCipher } from "../utils/encryption.js";
 
-// 6. Imports relativos restantes.
 import { createTestAccountService, createTestGitLabSettingsService } from "../../../../test/auth.js";
 import { createTestDatabase } from "../../../../test/database.js";
 import { createGitLabSettingsRepository } from "./gitlabSettingsRepository.js";

@@ -16,7 +16,6 @@ export default [
       "simple-import-sort": simpleImportSort,
     },
     rules: {
-      "local/jsx-sort-props": "error",
       quotes: ["error", "double"],
       semi: ["error", "always"],
       "simple-import-sort/exports": "error",

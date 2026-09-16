@@ -1,4 +1,3 @@
-// 6. Imports relativos restantes.
 import { toIsoString } from "../../../shared/database.js";
 
 /** Traduce una fila de `account_gitlab_settings` al contrato del dominio. */

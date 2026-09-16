@@ -1,10 +1,7 @@
-// 2. Dependencias externas.
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-// 4. Módulos de constantes.
 import { TEST_BASE_URL, TEST_TOKEN } from "../../../../test/constants.js";
 
-// 6. Imports relativos restantes.
 import { createGitLabClient } from "./gitlabApi.js";
 
 const client = createGitLabClient(TEST_TOKEN);

@@ -1,11 +1,7 @@
-// 2. Dependencias externas.
 import { describe, expect, it } from "vitest";
 
-// 6. Imports relativos restantes.
-// 4. Módulos de constantes.
 import { DEFAULT_API_BASE_URL } from "../constants/api.consts.js";
 
-// 6. Imports relativos restantes.
 import { parseApiBaseUrl } from "./api.utils.js";
 
 describe("parseApiBaseUrl", () => {

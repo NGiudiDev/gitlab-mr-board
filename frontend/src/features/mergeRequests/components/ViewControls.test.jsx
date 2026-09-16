@@ -1,8 +1,6 @@
-// 2. Dependencias externas.
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-// 6. Imports relativos restantes.
 import { ViewControls } from "./ViewControls.jsx";
 
 const PEOPLE = [

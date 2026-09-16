@@ -1,10 +1,8 @@
-// 1. Módulos estándar de Node.js.
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 
 import { parseGitlabUsername } from "../utils/gitlabUsername.js";
 import { hashPassword, verifyPassword } from "../utils/password.js";
 
-// 5. Utilidades.
 import { HttpError } from "../../../shared/httpError.js";
 
 const DEFAULT_SESSION_DURATION_DAYS = 7;

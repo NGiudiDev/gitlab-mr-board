@@ -1,10 +1,7 @@
-// 2. Dependencias externas.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-// 4. Módulos de constantes.
 import { TEST_GITLAB_USERNAME, TEST_PROJECT_IDS, TEST_TOKEN } from "../../../../test/constants.js";
 
-// 6. Imports relativos restantes.
 import { buildMergeRequest, createGitLabStub } from "../../../../test/fixtures/gitlab.js";
 import { getAllMergeRequests } from "./mergeRequestService.js";
 

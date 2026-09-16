@@ -1,4 +1,3 @@
-// 6. Imports relativos restantes.
 import { GitlabAccountSettingsSection } from "../../gitlabAccount/components/GitlabAccountSettingsSection.jsx";
 import { GitlabUserSettingsSection } from "../../gitlabUser/components/GitlabUserSettingsSection.jsx";
 import { fetchMergeRequests } from "../../mergeRequests/hooks/useMergeRequests.js";

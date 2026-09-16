@@ -1,4 +1,3 @@
-// 6. Imports relativos restantes.
 import { createConfiguredApp } from "./app.js";
 import config from "./config.js";
 

@@ -1,7 +1,5 @@
-// 2. Dependencias externas.
 import { describe, expect, it } from "vitest";
 
-// 6. Imports relativos restantes.
 import RateLimiter from "./rateLimiter.js";
 
 /** Promesa que se resuelve desde fuera, para controlar el orden de ejecución. */

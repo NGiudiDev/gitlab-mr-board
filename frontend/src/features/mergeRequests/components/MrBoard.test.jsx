@@ -1,9 +1,7 @@
-// 2. Dependencias externas.
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
-// 6. Imports relativos restantes.
 import { buildMergeRequest } from "../../../../test/fixtures/mergeRequests.js";
 import { MrBoard } from "./MrBoard.jsx";
 

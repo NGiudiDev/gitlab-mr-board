@@ -1,7 +1,5 @@
-// 2. Dependencias externas.
 import { useEffect, useSyncExternalStore } from "react";
 
-// 6. Imports relativos restantes.
 import { config } from "../../../config.js";
 
 const SESSION_EXPIRED_MESSAGE = "Tu sesión expiró. Volvé a ingresar.";

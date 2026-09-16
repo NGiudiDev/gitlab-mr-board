@@ -1,7 +1,5 @@
-// 2. Dependencias externas.
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-// 6. Imports relativos restantes.
 import { hashPassword, MINIMUM_PASSWORD_LENGTH, verifyPassword } from "./password.js";
 
 const PASSWORD = "una-contrasena-larga";

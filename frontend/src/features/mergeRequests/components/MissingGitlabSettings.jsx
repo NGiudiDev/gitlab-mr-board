@@ -1,8 +1,6 @@
-// 2. Dependencias externas.
 import { Link } from "react-router";
 
-// 6. Imports relativos restantes.
-import { APP_PATHS } from "../../../app/routes.js";
+import { APP_PATHS } from "../../../app/constants/routes.consts.js";
 import { BoardStatus } from "./BoardStatus.jsx";
 
 /** Explica cómo completar la configuración de GitLab que necesita el tablero. */

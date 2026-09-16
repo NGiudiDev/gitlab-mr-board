@@ -1,11 +1,8 @@
-// 2. Dependencias externas.
 import cors from "cors";
 import express from "express";
 
-// 5. Utilidades.
 import { createSecretCipher } from "./features/gitlabSettings/utils/encryption.js";
 
-// 6. Imports relativos restantes.
 import config from "./config.js";
 import { createAccountsRouter } from "./features/accounts/routes/accounts.js";
 import { createAccountRepository } from "./features/accounts/services/accountRepository.js";

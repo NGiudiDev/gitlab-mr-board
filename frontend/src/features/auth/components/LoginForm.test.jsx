@@ -1,9 +1,7 @@
-// 2. Dependencias externas.
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-// 6. Imports relativos restantes.
 import { LoginForm } from "./LoginForm.jsx";
 
 function renderLoginForm(props = {}) {

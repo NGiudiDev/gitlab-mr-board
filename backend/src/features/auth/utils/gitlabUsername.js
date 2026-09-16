@@ -1,4 +1,3 @@
-// 5. Utilidades.
 import { HttpError } from "../../../shared/httpError.js";
 
 // GitLab admite letras, números, guiones, guiones bajos y puntos, y exige que

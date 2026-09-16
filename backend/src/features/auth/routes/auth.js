@@ -1,10 +1,7 @@
-// 2. Dependencias externas.
 import express from "express";
 
-// 5. Utilidades.
 import { parseCookieHeader } from "../utils/cookies.js";
 
-// 6. Imports relativos restantes.
 import config from "../../../config.js";
 import { respondWithHttpError } from "../../../shared/httpError.js";
 

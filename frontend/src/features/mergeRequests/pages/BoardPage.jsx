@@ -1,4 +1,3 @@
-// 6. Imports relativos restantes.
 import { BOARD_STATUS_CLASSES, BoardStatus } from "../components/BoardStatus.jsx";
 import { MissingGitlabSettings } from "../components/MissingGitlabSettings.jsx";
 import { MrBoard } from "../components/MrBoard.jsx";
@@ -7,7 +6,12 @@ import { ViewControls } from "../components/ViewControls.jsx";
 import { useMergeRequests } from "../hooks/useMergeRequests.js";
 import { findPersonByUsername, mergeRequestsForPerson } from "../personalView.js";
 
-/** Construye el anuncio accesible correspondiente al estado actual del tablero. */
+/**
+ * Construye el anuncio accesible correspondiente al estado actual del tablero.
+ *
+ * @param {object} state Estado visible y filtros activos del tablero.
+ * @returns {string} Mensaje que debe anunciar la región viva.
+ */
 function announcementFor({
   canChoosePerson,
   error,

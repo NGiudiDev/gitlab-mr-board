@@ -1,4 +1,3 @@
-// 1. Módulos estándar de Node.js.
 import http from "node:http";
 
 /**

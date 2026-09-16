@@ -1,4 +1,3 @@
-// 6. Imports relativos restantes.
 import { HttpError } from "../../../shared/httpError.js";
 
 // Los IDs viajan dentro de la ruta de la API de GitLab: aceptar sólo números

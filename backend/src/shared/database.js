@@ -1,4 +1,3 @@
-// 2. Dependencias externas.
 import { neonConfig, Pool } from "@neondatabase/serverless";
 
 // El esquema se aplica en cada arranque: `IF NOT EXISTS` lo vuelve idempotente

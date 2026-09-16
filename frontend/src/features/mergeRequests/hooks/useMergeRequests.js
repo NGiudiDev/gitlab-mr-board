@@ -1,7 +1,5 @@
-// 2. Dependencias externas.
 import { useEffect, useSyncExternalStore } from "react";
 
-// 6. Imports relativos restantes.
 import { config } from "../../../config.js";
 import { expireSession } from "../../auth/hooks/useSession.js";
 

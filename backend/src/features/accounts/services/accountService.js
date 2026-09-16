@@ -1,9 +1,7 @@
-// 1. Módulos estándar de Node.js.
 import { randomUUID } from "node:crypto";
 
 import { generateInviteCode as generateRandomInviteCode, normalizeInviteCode } from "../utils/inviteCode.js";
 
-// 5. Utilidades.
 import { HttpError } from "../../../shared/httpError.js";
 
 const DEFAULT_ACCOUNT_NAME = "Mi equipo";
