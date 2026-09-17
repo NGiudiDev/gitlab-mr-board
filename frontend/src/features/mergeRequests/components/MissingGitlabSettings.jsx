@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 
 import { APP_PATHS } from "../../../app/constants/routes.consts.js";
+import { PRIMARY_BUTTON_CLASSES } from "../../../app/constants/styles.consts.js";
 import { BoardStatus } from "./BoardStatus.jsx";
 
 /** Explica cómo completar la configuración de GitLab que necesita el tablero. */
@@ -14,7 +15,7 @@ function MissingGitlabSettings({ canConfigure = false }) {
       </p>
       {canConfigure ? (
         <Link
-          className="rounded-md bg-accent px-3 py-2 text-[13px] font-semibold text-bg cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          className={PRIMARY_BUTTON_CLASSES}
           to={APP_PATHS.account}
         >
           Configurar en Mi cuenta

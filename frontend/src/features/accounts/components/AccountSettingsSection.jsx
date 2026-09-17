@@ -2,11 +2,17 @@
 import { useEffect, useState } from "react";
 
 import {
-  BUTTON_CLASSES,
+  DETAIL_LIST_CLASSES,
+  DETAIL_VALUE_CLASSES,
+  ERROR_ALERT_CLASSES,
   FIELD_CLASSES,
   HINT_CLASSES,
   LABEL_CLASSES,
-} from "../../../assets/constants.js";
+  PRIMARY_BUTTON_CLASSES,
+  SECTION_DESCRIPTION_CLASSES,
+  SECTION_HEADING_CLASSES,
+  SUCCESS_ALERT_CLASSES,
+} from "../../../app/constants/styles.consts.js";
 
 import { renameAccount } from "../hooks/useAccount.js";
 
@@ -55,22 +61,22 @@ export function AccountSettingsSection({ account = null }) {
 
   return (
     <section aria-labelledby="cuenta-heading">
-      <h2 className="text-base font-semibold text-text-primary mb-1" id="cuenta-heading">
+      <h2 className={SECTION_HEADING_CLASSES} id="cuenta-heading">
         Mi cuenta
       </h2>
 
-      <p className="text-[12.5px] text-text-muted mb-4">
+      <p className={SECTION_DESCRIPTION_CLASSES}>
         La cuenta agrupa a las personas que ven el mismo tablero, con los mismos proyectos y el mismo access token de GitLab.
       </p>
 
       {formError ? (
-        <p className="mb-4 rounded-md border border-conflict bg-conflict-soft px-3 py-2 text-[12.5px] text-text-primary" role="alert">
+        <p className={ERROR_ALERT_CLASSES} role="alert">
           {formError}
         </p>
       ) : null}
 
       {message ? (
-        <p className="mb-4 rounded-md border border-ready bg-ready-soft px-3 py-2 text-[12.5px] text-text-primary" role="status">
+        <p className={SUCCESS_ALERT_CLASSES} role="status">
           {message}
         </p>
       ) : null}
@@ -98,17 +104,17 @@ export function AccountSettingsSection({ account = null }) {
             </p>
           </div>
 
-          <button className={BUTTON_CLASSES} disabled={submitting} type="submit">
+          <button className={PRIMARY_BUTTON_CLASSES} disabled={submitting} type="submit">
             {submitting ? "Guardando..." : "Guardar el nombre"}
           </button>
         </form>
       ) : (
-        <dl className="text-[13px]">
+        <dl className={DETAIL_LIST_CLASSES}>
           <dt className={LABEL_CLASSES}>Cuenta</dt>
-          <dd className="mb-3 mt-1 text-text-primary">{account.name}</dd>
+          <dd className={`${DETAIL_VALUE_CLASSES} mb-3`}>{account.name}</dd>
 
           <dt className={LABEL_CLASSES}>Integrantes</dt>
-          <dd className="mt-1 text-text-primary">{membersLabel(account.memberCount)}</dd>
+          <dd className={DETAIL_VALUE_CLASSES}>{membersLabel(account.memberCount)}</dd>
         </dl>
       )}
     </section>

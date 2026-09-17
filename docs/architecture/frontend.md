@@ -15,6 +15,7 @@ El código se divide entre la composición general y las funcionalidades del dom
 - `src/app/App.jsx`: decide si mostrar las rutas públicas o privadas según la sesión y asocia cada URL con una page de su feature.
 - `src/app/components/AppLayout.jsx`: define el layout —barra superior, navegación entre secciones y contenido—; `AccountMenu.jsx` reúne allí la identidad, el equipo y el cierre de sesión.
 - `src/app/constants/routes.consts.js`: mantiene las URLs y los metadatos de navegación como única fuente de verdad.
+- `src/app/constants/styles.consts.js`: centraliza los patrones visuales compartidos por componentes de distintas features.
 - `src/features/accounts/`: contiene el store y los componentes de la cuenta, además de `pages/AccountPage.jsx`, descritos en el [dominio de cuentas](../domains/cuentas.md).
 - `src/features/auth/`: contiene el store de la sesión, el hook de la lista de usuarios, sus componentes y las pages de ingreso, alta, administración y perfil, descritos en el [dominio de autenticación](../domains/autenticacion.md).
 - `src/features/gitlabAccount/`: contiene la sección, el formulario, los estados de carga y lectura, y el hook de la configuración de GitLab de la cuenta, descritos en la [configuración de GitLab](../domains/configuracion-gitlab.md).

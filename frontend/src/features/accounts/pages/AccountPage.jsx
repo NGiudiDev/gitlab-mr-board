@@ -1,3 +1,8 @@
+import {
+  LOADING_TEXT_CLASSES,
+  PAGE_SECTIONS_CLASSES,
+} from "../../../app/constants/styles.consts.js";
+
 import { GitlabAccountSettingsSection } from "../../gitlabAccount/components/GitlabAccountSettingsSection.jsx";
 import { GitlabUserSettingsSection } from "../../gitlabUser/components/GitlabUserSettingsSection.jsx";
 import { fetchMergeRequests } from "../../mergeRequests/hooks/useMergeRequests.js";
@@ -17,10 +22,10 @@ function AccountPage({ onSaveGitlabUsername, submitting, user }) {
   const isAdmin = user.role === "admin";
 
   return (
-    <div className="mx-auto max-w-xl divide-y divide-border-soft [&>section]:py-5 [&>section:first-child]:pt-0 [&>section:last-child]:pb-0">
+    <div className={PAGE_SECTIONS_CLASSES}>
       {accountLoading && !account ? (
         <section aria-label="Estado de la cuenta">
-          <p className="text-[13px] text-text-muted" role="status">Cargando la cuenta...</p>
+          <p className={LOADING_TEXT_CLASSES} role="status">Cargando la cuenta...</p>
         </section>
       ) : accountError && !account ? (
         <section aria-label="Estado de la cuenta">

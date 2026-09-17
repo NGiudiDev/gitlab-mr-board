@@ -1,9 +1,18 @@
 import { useState } from "react";
 
+import {
+  ERROR_ALERT_CLASSES,
+  FIELD_CLASSES,
+  LABEL_CLASSES,
+  LOADING_TEXT_CLASSES,
+  PRIMARY_BUTTON_CLASSES,
+  SECTION_DESCRIPTION_CLASSES,
+  SECTION_HEADING_CLASSES,
+  SUCCESS_ALERT_CLASSES,
+} from "../../../app/constants/styles.consts.js";
+
 import { useUsers } from "../hooks/useUsers.js";
 
-const FIELD_CLASSES = "block w-full mt-1 rounded-md border border-control bg-surface-raised px-3 py-2 text-[13px] font-normal text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
-const LABEL_CLASSES = "block text-[12px] font-semibold text-text-muted";
 const ACTION_CLASSES = "px-2.5 py-1 rounded-md border border-control text-[12px] text-text-primary hover:border-accent cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
 const EMPTY_FORM = { email: "", displayName: "", password: "", role: "user" };
@@ -94,7 +103,7 @@ function CreateUserForm({ onCreate = () => {}, submitting = false }) {
       </div>
 
       <button
-        className="mt-3 rounded-md bg-accent px-3 py-2 text-[13px] font-semibold text-bg disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        className={`${PRIMARY_BUTTON_CLASSES} mt-3`}
         disabled={submitting}
         type="submit"
       >
@@ -158,21 +167,21 @@ export function UserAdmin({ currentEmail = "" }) {
 
   return (
     <section aria-labelledby="usuarios-heading" className="rounded-lg border border-border bg-surface p-5">
-      <h2 className="text-base font-semibold text-text-primary mb-1" id="usuarios-heading">
+      <h2 className={SECTION_HEADING_CLASSES} id="usuarios-heading">
         Usuarios
       </h2>
-      <p className="text-[12.5px] text-text-muted mb-4">
+      <p className={SECTION_DESCRIPTION_CLASSES}>
         Las personas de tu cuenta. Todas ven el mismo tablero: no tienen que cargar credenciales de GitLab.
       </p>
 
       {actionError || error ? (
-        <p className="mb-4 rounded-md border border-conflict bg-conflict-soft px-3 py-2 text-[12.5px] text-text-primary" role="alert">
+        <p className={ERROR_ALERT_CLASSES} role="alert">
           {actionError ?? error}
         </p>
       ) : null}
 
       {message ? (
-        <p className="mb-4 rounded-md border border-ready bg-ready-soft px-3 py-2 text-[12.5px] text-text-primary" role="status">
+        <p className={SUCCESS_ALERT_CLASSES} role="status">
           {message}
         </p>
       ) : null}
@@ -180,7 +189,7 @@ export function UserAdmin({ currentEmail = "" }) {
       <CreateUserForm onCreate={handleCreate} submitting={busyEmail !== null} />
 
       {loading ? (
-        <p className="text-[13px] text-text-muted" role="status">Cargando usuarios...</p>
+        <p className={LOADING_TEXT_CLASSES} role="status">Cargando usuarios...</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-[12.5px]">

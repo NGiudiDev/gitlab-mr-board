@@ -1,7 +1,17 @@
 import { useState } from "react";
 
-const FIELD_CLASSES = "block w-full mt-1 rounded-md border border-control bg-surface-raised px-3 py-2 text-[13px] font-normal text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
-const LABEL_CLASSES = "block text-[12px] font-semibold text-text-muted mb-3";
+import {
+  AUTH_FORM_CLASSES,
+  AUTH_FORM_DESCRIPTION_CLASSES,
+  AUTH_FORM_HEADING_CLASSES,
+  AUTH_FORM_SUBMIT_BUTTON_CLASSES,
+  AUTH_FORM_SWITCH_CLASSES,
+  BUTTON_LINK_CLASSES,
+  ERROR_ALERT_CLASSES,
+  FIELD_CLASSES,
+  LABEL_CLASSES,
+} from "../../../app/constants/styles.consts.js";
+
 const CHOICE_CLASSES = "flex-1 rounded-md border px-3 py-2 text-[12.5px] cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
 const MINIMUM_PASSWORD_LENGTH = 8;
@@ -57,18 +67,18 @@ export function RegisterForm({ error = null, onShowLogin = () => {}, onSubmit = 
   return (
     <form
       aria-labelledby="registro-heading"
-      className="w-full max-w-sm mx-auto mt-16 rounded-lg border border-border bg-surface p-6"
+      className={AUTH_FORM_CLASSES}
       onSubmit={handleSubmit}
     >
-      <h1 className="text-lg font-semibold text-text-primary mb-1" id="registro-heading">
+      <h1 className={AUTH_FORM_HEADING_CLASSES} id="registro-heading">
         Crear una cuenta
       </h1>
-      <p className="text-[12.5px] text-text-muted mb-5">
+      <p className={AUTH_FORM_DESCRIPTION_CLASSES}>
         Ingresá tu email y una contraseña de al menos {MINIMUM_PASSWORD_LENGTH} caracteres.
       </p>
 
       {visibleError ? (
-        <p className="mb-4 rounded-md border border-conflict bg-conflict-soft px-3 py-2 text-[12.5px] text-text-primary" role="alert">
+        <p className={ERROR_ALERT_CLASSES} role="alert">
           {visibleError}
         </p>
       ) : null}
@@ -99,7 +109,7 @@ export function RegisterForm({ error = null, onShowLogin = () => {}, onSubmit = 
 
       {joinExisting ? (
         <>
-          <label className={LABEL_CLASSES} htmlFor="registro-invitacion">
+          <label className={`${LABEL_CLASSES} mb-3`} htmlFor="registro-invitacion">
             Código de invitación
             <input
               aria-describedby="registro-invitacion-ayuda"
@@ -120,7 +130,7 @@ export function RegisterForm({ error = null, onShowLogin = () => {}, onSubmit = 
         </>
       ) : (
         <>
-          <label className={LABEL_CLASSES} htmlFor="registro-cuenta">
+          <label className={`${LABEL_CLASSES} mb-3`} htmlFor="registro-cuenta">
             Nombre del equipo (opcional)
             <input
               aria-describedby="registro-cuenta-ayuda"
@@ -139,7 +149,7 @@ export function RegisterForm({ error = null, onShowLogin = () => {}, onSubmit = 
         </>
       )}
 
-      <label className={LABEL_CLASSES} htmlFor="registro-email">
+      <label className={`${LABEL_CLASSES} mb-3`} htmlFor="registro-email">
         Email
         <input
           autoCapitalize="none"
@@ -155,7 +165,7 @@ export function RegisterForm({ error = null, onShowLogin = () => {}, onSubmit = 
           value={email}
         />
       </label>
-      <label className={LABEL_CLASSES} htmlFor="registro-nombre">
+      <label className={`${LABEL_CLASSES} mb-3`} htmlFor="registro-nombre">
         Nombre visible (opcional)
         <input
           autoComplete="name"
@@ -169,7 +179,7 @@ export function RegisterForm({ error = null, onShowLogin = () => {}, onSubmit = 
         />
       </label>
 
-      <label className={LABEL_CLASSES} htmlFor="registro-password">
+      <label className={`${LABEL_CLASSES} mb-3`} htmlFor="registro-password">
         Contraseña
         <input
           autoComplete="new-password"
@@ -184,7 +194,7 @@ export function RegisterForm({ error = null, onShowLogin = () => {}, onSubmit = 
         />
       </label>
 
-      <label className={LABEL_CLASSES} htmlFor="registro-confirmacion">
+      <label className={`${LABEL_CLASSES} mb-3`} htmlFor="registro-confirmacion">
         Repetí la contraseña
         <input
           autoComplete="new-password"
@@ -200,17 +210,17 @@ export function RegisterForm({ error = null, onShowLogin = () => {}, onSubmit = 
       </label>
 
       <button
-        className="w-full mt-2 rounded-md bg-accent px-3 py-2 text-[13px] font-semibold text-bg disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        className={AUTH_FORM_SUBMIT_BUTTON_CLASSES}
         disabled={submitting}
         type="submit"
       >
         {submitting ? "Creando la cuenta..." : "Crear cuenta"}
       </button>
 
-      <p className="mt-4 text-center text-[12.5px] text-text-muted">
+      <p className={AUTH_FORM_SWITCH_CLASSES}>
         ¿Ya tenés cuenta?{" "}
         <button
-          className="text-accent underline cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          className={BUTTON_LINK_CLASSES}
           onClick={onShowLogin}
           type="button"
         >

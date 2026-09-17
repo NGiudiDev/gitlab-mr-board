@@ -1,8 +1,8 @@
-const BOARD_STATUS_CLASSES = "text-center text-text-muted text-[13px] py-16 border border-dashed border-border rounded-lg bg-surface";
+import { STATUS_PANEL_CLASSES } from "../../../app/constants/styles.consts.js";
 
 /** Presenta de forma consistente un estado informativo del tablero. */
 function BoardStatus({ children, role = "status" }) {
-  return <div className={BOARD_STATUS_CLASSES} role={role}>{children}</div>;
+  return <div className={STATUS_PANEL_CLASSES} role={role}>{children}</div>;
 }
 
-export { BOARD_STATUS_CLASSES, BoardStatus };
+export { BoardStatus };

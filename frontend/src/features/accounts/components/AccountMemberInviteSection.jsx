@@ -2,11 +2,14 @@
 import { useState } from "react";
 
 import {
+  ERROR_ALERT_CLASSES,
   FIELD_CLASSES,
   HINT_CLASSES,
   LABEL_CLASSES,
   SECONDARY_BUTTON_CLASSES,
-} from "../../../assets/constants.js";
+  SECTION_HEADING_CLASSES,
+  SUCCESS_ALERT_CLASSES,
+} from "../../../app/constants/styles.consts.js";
 
 export function AccountMemberInviteSection({
   inviteCode = "",
@@ -36,7 +39,7 @@ export function AccountMemberInviteSection({
 
   return (
     <section aria-labelledby="invitacion-heading">
-      <h2 className="mb-1 text-base font-semibold text-text-primary" id="invitacion-heading">
+      <h2 className={SECTION_HEADING_CLASSES} id="invitacion-heading">
         Invitar al equipo
       </h2>
 
@@ -45,13 +48,13 @@ export function AccountMemberInviteSection({
       </p>
 
       {error ? (
-        <p className="mb-4 rounded-md border border-conflict bg-conflict-soft px-3 py-2 text-[12.5px] text-text-primary" role="alert">
+        <p className={ERROR_ALERT_CLASSES} role="alert">
           {error}
         </p>
       ) : null}
 
       {message ? (
-        <p className="mb-4 rounded-md border border-ready bg-ready-soft px-3 py-2 text-[12.5px] text-text-primary" role="status">
+        <p className={SUCCESS_ALERT_CLASSES} role="status">
           {message}
         </p>
       ) : null}

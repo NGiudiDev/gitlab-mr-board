@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 
-import { FIELD_CLASSES, HINT_CLASSES, LABEL_CLASSES } from "../../../assets/constants.js";
+import {
+  ERROR_ALERT_CLASSES,
+  FIELD_CLASSES,
+  HINT_CLASSES,
+  LABEL_CLASSES,
+  PRIMARY_BUTTON_CLASSES,
+  SUCCESS_ALERT_CLASSES,
+} from "../../../app/constants/styles.consts.js";
 
 /**
  * Edita los proyectos y el access token compartidos por la cuenta.
@@ -53,13 +60,13 @@ export function GitlabAccountSettingsForm({
   return (
     <form onSubmit={handleSubmit}>
       {formError ? (
-        <p className="mb-4 rounded-md border border-conflict bg-conflict-soft px-3 py-2 text-[12.5px] text-text-primary" role="alert">
+        <p className={ERROR_ALERT_CLASSES} role="alert">
           {formError}
         </p>
       ) : null}
 
       {message ? (
-        <p className="mb-4 rounded-md border border-ready bg-ready-soft px-3 py-2 text-[12.5px] text-text-primary" role="status">
+        <p className={SUCCESS_ALERT_CLASSES} role="status">
           {message}
         </p>
       ) : null}
@@ -110,7 +117,7 @@ export function GitlabAccountSettingsForm({
       </div>
 
       <button
-        className="rounded-md bg-accent px-3 py-2 text-[13px] font-semibold text-bg disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        className={PRIMARY_BUTTON_CLASSES}
         disabled={saving}
         type="submit"
       >

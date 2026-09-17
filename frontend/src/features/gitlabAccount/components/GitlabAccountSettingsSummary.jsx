@@ -1,20 +1,25 @@
-import { LABEL_CLASSES } from "../../../assets/constants.js";
+import {
+  DETAIL_LIST_CLASSES,
+  DETAIL_VALUE_CLASSES,
+  LABEL_CLASSES,
+  LOADING_TEXT_CLASSES,
+} from "../../../app/constants/styles.consts.js";
 
 export function GitlabAccountSettingsSummary({ settings = null }) {
   if (!settings) {
     return (
-      <p className="text-[13px] text-text-muted" role="status">
+      <p className={LOADING_TEXT_CLASSES} role="status">
         Todavía no hay proyectos ni access token cargados. Pedíselo a quien administra la cuenta.
       </p>
     );
   }
 
   return (
-    <dl className="text-[13px]">
+    <dl className={DETAIL_LIST_CLASSES}>
       <dt className={LABEL_CLASSES}>Proyectos</dt>
-      <dd className="mb-3 mt-1 font-mono text-text-primary">{settings.projectIds.join(", ")}</dd>
+      <dd className={`${DETAIL_VALUE_CLASSES} mb-3 font-mono`}>{settings.projectIds.join(", ")}</dd>
       <dt className={LABEL_CLASSES}>Access token</dt>
-      <dd className="mt-1 text-text-primary">
+      <dd className={DETAIL_VALUE_CLASSES}>
         Guardado, terminado en «{settings.tokenHint}».
       </dd>
     </dl>

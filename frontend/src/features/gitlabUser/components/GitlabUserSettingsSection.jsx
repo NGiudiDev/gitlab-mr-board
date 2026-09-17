@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
 
 import {
-  BUTTON_CLASSES,
+  ERROR_ALERT_CLASSES,
   FIELD_CLASSES,
   HINT_CLASSES,
   LABEL_CLASSES,
-} from "../../../assets/constants.js";
+  PRIMARY_BUTTON_CLASSES,
+  SECTION_DESCRIPTION_CLASSES,
+  SECTION_HEADING_CLASSES,
+  SUCCESS_ALERT_CLASSES,
+} from "../../../app/constants/styles.consts.js";
 
 /**
  * Nickname de GitLab de la propia persona.
@@ -44,21 +48,21 @@ export function GitlabUserSettingsSection({ onSave = () => {}, submitting = fals
 
   return (
     <section aria-labelledby="identidad-heading">
-      <h2 className="text-base font-semibold text-text-primary mb-1" id="identidad-heading">
+      <h2 className={SECTION_HEADING_CLASSES} id="identidad-heading">
         Usuario de GitLab
       </h2>
-      <p className="text-[12.5px] text-text-muted mb-4">
+      <p className={SECTION_DESCRIPTION_CLASSES}>
         Con tu nickname el tablero reconoce cuáles de los merge requests del equipo son tuyos.
       </p>
 
       {error ? (
-        <p className="mb-4 rounded-md border border-conflict bg-conflict-soft px-3 py-2 text-[12.5px] text-text-primary" role="alert">
+        <p className={ERROR_ALERT_CLASSES} role="alert">
           {error}
         </p>
       ) : null}
 
       {message ? (
-        <p className="mb-4 rounded-md border border-ready bg-ready-soft px-3 py-2 text-[12.5px] text-text-primary" role="status">
+        <p className={SUCCESS_ALERT_CLASSES} role="status">
           {message}
         </p>
       ) : null}
@@ -87,7 +91,7 @@ export function GitlabUserSettingsSection({ onSave = () => {}, submitting = fals
         </div>
 
         <button
-          className={BUTTON_CLASSES}
+          className={PRIMARY_BUTTON_CLASSES}
           disabled={submitting}
           type="submit"
         >

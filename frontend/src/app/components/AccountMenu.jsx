@@ -7,6 +7,7 @@ import { Link } from "react-router";
 import { getUserInitials } from "../../features/user/utils/user.utils.js";
 
 import { APP_PATHS } from "../constants/routes.consts.js";
+import { MENU_ICON_CLASSES, MENU_ITEM_CLASSES } from "../constants/styles.consts.js";
 
 export function AccountMenu(props) {
   const {
@@ -123,13 +124,13 @@ export function AccountMenu(props) {
 
           <div className="p-2">
             <Link
-              className="flex min-h-10 w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm text-text-primary hover:bg-surface-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              className={MENU_ITEM_CLASSES}
               onClick={closeMenu}
               to={APP_PATHS.profile}
             >
               <svg
                 aria-hidden="true"
-                className="h-4 w-4 text-text-muted"
+                className={MENU_ICON_CLASSES}
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="1.7"
@@ -141,13 +142,13 @@ export function AccountMenu(props) {
             </Link>
 
             <Link
-              className="flex min-h-10 w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm text-text-primary hover:bg-surface-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              className={MENU_ITEM_CLASSES}
               onClick={closeMenu}
               to={APP_PATHS.account}
             >
               <svg
                 aria-hidden="true"
-                className="h-4 w-4 text-text-muted"
+                className={MENU_ICON_CLASSES}
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="1.7"
@@ -159,13 +160,13 @@ export function AccountMenu(props) {
             </Link>
 
             <button
-              className="flex min-h-10 w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm text-text-primary hover:bg-surface-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              className={MENU_ITEM_CLASSES}
               onClick={handleLogout}
               type="button"
             >
               <svg
                 aria-hidden="true"
-                className="h-4 w-4 text-text-muted"
+                className={MENU_ICON_CLASSES}
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="1.7"

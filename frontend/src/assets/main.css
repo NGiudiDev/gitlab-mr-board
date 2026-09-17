@@ -10,9 +10,6 @@ a {
   color: #45B8C9;
   text-decoration: none;
 }
-a:hover {
-  text-decoration: underline;
-}
 
 @media (prefers-reduced-motion: reduce) {
   *,

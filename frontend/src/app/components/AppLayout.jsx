@@ -1,9 +1,7 @@
 import { AccountMenu } from "./AccountMenu.jsx";
 import { NavLink } from "react-router";
 
-import { getNavigationSectionsForUser } from "../constants/routes.consts.js";
-
-const NAV_ITEM_CLASSES = "block rounded-md px-2.5 py-1 text-[13px] cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+import { getNavigationSectionsForUser } from "../utils/routes.utils.js";
 
 export function AppLayout(props) {
   const {
@@ -32,7 +30,7 @@ export function AppLayout(props) {
                   return (
                     <li key={section.id}>
                       <NavLink
-                        className={({ isActive }) => `${NAV_ITEM_CLASSES} ${isActive
+                        className={({ isActive }) => `block rounded-md px-2.5 py-1 text-[13px] cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${isActive
                           ? "bg-surface-raised font-semibold text-text-primary"
                           : "text-text-muted hover:text-text-primary"}`}
                         to={section.path}

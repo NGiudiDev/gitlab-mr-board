@@ -1,7 +1,13 @@
 import { useState } from "react";
 
-const FIELD_CLASSES = "block w-full mt-1 rounded-md border border-control bg-surface-raised px-3 py-2 text-[13px] font-normal text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
-const LABEL_CLASSES = "block text-[12px] font-semibold text-text-muted mb-3";
+import {
+  ERROR_ALERT_CLASSES,
+  FIELD_CLASSES,
+  LABEL_CLASSES,
+  PRIMARY_BUTTON_CLASSES,
+  SECTION_DESCRIPTION_CLASSES,
+  SECTION_HEADING_CLASSES,
+} from "../../../app/constants/styles.consts.js";
 
 /**
  * Cambio de la propia contraseña, pidiendo la actual como confirmación.
@@ -34,21 +40,21 @@ export function PasswordPanel({ onChangePassword = () => {}, submitting = false,
 
   return (
     <section aria-labelledby="contrasena-heading">
-      <h2 className="text-base font-semibold text-text-primary mb-1" id="contrasena-heading">
+      <h2 className={SECTION_HEADING_CLASSES} id="contrasena-heading">
         Mi contraseña
       </h2>
-      <p className="text-[12.5px] text-text-muted mb-4">
+      <p className={SECTION_DESCRIPTION_CLASSES}>
         Al cambiarla se cierran todas tus sesiones, así que vas a tener que ingresar de nuevo.
       </p>
 
       {error ? (
-        <p className="mb-4 rounded-md border border-conflict bg-conflict-soft px-3 py-2 text-[12.5px] text-text-primary" role="alert">
+        <p className={ERROR_ALERT_CLASSES} role="alert">
           {error}
         </p>
       ) : null}
 
       <form onSubmit={handleSubmit}>
-        <label className={LABEL_CLASSES} htmlFor="cuenta-actual">
+        <label className={`${LABEL_CLASSES} mb-3`} htmlFor="cuenta-actual">
           Contraseña actual
           <input
             autoComplete="current-password"
@@ -61,7 +67,7 @@ export function PasswordPanel({ onChangePassword = () => {}, submitting = false,
           />
         </label>
 
-        <label className={LABEL_CLASSES} htmlFor="cuenta-nueva">
+        <label className={`${LABEL_CLASSES} mb-3`} htmlFor="cuenta-nueva">
           Contraseña nueva
           <input
             autoComplete="new-password"
@@ -75,7 +81,7 @@ export function PasswordPanel({ onChangePassword = () => {}, submitting = false,
           />
         </label>
 
-        <label className={LABEL_CLASSES} htmlFor="cuenta-confirmacion">
+        <label className={`${LABEL_CLASSES} mb-3`} htmlFor="cuenta-confirmacion">
           Repetí la contraseña nueva
           <input
             autoComplete="new-password"
@@ -90,7 +96,7 @@ export function PasswordPanel({ onChangePassword = () => {}, submitting = false,
         </label>
 
         <button
-          className="rounded-md bg-accent px-3 py-2 text-[13px] font-semibold text-bg disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          className={PRIMARY_BUTTON_CLASSES}
           disabled={submitting}
           type="submit"
         >

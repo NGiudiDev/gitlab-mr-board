@@ -1,3 +1,5 @@
+import { PAGE_SECTIONS_CLASSES } from "../../../app/constants/styles.consts.js";
+
 import { PasswordPanel } from "../components/PasswordPanel.jsx";
 import { ProfilePanel } from "../components/ProfilePanel.jsx";
 
@@ -5,7 +7,7 @@ export function ProfilePage(props) {
   const { onChangePassword, onSaveProfile, submitting, user } = props;
 
   return (
-    <div className="mx-auto max-w-xl divide-y divide-border-soft [&>section]:py-5 [&>section:first-child]:pt-0 [&>section:last-child]:pb-0">
+    <div className={PAGE_SECTIONS_CLASSES}>
       <ProfilePanel onSave={onSaveProfile} submitting={submitting} user={user} />
       <PasswordPanel
         onChangePassword={onChangePassword}

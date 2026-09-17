@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
 
+import {
+  FIELD_CLASSES,
+  LABEL_CLASSES,
+  PRIMARY_BUTTON_CLASSES,
+  SECTION_DESCRIPTION_CLASSES,
+  SECTION_HEADING_CLASSES,
+} from "../../../app/constants/styles.consts.js";
+
 /**
  * Permite editar el nombre visible y el email de la propia persona.
  */
@@ -41,20 +49,20 @@ export function ProfilePanel({
 
   return (
     <section aria-labelledby="perfil-heading">
-      <h2 className="mb-1 text-base font-semibold text-text-primary" id="perfil-heading">
+      <h2 className={SECTION_HEADING_CLASSES} id="perfil-heading">
         Mi perfil
       </h2>
-      <p className="mb-4 text-[12.5px] text-text-muted">
+      <p className={SECTION_DESCRIPTION_CLASSES}>
         Estos datos identifican tu sesión. Si cambiás el email, usá el nuevo la próxima vez que ingreses.
       </p>
 
       <form onSubmit={handleSubmit}>
-        <label className="mb-3 block text-[12px] font-semibold text-text-muted" htmlFor="perfil-email">
+        <label className={`${LABEL_CLASSES} mb-3`} htmlFor="perfil-email">
           Email
           <input
             autoCapitalize="none"
             autoComplete="email"
-            className="mt-1 block w-full rounded-md border border-control bg-surface-raised px-3 py-2 text-[13px] font-normal text-text-primary disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className={FIELD_CLASSES}
             disabled={submitting}
             id="perfil-email"
             maxLength={254}
@@ -67,11 +75,11 @@ export function ProfilePanel({
           />
         </label>
 
-        <label className="mb-1 block text-[12px] font-semibold text-text-muted" htmlFor="perfil-display-name">
+        <label className={`${LABEL_CLASSES} mb-1`} htmlFor="perfil-display-name">
           Nombre visible
           <input
             autoComplete="name"
-            className="mt-1 block w-full rounded-md border border-control bg-surface-raised px-3 py-2 text-[13px] font-normal text-text-primary disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className={FIELD_CLASSES}
             disabled={submitting}
             id="perfil-display-name"
             name="displayName"
@@ -86,7 +94,7 @@ export function ProfilePanel({
         {notice ? <p className="mt-3 text-xs text-ready" role="status">{notice}</p> : null}
 
         <button
-          className="mt-4 rounded-md bg-accent px-3 py-2 text-[13px] font-semibold text-bg disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          className={`${PRIMARY_BUTTON_CLASSES} mt-4`}
           disabled={submitting}
           type="submit"
         >

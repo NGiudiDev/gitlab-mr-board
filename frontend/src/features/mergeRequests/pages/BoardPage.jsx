@@ -1,4 +1,6 @@
-import { BOARD_STATUS_CLASSES, BoardStatus } from "../components/BoardStatus.jsx";
+import { STATUS_PANEL_CLASSES } from "../../../app/constants/styles.consts.js";
+
+import { BoardStatus } from "../components/BoardStatus.jsx";
 import { MissingGitlabSettings } from "../components/MissingGitlabSettings.jsx";
 import { MrBoard } from "../components/MrBoard.jsx";
 import { TopBar } from "../components/TopBar.jsx";
@@ -103,7 +105,7 @@ function BoardPage({ canChoosePerson = false, canConfigureGitlab = false }) {
       </div>
 
       {failedWithoutData ? (
-        <div className={BOARD_STATUS_CLASSES} role="alert">
+        <div className={STATUS_PANEL_CLASSES} role="alert">
           <p className="mb-2">No se pudo conectar al backend.</p>
           <p className="text-conflict text-[12px]">{error}</p>
         </div>

@@ -1,3 +1,9 @@
+import {
+  ERROR_ALERT_CLASSES,
+  SECTION_DESCRIPTION_CLASSES,
+  SECTION_HEADING_CLASSES,
+} from "../../../app/constants/styles.consts.js";
+
 import { useGitlabSettings } from "../hooks/useGitlabSettings.js";
 
 import { GitlabAccountSettingsForm } from "./GitlabAccountSettingsForm.jsx";
@@ -20,18 +26,18 @@ export function GitlabAccountSettingsSection({
 
   return (
     <section aria-labelledby="gitlab-heading">
-      <h2 className="text-base font-semibold text-text-primary mb-1" id="gitlab-heading">
+      <h2 className={SECTION_HEADING_CLASSES} id="gitlab-heading">
         Cuenta de GitLab
       </h2>
 
-      <p className="text-[12.5px] text-text-muted mb-4">
+      <p className={SECTION_DESCRIPTION_CLASSES}>
         {canEdit
           ? "El tablero muestra los merge requests de estos proyectos. Los cargás una vez y los ve todo el equipo."
           : "El tablero se alimenta de estos proyectos. Los carga quien administra la cuenta, así que no tenés que cargar tu propio access token."}
       </p>
 
       {error ? (
-        <p className="mb-4 rounded-md border border-conflict bg-conflict-soft px-3 py-2 text-[12.5px] text-text-primary" role="alert">
+        <p className={ERROR_ALERT_CLASSES} role="alert">
           {error}
         </p>
       ) : null}

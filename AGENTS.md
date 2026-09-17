@@ -90,6 +90,8 @@
 
 - Estilos con **Tailwind CSS** — nada de CSS custom salvo para lo que Tailwind no cubra.
 
+- Los patrones completos de clases Tailwind reutilizados por componentes de distintas features viven en `frontend/src/app/constants/styles.consts.js`. Mantener inline las utilidades aisladas y los ajustes exclusivos de un componente; `frontend/src/assets/` queda para CSS y recursos estáticos.
+
 - **El estado compartido va al store**: `hooks/useMergeRequests.js` para el tablero, `features/auth/hooks/useSession.js` para la sesión y `features/accounts/hooks/useAccount.js` para la cuenta, los tres con `useSyncExternalStore`; `useState` queda para estado local del componente. Al cerrar sesión hay que reiniciarlos todos. Toda petición al backend viaja con `credentials: 'include'`.
 
 - Al agregar o renombrar una clasificación, mantener sincronizadas la clasificación que calcula `mergeRequestRules.js` en el backend, las columnas de `mergeRequestColumns.js` y `docs/domains/merge-requests.md`. Al cambiar la asignación de responsables, modificar `computeResponsiblePeople`, cubrir las combinaciones en `mergeRequestRules.test.js` y actualizar ese mismo documento.

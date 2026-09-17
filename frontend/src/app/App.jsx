@@ -14,8 +14,7 @@ import { resetStore } from "../features/mergeRequests/hooks/useMergeRequests.js"
 import { resetAccountStore } from "../features/accounts/hooks/useAccount.js";
 
 import { APP_PATHS } from "./constants/routes.consts.js";
-
-const SESSION_STATUS_CLASSES = "text-center text-text-muted text-[13px] py-16 border border-dashed border-border rounded-lg bg-surface";
+import { STATUS_PANEL_CLASSES } from "./constants/styles.consts.js";
 
 export function App() {
   const navigate = useNavigate();
@@ -31,7 +30,7 @@ export function App() {
   if (session.status === "checking") {
     return (
       <AppLayout>
-        <div className={SESSION_STATUS_CLASSES} role="status">
+        <div className={STATUS_PANEL_CLASSES} role="status">
           Verificando tu sesión...
         </div>
       </AppLayout>
