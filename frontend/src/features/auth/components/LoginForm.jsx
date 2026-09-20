@@ -13,12 +13,6 @@ import {
   SUCCESS_ALERT_CLASSES,
 } from "../../../app/constants/styles.consts.js";
 
-/**
- * Formulario de ingreso al tablero.
- *
- * El estado de las credenciales es local: sólo lo necesita este componente y
- * no debe sobrevivir al envío.
- */
 export function LoginForm(props) {
   const {
     error = null,

@@ -45,6 +45,7 @@ export function PasswordPanel(props) {
       <h2 className={SECTION_HEADING_CLASSES} id="contrasena-heading">
         Mi contraseña
       </h2>
+
       <p className={SECTION_DESCRIPTION_CLASSES}>
         Al cambiarla se cierran todas tus sesiones, así que vas a tener que ingresar de nuevo.
       </p>

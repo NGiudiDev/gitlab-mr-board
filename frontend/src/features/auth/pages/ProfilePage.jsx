@@ -9,6 +9,7 @@ export function ProfilePage(props) {
   return (
     <div className={PAGE_SECTIONS_CLASSES}>
       <ProfilePanel onSave={onSaveProfile} submitting={submitting} user={user} />
+
       <PasswordPanel
         onChangePassword={onChangePassword}
         submitting={submitting}

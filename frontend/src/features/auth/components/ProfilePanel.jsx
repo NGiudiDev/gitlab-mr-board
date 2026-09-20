@@ -8,9 +8,6 @@ import {
   SECTION_HEADING_CLASSES,
 } from "../../../app/constants/styles.consts.js";
 
-/**
- * Permite editar el nombre visible y el email de la propia persona.
- */
 export function ProfilePanel(props) {
   const {
     onSave = async () => null,
