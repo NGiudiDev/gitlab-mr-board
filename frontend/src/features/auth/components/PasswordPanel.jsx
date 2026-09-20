@@ -18,7 +18,9 @@ import {
  * El estado de las contraseñas es local: sólo lo necesita esta pantalla y no
  * debe sobrevivir al envío.
  */
-export function PasswordPanel({ onChangePassword = () => {}, submitting = false, user = null }) {
+export function PasswordPanel(props) {
+  const { onChangePassword = () => {}, submitting = false, user = null } = props;
+
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");

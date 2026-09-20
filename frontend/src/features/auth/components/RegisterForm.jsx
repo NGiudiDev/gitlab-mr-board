@@ -26,7 +26,9 @@ const MINIMUM_PASSWORD_LENGTH = 8;
  * Valida en el navegador lo mismo que el backend para avisar antes de enviar,
  * pero la regla que manda es la del backend.
  */
-export function RegisterForm({ error = null, onShowLogin = () => {}, onSubmit = () => {}, submitting = false }) {
+export function RegisterForm(props) {
+  const { error = null, onShowLogin = () => {}, onSubmit = () => {}, submitting = false } = props;
+
   const [joinExisting, setJoinExisting] = useState(true);
   const [inviteCode, setInviteCode] = useState("");
   const [accountName, setAccountName] = useState("");

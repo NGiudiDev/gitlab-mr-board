@@ -20,7 +20,9 @@ function groupByRepo(mergeRequests, allProjects) {
     .map((repo) => ({ repo, mrs: byRepo[repo] }));
 }
 
-export function MrBoard({ allProjects = [], mergeRequests }) {
+export function MrBoard(props) {
+  const { allProjects = [], mergeRequests } = props;
+
   const [expanded, setExpanded] = useState({});
 
   function toggle(repo) {

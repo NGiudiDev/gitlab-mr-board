@@ -5,7 +5,9 @@ import {
   LOADING_TEXT_CLASSES,
 } from "../../../app/constants/styles.consts.js";
 
-export function GitlabAccountSettingsSummary({ settings = null }) {
+export function GitlabAccountSettingsSummary(props) {
+  const { settings = null } = props;
+
   if (!settings) {
     return (
       <p className={LOADING_TEXT_CLASSES} role="status">

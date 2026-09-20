@@ -1,4 +1,6 @@
-export function GitlabAccountSettingsSkeleton({ canEdit = false }) {
+export function GitlabAccountSettingsSkeleton(props) {
+  const { canEdit = false } = props;
+
   return (
     <div aria-busy="true" role="status">
       <span className="sr-only">Cargando la configuración...</span>

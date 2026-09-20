@@ -40,7 +40,9 @@ function announcementFor({
 }
 
 /** Presenta el tablero y sus estados de carga, error y vista personal. */
-function BoardPage({ canChoosePerson = false, canConfigureGitlab = false }) {
+export function BoardPage(props) {
+  const { canChoosePerson = false, canConfigureGitlab = false } = props;
+
   const {
     mergeRequests,
     meta,
@@ -157,5 +159,3 @@ function BoardPage({ canChoosePerson = false, canConfigureGitlab = false }) {
     </>
   );
 }
-
-export { BoardPage };

@@ -19,13 +19,15 @@ import {
  * El estado de las credenciales es local: sólo lo necesita este componente y
  * no debe sobrevivir al envío.
  */
-export function LoginForm({
-  error = null,
-  notice = null,
-  onShowRegister = () => {},
-  onSubmit = () => {},
-  submitting = false,
-}) {
+export function LoginForm(props) {
+  const {
+    error = null,
+    notice = null,
+    onShowRegister = () => {},
+    onSubmit = () => {},
+    submitting = false,
+  } = props;
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 

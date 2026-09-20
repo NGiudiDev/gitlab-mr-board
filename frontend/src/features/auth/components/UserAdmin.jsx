@@ -24,7 +24,9 @@ function formatDate(isoDate) {
   return new Date(isoDate).toLocaleDateString("es-AR");
 }
 /** Alta de usuarios con rol elegible, sólo visible para administradores. */
-function CreateUserForm({ onCreate = () => {}, submitting = false }) {
+function CreateUserForm(props) {
+  const { onCreate = () => {}, submitting = false } = props;
+
   const [form, setForm] = useState(EMPTY_FORM);
 
   function updateField(field) {
@@ -121,7 +123,9 @@ function CreateUserForm({ onCreate = () => {}, submitting = false }) {
  * valida el rol y la cuenta en cada ruta; esconder los controles es sólo una
  * cortesía de la interfaz.
  */
-export function UserAdmin({ currentEmail = "" }) {
+export function UserAdmin(props) {
+  const { currentEmail = "" } = props;
+
   const { users, loading, error, createUser, setStatus } = useUsers();
   const [actionError, setActionError] = useState(null);
   const [message, setMessage] = useState(null);

@@ -9,7 +9,9 @@ function formatTime(date) {
   return date.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
 }
 
-function StatusText({ error, lastFetched, loading }) {
+function StatusText(props) {
+  const { error, lastFetched, loading } = props;
+
   if (loading) return <span>Actualizando...</span>;
   if (error) return <span>Error</span>;
   if (lastFetched) return <span>{formatTime(lastFetched)}</span>;
@@ -21,7 +23,9 @@ function StatusText({ error, lastFetched, loading }) {
  * manual. El título de la aplicación lo presenta el layout, así que esta barra
  * se queda sólo con lo que cambia cuando llegan datos nuevos.
  */
-export function TopBar({ error = null, lastFetched = null, loading = false, meta = null, onRefresh }) {
+export function TopBar(props) {
+  const { error = null, lastFetched = null, loading = false, meta = null, onRefresh } = props;
+
   return (
     <div className="flex items-center gap-2.5">
       <p className="text-[12.5px] font-mono text-text-muted">

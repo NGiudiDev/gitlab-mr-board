@@ -11,11 +11,13 @@ import {
 /**
  * Permite editar el nombre visible y el email de la propia persona.
  */
-export function ProfilePanel({
-  onSave = async () => null,
-  submitting = false,
-  user = null,
-}) {
+export function ProfilePanel(props) {
+  const {
+    onSave = async () => null,
+    submitting = false,
+    user = null,
+  } = props;
+
   const [profile, setProfile] = useState({ displayName: "", email: "" });
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);

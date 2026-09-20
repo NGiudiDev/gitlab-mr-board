@@ -21,7 +21,9 @@ function membersLabel(memberCount) {
   return memberCount === 1 ? "1 persona" : `${memberCount} personas`;
 }
 
-export function AccountSettingsSection({ account = null }) {
+export function AccountSettingsSection(props) {
+  const { account = null } = props;
+
   const [formError, setFormError] = useState(null);
   const [message, setMessage] = useState(null);
   const [name, setName] = useState("");

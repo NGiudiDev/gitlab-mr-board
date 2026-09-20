@@ -11,7 +11,9 @@ import { AccountSettingsSection } from "../components/AccountSettingsSection.jsx
 import { useAccount } from "../hooks/useAccount.js";
 
 /** Presenta la configuración compartida de la cuenta y la personal de GitLab. */
-function AccountPage({ onSaveGitlabUsername, submitting, user }) {
+export function AccountPage(props) {
+  const { onSaveGitlabUsername, submitting, user } = props;
+
   const {
     account,
     error: accountError,
@@ -58,5 +60,3 @@ function AccountPage({ onSaveGitlabUsername, submitting, user }) {
     </div>
   );
 }
-
-export { AccountPage };

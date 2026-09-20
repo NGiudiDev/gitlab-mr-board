@@ -14,15 +14,17 @@ const OPTION_CLASSES = "px-3 py-1 text-[13px] rounded cursor-pointer focus-visib
  * ese permiso la vista personal muestra siempre las tareas propias, así que el
  * selector sobra.
  */
-export function ViewControls({
-  canChoosePerson = false,
-  onPersonChange = () => {},
-  onViewChange = () => {},
-  people = [],
-  selectedPersonName = "",
-  selectedUsername = "",
-  viewMode = "general",
-}) {
+export function ViewControls(props) {
+  const {
+    canChoosePerson = false,
+    onPersonChange = () => {},
+    onViewChange = () => {},
+    people = [],
+    selectedPersonName = "",
+    selectedUsername = "",
+    viewMode = "general",
+  } = props;
+
   const selectedPersonIsAvailable = Boolean(findPersonByUsername(people, selectedUsername));
 
   return (

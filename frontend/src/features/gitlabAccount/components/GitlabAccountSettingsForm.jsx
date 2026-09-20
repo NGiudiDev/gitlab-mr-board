@@ -19,12 +19,14 @@ import {
  * @param {Function} [props.onSaved] Avisa que el guardado terminó correctamente.
  * @returns {import("react").ReactElement} Formulario de configuración de GitLab.
  */
-export function GitlabAccountSettingsForm({
-  onSaved = () => {},
-  save = async () => null,
-  saving = false,
-  settings = null,
-}) {
+export function GitlabAccountSettingsForm(props) {
+  const {
+    onSaved = () => {},
+    save = async () => null,
+    saving = false,
+    settings = null,
+  } = props;
+
   const [accessToken, setAccessToken] = useState("");
   const [formError, setFormError] = useState(null);
   const [message, setMessage] = useState(null);

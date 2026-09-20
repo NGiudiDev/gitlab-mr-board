@@ -18,7 +18,9 @@ import {
  * cuenta, pero con qué nombre aparece cada persona en los merge requests es
  * suyo, y de eso depende la vista personal.
  */
-export function GitlabUserSettingsSection({ onSave = () => {}, submitting = false, user = null }) {
+export function GitlabUserSettingsSection(props) {
+  const { onSave = () => {}, submitting = false, user = null } = props;
+
   const [gitlabUsername, setGitlabUsername] = useState(user?.gitlabUsername ?? "");
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);

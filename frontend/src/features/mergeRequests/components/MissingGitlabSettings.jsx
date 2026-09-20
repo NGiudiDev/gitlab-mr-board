@@ -5,7 +5,9 @@ import { PRIMARY_BUTTON_CLASSES } from "../../../app/constants/styles.consts.js"
 import { BoardStatus } from "./BoardStatus.jsx";
 
 /** Explica cómo completar la configuración de GitLab que necesita el tablero. */
-function MissingGitlabSettings({ canConfigure = false }) {
+export function MissingGitlabSettings(props) {
+  const { canConfigure = false } = props;
+
   return (
     <BoardStatus>
       <p className="mb-3">
@@ -24,5 +26,3 @@ function MissingGitlabSettings({ canConfigure = false }) {
     </BoardStatus>
   );
 }
-
-export { MissingGitlabSettings };

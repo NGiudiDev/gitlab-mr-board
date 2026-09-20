@@ -69,7 +69,9 @@ function badgeClasses(type, data) {
   return "bg-surface text-text-muted";
 }
 
-export function BlockerBadge({ data, type }) {
+export function BlockerBadge(props) {
+  const { data, type } = props;
+
   const linkUrl = type === "pipeline" ? data.pipelineUrl || null : null;
   const tooltip = tooltipFor(type, data);
   // Sólo el badge de pipeline enlaza; el resto es texto, así que el elemento

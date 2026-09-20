@@ -11,11 +11,13 @@ import {
   SUCCESS_ALERT_CLASSES,
 } from "../../../app/constants/styles.consts.js";
 
-export function AccountMemberInviteSection({
-  inviteCode = "",
-  onRotate = async () => null,
-  submitting = false,
-}) {
+export function AccountMemberInviteSection(props) {
+  const {
+    inviteCode = "",
+    onRotate = async () => null,
+    submitting = false,
+  } = props;
+
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
 

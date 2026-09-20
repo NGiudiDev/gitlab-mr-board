@@ -1,6 +1,8 @@
 import { MrCard } from "./MrCard.jsx";
 
-export function BoardColumn({ idPrefix, mergeRequests, title }) {
+export function BoardColumn(props) {
+  const { idPrefix, mergeRequests, title } = props;
+
   const headingId = `columna-${idPrefix}-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
 
   return (

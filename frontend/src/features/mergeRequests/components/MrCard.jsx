@@ -16,7 +16,9 @@ function timeAgo(iso) {
   return `${Math.round(diff / 86400)}d`;
 }
 
-export function MrCard({ mr }) {
+export function MrCard(props) {
+  const { mr } = props;
+
   const assignee = mr.responsiblePeople.map((person) => person.name).join(", ");
   const color = COLOR_BY_MERGEABILITY[mr.mergeability] || "border-l-text-faint";
 
