@@ -53,6 +53,7 @@ export function GitlabUserSettingsSection(props) {
       <h2 className={SECTION_HEADING_CLASSES} id="identidad-heading">
         Usuario de GitLab
       </h2>
+
       <p className={SECTION_DESCRIPTION_CLASSES}>
         Con tu nickname el tablero reconoce cuáles de los merge requests del equipo son tuyos.
       </p>

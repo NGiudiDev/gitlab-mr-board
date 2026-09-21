@@ -1,14 +1,12 @@
-import { MemoryRouter, useLocation } from "react-router";
-
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-
-import { AppLayout } from "./AppLayout.jsx";
+import { MemoryRouter, useLocation } from "react-router";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { jsonResponse, resetSharedState, TEST_ACCOUNT, TEST_USER } from "../../../test/sharedState.js";
-
-import { APP_PATHS, getNavigationSectionsForUser } from "../constants/routes.consts.js";
+import { APP_PATHS } from "../constants/routes.consts.js";
+import { getNavigationSectionsForUser } from "../utils/routes.utils.js";
+import { AppLayout } from "./AppLayout.jsx";
 
 const ADMIN_USER = { ...TEST_USER, role: "admin" };
 

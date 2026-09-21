@@ -23,7 +23,7 @@ function formatDate(isoDate) {
 
   return new Date(isoDate).toLocaleDateString("es-AR");
 }
-/** Alta de usuarios con rol elegible, sólo visible para administradores. */
+
 function CreateUserForm(props) {
   const { onCreate = () => {}, submitting = false } = props;
 
@@ -174,6 +174,7 @@ export function UserAdmin(props) {
       <h2 className={SECTION_HEADING_CLASSES} id="usuarios-heading">
         Usuarios
       </h2>
+
       <p className={SECTION_DESCRIPTION_CLASSES}>
         Las personas de tu cuenta. Todas ven el mismo tablero: no tienen que cargar credenciales de GitLab.
       </p>

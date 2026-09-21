@@ -9,16 +9,6 @@ import {
   SUCCESS_ALERT_CLASSES,
 } from "../../../app/constants/styles.consts.js";
 
-/**
- * Edita los proyectos y el access token compartidos por la cuenta.
- *
- * @param {object} props Propiedades del formulario.
- * @param {object | null} [props.settings] Configuración actualmente guardada.
- * @param {boolean} [props.saving] Indica si el guardado está en curso.
- * @param {Function} [props.save] Persiste los valores ingresados.
- * @param {Function} [props.onSaved] Avisa que el guardado terminó correctamente.
- * @returns {import("react").ReactElement} Formulario de configuración de GitLab.
- */
 export function GitlabAccountSettingsForm(props) {
   const {
     onSaved = () => {},

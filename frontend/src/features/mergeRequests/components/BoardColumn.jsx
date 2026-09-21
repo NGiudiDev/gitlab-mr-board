@@ -17,6 +17,7 @@ export function BoardColumn(props) {
           <span className="sr-only">{mergeRequests.length} merge requests</span>
         </span>
       </div>
+
       <ul className="overflow-y-auto p-2 flex flex-col gap-2 max-h-[60vh]" role="list">
         {mergeRequests.map((mr) => (
           <li key={mr.id}>

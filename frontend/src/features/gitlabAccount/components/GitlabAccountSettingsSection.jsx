@@ -5,19 +5,10 @@ import {
 } from "../../../app/constants/styles.consts.js";
 
 import { useGitlabSettings } from "../hooks/useGitlabSettings.js";
-
 import { GitlabAccountSettingsForm } from "./GitlabAccountSettingsForm.jsx";
 import { GitlabAccountSettingsSkeleton } from "./GitlabAccountSettingsSkeleton.jsx";
 import { GitlabAccountSettingsSummary } from "./GitlabAccountSettingsSummary.jsx";
 
-/**
- * Coordina la carga y la presentación de la configuración de GitLab de la cuenta.
- *
- * @param {object} props Propiedades de la sección.
- * @param {boolean} [props.canEdit] Indica si la persona puede editar la configuración.
- * @param {Function} [props.onSaved] Avisa que el tablero debe actualizar sus datos.
- * @returns {import("react").ReactElement} Sección de configuración de GitLab.
- */
 export function GitlabAccountSettingsSection(props) {
   const { canEdit = false, onSaved = () => {} } = props;
 

@@ -9,15 +9,6 @@ import {
   SECTION_HEADING_CLASSES,
 } from "../../../app/constants/styles.consts.js";
 
-/**
- * Cambio de la propia contraseña, pidiendo la actual como confirmación.
- *
- * Es una de las tarjetas de «Mi perfil»; los datos compartidos de la cuenta y
- * la administración de usuarios son sus propios componentes.
- *
- * El estado de las contraseñas es local: sólo lo necesita esta pantalla y no
- * debe sobrevivir al envío.
- */
 export function PasswordPanel(props) {
   const { onChangePassword = () => {}, submitting = false, user = null } = props;
 

@@ -88,6 +88,8 @@
 
 - Preferir exports nombrados para componentes; usar `export default` sólo cuando una integración lo exija.
 
+- Seguir el orden de imports, bloques del componente y espacios de JSX de la [guía de calidad de código](docs/development/calidad-codigo.md#estilo-de-código).
+
 - Estilos con **Tailwind CSS** — nada de CSS custom salvo para lo que Tailwind no cubra.
 
 - Los patrones completos de clases Tailwind reutilizados por componentes de distintas features viven en `frontend/src/app/constants/styles.consts.js`. Mantener inline las utilidades aisladas y los ajustes exclusivos de un componente; `frontend/src/assets/` queda para CSS y recursos estáticos.

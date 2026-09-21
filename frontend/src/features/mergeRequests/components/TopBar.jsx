@@ -18,11 +18,6 @@ function StatusText(props) {
   return <span>Sin datos</span>;
 }
 
-/**
- * Resumen del tablero: totales, estado de la sincronización y actualización
- * manual. El título de la aplicación lo presenta el layout, así que esta barra
- * se queda sólo con lo que cambia cuando llegan datos nuevos.
- */
 export function TopBar(props) {
   const { error = null, lastFetched = null, loading = false, meta = null, onRefresh } = props;
 

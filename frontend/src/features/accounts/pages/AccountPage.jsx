@@ -6,11 +6,11 @@ import {
 import { GitlabAccountSettingsSection } from "../../gitlabAccount/components/GitlabAccountSettingsSection.jsx";
 import { GitlabUserSettingsSection } from "../../gitlabUser/components/GitlabUserSettingsSection.jsx";
 import { fetchMergeRequests } from "../../mergeRequests/hooks/useMergeRequests.js";
+
 import { AccountMemberInviteSection } from "../components/AccountMemberInviteSection.jsx";
 import { AccountSettingsSection } from "../components/AccountSettingsSection.jsx";
 import { useAccount } from "../hooks/useAccount.js";
 
-/** Presenta la configuración compartida de la cuenta y la personal de GitLab. */
 export function AccountPage(props) {
   const { onSaveGitlabUsername, submitting, user } = props;
 

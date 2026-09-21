@@ -1,13 +1,11 @@
 import { useEffect, useId, useRef, useState } from "react";
-
-import { useAccount } from "../../features/accounts/hooks/useAccount.js";
-
 import { Link } from "react-router";
-
-import { getUserInitials } from "../../features/user/utils/user.utils.js";
 
 import { APP_PATHS } from "../constants/routes.consts.js";
 import { MENU_ICON_CLASSES, MENU_ITEM_CLASSES } from "../constants/styles.consts.js";
+
+import { useAccount } from "../../features/accounts/hooks/useAccount.js";
+import { getUserInitials } from "../../features/user/utils/user.utils.js";
 
 export function AccountMenu(props) {
   const {
@@ -16,13 +14,13 @@ export function AccountMenu(props) {
   } = props;
 
   const { account, loading } = useAccount(user?.accountId ?? null);
-  
+
   const containerRef = useRef(null);
   const triggerRef = useRef(null);
   const menuId = useId();
 
   const [isOpen, setIsOpen] = useState(false);
-  
+
   function closeMenu() {
     setIsOpen(false);
   }

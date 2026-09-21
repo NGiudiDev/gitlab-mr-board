@@ -20,6 +20,7 @@ export function GitlabAccountSettingsSummary(props) {
     <dl className={DETAIL_LIST_CLASSES}>
       <dt className={LABEL_CLASSES}>Proyectos</dt>
       <dd className={`${DETAIL_VALUE_CLASSES} mb-3 font-mono`}>{settings.projectIds.join(", ")}</dd>
+
       <dt className={LABEL_CLASSES}>Access token</dt>
       <dd className={DETAIL_VALUE_CLASSES}>
         Guardado, terminado en «{settings.tokenHint}».

@@ -51,6 +51,7 @@ export function ProfilePanel(props) {
       <h2 className={SECTION_HEADING_CLASSES} id="perfil-heading">
         Mi perfil
       </h2>
+
       <p className={SECTION_DESCRIPTION_CLASSES}>
         Estos datos identifican tu sesión. Si cambiás el email, usá el nuevo la próxima vez que ingreses.
       </p>
@@ -88,9 +89,13 @@ export function ProfilePanel(props) {
           />
         </label>
 
-        {error ? <p className="mt-3 text-xs text-conflict" role="alert">{error}</p> : null}
-        
-        {notice ? <p className="mt-3 text-xs text-ready" role="status">{notice}</p> : null}
+        {error ? (
+          <p className="mt-3 text-xs text-conflict" role="alert">{error}</p>
+        ) : null}
+
+        {notice ? (
+          <p className="mt-3 text-xs text-ready" role="status">{notice}</p>
+        ) : null}
 
         <button
           className={`${PRIMARY_BUTTON_CLASSES} mt-4`}

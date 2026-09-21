@@ -1,5 +1,3 @@
-// Iconos como caracteres literales: en Vue se inyectaban con `v-html` como
-// entidades HTML, acá no hace falta `dangerouslySetInnerHTML`.
 function iconFor(type, data) {
   if (type === "pipeline") {
     const status = data.status;
@@ -13,6 +11,7 @@ function iconFor(type, data) {
   if (type === "conflicts") return data.hasConflicts ? "✗" : "✓";
   return "";
 }
+
 function labelFor(type, data) {
   if (type === "pipeline") {
     const map = { success: "CI OK", failed: "CI Falló", running: "CI...", pending: "CI...", canceled: "CI Cancel", none: "Sin CI" };
@@ -74,8 +73,6 @@ export function BlockerBadge(props) {
 
   const linkUrl = type === "pipeline" ? data.pipelineUrl || null : null;
   const tooltip = tooltipFor(type, data);
-  // Sólo el badge de pipeline enlaza; el resto es texto, así que el elemento
-  // cambia entre `a` y `span` según haya URL.
   const Tag = linkUrl ? "a" : "span";
 
   return (

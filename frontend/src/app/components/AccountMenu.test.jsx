@@ -3,10 +3,11 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, useLocation } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { AccountMenu, getUserInitials } from "./AccountMenu.jsx";
-
 import { jsonResponse, resetSharedState, TEST_ACCOUNT, TEST_USER } from "../../../test/sharedState.js";
 import { APP_PATHS } from "../constants/routes.consts.js";
+import { getUserInitials } from "../../features/user/utils/user.utils.js";
+
+import { AccountMenu } from "./AccountMenu.jsx";
 
 const ADMIN_USER = { ...TEST_USER, role: "admin" };
 

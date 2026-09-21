@@ -1,6 +1,6 @@
-import { AccountMenu } from "./AccountMenu.jsx";
 import { NavLink } from "react-router";
 
+import { AccountMenu } from "./AccountMenu.jsx";
 import { getNavigationSectionsForUser } from "../utils/routes.utils.js";
 
 export function AppLayout(props) {

@@ -1,4 +1,3 @@
-// Revisado: 12/09
 import { DEFAULT_API_BASE_URL } from "../constants/api.consts.js";
 
 /**

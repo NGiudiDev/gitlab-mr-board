@@ -63,8 +63,8 @@ export function MrBoard(props) {
                 {group.mrs.length} <span className="sr-only">merge requests</span>
               </span>
             </button>
-            {/* El panel se mantiene en el DOM aunque esté contraído, como hacía
-                `v-show`: `aria-controls` debe apuntar a un elemento existente. */}
+
+            {/* `aria-controls` necesita que el panel permanezca en el DOM al contraerse. */}
             <div
               aria-label="Columnas del proyecto"
               className={`${isExpanded ? "flex" : "hidden"} gap-3 overflow-x-auto p-3 border-t border-border-soft`}

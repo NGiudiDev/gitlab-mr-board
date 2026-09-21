@@ -39,7 +39,6 @@ function announcementFor({
   return `Actualización completa. Se muestran ${total} merge requests.`;
 }
 
-/** Presenta el tablero y sus estados de carga, error y vista personal. */
 export function BoardPage(props) {
   const { canChoosePerson = false, canConfigureGitlab = false } = props;
 
@@ -124,6 +123,7 @@ export function BoardPage(props) {
                 ? `Tareas de ${selectedPerson.name} por estado`
                 : "Merge requests por proyecto y estado"}
             </h2>
+
             {loading && mergeRequests.length === 0 ? (
               <BoardStatus>Cargando merge requests...</BoardStatus>
             ) : mergeRequests.length === 0 ? (
@@ -155,6 +155,7 @@ export function BoardPage(props) {
           ) : null}
         </>
       )}
+
       <p aria-atomic="true" aria-live="polite" className="sr-only">{statusAnnouncement}</p>
     </>
   );

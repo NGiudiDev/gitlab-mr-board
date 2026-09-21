@@ -6,12 +6,12 @@
  */
 export function getUserInitials(user) {
   const label = user?.displayName?.trim() || user?.email?.trim() || "?";
-  
+
   const words = label.split(/\s+/);
-  
+
   const initials = words.length > 1
     ? `${words[0][0]}${words.at(-1)[0]}`
     : label.slice(0, 2);
 
-   return initials.toLocaleUpperCase("es");
+  return initials.toLocaleUpperCase("es");
 }

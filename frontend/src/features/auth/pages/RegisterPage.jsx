@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router";
 
-import { RegisterForm } from "../components/RegisterForm.jsx";
-
 import { APP_PATHS } from "../../../app/constants/routes.consts.js";
+
+import { RegisterForm } from "../components/RegisterForm.jsx";
 
 export function RegisterPage(props) {
   const { error, onRegister, submitting } = props;

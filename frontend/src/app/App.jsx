@@ -1,20 +1,18 @@
 import { Navigate, Route, Routes, useNavigate } from "react-router";
 
-import { useSession } from "../features/auth/hooks/useSession.js";
-
-import { AccountPage } from "../features/accounts/pages/AccountPage.jsx";
 import { AppLayout } from "./components/AppLayout.jsx";
-import { BoardPage } from "../features/mergeRequests/pages/BoardPage.jsx";
+import { APP_PATHS } from "./constants/routes.consts.js";
+import { STATUS_PANEL_CLASSES } from "./constants/styles.consts.js";
+
+import { resetAccountStore } from "../features/accounts/hooks/useAccount.js";
+import { AccountPage } from "../features/accounts/pages/AccountPage.jsx";
+import { useSession } from "../features/auth/hooks/useSession.js";
 import { LoginPage } from "../features/auth/pages/LoginPage.jsx";
 import { ProfilePage } from "../features/auth/pages/ProfilePage.jsx";
 import { RegisterPage } from "../features/auth/pages/RegisterPage.jsx";
 import { UsersPage } from "../features/auth/pages/UsersPage.jsx";
-
 import { resetStore } from "../features/mergeRequests/hooks/useMergeRequests.js";
-import { resetAccountStore } from "../features/accounts/hooks/useAccount.js";
-
-import { APP_PATHS } from "./constants/routes.consts.js";
-import { STATUS_PANEL_CLASSES } from "./constants/styles.consts.js";
+import { BoardPage } from "../features/mergeRequests/pages/BoardPage.jsx";
 
 export function App() {
   const navigate = useNavigate();

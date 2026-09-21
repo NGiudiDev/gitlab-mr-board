@@ -39,6 +39,7 @@ export function LoginForm(props) {
       <h1 className={AUTH_FORM_HEADING_CLASSES} id="login-heading">
         Tablero de MRs
       </h1>
+
       <p className={AUTH_FORM_DESCRIPTION_CLASSES}>Ingresá con tu email para ver el tablero.</p>
 
       {error ? (

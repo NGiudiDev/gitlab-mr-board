@@ -59,7 +59,6 @@ export function RegisterForm(props) {
 
   const visibleError = localError ?? error;
 
-  /** Clases del botón que elige el camino, según esté activo o no. */
   function choiceClasses(isActive) {
     return `${CHOICE_CLASSES} ${isActive
       ? "border-accent bg-surface-raised font-semibold text-text-primary"
@@ -75,6 +74,7 @@ export function RegisterForm(props) {
       <h1 className={AUTH_FORM_HEADING_CLASSES} id="registro-heading">
         Crear una cuenta
       </h1>
+
       <p className={AUTH_FORM_DESCRIPTION_CLASSES}>
         Ingresá tu email y una contraseña de al menos {MINIMUM_PASSWORD_LENGTH} caracteres.
       </p>
@@ -167,6 +167,7 @@ export function RegisterForm(props) {
           value={email}
         />
       </label>
+
       <label className={`${LABEL_CLASSES} mb-3`} htmlFor="registro-nombre">
         Nombre visible (opcional)
         <input
