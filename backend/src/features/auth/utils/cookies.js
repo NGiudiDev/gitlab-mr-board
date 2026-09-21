@@ -10,8 +10,8 @@ function parseCookieHeader(header) {
 
   const cookies = {};
 
-  for (const part of header.split(';')) {
-    const separatorIndex = part.indexOf('=');
+  for (const part of header.split(";")) {
+    const separatorIndex = part.indexOf("=");
     if (separatorIndex < 1) continue;
 
     const name = part.slice(0, separatorIndex).trim();

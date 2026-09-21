@@ -1,23 +1,21 @@
-// 1. Módulos estándar de Node.js.
-import readline from 'node:readline';
-import { Writable } from 'node:stream';
+import readline from "node:readline";
+import { Writable } from "node:stream";
 
-// 6. Imports relativos restantes.
-import config from '../config.js';
-import { createAccountRepository } from '../features/accounts/services/accountRepository.js';
-import { createAccountService } from '../features/accounts/services/accountService.js';
-import { createAuthRepository } from '../features/auth/services/authRepository.js';
-import { createAuthService } from '../features/auth/services/authService.js';
-import { applySchema, createNeonDatabase } from '../shared/database.js';
+import config from "../config.js";
+import { createAccountRepository } from "../features/accounts/services/accountRepository.js";
+import { createAccountService } from "../features/accounts/services/accountService.js";
+import { createAuthRepository } from "../features/auth/services/authRepository.js";
+import { createAuthService } from "../features/auth/services/authService.js";
+import { applySchema, createNeonDatabase } from "../shared/database.js";
 
 const USAGE = `Gestión de cuentas y usuarios del tablero.
 
-  npm run users --prefix backend -- create <usuario> [--name "Nombre visible"] [--account "Nombre de la cuenta"]
-  npm run users --prefix backend -- create <usuario> --invite <código> [--name "Nombre visible"] [--role admin]
-  npm run users --prefix backend -- password <usuario>
-  npm run users --prefix backend -- disable <usuario>
-  npm run users --prefix backend -- enable <usuario>
-  npm run users --prefix backend -- delete <usuario>
+  npm run users --prefix backend -- create <email> [--name "Nombre visible"] [--account "Nombre de la cuenta"]
+  npm run users --prefix backend -- create <email> --invite <código> [--name "Nombre visible"] [--role admin]
+  npm run users --prefix backend -- password <email>
+  npm run users --prefix backend -- disable <email>
+  npm run users --prefix backend -- enable <email>
+  npm run users --prefix backend -- delete <email>
   npm run users --prefix backend -- list
   npm run users --prefix backend -- accounts
 
@@ -53,13 +51,13 @@ function readOption(args, name) {
  * @throws {Error} Si la entrada trae menos líneas de las necesarias.
  */
 async function readSecretsFromPipe(count) {
-  let input = '';
-  process.stdin.setEncoding('utf8');
+  let input = "";
+  process.stdin.setEncoding("utf8");
 
   for await (const chunk of process.stdin) input += chunk;
 
   const lines = input.split(/\r?\n/).slice(0, count);
-  if (lines.length < count || lines.some((line) => line === '')) {
+  if (lines.length < count || lines.some((line) => line === "")) {
     throw new Error(`La entrada debe traer ${count} líneas, una por cada dato pedido.`);
   }
 
@@ -94,17 +92,17 @@ async function askSecretsInTerminal(questions) {
   try {
     for (const question of questions) {
       const answer = await new Promise((resolve) => {
-        rl.once('close', () => resolve(null));
+        rl.once("close", () => resolve(null));
         rl.question(question, (value) => {
           hideInput = false;
-          process.stdout.write('\n');
+          process.stdout.write("\n");
           resolve(value);
         });
 
         hideInput = true;
       });
 
-      if (answer === null) throw new Error('Entrada cancelada.');
+      if (answer === null) throw new Error("Entrada cancelada.");
 
       answers.push(answer);
     }
@@ -136,13 +134,13 @@ function askSecrets(questions) {
  * @throws {Error} Si las dos entradas no coinciden.
  */
 async function askNewPassword() {
-  const [password, confirmation] = await askSecrets(['Contraseña: ', 'Repetí la contraseña: ']);
+  const [password, confirmation] = await askSecrets(["Contraseña: ", "Repetí la contraseña: "]);
 
   if (password !== confirmation) {
-    throw new Error('Las contraseñas no coinciden.');
+    throw new Error("Las contraseñas no coinciden.");
   }
 
-  return password ?? '';
+  return password ?? "";
 }
 
 /**
@@ -153,26 +151,26 @@ async function askNewPassword() {
  * `--invite` se suma a la cuenta de ese código y el rol lo decide `--role`.
  */
 async function createUserCommand(authService, accountService, args) {
-  const username = args[0];
-  if (!username || username.startsWith('--')) {
-    throw new Error('Indicá el nombre de usuario. Ejemplo: create ana --account "Mi equipo"');
+  const email = args[0];
+  if (!email || email.startsWith("--")) {
+    throw new Error("Indicá el email. Ejemplo: create ana@example.com --account \"Mi equipo\"");
   }
 
-  const inviteCode = readOption(args, 'invite');
+  const inviteCode = readOption(args, "invite");
   const account = inviteCode
     ? await accountService.findByInviteCode(inviteCode)
-    : await accountService.create(readOption(args, 'account'));
-  const role = inviteCode && readOption(args, 'role') !== 'admin' ? 'user' : 'admin';
+    : await accountService.create(readOption(args, "account"));
+  const role = inviteCode && readOption(args, "role") !== "admin" ? "user" : "admin";
 
   const user = await authService.createUser({
     accountId: account.id,
-    username,
+    email,
     password: await askNewPassword(),
-    displayName: readOption(args, 'name'),
+    displayName: readOption(args, "name"),
     role: role,
   });
 
-  console.log(`Usuario «${user.username}» creado con el rol ${user.role} en la cuenta «${account.name}».`);
+  console.log(`Usuario «${user.email}» creado con el rol ${user.role} en la cuenta «${account.name}».`);
   if (!inviteCode) {
     console.log(`Código de invitación de la cuenta: ${account.inviteCode}`);
   }
@@ -180,42 +178,42 @@ async function createUserCommand(authService, accountService, args) {
 
 /** Cambia la contraseña de un usuario existente y cierra sus sesiones. */
 async function changePasswordCommand(authService, args) {
-  const username = args[0];
-  if (!username) {
-    throw new Error('Indicá el nombre de usuario. Ejemplo: password ana');
+  const email = args[0];
+  if (!email) {
+    throw new Error("Indicá el email. Ejemplo: password ana@example.com");
   }
 
-  await authService.changePassword(username, await askNewPassword());
+  await authService.changePassword(email, await askNewPassword());
 
-  console.log(`Contraseña actualizada. Se cerraron las sesiones abiertas de «${username}».`);
+  console.log(`Contraseña actualizada. Se cerraron las sesiones abiertas de «${email}».`);
 }
 
 /** Habilita o deshabilita el acceso de un usuario. */
 async function setStatusCommand(authService, args, status) {
-  const username = args[0];
-  if (!username) {
-    throw new Error('Indicá el nombre de usuario. Ejemplo: disable ana');
+  const email = args[0];
+  if (!email) {
+    throw new Error("Indicá el email. Ejemplo: disable ana@example.com");
   }
 
-  const user = await authService.setUserStatus(username, status);
+  const user = await authService.setUserStatus(email, status);
 
-  console.log(status === 'disabled'
-    ? `Usuario «${user.username}» deshabilitado. Se cerraron sus sesiones abiertas.`
-    : `Usuario «${user.username}» habilitado de nuevo.`);
+  console.log(status === "disabled"
+    ? `Usuario «${user.email}» deshabilitado. Se cerraron sus sesiones abiertas.`
+    : `Usuario «${user.email}» habilitado de nuevo.`);
 }
 
 /** Borra un usuario junto con sus sesiones. */
 async function deleteUserCommand(authService, args) {
-  const username = args[0];
-  if (!username) {
-    throw new Error('Indicá el nombre de usuario. Ejemplo: delete ana');
+  const email = args[0];
+  if (!email) {
+    throw new Error("Indicá el email. Ejemplo: delete ana@example.com");
   }
 
-  const deleted = await authService.deleteUser(username);
+  const deleted = await authService.deleteUser(email);
 
   console.log(deleted
-    ? `Usuario «${username}» borrado, junto con sus sesiones.`
-    : `No existía el usuario «${username}»; no había nada que borrar.`);
+    ? `Usuario «${email}» borrado, junto con sus sesiones.`
+    : `No existía el usuario «${email}»; no había nada que borrar.`);
 }
 
 /** Lista los usuarios de todas las cuentas, indicando a cuál pertenece cada uno. */
@@ -223,7 +221,7 @@ async function listUsersCommand(authService, accountService) {
   const users = await authService.listAllUsers();
 
   if (users.length === 0) {
-    console.log('Todavía no hay usuarios. Creá el primero acá, o registrate en el tablero: quien abre una cuenta queda su administrador.');
+    console.log("Todavía no hay usuarios. Creá el primero acá, o registrate en el tablero: quien abre una cuenta queda su administrador.");
     return;
   }
 
@@ -232,9 +230,9 @@ async function listUsersCommand(authService, accountService) {
   );
 
   for (const user of users) {
-    const accountName = accountNamesById.get(user.accountId) ?? '(sin cuenta)';
+    const accountName = accountNamesById.get(user.accountId) ?? "(sin cuenta)";
 
-    console.log(`${user.username}\t${user.role}\t${user.status}\t${accountName}\t${user.displayName}`);
+    console.log(`${user.email}\t${user.role}\t${user.status}\t${accountName}\t${user.displayName}`);
   }
 }
 
@@ -243,19 +241,19 @@ async function listAccountsCommand(accountService) {
   const accounts = await accountService.list();
 
   if (accounts.length === 0) {
-    console.log('Todavía no hay cuentas. La primera se crea al registrarse en el tablero o con «create».');
+    console.log("Todavía no hay cuentas. La primera se crea al registrarse en el tablero o con «create».");
     return;
   }
 
   for (const account of accounts) {
-    const members = account.memberCount === 1 ? '1 miembro' : `${account.memberCount} miembros`;
+    const members = account.memberCount === 1 ? "1 miembro" : `${account.memberCount} miembros`;
 
-    console.log(`${account.name}\t${account.inviteCode ?? ''}\t${members}`);
+    console.log(`${account.name}\t${account.inviteCode ?? ""}\t${members}`);
   }
 }
 
 async function main() {
-  const [command = '', ...args] = process.argv.slice(2);
+  const [command = "", ...args] = process.argv.slice(2);
   const database = createNeonDatabase(config.databaseUrl);
 
   // El script puede ser lo primero que corra contra una base recién creada.
@@ -269,32 +267,32 @@ async function main() {
   });
 
   try {
-    if (command === 'create') {
+    if (command === "create") {
       await createUserCommand(authService, accountService, args);
       return;
     }
 
-    if (command === 'password') {
+    if (command === "password") {
       await changePasswordCommand(authService, args);
       return;
     }
 
-    if (command === 'disable' || command === 'enable') {
-      await setStatusCommand(authService, args, command === 'disable' ? 'disabled' : 'active');
+    if (command === "disable" || command === "enable") {
+      await setStatusCommand(authService, args, command === "disable" ? "disabled" : "active");
       return;
     }
 
-    if (command === 'delete') {
+    if (command === "delete") {
       await deleteUserCommand(authService, args);
       return;
     }
 
-    if (command === 'list') {
+    if (command === "list") {
       await listUsersCommand(authService, accountService);
       return;
     }
 
-    if (command === 'accounts') {
+    if (command === "accounts") {
       await listAccountsCommand(accountService);
       return;
     }

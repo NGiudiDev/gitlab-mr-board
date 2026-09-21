@@ -1,119 +1,119 @@
-import { defineConfig } from 'vitepress'
+import { defineConfig } from "vitepress";
 
 // El sidebar se declara a mano: con cinco secciones es más explícito que
 // autogenerarlo, y obliga a decidir el título con el que aparece cada página.
 const sidebar = [
   {
-    text: 'Arquitectura',
-    link: '/architecture/',
+    text: "Arquitectura",
+    link: "/architecture/",
     items: [
-      { text: 'Visión general', link: '/architecture/vision-general' },
-      { text: 'Backend', link: '/architecture/backend' },
-      { text: 'Frontend', link: '/architecture/frontend' },
-      { text: 'Interfaz visual', link: '/architecture/interfaz-visual' },
+      { text: "Visión general", link: "/architecture/vision-general" },
+      { text: "Backend", link: "/architecture/backend" },
+      { text: "Frontend", link: "/architecture/frontend" },
+      { text: "Interfaz visual", link: "/architecture/interfaz-visual" },
     ],
   },
   {
-    text: 'Decisiones',
-    link: '/decisions/',
+    text: "Decisiones",
+    link: "/decisions/",
     items: [
-      { text: 'ADR 0001: Backend for Frontend', link: '/decisions/0001-backend-for-frontend' },
-      { text: 'ADR 0002: caché en memoria', link: '/decisions/0002-cache-en-memoria' },
-      { text: 'ADR 0003: estrategia de test', link: '/decisions/0003-estrategia-de-test' },
-      { text: 'ADR 0004: sitio de documentación', link: '/decisions/0004-sitio-de-documentacion' },
-      { text: 'ADR 0005: frontend en React', link: '/decisions/0005-frontend-en-react' },
-      { text: 'ADR 0006: login local con SQLite', link: '/decisions/0006-login-local-con-sqlite' },
-      { text: 'ADR 0007: registro y gestión de usuarios', link: '/decisions/0007-registro-abierto-y-gestion-de-usuarios' },
-      { text: 'ADR 0008: credenciales de GitLab por usuario', link: '/decisions/0008-credenciales-de-gitlab-por-usuario' },
-      { text: 'ADR 0009: Neon como base de datos', link: '/decisions/0009-neon-como-base-de-datos' },
-      { text: 'ADR 0010: backend por features', link: '/decisions/0010-backend-por-features' },
-      { text: 'ADR 0011: cuentas compartidas', link: '/decisions/0011-cuentas-compartidas' },
-      { text: 'ADR 0012: JavaScript sin TypeScript', link: '/decisions/0012-javascript-sin-typescript' },
+      { text: "ADR 0001: Backend for Frontend", link: "/decisions/0001-backend-for-frontend" },
+      { text: "ADR 0002: caché en memoria", link: "/decisions/0002-cache-en-memoria" },
+      { text: "ADR 0003: estrategia de test", link: "/decisions/0003-estrategia-de-test" },
+      { text: "ADR 0004: sitio de documentación", link: "/decisions/0004-sitio-de-documentacion" },
+      { text: "ADR 0005: frontend en React", link: "/decisions/0005-frontend-en-react" },
+      { text: "ADR 0006: login local con SQLite", link: "/decisions/0006-login-local-con-sqlite" },
+      { text: "ADR 0007: registro y gestión de usuarios", link: "/decisions/0007-registro-abierto-y-gestion-de-usuarios" },
+      { text: "ADR 0008: credenciales de GitLab por usuario", link: "/decisions/0008-credenciales-de-gitlab-por-usuario" },
+      { text: "ADR 0009: Neon como base de datos", link: "/decisions/0009-neon-como-base-de-datos" },
+      { text: "ADR 0010: backend por features", link: "/decisions/0010-backend-por-features" },
+      { text: "ADR 0011: cuentas compartidas", link: "/decisions/0011-cuentas-compartidas" },
+      { text: "ADR 0012: JavaScript sin TypeScript", link: "/decisions/0012-javascript-sin-typescript" },
     ],
   },
   {
-    text: 'Desarrollo',
-    link: '/development/',
+    text: "Desarrollo",
+    link: "/development/",
     items: [
-      { text: 'Entorno local', link: '/development/entorno-local' },
-      { text: 'Calidad de código', link: '/development/calidad-codigo' },
-      { text: 'Test', link: '/development/test' },
+      { text: "Entorno local", link: "/development/entorno-local" },
+      { text: "Calidad de código", link: "/development/calidad-codigo" },
+      { text: "Test", link: "/development/test" },
     ],
   },
   {
-    text: 'Despliegue',
-    link: '/deployment/',
+    text: "Despliegue",
+    link: "/deployment/",
     items: [
-      { text: 'Producción', link: '/deployment/produccion' },
+      { text: "Producción", link: "/deployment/produccion" },
     ],
   },
   {
-    text: 'Dominios',
-    link: '/domains/',
+    text: "Dominios",
+    link: "/domains/",
     items: [
-      { text: 'Merge Requests', link: '/domains/merge-requests' },
-      { text: 'Vista personal', link: '/domains/vista-personal' },
-      { text: 'Autenticación', link: '/domains/autenticacion' },
-      { text: 'Configuración de GitLab', link: '/domains/configuracion-gitlab' },
+      { text: "Merge Requests", link: "/domains/merge-requests" },
+      { text: "Vista personal", link: "/domains/vista-personal" },
+      { text: "Autenticación", link: "/domains/autenticacion" },
+      { text: "Configuración de GitLab", link: "/domains/configuracion-gitlab" },
     ],
   },
-]
+];
 
 export default defineConfig({
-  lang: 'es',
-  title: 'GitLab MR Board',
-  description: 'Documentación del tablero de merge requests',
+  lang: "es",
+  title: "GitLab MR Board",
+  description: "Documentación del tablero de merge requests",
   // VitePress espera `index.md` como índice de carpeta. Los archivos siguen
   // llamándose `README.md` para que GitHub los renderice al navegar el repo.
   rewrites: {
-    'README.md': 'index.md',
-    ':section/README.md': ':section/index.md',
+    "README.md": "index.md",
+    ":section/README.md": ":section/index.md",
   },
   // El sitio se sirve local. `DOCS_BASE` ajusta la ruta si algún día se
   // publica bajo un subdirectorio.
-  base: process.env.DOCS_BASE ?? '/',
+  base: process.env.DOCS_BASE ?? "/",
   cleanUrls: true,
   // 5173 y 4173 los usa el frontend; el sitio de docs no debe competir por ellos.
   vite: { server: { port: 5175, strictPort: false } },
   // Un enlace roto entre documentos rompe el build en lugar de publicarse.
   ignoreDeadLinks: false,
   themeConfig: {
-    outline: { level: [2, 3], label: 'En esta página' },
+    outline: { level: [2, 3], label: "En esta página" },
     nav: [
-      { text: 'Arquitectura', link: '/architecture/' },
-      { text: 'Decisiones', link: '/decisions/' },
-      { text: 'Desarrollo', link: '/development/' },
-      { text: 'Dominios', link: '/domains/' },
+      { text: "Arquitectura", link: "/architecture/" },
+      { text: "Decisiones", link: "/decisions/" },
+      { text: "Desarrollo", link: "/development/" },
+      { text: "Dominios", link: "/domains/" },
     ],
     sidebar,
     search: {
-      provider: 'local',
+      provider: "local",
       options: {
         translations: {
-          button: { buttonText: 'Buscar', buttonAriaLabel: 'Buscar en la documentación' },
+          button: { buttonText: "Buscar", buttonAriaLabel: "Buscar en la documentación" },
           modal: {
-            displayDetails: 'Mostrar detalles',
-            resetButtonTitle: 'Limpiar búsqueda',
-            backButtonTitle: 'Volver',
-            noResultsText: 'Sin resultados para',
+            displayDetails: "Mostrar detalles",
+            resetButtonTitle: "Limpiar búsqueda",
+            backButtonTitle: "Volver",
+            noResultsText: "Sin resultados para",
             footer: {
-              selectText: 'para seleccionar',
-              navigateText: 'para navegar',
-              closeText: 'para cerrar',
+              selectText: "para seleccionar",
+              navigateText: "para navegar",
+              closeText: "para cerrar",
             },
           },
         },
       },
     },
-    docFooter: { prev: 'Anterior', next: 'Siguiente' },
-    darkModeSwitchLabel: 'Tema',
-    lightModeSwitchTitle: 'Cambiar a tema claro',
-    darkModeSwitchTitle: 'Cambiar a tema oscuro',
-    sidebarMenuLabel: 'Secciones',
-    returnToTopLabel: 'Volver arriba',
+    docFooter: { prev: "Anterior", next: "Siguiente" },
+    darkModeSwitchLabel: "Tema",
+    lightModeSwitchTitle: "Cambiar a tema claro",
+    darkModeSwitchTitle: "Cambiar a tema oscuro",
+    sidebarMenuLabel: "Secciones",
+    returnToTopLabel: "Volver arriba",
     lastUpdated: {
-      text: 'Última actualización',
-      formatOptions: { dateStyle: 'medium' },
+      text: "Última actualización",
+      formatOptions: { dateStyle: "medium" },
     },
   },
-})
+});

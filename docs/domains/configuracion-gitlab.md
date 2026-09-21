@@ -2,7 +2,7 @@
 
 Cada **cuenta** indica desde qué proyectos se alimenta su tablero y con qué access token se los consulta. Los carga un administrador una sola vez y con ellos se arma el tablero de todos los miembros: quien se suma no configura nada. Los motivos y las alternativas descartadas están en el [ADR 0008](../decisions/0008-credenciales-de-gitlab-por-usuario.md) y el [ADR 0011](../decisions/0011-cuentas-compartidas.md); este documento describe el modelo y las reglas.
 
-La configuración se carga en la sección **«Mi cuenta»**, en la tarjeta «GitLab de la cuenta». El **nickname de GitLab**, en cambio, lo carga cada persona: pertenece al usuario y no a la cuenta, así que vive en la [autenticación](autenticacion.md#nickname-de-gitlab).
+La configuración se carga en la sección **«Mi cuenta»**, en la tarjeta «Cuenta de GitLab». El **nickname de GitLab**, en cambio, lo carga cada persona: pertenece al usuario y no a la cuenta, así que vive en la [autenticación](autenticacion.md#nickname-de-gitlab).
 
 ## Modelo de datos
 

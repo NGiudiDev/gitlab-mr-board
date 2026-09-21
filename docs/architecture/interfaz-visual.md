@@ -4,7 +4,7 @@ El tablero usa tema oscuro y Tailwind CSS. Los tokens extendidos se definen en `
 
 ## Layout
 
-El layout es deliberadamente mínimo: una barra superior fija con el nombre del tablero, la navegación entre secciones y la sesión, y debajo el contenido a todo el ancho disponible hasta `1600px`. La barra usa el mismo fondo de página con un borde inferior, sin superficie propia, para que el tablero domine la pantalla.
+El layout es deliberadamente mínimo: una barra superior fija con el nombre del tablero, la navegación entre secciones y un avatar que despliega la cuenta y la sesión, y debajo el contenido a todo el ancho disponible hasta `1600px`. La barra usa el mismo fondo de página con un borde inferior, sin superficie propia, para que el tablero domine la pantalla.
 
 El tablero reúne en una sola fila los controles de la vista —a la izquierda— y el resumen, el estado de sincronización y la actualización manual —a la derecha—, separados del contenido por un borde suave. El orden del DOM coincide con el visual, así que el recorrido por teclado sigue la lectura.
 

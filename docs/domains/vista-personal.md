@@ -28,7 +28,7 @@ La vista no incorpora preferencias persistentes, notificaciones ni asignación d
 
 Cada persona guarda su **nickname de GitLab** en «Mi cuenta» ([autenticación](autenticacion.md#nickname-de-gitlab)). Es el único dato de GitLab que sigue cargando cada uno: los proyectos y el token son de la cuenta. El backend lo devuelve en `meta.viewerUsername` junto con el tablero, y la vista personal filtra por él sin pedir nada.
 
-Si todavía no lo configuró, la vista lo pide y enlaza a «Mi cuenta» en lugar de mostrar columnas vacías.
+Si todavía no lo configuró, la vista le indica que debe hacerlo en «Mi cuenta» en lugar de mostrar columnas vacías.
 
 ### Un `admin`: cualquiera
 

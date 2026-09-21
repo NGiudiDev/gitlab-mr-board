@@ -1,5 +1,4 @@
-// 2. Dependencias externas.
-import { neonConfig, Pool } from '@neondatabase/serverless';
+import { neonConfig, Pool } from "@neondatabase/serverless";
 
 // El esquema se aplica en cada arranque: `IF NOT EXISTS` lo vuelve idempotente
 // y evita sumar una herramienta de migraciones para cuatro tablas.
@@ -18,7 +17,7 @@ const SCHEMA_STATEMENTS = [
   `CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
     account_id TEXT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
-    username TEXT NOT NULL UNIQUE,
+    email TEXT NOT NULL UNIQUE,
     display_name TEXT NOT NULL,
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL CHECK (role IN ('user', 'admin')),
@@ -28,14 +27,30 @@ const SCHEMA_STATEMENTS = [
     last_login_at TIMESTAMPTZ
   )`,
 
+  // Conserva el identificador de instalaciones existentes. Puede seguir
+  // usándose para ingresar hasta que la persona lo reemplace por su email en
+  // «Mi perfil»; las altas y modificaciones nuevas sí validan el formato.
+  `DO $$
+   BEGIN
+     IF EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'users' AND column_name = 'username'
+     ) AND NOT EXISTS (
+       SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'users' AND column_name = 'email'
+     ) THEN
+       ALTER TABLE users RENAME COLUMN username TO email;
+     END IF;
+   END $$`,
+
   // `CREATE TABLE IF NOT EXISTS` no toca una tabla que ya existe, así que una
   // columna agregada después necesita su propio `ALTER`. Las dos entran
   // nullable porque una tabla con filas no admite otra cosa; `account_id` pasa
   // a obligatoria recién al final, cuando ya está completa.
-  'ALTER TABLE users ADD COLUMN IF NOT EXISTS account_id TEXT REFERENCES accounts(id) ON DELETE CASCADE',
-  'ALTER TABLE users ADD COLUMN IF NOT EXISTS gitlab_username TEXT',
+  "ALTER TABLE users ADD COLUMN IF NOT EXISTS account_id TEXT REFERENCES accounts(id) ON DELETE CASCADE",
+  "ALTER TABLE users ADD COLUMN IF NOT EXISTS gitlab_username TEXT",
 
-  'CREATE INDEX IF NOT EXISTS idx_users_account_id ON users(account_id)',
+  "CREATE INDEX IF NOT EXISTS idx_users_account_id ON users(account_id)",
 
   `CREATE TABLE IF NOT EXISTS sessions (
     id TEXT PRIMARY KEY,
@@ -45,7 +60,7 @@ const SCHEMA_STATEMENTS = [
     expires_at TIMESTAMPTZ NOT NULL
   )`,
 
-  'CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id)',
+  "CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id)",
 
   // Las credenciales son de la cuenta: las carga un administrador y con ellas
   // se arma el tablero de todos sus miembros.
@@ -98,7 +113,7 @@ const SCHEMA_STATEMENTS = [
 
   // Ya no quedan usuarios sin cuenta, así que la columna puede exigirse.
   // Repetir la sentencia sobre una columna que ya es obligatoria no hace nada.
-  'ALTER TABLE users ALTER COLUMN account_id SET NOT NULL',
+  "ALTER TABLE users ALTER COLUMN account_id SET NOT NULL",
 ];
 
 // El driver habla el protocolo de Postgres sobre WebSocket. Node 24 ya trae la
@@ -135,8 +150,8 @@ function createNeonDatabase(connectionString) {
   // inactividad— emite `error` en el pool. Sin este listener, Node convierte
   // ese evento en una excepción no capturada y termina el proceso: el pool
   // descarta la conexión rota por su cuenta y la siguiente consulta abre otra.
-  pool.on('error', (error) => {
-    console.error('Error en una conexión ociosa del pool:', error);
+  pool.on("error", (error) => {
+    console.error("Error en una conexión ociosa del pool:", error);
   });
 
   return {

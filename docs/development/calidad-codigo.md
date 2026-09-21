@@ -1,62 +1,24 @@
 # Calidad de código
 
-## Orden automático de imports
+## Estilo de código
 
-La raíz configura ESLint con `eslint-plugin-simple-import-sort` para ordenar imports y exports en el backend, el frontend React y los archivos de configuración. Todo el proyecto es JavaScript ([ADR 0012](../decisions/0012-javascript-sin-typescript.md)), así que alcanza con el parser propio de ESLint. Esta responsabilidad no depende de un formateador.
+ESLint exige comillas dobles para los strings y punto y coma al final de cada sentencia. Ambas reglas se aplican automáticamente con `npm run lint:fix`.
 
-Las dependencias se instalan en la raíz y sus versiones exactas viven en `package.json` y `package-lock.json`. Para restaurarlas se usa `npm ci`.
+Los componentes publican exports nombrados. `export default` queda reservado para integraciones que lo exijan, como ciertos archivos de configuración. Cada componente conserva una sola responsabilidad; una parte se extrae cuando tiene un contrato propio o permite reutilización real, no sólo para reducir la cantidad de líneas.
 
-El orden de grupos definido en `eslint.config.mjs` es:
+En el frontend, ordenar los imports por origen: paquetes externos, módulos compartidos de `app/`, módulos de otras features y módulos de la feature actual. Omitir los grupos vacíos, separar los presentes con una línea en blanco y mantener juntos los imports del mismo origen. Dentro de cada componente, colocar primero las props, después los hooks y valores derivados, luego los handlers y efectos, y al final los retornos. Conservar el orden que exijan los hooks y las dependencias entre declaraciones.
 
-1. Módulos estándar de Node.js con el protocolo `node:`.
-2. Dependencias externas, incluidas las que tienen scope.
-3. Módulos internos identificados con el alias `@/`.
-4. Módulos de constantes ubicados en un archivo o directorio llamado `constants`.
-5. Utilidades ubicadas en un archivo o directorio llamado `utils`.
-6. Imports relativos restantes, tanto del directorio padre como del actual.
-7. Hojas de estilo CSS, Less, SCSS y Sass.
-
-Cada expresión de `importGroups` tiene un comentario que identifica su posición y propósito. Los archivos de código repiten ese mismo comentario como encabezado de cada bloque presente; no incluyen comentarios para grupos vacíos. ESLint agrega una línea en blanco entre grupos y ordena alfabéticamente los módulos dentro de cada uno.
-
-El resultado esperado sigue esta estructura:
-
-```js
-// 1. Módulos estándar de Node.js.
-import path from 'node:path'
-
-// 2. Dependencias externas.
-import express from 'express'
-import { describe, expect, it } from 'vitest'
-
-// 3. Módulos internos con el alias `@/`.
-import config from '@/config.js'
-
-// 4. Módulos de constantes.
-import { DEFAULT_PAGE_SIZE } from '../constants.js'
-
-// 5. Utilidades.
-import { normalizeUsername } from '../utils/users.js'
-
-// 6. Imports relativos restantes.
-import { buildResponse } from './response.js'
-
-// 7. Hojas de estilo.
-import './styles.css'
-```
-
-El ejemplo es ilustrativo: un archivo incluye únicamente los grupos que necesita. No se agregan bloques vacíos ni imports artificiales para completar el orden.
-
-Los imports con efectos secundarios se mantienen en el grupo correspondiente a su origen. Las hojas de estilo siempre quedan en el último grupo. La regla reconoce `@/` para ordenar, pero no configura su resolución: antes de usar ese alias hay que declararlo en las herramientas de compilación del paquete correspondiente.
+En JSX, separar con una línea en blanco los bloques hermanos que cumplen funciones distintas, como el encabezado y su descripción, las alertas, los campos y las secciones de una page. Mantener juntos los elementos que forman una unidad, como un `dt` con su `dd` o una etiqueta con su ayuda. No dejar espacios en líneas vacías ni agregar comentarios que repitan el nombre o el contenido evidente del componente; los comentarios explican decisiones que el código no muestra por sí solo.
 
 ## Comandos
 
 | Comando | Uso |
 |---|---|
-| `npm run lint` | Valida el orden sin modificar archivos |
-| `npm run lint:fix` | Ordena imports y exports automáticamente |
+| `npm run lint` | Valida el código sin modificar archivos |
+| `npm run lint:fix` | Corrige comillas, punto y coma y exports automáticamente |
 
 ## VS Code
 
-El repositorio recomienda la extensión oficial ESLint mediante `.vscode/extensions.json`. `.vscode/settings.json` ejecuta `source.fixAll.eslint` en cada guardado y desactiva `source.organizeImports` para que el organizador nativo no compita con el orden de grupos del proyecto.
+El repositorio recomienda la extensión oficial ESLint mediante `.vscode/extensions.json`. `.vscode/settings.json` ejecuta `source.fixAll.eslint` en cada guardado.
 
-`editor.formatOnSave` permanece desactivado porque ESLint aplica el cambio como una acción de código, no como formateo. Si más adelante se incorpora un formateador, puede activarse sin trasladarle la responsabilidad de ordenar imports.
+`editor.formatOnSave` permanece desactivado porque ESLint aplica el cambio como una acción de código, no como formateo.

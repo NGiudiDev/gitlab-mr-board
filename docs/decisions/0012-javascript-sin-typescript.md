@@ -17,8 +17,6 @@ Todo el proyecto pasa a ser **JavaScript con ES modules**, sin compilación.
 - Los `types.ts` de cada feature y el `test/types.ts` **se eliminan**: sólo declaraban interfaces. Los contratos siguen documentados en la [arquitectura del backend](../architecture/backend.md) y sostenidos por los test, no por el compilador.
 - Se eliminan `tsconfig.json`, `tsconfig.test.json`, los scripts `build`, `start:prod` y `typecheck`, y las dependencias `typescript`, `tsx` y `@types/*`.
 - `npm run dev` usa `node --watch` y `npm start`, `node src/index.js`. Node ejecuta `src/` tal cual, así que **el despliegue deja de tener paso de compilación**.
-- En la raíz se quitan `@typescript-eslint/parser`, `@typescript-eslint/eslint-plugin` y `eslint-plugin-import-x`: el orden de imports lo sigue haciendo `eslint-plugin-simple-import-sort` con el parser propio de ESLint.
-- El orden de grupos de imports pierde el grupo de imports de tipos y **se renumera del 1 al 7**, según la [guía de calidad de código](../development/calidad-codigo.md).
 
 ## Alternativas consideradas
 

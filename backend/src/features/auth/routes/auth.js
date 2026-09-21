@@ -1,14 +1,11 @@
-// 2. Dependencias externas.
-import express from 'express';
+import express from "express";
 
-// 5. Utilidades.
-import { parseCookieHeader } from '../utils/cookies.js';
+import { parseCookieHeader } from "../utils/cookies.js";
 
-// 6. Imports relativos restantes.
-import config from '../../../config.js';
-import { respondWithHttpError } from '../../../shared/httpError.js';
+import config from "../../../config.js";
+import { respondWithHttpError } from "../../../shared/httpError.js";
 
-const SESSION_COOKIE_NAME = 'mr_board_session';
+const SESSION_COOKIE_NAME = "mr_board_session";
 
 // El registro es público, así que necesita su propio freno: sin él, cualquiera
 // podría llenar la base de usuarios. El conteo vive en memoria del proceso.
@@ -24,9 +21,9 @@ const REGISTRATION_WINDOW_MS = 60 * 60 * 1000;
 function sessionCookieOptions(expiresAt) {
   return {
     httpOnly: true,
-    sameSite: 'lax',
+    sameSite: "lax",
     secure: config.cookieSecure,
-    path: '/',
+    path: "/",
     ...(expiresAt ? { expires: expiresAt } : {}),
   };
 }
@@ -55,13 +52,13 @@ function createRequireSession(authService) {
     try {
       user = await authService.authenticate(readSessionToken(request.headers.cookie));
     } catch (error) {
-      console.error('Error al validar la sesión:', error);
-      response.status(503).json({ error: 'No se pudo validar tu sesión. Probá de nuevo.' });
+      console.error("Error al validar la sesión:", error);
+      response.status(503).json({ error: "No se pudo validar tu sesión. Probá de nuevo." });
       return;
     }
 
     if (!user) {
-      response.status(401).json({ error: 'Iniciá sesión para ver el tablero.' });
+      response.status(401).json({ error: "Iniciá sesión para ver el tablero." });
       return;
     }
 
@@ -82,8 +79,8 @@ function createRequireAdmin(authService) {
     (_request, response, next) => {
       const user = response.locals.user;
 
-      if (user.role !== 'admin') {
-        response.status(403).json({ error: 'Necesitás permisos de administrador.' });
+      if (user.role !== "admin") {
+        response.status(403).json({ error: "Necesitás permisos de administrador." });
         return;
       }
 
@@ -93,8 +90,8 @@ function createRequireAdmin(authService) {
 }
 
 /**
- * Crea el router de sesión: registro, login, logout, usuario actual y cambio
- * de la propia contraseña.
+ * Crea el router de sesión: registro, login, logout, usuario actual y cambios
+ * del propio perfil y la contraseña.
  *
  * @param authService Servicio de autenticación ya construido.
  * @returns Router para montar bajo `/api/auth`.
@@ -113,22 +110,22 @@ function createAuthRouter(authService) {
     return recent.length >= MAX_REGISTRATIONS_PER_WINDOW;
   }
 
-  router.post('/register', async (request, response) => {
-    const address = request.ip ?? 'desconocido';
+  router.post("/register", async (request, response) => {
+    const address = request.ip ?? "desconocido";
 
     if (registrationLimitReached(address)) {
-      response.status(429).json({ error: 'Se hicieron demasiados registros. Probá de nuevo más tarde.' });
+      response.status(429).json({ error: "Se hicieron demasiados registros. Probá de nuevo más tarde." });
       return;
     }
 
-    const { username, password, displayName, accountName, inviteCode } = request.body ?? {};
+    const { email, password, displayName, accountName, inviteCode } = request.body ?? {};
 
     try {
       // El código y el nombre de la cuenta se pasan tal como llegaron: es el
       // servicio el que decide si el alta se suma a una cuenta o crea una.
       const result = await authService.register({
-        username: username ?? '',
-        password: password ?? '',
+        email: email ?? "",
+        password: password ?? "",
         ...(displayName === undefined ? {} : { displayName }),
         ...(accountName === undefined ? {} : { accountName }),
         ...(inviteCode === undefined ? {} : { inviteCode }),
@@ -138,62 +135,78 @@ function createAuthRouter(authService) {
       response.cookie(SESSION_COOKIE_NAME, result.token, sessionCookieOptions(result.expiresAt));
       response.status(201).json({ user: result.user });
     } catch (error) {
-      respondWithHttpError(response, error, 'al registrar un usuario');
+      respondWithHttpError(response, error, "al registrar un usuario");
     }
   });
 
-  router.post('/login', async (request, response) => {
-    const { username, password } = request.body ?? {};
+  router.post("/login", async (request, response) => {
+    const { email, password } = request.body ?? {};
 
     try {
-      const result = await authService.login({ username: username ?? '', password: password ?? '' });
+      const result = await authService.login({ email: email ?? "", password: password ?? "" });
 
       response.cookie(SESSION_COOKIE_NAME, result.token, sessionCookieOptions(result.expiresAt));
       response.json({ user: result.user });
     } catch (error) {
-      respondWithHttpError(response, error, 'al iniciar sesión');
+      respondWithHttpError(response, error, "al iniciar sesión");
     }
   });
 
-  router.post('/logout', async (request, response) => {
+  router.post("/logout", async (request, response) => {
     try {
       await authService.logout(readSessionToken(request.headers.cookie));
     } catch (error) {
       // La cookie se limpia igual: dejarla viva sería peor, y el token vence solo.
-      console.error('Error al cerrar la sesión:', error);
+      console.error("Error al cerrar la sesión:", error);
     }
 
     response.clearCookie(SESSION_COOKIE_NAME, sessionCookieOptions());
     response.status(204).end();
   });
 
-  router.get('/me', createRequireSession(authService), (_request, response) => {
+  router.get("/me", createRequireSession(authService), (_request, response) => {
     response.json({ user: response.locals.user });
   });
 
-  router.put('/gitlab-username', createRequireSession(authService), async (request, response) => {
+  router.patch("/profile", createRequireSession(authService), async (request, response) => {
+    const user = response.locals.user;
+    const { email, displayName } = request.body ?? {};
+
+    try {
+      response.json({
+        user: await authService.changeOwnProfile(user.id, {
+          ...(email === undefined ? {} : { email }),
+          ...(displayName === undefined ? {} : { displayName }),
+        }),
+      });
+    } catch (error) {
+      respondWithHttpError(response, error, "al guardar el perfil");
+    }
+  });
+
+  router.put("/gitlab-username", createRequireSession(authService), async (request, response) => {
     const user = response.locals.user;
     const { gitlabUsername } = request.body ?? {};
 
     try {
       response.json({ user: await authService.changeGitlabUsername(user.id, gitlabUsername) });
     } catch (error) {
-      respondWithHttpError(response, error, 'al guardar el nickname de GitLab');
+      respondWithHttpError(response, error, "al guardar el nickname de GitLab");
     }
   });
 
-  router.put('/password', createRequireSession(authService), async (request, response) => {
+  router.put("/password", createRequireSession(authService), async (request, response) => {
     const user = response.locals.user;
     const { currentPassword, newPassword } = request.body ?? {};
 
     try {
-      await authService.changeOwnPassword(user.username, currentPassword ?? '', newPassword ?? '');
+      await authService.changeOwnPassword(user.email, currentPassword ?? "", newPassword ?? "");
 
       // Cambiar la contraseña cierra todas las sesiones, incluida esta.
       response.clearCookie(SESSION_COOKIE_NAME, sessionCookieOptions());
       response.status(204).end();
     } catch (error) {
-      respondWithHttpError(response, error, 'al cambiar la contraseña');
+      respondWithHttpError(response, error, "al cambiar la contraseña");
     }
   });
 

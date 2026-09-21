@@ -4,62 +4,74 @@ El frontend es una aplicación de página única construida con React 19, Vite y
 
 La lógica de negocio vive en el backend. El frontend presenta lo que recibe resuelto —clasificación, responsables y personas— y sólo conserva decisiones de presentación: qué columnas mostrar y en qué orden, agrupar, ordenar visualmente, formatear y filtrar por lo que ya viene calculado.
 
-La aplicación usa componentes de función en archivos `.jsx`, módulos ES y estado compartido basado en las primitivas nativas de React. No incorpora un router, un provider global ni una biblioteca externa de gestión de estado.
+La aplicación usa componentes de función en archivos `.jsx`, módulos ES, React Router en modo declarativo y estado compartido basado en las primitivas nativas de React. No incorpora un provider global ni una biblioteca externa de gestión de estado.
 
 ## Organización del código
 
 El código se divide entre la composición general y las funcionalidades del dominio:
 
-- `src/main.jsx`: carga los estilos globales y monta React mediante `createRoot` y `StrictMode`.
+- `src/main.jsx`: carga los estilos globales y monta React mediante `createRoot`, `StrictMode` y `BrowserRouter`.
 - `src/config.js`: centraliza y valida la configuración expuesta por Vite.
-- `src/app/App.jsx`: decide si mostrar el ingreso o el layout según la sesión, conserva la sección activa y resuelve qué presentar durante la carga, los errores y la ausencia de datos.
-- `src/app/AppShell.jsx`: define el layout —barra superior, navegación entre secciones y contenido— y declara en `SECTIONS` las secciones navegables.
-- `src/features/accounts/`: contiene el store de la cuenta y los componentes que la presentan —el panel del equipo y el indicador de la barra superior—, descritos en el [dominio de cuentas](../domains/cuentas.md).
-- `src/features/auth/`: contiene el store de la sesión, el hook de la lista de usuarios y los componentes de ingreso, alta, administración, contraseña e identidad en GitLab, descritos en el [dominio de autenticación](../domains/autenticacion.md).
-- `src/features/gitlabSettings/`: contiene el formulario de la configuración de GitLab de la cuenta y su hook, descritos en la [configuración de GitLab](../domains/configuracion-gitlab.md).
+- `src/app/App.jsx`: decide si mostrar las rutas públicas o privadas según la sesión y asocia cada URL con una page de su feature.
+- `src/app/components/AppLayout.jsx`: define el layout —barra superior, navegación entre secciones y contenido—; `AccountMenu.jsx` reúne allí la identidad, el equipo y el cierre de sesión.
+- `src/app/constants/routes.consts.js`: mantiene las URLs y los metadatos de navegación como única fuente de verdad.
+- `src/app/constants/styles.consts.js`: centraliza los patrones visuales compartidos por componentes de distintas features.
+- `src/features/accounts/`: contiene el store y los componentes de la cuenta, además de `pages/AccountPage.jsx`, descritos en el [dominio de cuentas](../domains/cuentas.md).
+- `src/features/auth/`: contiene el store de la sesión, el hook de la lista de usuarios, sus componentes y las pages de ingreso, alta, administración y perfil, descritos en el [dominio de autenticación](../domains/autenticacion.md).
+- `src/features/gitlabAccount/`: contiene la sección, el formulario, los estados de carga y lectura, y el hook de la configuración de GitLab de la cuenta, descritos en la [configuración de GitLab](../domains/configuracion-gitlab.md).
+- `src/features/gitlabUser/`: contiene la configuración del nickname de GitLab propio de cada persona.
 - `src/features/mergeRequests/hooks/useMergeRequests.js`: contiene el store compartido, el acceso al backend y el polling.
 - `src/features/mergeRequests/components/`: contiene los componentes del tablero de merge requests.
+- `src/features/mergeRequests/pages/BoardPage.jsx`: compone la pantalla completa del tablero y sus estados.
 - `src/features/mergeRequests/personalView.js`: selecciona los datos de la vista personal a partir del contrato del backend.
 - `src/assets/main.css`: incluye las directivas de Tailwind y los pocos estilos globales que no se expresan mediante utilidades.
 - `test/`: reúne la configuración, los fixtures y las utilidades compartidas según la [estrategia de test](../development/test.md).
 
-Las funcionalidades nuevas deben seguir la estructura `src/features/<feature>/components/` y `src/features/<feature>/hooks/`. `src/app/` se reserva para la composición de alto nivel y no debe absorber lógica propia de una feature.
+Las funcionalidades nuevas deben seguir la estructura `src/features/<feature>/components/`, `hooks/` y `pages/`. Una page representa la pantalla asociada a una URL y compone componentes de su feature; `src/app/` se reserva para el layout, las rutas y la composición de alto nivel.
 
 ## Composición de componentes
 
-`App` consume `useSession()`, monta el tablero sólo con la sesión abierta y resuelve qué sección presentar; `AppShell` aporta el layout y la navegación; `Board` consume `useMergeRequests()` y distribuye datos y callbacks mediante props explícitas. El árbol principal es:
+`App` consume `useSession()`, monta las pages sólo con la sesión correspondiente y resuelve las rutas públicas o privadas; `AppLayout` aporta el layout y la navegación; `BoardPage` consume `useMergeRequests()` y distribuye datos y callbacks mediante props explícitas. El árbol principal es:
 
 ```text
 App
-└── AppShell
-    ├── AccountBadge                 (con sesión)
-    ├── SessionBar                   (con sesión)
-    ├── LoginForm / RegisterForm     (sin sesión)
-    ├── Board                        (sección «Tablero»)
+└── AppLayout
+    ├── AccountMenu                  (con sesión)
+    ├── LoginPage / RegisterPage     (sin sesión)
+    │   └── LoginForm / RegisterForm
+    ├── BoardPage                    (sección «Tablero»)
     │   ├── ViewControls
     │   ├── TopBar
     │   └── MrBoard
     │       └── BoardColumn
     │           └── MrCard
     │               └── BlockerBadge
-    ├── AccountPanel                 (sección «Mi cuenta»)
-    ├── GitlabSettingsForm           (sección «Mi cuenta»)
-    ├── GitlabIdentityPanel          (sección «Mi cuenta»)
-    ├── PasswordPanel                (sección «Mi cuenta»)
-    └── UserAdmin                    (sección «Usuarios», sólo con rol admin)
+    ├── AccountPage                 (sección «Mi cuenta»)
+    │   ├── AccountSettingsSection
+    │   ├── AccountMemberInviteSection  (sólo admin)
+    │   ├── GitlabAccountSettingsSection
+    │   └── GitlabUserSettingsSection
+    ├── ProfilePage                 (sección «Mi perfil»)
+    │   ├── ProfilePanel
+    │   └── PasswordPanel
+    └── UsersPage                    (sección «Usuarios», sólo con rol admin)
+        └── UserAdmin
 ```
 
-- `AppShell` presenta la barra superior con el nombre del tablero, la navegación entre secciones y la sesión, y envuelve el contenido en el único `main` de la aplicación. La barra aparece sólo con la sesión abierta, porque el ingreso y el alta son pantallas completas con su propio encabezado principal.
-- `LoginForm` pide usuario y contraseña, muestra el error que devuelve el backend y ofrece pasar al alta.
+- `AppLayout` presenta la barra superior con el nombre del tablero, la navegación principal y el avatar que abre el menú de cuenta, y envuelve el contenido en el único `main` de la aplicación. «Mi perfil» se abre desde «Editar perfil» y «Mi cuenta» desde «Editar cuenta» —o «Ver cuenta» sin permisos de escritura—; ninguna ocupa un botón propio en la barra. La barra aparece sólo con la sesión abierta, porque el ingreso y el alta son pantallas completas con su propio encabezado principal.
+- `LoginForm` pide email y contraseña, muestra el error que devuelve el backend y ofrece pasar al alta.
 - `RegisterForm` da de alta la persona y elige entre sus dos caminos excluyentes: sumarse a un equipo con su código de invitación, o abrir uno nuevo. Valida en el navegador las mismas reglas que el backend para avisar antes de enviar.
-- `SessionBar` identifica a quién pertenece la sesión y permite cerrarla, y `AccountBadge` muestra de qué equipo es el tablero que se está mirando.
-- `AccountPanel` presenta el equipo: su nombre, cuánta gente lo integra y, para un `admin`, el código de invitación y su renovación.
-- `GitlabSettingsForm` resuelve los IDs de los proyectos y el access token de la cuenta. Sólo los edita un `admin`; al resto le presenta la configuración vigente en modo lectura. El campo del token arranca vacío en cada visita, porque el backend nunca lo devuelve: dejarlo así conserva el guardado.
-- `GitlabIdentityPanel` resuelve el nickname de GitLab propio, del que depende la vista personal.
+- `AccountMenu` concentra detrás de un avatar el nombre visible, el email, el equipo, los accesos separados al perfil y a la cuenta, y el cierre de sesión. Se cierra al elegir una acción, al interactuar fuera o con `Escape`, que devuelve el foco al avatar.
+- `AccountPage` y `ProfilePage` componen exclusivamente las pantallas de cuenta y perfil; `App` asocia cada page con su URL.
+- `AccountSettingsSection` presenta el equipo: su nombre y cuánta gente lo integra.
+- `AccountMemberInviteSection` presenta a un `admin` el código de invitación y permite renovarlo; `AccountPage` la compone como una sección independiente dentro de «Mi cuenta».
+- `GitlabAccountSettingsSection` carga los IDs de los proyectos y el estado del access token de la cuenta, presenta un skeleton accesible mientras espera y decide entre la edición para un `admin` o el resumen de sólo lectura. `GitlabAccountSettingsForm` concentra los campos, el envío y sus mensajes; el token arranca vacío en cada visita porque el backend nunca lo devuelve, y dejarlo así conserva el guardado.
+- `ProfilePanel` permite cambiar el nombre visible y el email propios desde «Mi perfil» y comunica el resultado sin sacar a la persona de la pantalla.
+- `GitlabUserSettingsSection` resuelve en «Mi cuenta» el nickname de GitLab propio, lo precarga desde la sesión y permite actualizarlo; de él depende la vista personal.
 - `PasswordPanel` resuelve el cambio de la propia contraseña.
 - `UserAdmin` lista los usuarios de la cuenta y permite dar de alta, habilitar y deshabilitar. No ofrece restablecer contraseñas: eso se hace por línea de comandos.
 - `TopBar` presenta los totales, el estado de sincronización y la actualización manual del tablero.
-- `ViewControls` alterna entre la vista general y la personal. El selector de persona aparece sólo con `canChoosePerson`, que `App` activa para un `admin`: el resto ve siempre sus propias tareas, identificadas por `meta.viewerUsername`.
+- `ViewControls` alterna entre la vista general y la personal. El selector de persona aparece sólo con `canChoosePerson`, que `App` entrega a `BoardPage` para un `admin`: el resto ve siempre sus propias tareas, identificadas por `meta.viewerUsername`.
 - `MrBoard` agrupa los merge requests por proyecto, mantiene el estado local de expansión y los distribuye según su clasificación. Ambas vistas reutilizan este componente; la personal le entrega únicamente las tareas de la persona seleccionada.
 - `BoardColumn` representa una categoría mediante una lista semántica con scroll vertical.
 - `MrCard` resume el merge request, presenta los responsables que informa `responsiblePeople` y enlaza a GitLab.
@@ -71,11 +83,13 @@ Los componentes presentacionales reciben valores mediante props y notifican acci
 
 ## Navegación entre secciones
 
-No hay router: la sección activa es estado local de `App`, porque nadie más la observa. `AppShell` declara las secciones en `SECTIONS` —`board`, `account` y `users`— y `App` resuelve el contenido con el mismo `id`, así que agregar una sección es sumarla a esa lista y contemplarla en `ActiveSection`.
+React Router mantiene una URL por pantalla: `/ingresar`, `/registro`, `/tablero`, `/perfil`, `/cuenta` y `/usuarios`. `BrowserRouter` envuelve la aplicación; `App` declara los `Routes`; y los enlaces de `AppLayout` y `AccountMenu` permiten historial, recarga y acceso directo. El rewrite de `frontend/vercel.json` devuelve `index.html` para esas rutas en producción.
 
-`sectionsFor(user)` decide qué secciones ofrece la barra: `users` sólo aparece con rol `admin`. Dentro de «Mi cuenta», el rol también decide qué tarjetas se pueden editar. Si la sección activa deja de estar disponible, `App` cae en el tablero en lugar de dejar la pantalla vacía. Esconder la sección es una cortesía de la interfaz: el backend valida el rol ruta por ruta, según el [dominio de autenticación](../domains/autenticacion.md).
+`routes.consts.js` define `APP_PATHS` y `NAVIGATION_SECTIONS` como única fuente de verdad. `profile` y `account` llevan `menuOnly` porque se abren desde el avatar y no se muestran en la navegación principal. Al agregar una pantalla hay que sumar su URL, su metadato de navegación si corresponde y su `Route` pública o privada.
 
-Al cerrar la sesión la app vuelve al tablero, para que la próxima no empiece donde quedó la anterior, y descarta los stores del tablero y de la cuenta.
+Las rutas privadas redirigen a `/ingresar` sin sesión y las públicas redirigen a `/tablero` con una sesión abierta. `getNavigationSectionsForUser(user)` decide qué enlaces puede ver cada persona y `/usuarios` redirige al tablero si el rol no es `admin`. «Mi perfil» siempre es editable por su titular; dentro de «Mi cuenta», el rol decide si el contenido compartido se edita o se consulta, mientras que el nickname personal siempre puede actualizarse. Esconder o redirigir una sección es una cortesía de la interfaz: el backend valida el rol ruta por ruta, según el [dominio de autenticación](../domains/autenticacion.md).
+
+Al cerrar la sesión la app navega a `/ingresar` y descarta los stores del tablero y de la cuenta.
 
 ## Estado compartido
 
@@ -92,7 +106,7 @@ Al cerrar la sesión la app vuelve al tablero, para que la próxima no empiece d
 
 No hay un provider: todos los consumidores del hook se suscriben a la misma instancia. El estado que deba observar más de un componente debe incorporarse al store; `useState` se reserva para estado local de interfaz, como las secciones expandidas de `MrBoard`.
 
-`features/auth/hooks/useSession.js` mantiene un segundo store con el mismo patrón, porque la sesión también la observan varios componentes, y `features/accounts/hooks/useAccount.js` un tercero para la cuenta, que miran la barra superior y la pantalla del equipo. Ese último se recarga cuando el `accountId` de la sesión deja de coincidir con la cuenta que tiene guardada, que es lo que pasa al entrar con otro usuario. La lista de usuarios, en cambio, la consume una sola pantalla: `useUsers` la resuelve con estado local.
+`features/auth/hooks/useSession.js` mantiene un segundo store con el mismo patrón, porque la sesión también la observan varios componentes, y `features/accounts/hooks/useAccount.js` un tercero para la cuenta, que miran el menú de la barra superior y la pantalla del equipo. Ese último se recarga cuando el `accountId` de la sesión deja de coincidir con la cuenta que tiene guardada, que es lo que pasa al entrar con otro usuario. La lista de usuarios, en cambio, la consume una sola pantalla: `useUsers` la resuelve con estado local.
 
 ### Ciclo de suscripción y polling
 
@@ -134,8 +148,9 @@ Ambas vistas usan secciones verticales por proyecto. Cada sección despliega sei
 
 La interfaz apunta a WCAG 2.2 nivel AA y aplica estas decisiones:
 
-- `AppShell` incluye un enlace para saltar al contenido principal y presenta la aplicación con un único `main` y un único `h1`.
+- `AppLayout` incluye un enlace para saltar al contenido principal y presenta la aplicación con un único `main` y un único `h1`.
 - La navegación es un `nav` etiquetado y la sección activa se marca con `aria-current="page"`, además del contraste y el peso tipográfico.
+- El menú de cuenta expone su estado con `aria-expanded`, mantiene un recorrido de foco natural y se puede cerrar con `Escape` devolviendo el foco al avatar.
 - Los estados de carga, vacío y error usan roles semánticos.
 - Los cambios asíncronos se anuncian mediante una región viva.
 - Los proyectos son secciones desplegables con `aria-expanded` y `aria-controls`.

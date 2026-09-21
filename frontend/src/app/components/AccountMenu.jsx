@@ -1,0 +1,182 @@
+import { useEffect, useId, useRef, useState } from "react";
+import { Link } from "react-router";
+
+import { APP_PATHS } from "../constants/routes.consts.js";
+import { MENU_ICON_CLASSES, MENU_ITEM_CLASSES } from "../constants/styles.consts.js";
+
+import { useAccount } from "../../features/accounts/hooks/useAccount.js";
+import { getUserInitials } from "../../features/user/utils/user.utils.js";
+
+export function AccountMenu(props) {
+  const {
+    onLogout = () => {},
+    user = null,
+  } = props;
+
+  const { account, loading } = useAccount(user?.accountId ?? null);
+
+  const containerRef = useRef(null);
+  const triggerRef = useRef(null);
+  const menuId = useId();
+
+  const [isOpen, setIsOpen] = useState(false);
+
+  function closeMenu() {
+    setIsOpen(false);
+  }
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    function handlePointerDown(event) {
+      if (!containerRef.current?.contains(event.target)) closeMenu();
+    }
+
+    function handleKeyDown(event) {
+      if (event.key !== "Escape") return;
+
+      closeMenu();
+      triggerRef.current?.focus();
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen]);
+
+  if (!user) return null;
+
+  function handleLogout() {
+    closeMenu();
+    onLogout();
+  }
+
+  return (
+    <div className="relative ml-auto" ref={containerRef}>
+      <button
+        aria-controls={isOpen ? menuId : undefined}
+        aria-expanded={isOpen}
+        aria-label={`${isOpen ? "Cerrar" : "Abrir"} menú de cuenta de ${user.displayName}`}
+        className="flex min-h-10 items-center gap-1.5 rounded-full border border-control bg-surface px-1.5 py-1 text-text-primary hover:border-accent hover:bg-surface-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        onClick={() => {
+          if (isOpen) {
+            closeMenu();
+            return;
+          }
+
+          setIsOpen(true);
+        }}
+        ref={triggerRef}
+        type="button"
+      >
+        <span
+          aria-hidden="true"
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-[12px] font-bold text-bg"
+        >
+          {getUserInitials(user)}
+        </span>
+
+        <svg
+          aria-hidden="true"
+          className={`h-4 w-4 text-text-muted transition-transform ${isOpen ? "rotate-180" : ""}`}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          viewBox="0 0 20 20"
+        >
+          <path d="m6 8 4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+
+      {isOpen ? (
+        <div
+          aria-label="Menú de cuenta"
+          className="absolute right-0 top-full z-50 mt-2 w-72 overflow-hidden rounded-lg border border-border bg-surface shadow-2xl"
+          id={menuId}
+          role="region"
+        >
+          <div className="flex items-center gap-3 px-4 py-3.5">
+            <span
+              aria-hidden="true"
+              className="flex h-11 w-11 flex-none items-center justify-center rounded-full bg-accent text-sm font-bold text-bg"
+            >
+              {getUserInitials(user)}
+            </span>
+
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-text-primary">{user.displayName}</p>
+              <p className="truncate text-xs text-text-muted">{user.email}</p>
+            </div>
+          </div>
+
+          <dl className="border-y border-border-soft px-4 py-3">
+            <dt className="text-[11px] font-semibold uppercase tracking-wide text-text-faint">Equipo</dt>
+            <dd className="mt-0.5 truncate text-sm text-text-primary">
+              {account?.name ?? (loading ? "Cargando…" : "No disponible")}
+            </dd>
+          </dl>
+
+          <div className="p-2">
+            <Link
+              className={MENU_ITEM_CLASSES}
+              onClick={closeMenu}
+              to={APP_PATHS.profile}
+            >
+              <svg
+                aria-hidden="true"
+                className={MENU_ICON_CLASSES}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                viewBox="0 0 20 20"
+              >
+                <path d="m13.5 3.5 3 3L7 16H4v-3L13.5 3.5Z" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Editar perfil
+            </Link>
+
+            <Link
+              className={MENU_ITEM_CLASSES}
+              onClick={closeMenu}
+              to={APP_PATHS.account}
+            >
+              <svg
+                aria-hidden="true"
+                className={MENU_ICON_CLASSES}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                viewBox="0 0 20 20"
+              >
+                <path d="M3.5 16.5h13M5 16.5v-9h10v9M7.5 10h1m3 0h1m-5 3h1m3 0h1M4 7.5 10 3l6 4.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              {user.role === "admin" ? "Editar cuenta" : "Ver cuenta"}
+            </Link>
+
+            <button
+              className={MENU_ITEM_CLASSES}
+              onClick={handleLogout}
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                className={MENU_ICON_CLASSES}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                viewBox="0 0 20 20"
+              >
+                <path d="M8 4H5.5A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8M12.5 6.5 16 10l-3.5 3.5M7 10h9" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Cerrar sesión
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}

@@ -1,12 +1,11 @@
-// 6. Imports relativos restantes.
-import { findPersonByUsername } from '../personalView.js'
+import { findPersonByUsername } from "../personalView.js";
 
 const VIEW_OPTIONS = [
-  { id: 'general', label: 'General' },
-  { id: 'personal', label: 'Personal' },
-]
+  { id: "general", label: "General" },
+  { id: "personal", label: "Personal" },
+];
 
-const OPTION_CLASSES = 'px-3 py-1 text-[13px] rounded cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
+const OPTION_CLASSES = "px-3 py-1 text-[13px] rounded cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
 /**
  * Controles de la vista del tablero.
@@ -15,50 +14,52 @@ const OPTION_CLASSES = 'px-3 py-1 text-[13px] rounded cursor-pointer focus-visib
  * ese permiso la vista personal muestra siempre las tareas propias, así que el
  * selector sobra.
  */
-function ViewControls({
-  viewMode = 'general',
-  people = [],
-  selectedUsername = '',
-  selectedPersonName = '',
-  canChoosePerson = false,
-  onViewChange = () => {},
-  onPersonChange = () => {},
-}) {
-  const selectedPersonIsAvailable = Boolean(findPersonByUsername(people, selectedUsername))
+export function ViewControls(props) {
+  const {
+    canChoosePerson = false,
+    onPersonChange = () => {},
+    onViewChange = () => {},
+    people = [],
+    selectedPersonName = "",
+    selectedUsername = "",
+    viewMode = "general",
+  } = props;
+
+  const selectedPersonIsAvailable = Boolean(findPersonByUsername(people, selectedUsername));
 
   return (
-    <section className="flex items-center gap-3 flex-wrap" aria-label="Configuración de la vista">
+    <section aria-label="Configuración de la vista" className="flex items-center gap-3 flex-wrap">
       <div
+        aria-label="Tipo de vista"
         className="inline-flex gap-0.5 rounded-md border border-control p-0.5"
         role="group"
-        aria-label="Tipo de vista"
       >
         {VIEW_OPTIONS.map((option) => {
-          const isSelected = viewMode === option.id
+          const isSelected = viewMode === option.id;
 
           return (
             <button
-              key={option.id}
-              type="button"
               aria-pressed={isSelected}
-              onClick={() => onViewChange(option.id)}
               className={`${OPTION_CLASSES} ${isSelected
-                ? 'bg-surface-raised font-semibold text-text-primary'
-                : 'text-text-muted hover:text-text-primary'}`}
+                ? "bg-surface-raised font-semibold text-text-primary"
+                : "text-text-muted hover:text-text-primary"}`}
+              key={option.id}
+              onClick={() => onViewChange(option.id)}
+              type="button"
             >
               {option.label}
             </button>
-          )
+          );
         })}
       </div>
 
-      {viewMode === 'personal' && canChoosePerson ? (
+      {viewMode === "personal" && canChoosePerson ? (
         <label className="flex items-center gap-2 text-[12px] font-semibold text-text-muted">
           Persona
           <select
-            value={selectedUsername}
-            onChange={(event) => onPersonChange(event.target.value)}
             className="min-w-56 rounded-md border border-control bg-surface-raised px-3 py-1.5 text-[13px] font-normal text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            onChange={(event) => onPersonChange(event.target.value)}
+            value={selectedUsername}
           >
             <option value="">Elegí una persona</option>
             {selectedUsername && !selectedPersonIsAvailable ? (
@@ -75,7 +76,5 @@ function ViewControls({
         </label>
       ) : null}
     </section>
-  )
+  );
 }
-
-export default ViewControls

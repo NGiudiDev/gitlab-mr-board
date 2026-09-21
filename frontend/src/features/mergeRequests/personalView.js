@@ -12,9 +12,9 @@
  * @returns {{name: string, username: string}|null} Persona encontrada.
  */
 function findPersonByUsername(people, username) {
-  if (!username) return null
+  if (!username) return null;
 
-  return people.find((person) => person.username === username) ?? null
+  return people.find((person) => person.username === username) ?? null;
 }
 
 /**
@@ -25,11 +25,11 @@ function findPersonByUsername(people, username) {
  * @returns {Array<object>} Merge requests de esa persona.
  */
 function mergeRequestsForPerson(mergeRequests, username) {
-  if (!username) return []
+  if (!username) return [];
 
   return mergeRequests.filter((mr) => mr.responsiblePeople.some(
     (person) => person.username === username,
-  ))
+  ));
 }
 
-export { findPersonByUsername, mergeRequestsForPerson }
+export { findPersonByUsername, mergeRequestsForPerson };
