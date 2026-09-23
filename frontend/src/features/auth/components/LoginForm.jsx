@@ -1,16 +1,15 @@
 import { useState } from "react";
 
 import {
-  AUTH_FORM_CLASSES,
-  AUTH_FORM_DESCRIPTION_CLASSES,
-  AUTH_FORM_HEADING_CLASSES,
-  AUTH_FORM_SUBMIT_BUTTON_CLASSES,
-  AUTH_FORM_SWITCH_CLASSES,
-  BUTTON_LINK_CLASSES,
-  ERROR_ALERT_CLASSES,
-  FIELD_CLASSES,
-  LABEL_CLASSES,
-  SUCCESS_ALERT_CLASSES,
+  Alert,
+  AuthForm,
+  AuthFormDescription,
+  AuthFormHeading,
+  AuthFormSwitch,
+  AuthSubmitButton,
+  ButtonLink,
+  Field,
+  SpacedLabel,
 } from "../../../app/constants/styles.consts.js";
 
 export function LoginForm(props) {
@@ -31,35 +30,30 @@ export function LoginForm(props) {
   }
 
   return (
-    <form
-      aria-labelledby="login-heading"
-      className={AUTH_FORM_CLASSES}
-      onSubmit={handleSubmit}
-    >
-      <h1 className={AUTH_FORM_HEADING_CLASSES} id="login-heading">
+    <AuthForm aria-labelledby="login-heading" onSubmit={handleSubmit}>
+      <AuthFormHeading id="login-heading">
         Tablero de MRs
-      </h1>
+      </AuthFormHeading>
 
-      <p className={AUTH_FORM_DESCRIPTION_CLASSES}>Ingresá con tu email para ver el tablero.</p>
+      <AuthFormDescription>Ingresá con tu email para ver el tablero.</AuthFormDescription>
 
       {error ? (
-        <p className={ERROR_ALERT_CLASSES} role="alert">
+        <Alert role="alert">
           {error}
-        </p>
+        </Alert>
       ) : null}
 
       {notice ? (
-        <p className={SUCCESS_ALERT_CLASSES} role="status">
+        <Alert $success role="status">
           {notice}
-        </p>
+        </Alert>
       ) : null}
 
-      <label className={`${LABEL_CLASSES} mb-3`} htmlFor="login-email">
+      <SpacedLabel htmlFor="login-email">
         Email
-        <input
+        <Field
           autoCapitalize="none"
           autoComplete="email"
-          className={FIELD_CLASSES}
           id="login-email"
           inputMode="email"
           name="email"
@@ -69,13 +63,12 @@ export function LoginForm(props) {
           type="text"
           value={email}
         />
-      </label>
+      </SpacedLabel>
 
-      <label className={`${LABEL_CLASSES} mb-3`} htmlFor="login-password">
+      <SpacedLabel htmlFor="login-password">
         Contraseña
-        <input
+        <Field
           autoComplete="current-password"
-          className={FIELD_CLASSES}
           id="login-password"
           name="password"
           onChange={(event) => setPassword(event.target.value)}
@@ -83,26 +76,18 @@ export function LoginForm(props) {
           type="password"
           value={password}
         />
-      </label>
+      </SpacedLabel>
 
-      <button
-        className={AUTH_FORM_SUBMIT_BUTTON_CLASSES}
-        disabled={submitting}
-        type="submit"
-      >
+      <AuthSubmitButton disabled={submitting} type="submit">
         {submitting ? "Ingresando..." : "Ingresar"}
-      </button>
+      </AuthSubmitButton>
 
-      <p className={AUTH_FORM_SWITCH_CLASSES}>
+      <AuthFormSwitch>
         ¿No tenés cuenta?{" "}
-        <button
-          className={BUTTON_LINK_CLASSES}
-          onClick={onShowRegister}
-          type="button"
-        >
+        <ButtonLink onClick={onShowRegister} type="button">
           Crear una cuenta
-        </button>
-      </p>
-    </form>
+        </ButtonLink>
+      </AuthFormSwitch>
+    </AuthForm>
   );
 }

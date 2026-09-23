@@ -46,39 +46,58 @@ function tooltipFor(type, data) {
   return "";
 }
 
-function badgeClasses(type, data) {
+function badgeColors(type, data) {
   if (type === "pipeline") {
     const status = data.status;
-    if (status === "success") return "bg-ready-soft text-ready";
-    if (status === "failed" || status === "canceled") return "bg-conflict-soft text-conflict";
-    if (status === "running" || status === "pending") return "bg-draft-soft text-draft";
-    return "bg-surface text-text-muted";
+    if (status === "success") return ["var(--color-ready-soft)", "var(--color-ready)"];
+    if (status === "failed" || status === "canceled") return ["var(--color-conflict-soft)", "var(--color-conflict)"];
+    if (status === "running" || status === "pending") return ["var(--color-draft-soft)", "var(--color-draft)"];
+    return ["var(--color-surface)", "var(--color-text-muted)"];
   }
   if (type === "threads") {
-    return data.unresolvedCount > 0 ? "bg-conflict-soft text-conflict" : "bg-ready-soft text-ready";
+    return data.unresolvedCount > 0
+      ? ["var(--color-conflict-soft)", "var(--color-conflict)"]
+      : ["var(--color-ready-soft)", "var(--color-ready)"];
   }
   if (type === "approvals") {
-    if (data.status === "approved") return "bg-ready-soft text-ready";
-    if (data.status === "pending") return "bg-draft-soft text-draft";
-    return "bg-surface text-text-muted";
+    if (data.status === "approved") return ["var(--color-ready-soft)", "var(--color-ready)"];
+    if (data.status === "pending") return ["var(--color-draft-soft)", "var(--color-draft)"];
+    return ["var(--color-surface)", "var(--color-text-muted)"];
   }
   if (type === "conflicts") {
-    return data.hasConflicts ? "bg-conflict-soft text-conflict" : "bg-ready-soft text-ready";
+    return data.hasConflicts
+      ? ["var(--color-conflict-soft)", "var(--color-conflict)"]
+      : ["var(--color-ready-soft)", "var(--color-ready)"];
   }
-  return "bg-surface text-text-muted";
+  return ["var(--color-surface)", "var(--color-text-muted)"];
 }
+
+const Badge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  background: ${({ $colors }) => $colors[0]};
+  color: ${({ $colors }) => $colors[1]};
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-decoration: none;
+  ${focusRingStyles}
+`;
 
 export function BlockerBadge(props) {
   const { data, type } = props;
 
   const linkUrl = type === "pipeline" ? data.pipelineUrl || null : null;
   const tooltip = tooltipFor(type, data);
-  const Tag = linkUrl ? "a" : "span";
+  const colors = badgeColors(type, data);
 
   return (
-    <Tag
+    <Badge
+      $colors={colors}
       aria-label={`${tooltip}${linkUrl ? ". Abre en una pestaña nueva." : ""}`}
-      className={`${badgeClasses(type, data)} inline-flex items-center gap-1 text-[11px] font-semibold px-1.5 py-0.5 rounded no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent`}
+      as={linkUrl ? "a" : "span"}
       href={linkUrl || undefined}
       rel={linkUrl ? "noopener" : undefined}
       target={linkUrl ? "_blank" : undefined}
@@ -86,7 +105,10 @@ export function BlockerBadge(props) {
     >
       <span aria-hidden="true">{iconFor(type, data)}</span>
       <span>{labelFor(type, data)}</span>
-      {linkUrl ? <span className="sr-only">(abre en una pestaña nueva)</span> : null}
-    </Tag>
+      {linkUrl ? <VisuallyHidden>(abre en una pestaña nueva)</VisuallyHidden> : null}
+    </Badge>
   );
 }
+import styled from "styled-components";
+
+import { focusRingStyles, VisuallyHidden } from "../../../app/constants/styles.consts.js";

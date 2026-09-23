@@ -1,21 +1,110 @@
 import { useState } from "react";
+import styled from "styled-components";
 
 import {
-  ERROR_ALERT_CLASSES,
-  FIELD_CLASSES,
-  LABEL_CLASSES,
-  LOADING_TEXT_CLASSES,
-  PRIMARY_BUTTON_CLASSES,
-  SECTION_DESCRIPTION_CLASSES,
-  SECTION_HEADING_CLASSES,
-  SUCCESS_ALERT_CLASSES,
+  Alert,
+  Button,
+  Field,
+  focusRingStyles,
+  Label,
+  LoadingText,
+  SectionDescription,
+  SectionHeading,
+  VisuallyHidden,
 } from "../../../app/constants/styles.consts.js";
 
 import { isAdmin } from "../../accounts/utils/account.utils.js";
 
 import { useUsers } from "../hooks/useUsers.js";
 
-const ACTION_CLASSES = "px-2.5 py-1 rounded-md border border-control text-[12px] text-text-primary hover:border-accent cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+const AdminSection = styled.section`
+  padding: 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-surface);
+`;
+
+const CreateForm = styled.form`
+  margin-bottom: 1.5rem;
+`;
+
+const FormHeading = styled.h3`
+  margin: 0 0 0.75rem;
+  color: var(--color-text-primary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+`;
+
+const FormGrid = styled.div`
+  display: grid;
+  gap: 0.75rem;
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+`;
+
+const CreateButton = styled(Button)`
+  margin-top: 0.75rem;
+`;
+
+const TableViewport = styled.div`
+  overflow-x: auto;
+`;
+
+const UsersTable = styled.table`
+  width: 100%;
+  color: var(--color-text-primary);
+  font-size: 0.78125rem;
+  text-align: left;
+  border-collapse: collapse;
+`;
+
+const TableHead = styled.thead`
+  color: var(--color-text-muted);
+`;
+
+const HeaderCell = styled.th`
+  padding: 0.5rem ${({ $last }) => $last ? 0 : "1rem"} 0.5rem 0;
+  font-weight: 600;
+`;
+
+const UserRow = styled.tr`
+  border-top: 1px solid var(--color-border-soft);
+`;
+
+const UserEmail = styled.th`
+  padding: 0.5rem 1rem 0.5rem 0;
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-weight: 400;
+`;
+
+const UserCell = styled.td`
+  padding: 0.5rem ${({ $last }) => $last ? 0 : "1rem"} 0.5rem 0;
+  color: ${({ $muted }) => $muted ? "var(--color-text-muted)" : "var(--color-text-primary)"};
+`;
+
+const ActionButton = styled.button`
+  padding: 0.25rem 0.625rem;
+  border: 1px solid var(--color-control);
+  border-radius: 0.375rem;
+  background: transparent;
+  color: var(--color-text-primary);
+  font-size: 0.75rem;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--color-accent);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  ${focusRingStyles}
+`;
 
 const EMPTY_FORM = { email: "", displayName: "", password: "", role: "user" };
 
@@ -43,18 +132,17 @@ function CreateUserForm(props) {
   }
 
   return (
-    <form aria-labelledby="alta-heading" className="mb-6" onSubmit={handleSubmit}>
-      <h3 className="text-[13px] font-semibold text-text-primary mb-3" id="alta-heading">
+    <CreateForm aria-labelledby="alta-heading" onSubmit={handleSubmit}>
+      <FormHeading id="alta-heading">
         Dar de alta un usuario en el equipo
-      </h3>
+      </FormHeading>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <label className={LABEL_CLASSES} htmlFor="alta-email">
+      <FormGrid>
+        <Label htmlFor="alta-email">
           Email
-          <input
+          <Field
             autoCapitalize="none"
             autoComplete="email"
-            className={FIELD_CLASSES}
             id="alta-email"
             maxLength={254}
             name="email"
@@ -64,25 +152,23 @@ function CreateUserForm(props) {
             type="email"
             value={form.email}
           />
-        </label>
+        </Label>
 
-        <label className={LABEL_CLASSES} htmlFor="alta-nombre">
+        <Label htmlFor="alta-nombre">
           Nombre visible (opcional)
-          <input
-            className={FIELD_CLASSES}
+          <Field
             id="alta-nombre"
             maxLength={80}
             onChange={updateField("displayName")}
             type="text"
             value={form.displayName}
           />
-        </label>
+        </Label>
 
-        <label className={LABEL_CLASSES} htmlFor="alta-password">
+        <Label htmlFor="alta-password">
           Contraseña inicial
-          <input
+          <Field
             autoComplete="new-password"
-            className={FIELD_CLASSES}
             id="alta-password"
             minLength={8}
             onChange={updateField("password")}
@@ -90,30 +176,26 @@ function CreateUserForm(props) {
             type="password"
             value={form.password}
           />
-        </label>
+        </Label>
 
-        <label className={LABEL_CLASSES} htmlFor="alta-rol">
+        <Label htmlFor="alta-rol">
           Rol
-          <select
-            className={FIELD_CLASSES}
+          <Field
+            as="select"
             id="alta-rol"
             onChange={updateField("role")}
             value={form.role}
           >
             <option value="user">Usuario</option>
             <option value="admin">Administrador</option>
-          </select>
-        </label>
-      </div>
+          </Field>
+        </Label>
+      </FormGrid>
 
-      <button
-        className={`${PRIMARY_BUTTON_CLASSES} mt-3`}
-        disabled={submitting}
-        type="submit"
-      >
+      <CreateButton disabled={submitting} type="submit">
         {submitting ? "Creando..." : "Crear usuario"}
-      </button>
-    </form>
+      </CreateButton>
+    </CreateForm>
   );
 }
 
@@ -172,80 +254,79 @@ export function UserAdmin(props) {
   }
 
   return (
-    <section aria-labelledby="usuarios-heading" className="rounded-lg border border-border bg-surface p-5">
-      <h2 className={SECTION_HEADING_CLASSES} id="usuarios-heading">
+    <AdminSection aria-labelledby="usuarios-heading">
+      <SectionHeading id="usuarios-heading">
         Usuarios
-      </h2>
+      </SectionHeading>
 
-      <p className={SECTION_DESCRIPTION_CLASSES}>
+      <SectionDescription>
         Las personas de tu cuenta. Todas ven el mismo tablero: no tienen que cargar credenciales de GitLab.
-      </p>
+      </SectionDescription>
 
       {actionError || error ? (
-        <p className={ERROR_ALERT_CLASSES} role="alert">
+        <Alert role="alert">
           {actionError ?? error}
-        </p>
+        </Alert>
       ) : null}
 
       {message ? (
-        <p className={SUCCESS_ALERT_CLASSES} role="status">
+        <Alert $success role="status">
           {message}
-        </p>
+        </Alert>
       ) : null}
 
       <CreateUserForm onCreate={handleCreate} submitting={busyEmail !== null} />
 
       {loading ? (
-        <p className={LOADING_TEXT_CLASSES} role="status">Cargando usuarios...</p>
+        <LoadingText role="status">Cargando usuarios...</LoadingText>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-[12.5px]">
-            <caption className="sr-only">Personas de la cuenta y sus permisos</caption>
-            <thead className="text-text-muted">
+        <TableViewport>
+          <UsersTable>
+            <VisuallyHidden as="caption">Personas de la cuenta y sus permisos</VisuallyHidden>
+            <TableHead>
               <tr>
-                <th className="py-2 pr-4 font-semibold" scope="col">Email</th>
-                <th className="py-2 pr-4 font-semibold" scope="col">Nombre</th>
-                <th className="py-2 pr-4 font-semibold" scope="col">Rol</th>
-                <th className="py-2 pr-4 font-semibold" scope="col">Estado</th>
-                <th className="py-2 pr-4 font-semibold" scope="col">Último ingreso</th>
-                <th className="py-2 font-semibold" scope="col">Acciones</th>
+                <HeaderCell scope="col">Email</HeaderCell>
+                <HeaderCell scope="col">Nombre</HeaderCell>
+                <HeaderCell scope="col">Rol</HeaderCell>
+                <HeaderCell scope="col">Estado</HeaderCell>
+                <HeaderCell scope="col">Último ingreso</HeaderCell>
+                <HeaderCell $last scope="col">Acciones</HeaderCell>
               </tr>
-            </thead>
+            </TableHead>
             <tbody>
               {users.map((user) => {
                 const isCurrentUser = user.email === currentEmail;
 
                 return (
-                  <tr className="border-t border-border-soft" key={user.email}>
-                    <th className="py-2 pr-4 font-mono font-normal text-text-primary" scope="row">
+                  <UserRow key={user.email}>
+                    <UserEmail scope="row">
                       {user.email}
-                    </th>
-                    <td className="py-2 pr-4 text-text-primary">{user.displayName}</td>
-                    <td className="py-2 pr-4 text-text-muted">
+                    </UserEmail>
+                    <UserCell>{user.displayName}</UserCell>
+                    <UserCell $muted>
                       {isAdmin(user) ? "Administrador" : "Usuario"}
-                    </td>
-                    <td className="py-2 pr-4 text-text-muted">
+                    </UserCell>
+                    <UserCell $muted>
                       {user.status === "active" ? "Habilitado" : "Deshabilitado"}
-                    </td>
-                    <td className="py-2 pr-4 text-text-muted">{formatDate(user.lastLoginAt)}</td>
-                    <td className="py-2">
-                      <button
-                        className={ACTION_CLASSES}
+                    </UserCell>
+                    <UserCell $muted>{formatDate(user.lastLoginAt)}</UserCell>
+                    <UserCell $last>
+                      <ActionButton
                         disabled={isCurrentUser || busyEmail === user.email}
                         onClick={() => handleToggleStatus(user)}
                         title={isCurrentUser ? "No podés cambiar el estado de tu propia cuenta." : undefined}
                         type="button"
                       >
                         {user.status === "active" ? "Deshabilitar" : "Habilitar"}
-                      </button>
-                    </td>
-                  </tr>
+                      </ActionButton>
+                    </UserCell>
+                  </UserRow>
                 );
               })}
             </tbody>
-          </table>
-        </div>
+          </UsersTable>
+        </TableViewport>
       )}
-    </section>
+    </AdminSection>
   );
 }

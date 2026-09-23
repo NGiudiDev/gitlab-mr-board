@@ -1,6 +1,6 @@
 # Arquitectura del frontend
 
-El frontend es una aplicación de página única construida con React 19, Vite y Tailwind CSS, según el [ADR 0005](../decisions/0005-frontend-en-react.md). Consume exclusivamente el contrato consolidado del backend; no accede directamente a GitLab ni conoce su token.
+El frontend es una aplicación de página única construida con React 19, Vite y styled-components, según el [ADR 0005](../decisions/0005-frontend-en-react.md). Consume exclusivamente el contrato consolidado del backend; no accede directamente a GitLab ni conoce su token.
 
 La lógica de negocio vive en el backend. El frontend presenta lo que recibe resuelto —clasificación, responsables y personas— y sólo conserva decisiones de presentación: qué columnas mostrar y en qué orden, agrupar, ordenar visualmente, formatear y filtrar por lo que ya viene calculado.
 
@@ -13,6 +13,7 @@ El código se divide entre la composición general y las funcionalidades del dom
 - `src/main.jsx`: carga los estilos globales y monta React mediante `createRoot`, `StrictMode` y `BrowserRouter`.
 - `src/config.js`: centraliza y valida la configuración expuesta por Vite.
 - `src/app/App.jsx`: decide si mostrar las rutas públicas o privadas según la sesión y asocia cada URL con una page de su feature.
+- `src/app/GlobalStyles.jsx`: define tokens, reset y estilos globales mediante `createGlobalStyle`.
 - `src/app/components/AppLayout.jsx`: define el layout —barra superior, navegación entre secciones y contenido—; `AccountMenu.jsx` reúne allí la identidad, el equipo y el cierre de sesión.
 - `src/app/constants/routes.consts.js`: mantiene las URLs y los metadatos de navegación como única fuente de verdad.
 - `src/app/constants/styles.consts.js`: centraliza los patrones visuales compartidos por componentes de distintas features.
@@ -24,7 +25,6 @@ El código se divide entre la composición general y las funcionalidades del dom
 - `src/features/mergeRequests/components/`: contiene los componentes del tablero de merge requests.
 - `src/features/mergeRequests/pages/BoardPage.jsx`: compone la pantalla completa del tablero y sus estados.
 - `src/features/mergeRequests/personalView.js`: selecciona los datos de la vista personal a partir del contrato del backend.
-- `src/assets/main.css`: incluye las directivas de Tailwind y los pocos estilos globales que no se expresan mediante utilidades.
 - `test/`: reúne la configuración, los fixtures y las utilidades compartidas según la [estrategia de test](../development/test.md).
 
 Las funcionalidades nuevas deben seguir la estructura `src/features/<feature>/components/`, `hooks/` y `pages/`. Una page representa la pantalla asociada a una URL y compone componentes de su feature; `src/app/` se reserva para el layout, las rutas y la composición de alto nivel.
@@ -138,9 +138,9 @@ Una región viva con `aria-live="polite"` comunica el inicio, el error y la fina
 
 ## Presentación y diseño visual
 
-Tailwind concentra los estilos de los componentes. Los colores, superficies, tipografías y estados semánticos se definen como tokens en `tailwind.config.js`; su uso se detalla en la [arquitectura de la interfaz visual](interfaz-visual.md).
+styled-components mantiene los estilos exclusivos junto a cada componente. Los colores, superficies, tipografías y estados semánticos se definen como custom properties en `src/app/GlobalStyles.jsx`; su uso se detalla en la [arquitectura de la interfaz visual](interfaz-visual.md).
 
-`src/assets/main.css` se limita a las capas de Tailwind, el modelo de caja global, el comportamiento general de enlaces, la reducción de movimiento y la apariencia de las barras de desplazamiento. No se debe agregar CSS personalizado cuando una utilidad o un token existente pueda expresar el mismo resultado.
+`src/app/constants/styles.consts.js` expone sólo componentes visuales y mixins que comparten varias features. Las variantes visuales usan props transitorias con prefijo `$` para evitar que lleguen al DOM.
 
 Ambas vistas usan secciones verticales por proyecto. Cada sección despliega seis columnas horizontales en un contenedor desplazable y cada columna limita su altura para desplazar las tarjetas verticalmente. La vista personal conserva exactamente esta estructura y sólo filtra los merge requests entregados al tablero.
 

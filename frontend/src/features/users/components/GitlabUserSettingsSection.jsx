@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 
 import {
-  ERROR_ALERT_CLASSES,
-  FIELD_CLASSES,
-  HINT_CLASSES,
-  LABEL_CLASSES,
-  PRIMARY_BUTTON_CLASSES,
-  SECTION_DESCRIPTION_CLASSES,
-  SECTION_HEADING_CLASSES,
-  SUCCESS_ALERT_CLASSES,
+  Alert,
+  Button,
+  Field,
+  FormField,
+  Hint,
+  Label,
+  SectionDescription,
+  SectionHeading,
 } from "../../../app/constants/styles.consts.js";
 
 /**
@@ -50,37 +50,36 @@ export function GitlabUserSettingsSection(props) {
 
   return (
     <section aria-labelledby="identidad-heading">
-      <h2 className={SECTION_HEADING_CLASSES} id="identidad-heading">
+      <SectionHeading id="identidad-heading">
         Usuario de GitLab
-      </h2>
+      </SectionHeading>
 
-      <p className={SECTION_DESCRIPTION_CLASSES}>
+      <SectionDescription>
         Con tu nickname el tablero reconoce cuáles de los merge requests del equipo son tuyos.
-      </p>
+      </SectionDescription>
 
       {error ? (
-        <p className={ERROR_ALERT_CLASSES} role="alert">
+        <Alert role="alert">
           {error}
-        </p>
+        </Alert>
       ) : null}
 
       {message ? (
-        <p className={SUCCESS_ALERT_CLASSES} role="status">
+        <Alert $success role="status">
           {message}
-        </p>
+        </Alert>
       ) : null}
 
       <form onSubmit={handleSubmit}>
         {/* La ayuda queda fuera del `label` para que no forme parte del nombre
             accesible del campo; `aria-describedby` la asocia igual. */}
-        <div className="mb-4">
-          <label className={LABEL_CLASSES} htmlFor="identidad-nickname">
+        <FormField>
+          <Label htmlFor="identidad-nickname">
             Nickname de GitLab
-          </label>
-          <input
+          </Label>
+          <Field
             aria-describedby="identidad-nickname-ayuda"
             autoCapitalize="none"
-            className={FIELD_CLASSES}
             id="identidad-nickname"
             onChange={(event) => setGitlabUsername(event.target.value)}
             required
@@ -88,18 +87,14 @@ export function GitlabUserSettingsSection(props) {
             type="text"
             value={gitlabUsername}
           />
-          <p className={HINT_CLASSES} id="identidad-nickname-ayuda">
+          <Hint id="identidad-nickname-ayuda">
             Tu nombre de usuario en GitLab, sin la arroba.
-          </p>
-        </div>
+          </Hint>
+        </FormField>
 
-        <button
-          className={PRIMARY_BUTTON_CLASSES}
-          disabled={submitting}
-          type="submit"
-        >
+        <Button disabled={submitting} type="submit">
           {submitting ? "Guardando..." : "Guardar mi nickname"}
-        </button>
+        </Button>
       </form>
     </section>
   );

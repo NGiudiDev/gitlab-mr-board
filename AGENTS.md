@@ -90,9 +90,9 @@
 
 - Seguir el orden de imports, bloques del componente y espacios de JSX de la [guía de calidad de código](docs/development/calidad-codigo.md#estilo-de-código).
 
-- Estilos con **Tailwind CSS** — nada de CSS custom salvo para lo que Tailwind no cubra.
+- Estilos con **styled-components**. Cada componente define junto a sí sus estilos exclusivos; los componentes visuales y mixins usados por distintas features viven en `frontend/src/app/constants/styles.consts.js`, y `frontend/src/app/GlobalStyles.jsx` concentra los tokens, el reset y los estilos globales.
 
-- Los patrones completos de clases Tailwind reutilizados por componentes de distintas features viven en `frontend/src/app/constants/styles.consts.js`. Mantener inline las utilidades aisladas y los ajustes exclusivos de un componente; `frontend/src/assets/` queda para CSS y recursos estáticos.
+- Usar props transitorias con prefijo `$` para variantes exclusivamente visuales, de modo que no lleguen al DOM. No introducir `className` con estilos, hojas CSS ni estilos inline salvo que una integración externa lo exija.
 
 - **El estado compartido va al store**: `hooks/useMergeRequests.js` para el tablero, `features/auth/hooks/useSession.js` para la sesión y `features/accounts/hooks/useAccount.js` para la cuenta, los tres con `useSyncExternalStore`; `useState` queda para estado local del componente. Al cerrar sesión hay que reiniciarlos todos. Toda petición al backend viaja con `credentials: 'include'`.
 

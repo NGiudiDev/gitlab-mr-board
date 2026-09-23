@@ -1,19 +1,24 @@
 import { useEffect, useState } from "react";
+import styled from "styled-components";
 
 import { renameAccount } from "../hooks/useAccount.js";
 
 import {
-  DETAIL_LIST_CLASSES,
-  DETAIL_VALUE_CLASSES,
-  ERROR_ALERT_CLASSES,
-  FIELD_CLASSES,
-  HINT_CLASSES,
-  LABEL_CLASSES,
-  PRIMARY_BUTTON_CLASSES,
-  SECTION_DESCRIPTION_CLASSES,
-  SECTION_HEADING_CLASSES,
-  SUCCESS_ALERT_CLASSES,
+  Alert,
+  Button,
+  DetailList,
+  DetailValue,
+  Field,
+  FormField,
+  Hint,
+  Label,
+  SectionDescription,
+  SectionHeading,
 } from "../../../app/constants/styles.consts.js";
+
+const SpacedDetailValue = styled(DetailValue)`
+  margin-bottom: 0.75rem;
+`;
 
 /** Describe la cantidad de integrantes con singular y plural correctos. */
 function membersLabel(memberCount) {
@@ -62,36 +67,35 @@ export function AccountSettingsSection(props) {
 
   return (
     <section aria-labelledby="cuenta-heading">
-      <h2 className={SECTION_HEADING_CLASSES} id="cuenta-heading">
+      <SectionHeading id="cuenta-heading">
         Mi cuenta
-      </h2>
+      </SectionHeading>
 
-      <p className={SECTION_DESCRIPTION_CLASSES}>
+      <SectionDescription>
         La cuenta agrupa a las personas que ven el mismo tablero, con los mismos proyectos y el mismo access token de GitLab.
-      </p>
+      </SectionDescription>
 
       {formError ? (
-        <p className={ERROR_ALERT_CLASSES} role="alert">
+        <Alert role="alert">
           {formError}
-        </p>
+        </Alert>
       ) : null}
 
       {message ? (
-        <p className={SUCCESS_ALERT_CLASSES} role="status">
+        <Alert $success role="status">
           {message}
-        </p>
+        </Alert>
       ) : null}
 
       {canEdit ? (
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className={LABEL_CLASSES} htmlFor="cuenta-nombre">
+          <FormField>
+            <Label htmlFor="cuenta-nombre">
               Nombre de la cuenta
-            </label>
+            </Label>
 
-            <input
+            <Field
               aria-describedby="cuenta-nombre-ayuda"
-              className={FIELD_CLASSES}
               id="cuenta-nombre"
               maxLength={80}
               onChange={(event) => setName(event.target.value)}
@@ -100,23 +104,23 @@ export function AccountSettingsSection(props) {
               value={name}
             />
 
-            <p className={HINT_CLASSES} id="cuenta-nombre-ayuda">
+            <Hint id="cuenta-nombre-ayuda">
               La integran {membersLabel(account.memberCount)}.
-            </p>
-          </div>
+            </Hint>
+          </FormField>
 
-          <button className={PRIMARY_BUTTON_CLASSES} disabled={submitting} type="submit">
+          <Button disabled={submitting} type="submit">
             {submitting ? "Guardando..." : "Guardar el nombre"}
-          </button>
+          </Button>
         </form>
       ) : (
-        <dl className={DETAIL_LIST_CLASSES}>
-          <dt className={LABEL_CLASSES}>Cuenta</dt>
-          <dd className={`${DETAIL_VALUE_CLASSES} mb-3`}>{account.name}</dd>
+        <DetailList>
+          <Label as="dt">Cuenta</Label>
+          <SpacedDetailValue>{account.name}</SpacedDetailValue>
 
-          <dt className={LABEL_CLASSES}>Integrantes</dt>
-          <dd className={DETAIL_VALUE_CLASSES}>{membersLabel(account.memberCount)}</dd>
-        </dl>
+          <Label as="dt">Integrantes</Label>
+          <DetailValue>{membersLabel(account.memberCount)}</DetailValue>
+        </DetailList>
       )}
     </section>
   );

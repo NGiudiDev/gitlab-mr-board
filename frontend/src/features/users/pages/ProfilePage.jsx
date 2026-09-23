@@ -1,4 +1,4 @@
-import { PAGE_SECTIONS_CLASSES } from "../../../app/constants/styles.consts.js";
+import { PageSections } from "../../../app/constants/styles.consts.js";
 
 import { PasswordPanel } from "../../auth/components/PasswordPanel.jsx";
 import { ProfilePanel } from "../components/ProfilePanel.jsx";
@@ -13,7 +13,7 @@ export function ProfilePage(props) {
   } = props;
 
   return (
-    <div className={PAGE_SECTIONS_CLASSES}>
+    <PageSections>
       <ProfilePanel onSave={onSaveProfile} submitting={profileSubmitting} user={user} />
 
       <PasswordPanel
@@ -21,6 +21,6 @@ export function ProfilePage(props) {
         submitting={passwordSubmitting}
         user={user}
       />
-    </div>
+    </PageSections>
   );
 }

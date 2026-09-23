@@ -1,7 +1,105 @@
 import { NavLink } from "react-router";
+import styled from "styled-components";
+
+import { focusRingStyles, visuallyHiddenStyles } from "../constants/styles.consts.js";
 
 import { AccountMenu } from "./AccountMenu.jsx";
 import { getNavigationSectionsForUser } from "../utils/routes.utils.js";
+
+const SkipLink = styled.a`
+  ${visuallyHiddenStyles}
+
+  &:focus {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 50;
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: 0.5rem 1rem;
+    clip: auto;
+    border-radius: 0.375rem;
+    background: var(--color-accent);
+    color: var(--color-bg);
+    font-weight: 600;
+  }
+`;
+
+const Header = styled.header`
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
+`;
+
+const HeaderContent = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  max-width: 100rem;
+  margin: 0 auto;
+  padding: 0.625rem 1.25rem;
+  column-gap: 1.25rem;
+  row-gap: 0.5rem;
+`;
+
+const Brand = styled.h1`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+`;
+
+const BrandDot = styled.span`
+  width: 0.5rem;
+  height: 0.5rem;
+  flex: none;
+  border-radius: 999px;
+  background: var(--color-accent);
+`;
+
+const NavigationList = styled.ul`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+`;
+
+const NavigationLink = styled(NavLink)`
+  display: block;
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.375rem;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--color-text-primary);
+  }
+
+  &[aria-current="page"] {
+    background: var(--color-surface-raised);
+    color: var(--color-text-primary);
+    font-weight: 600;
+  }
+
+  ${focusRingStyles}
+`;
+
+const Main = styled.main`
+  max-width: 100rem;
+  margin: 0 auto;
+  padding: 1.25rem;
+  scroll-margin-top: 4rem;
+`;
 
 export function AppLayout(props) {
   const {
@@ -12,52 +110,43 @@ export function AppLayout(props) {
 
   return (
     <>
-      <a className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-accent focus:px-4 focus:py-2 focus:font-semibold focus:text-bg" href="#contenido-principal">
+      <SkipLink href="#contenido-principal">
         Saltar al contenido principal
-      </a>
+      </SkipLink>
 
       {user ? (
-        <header className="sticky top-0 z-40 border-b border-border bg-bg">
-          <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-x-5 gap-y-2 px-5 py-2.5">
-            <h1 className="flex items-center gap-2 text-[13px] font-semibold text-text-primary">
-              <span aria-hidden="true" className="h-2 w-2 flex-none rounded-full bg-accent" />
+        <Header>
+          <HeaderContent>
+            <Brand>
+              <BrandDot aria-hidden="true" />
               Tablero de MRs
-            </h1>
+            </Brand>
 
             <nav aria-label="Secciones">
-              <ul className="flex flex-wrap items-center gap-1">
+              <NavigationList>
                 {getNavigationSectionsForUser(user).filter((section) => !section.menuOnly).map((section) => {
                   return (
                     <li key={section.id}>
-                      <NavLink
-                        className={({ isActive }) => `block rounded-md px-2.5 py-1 text-[13px] cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${isActive
-                          ? "bg-surface-raised font-semibold text-text-primary"
-                          : "text-text-muted hover:text-text-primary"}`}
-                        to={section.path}
-                      >
+                      <NavigationLink to={section.path}>
                         {section.label}
-                      </NavLink>
+                      </NavigationLink>
                     </li>
                   );
                 })}
-              </ul>
+              </NavigationList>
             </nav>
 
             <AccountMenu
               onLogout={onLogout}
               user={user}
             />
-          </div>
-        </header>
+          </HeaderContent>
+        </Header>
       ) : null}
 
-      <main
-        className="mx-auto max-w-[1600px] scroll-mt-16 px-5 py-5"
-        id="contenido-principal"
-        tabIndex={-1}
-      >
+      <Main id="contenido-principal" tabIndex={-1}>
         {children}
-      </main>
+      </Main>
     </>
   );
 }

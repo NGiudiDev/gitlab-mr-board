@@ -10,8 +10,9 @@ import { fetchMergeRequests } from "../../mergeRequests/hooks/useMergeRequests.j
 import { isAdmin } from "../utils/account.utils.js";
 
 import {
-  LOADING_TEXT_CLASSES,
-  PAGE_SECTIONS_CLASSES,
+  Alert,
+  LoadingText,
+  PageSections,
 } from "../../../app/constants/styles.consts.js";
 
 
@@ -29,16 +30,16 @@ export function AccountPage(props) {
   const hasAdminRole = isAdmin(user);
 
   return (
-    <div className={PAGE_SECTIONS_CLASSES}>
+    <PageSections>
       {accountLoading && !account ? (
         <section aria-label="Estado de la cuenta">
-          <p className={LOADING_TEXT_CLASSES} role="status">Cargando la cuenta...</p>
+          <LoadingText role="status">Cargando la cuenta...</LoadingText>
         </section>
       ) : accountError && !account ? (
         <section aria-label="Estado de la cuenta">
-          <p className="rounded-md border border-conflict bg-conflict-soft px-3 py-2 text-[12.5px] text-text-primary" role="alert">
+          <Alert role="alert">
             {accountError}
-          </p>
+          </Alert>
         </section>
       ) : (
         <AccountSettingsSection account={account} />
@@ -62,6 +63,6 @@ export function AccountPage(props) {
         submitting={submitting}
         user={user}
       />
-    </div>
+    </PageSections>
   );
 }

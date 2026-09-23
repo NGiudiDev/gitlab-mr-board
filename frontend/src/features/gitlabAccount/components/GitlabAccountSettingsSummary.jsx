@@ -1,30 +1,37 @@
+import styled from "styled-components";
+
 import {
-  DETAIL_LIST_CLASSES,
-  DETAIL_VALUE_CLASSES,
-  LABEL_CLASSES,
-  LOADING_TEXT_CLASSES,
+  DetailList,
+  DetailValue,
+  Label,
+  LoadingText,
 } from "../../../app/constants/styles.consts.js";
+
+const ProjectIds = styled(DetailValue)`
+  margin-bottom: 0.75rem;
+  font-family: var(--font-mono);
+`;
 
 export function GitlabAccountSettingsSummary(props) {
   const { settings = null } = props;
 
   if (!settings) {
     return (
-      <p className={LOADING_TEXT_CLASSES} role="status">
+      <LoadingText role="status">
         Todavía no hay proyectos ni access token cargados. Pedíselo a quien administra la cuenta.
-      </p>
+      </LoadingText>
     );
   }
 
   return (
-    <dl className={DETAIL_LIST_CLASSES}>
-      <dt className={LABEL_CLASSES}>Proyectos</dt>
-      <dd className={`${DETAIL_VALUE_CLASSES} mb-3 font-mono`}>{settings.projectIds.join(", ")}</dd>
+    <DetailList>
+      <Label as="dt">Proyectos</Label>
+      <ProjectIds>{settings.projectIds.join(", ")}</ProjectIds>
 
-      <dt className={LABEL_CLASSES}>Access token</dt>
-      <dd className={DETAIL_VALUE_CLASSES}>
+      <Label as="dt">Access token</Label>
+      <DetailValue>
         Guardado, terminado en «{settings.tokenHint}».
-      </dd>
-    </dl>
+      </DetailValue>
+    </DetailList>
   );
 }

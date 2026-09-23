@@ -38,7 +38,7 @@ No hay umbral mínimo configurado, en línea con la convención de no tratar la 
 
 - Ubicar cada test junto al módulo cubierto con el sufijo `.test.js` o `.test.jsx`, según el tipo de archivo. En el backend eso significa dentro de la feature: los del tablero viven en `features/mergeRequests/` y `src/app.test.js` cubre sólo la composición.
 - Reservar `test/` dentro de cada paquete para configuración, fixtures y utilidades compartidas.
-- Priorizar reglas de negocio y comportamiento observable; evitar snapshots extensos y aserciones sobre clases de Tailwind.
+- Priorizar reglas de negocio y comportamiento observable; evitar snapshots extensos y aserciones sobre estilos generados.
 - Mantener cada test independiente y ejecutable en cualquier orden.
 - Agregar un test de regresión para toda corrección de un defecto.
 - No usar la cobertura como único indicador: primero cubrir todas las ramas de clasificación y los contratos críticos.
@@ -116,7 +116,7 @@ El recorrido crítico ingresa con ese usuario, comprueba las URLs durante la nav
 
 Para verlo correr: `npm run test:e2e:ui` abre el modo interactivo con watch y time-travel por paso, y `npm run test:e2e -- --headed` lo ejecuta en una ventana visible (`--debug` agrega el Inspector paso a paso). Las trazas de los reintentos se revisan después con `npx playwright show-trace`.
 
-Usar selectores accesibles como `getByRole()` y `getByLabel()`, con aserciones de espera automática; nunca localizar por clases de Tailwind. Los paneles de proyecto contraídos se ocultan con `display: none`, así que sus tarjetas quedan fuera del árbol de accesibilidad hasta expandirlos.
+Usar selectores accesibles como `getByRole()` y `getByLabel()`, con aserciones de espera automática; nunca localizar por clases generadas por styled-components. Los paneles de proyecto contraídos se ocultan con `display: none`, así que sus tarjetas quedan fuera del árbol de accesibilidad hasta expandirlos.
 
 Sólo se ejecuta Chromium: Firefox y WebKit se agregan únicamente ante un requisito explícito. Las trazas, capturas y videos se conservan solo para fallos o reintentos. La suite no crea, modifica, aprueba ni fusiona merge requests salvo que un caso futuro lo requiera con limpieza segura.
 

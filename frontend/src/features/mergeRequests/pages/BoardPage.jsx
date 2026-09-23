@@ -1,4 +1,10 @@
-import { STATUS_PANEL_CLASSES } from "../../../app/constants/styles.consts.js";
+import styled from "styled-components";
+
+import {
+  StatusPanel,
+  visuallyHiddenStyles,
+  VisuallyHidden,
+} from "../../../app/constants/styles.consts.js";
 
 import { BoardStatus } from "../components/BoardStatus.jsx";
 import { MissingGitlabSettings } from "../components/MissingGitlabSettings.jsx";
@@ -7,6 +13,42 @@ import { TopBar } from "../components/TopBar.jsx";
 import { ViewControls } from "../components/ViewControls.jsx";
 import { useMergeRequests } from "../hooks/useMergeRequests.js";
 import { findPersonByUsername, mergeRequestsForPerson } from "../personalView.js";
+
+const Toolbar = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-border-soft);
+`;
+
+const ErrorHeading = styled.p`
+  margin: 0 0 0.5rem;
+`;
+
+const ErrorDetail = styled.p`
+  margin: 0;
+  color: var(--color-conflict);
+  font-size: 0.75rem;
+`;
+
+const BoardHeading = styled.h2`
+  margin: 0 0 0.75rem;
+  color: var(--color-text-primary);
+  font-size: 1rem;
+  font-weight: 600;
+
+  ${({ $visible }) => !$visible && visuallyHiddenStyles}
+`;
+
+const LastUpdated = styled.p`
+  margin: 1rem 0 0;
+  color: var(--color-text-faint);
+  font-size: 0.75rem;
+`;
 
 /**
  * Construye el anuncio accesible correspondiente al estado actual del tablero.
@@ -85,7 +127,7 @@ export function BoardPage(props) {
 
   return (
     <>
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-x-5 gap-y-3 border-b border-border-soft pb-3">
+      <Toolbar>
         <ViewControls
           canChoosePerson={canChoosePerson}
           onPersonChange={selectPerson}
@@ -103,26 +145,24 @@ export function BoardPage(props) {
           meta={visibleMeta}
           onRefresh={() => fetchMRs(true)}
         />
-      </div>
+      </Toolbar>
 
       {failedWithoutData ? (
-        <div className={STATUS_PANEL_CLASSES} role="alert">
-          <p className="mb-2">No se pudo conectar al backend.</p>
-          <p className="text-conflict text-[12px]">{error}</p>
-        </div>
+        <StatusPanel role="alert">
+          <ErrorHeading>No se pudo conectar al backend.</ErrorHeading>
+          <ErrorDetail>{error}</ErrorDetail>
+        </StatusPanel>
       ) : (
         <>
           <section aria-labelledby="tablero-heading">
-            <h2
-              className={viewMode === "personal" && selectedPerson
-                ? "text-base font-semibold text-text-primary mb-3"
-                : "sr-only"}
+            <BoardHeading
+              $visible={viewMode === "personal" && Boolean(selectedPerson)}
               id="tablero-heading"
             >
               {viewMode === "personal" && selectedPerson
                 ? `Tareas de ${selectedPerson.name} por estado`
                 : "Merge requests por proyecto y estado"}
-            </h2>
+            </BoardHeading>
 
             {loading && mergeRequests.length === 0 ? (
               <BoardStatus>Cargando merge requests...</BoardStatus>
@@ -149,14 +189,14 @@ export function BoardPage(props) {
           </section>
 
           {lastFetched ? (
-            <p className="text-[12px] text-text-faint mt-4">
+            <LastUpdated>
               Última actualización: {lastFetched.toLocaleTimeString("es-AR")} · {visibleMergeRequests.length} MRs {viewMode === "personal" ? "visibles" : "en total"} · Próxima actualización automática en 5 min
-            </p>
+            </LastUpdated>
           ) : null}
         </>
       )}
 
-      <p aria-atomic="true" aria-live="polite" className="sr-only">{statusAnnouncement}</p>
+      <VisuallyHidden aria-atomic="true" aria-live="polite">{statusAnnouncement}</VisuallyHidden>
     </>
   );
 }

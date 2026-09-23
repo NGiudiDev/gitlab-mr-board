@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 
 import {
-  ERROR_ALERT_CLASSES,
-  FIELD_CLASSES,
-  HINT_CLASSES,
-  LABEL_CLASSES,
-  PRIMARY_BUTTON_CLASSES,
-  SUCCESS_ALERT_CLASSES,
+  Alert,
+  Button,
+  Field,
+  FormField,
+  Hint,
+  Label,
 } from "../../../app/constants/styles.consts.js";
 
 export function GitlabAccountSettingsForm(props) {
@@ -52,25 +52,24 @@ export function GitlabAccountSettingsForm(props) {
   return (
     <form onSubmit={handleSubmit}>
       {formError ? (
-        <p className={ERROR_ALERT_CLASSES} role="alert">
+        <Alert role="alert">
           {formError}
-        </p>
+        </Alert>
       ) : null}
 
       {message ? (
-        <p className={SUCCESS_ALERT_CLASSES} role="status">
+        <Alert $success role="status">
           {message}
-        </p>
+        </Alert>
       ) : null}
 
-      <div className="mb-4">
-        <label className={LABEL_CLASSES} htmlFor="gitlab-proyectos">
+      <FormField>
+        <Label htmlFor="gitlab-proyectos">
           IDs de los proyectos
-        </label>
+        </Label>
 
-        <input
+        <Field
           aria-describedby="gitlab-proyectos-ayuda"
-          className={FIELD_CLASSES}
           id="gitlab-proyectos"
           inputMode="numeric"
           onChange={(event) => setProjectIds(event.target.value)}
@@ -80,20 +79,19 @@ export function GitlabAccountSettingsForm(props) {
           value={projectIds}
         />
 
-        <p className={HINT_CLASSES} id="gitlab-proyectos-ayuda">
+        <Hint id="gitlab-proyectos-ayuda">
           Números separados por comas, por ejemplo 123, 456. Los encontrás en la portada de cada proyecto en GitLab.
-        </p>
-      </div>
+        </Hint>
+      </FormField>
 
-      <div className="mb-4">
-        <label className={LABEL_CLASSES} htmlFor="gitlab-token">
+      <FormField>
+        <Label htmlFor="gitlab-token">
           Access token
-        </label>
+        </Label>
 
-        <input
+        <Field
           aria-describedby="gitlab-token-ayuda"
           autoComplete="off"
-          className={FIELD_CLASSES}
           id="gitlab-token"
           onChange={(event) => setAccessToken(event.target.value)}
           required={!hasStoredToken}
@@ -101,20 +99,16 @@ export function GitlabAccountSettingsForm(props) {
           type="password"
           value={accessToken}
         />
-        <p className={HINT_CLASSES} id="gitlab-token-ayuda">
+        <Hint id="gitlab-token-ayuda">
           {hasStoredToken
             ? `Ya hay uno guardado, terminado en «${settings.tokenHint}». Dejá el campo vacío para conservarlo.`
             : "PAT de GitLab con el alcance read_api. Se guarda cifrado y no se muestra nunca más."}
-        </p>
-      </div>
+        </Hint>
+      </FormField>
 
-      <button
-        className={PRIMARY_BUTTON_CLASSES}
-        disabled={saving}
-        type="submit"
-      >
+      <Button disabled={saving} type="submit">
         {saving ? "Guardando..." : "Guardar configuración"}
-      </button>
+      </Button>
     </form>
   );
 }

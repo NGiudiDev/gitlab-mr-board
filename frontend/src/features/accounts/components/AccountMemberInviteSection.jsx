@@ -1,14 +1,25 @@
 import { useState } from "react";
+import styled from "styled-components";
 
 import {
-  ERROR_ALERT_CLASSES,
-  FIELD_CLASSES,
-  HINT_CLASSES,
-  LABEL_CLASSES,
-  SECONDARY_BUTTON_CLASSES,
-  SECTION_HEADING_CLASSES,
-  SUCCESS_ALERT_CLASSES,
+  Alert,
+  Field,
+  FormField,
+  Hint,
+  Label,
+  SecondaryButton,
+  SectionDescription,
+  SectionHeading,
 } from "../../../app/constants/styles.consts.js";
+
+const InviteDescription = styled(SectionDescription)`
+  margin-bottom: 0.75rem;
+`;
+
+const InviteField = styled(Field)`
+  font-family: var(--font-mono);
+  letter-spacing: 0.1em;
+`;
 
 export function AccountMemberInviteSection(props) {
   const {
@@ -40,52 +51,50 @@ export function AccountMemberInviteSection(props) {
 
   return (
     <section aria-labelledby="invitacion-heading">
-      <h2 className={SECTION_HEADING_CLASSES} id="invitacion-heading">
+      <SectionHeading id="invitacion-heading">
         Invitar al equipo
-      </h2>
+      </SectionHeading>
 
-      <p className="mb-3 text-[12.5px] text-text-muted">
+      <InviteDescription>
         Quien se registre con este código entra a esta cuenta y ve el mismo tablero, sin cargar ninguna credencial de GitLab.
-      </p>
+      </InviteDescription>
 
       {error ? (
-        <p className={ERROR_ALERT_CLASSES} role="alert">
+        <Alert role="alert">
           {error}
-        </p>
+        </Alert>
       ) : null}
 
       {message ? (
-        <p className={SUCCESS_ALERT_CLASSES} role="status">
+        <Alert $success role="status">
           {message}
-        </p>
+        </Alert>
       ) : null}
 
-      <div className="mb-3">
-        <label className={LABEL_CLASSES} htmlFor="cuenta-invitacion">
+      <FormField>
+        <Label htmlFor="cuenta-invitacion">
           Código de invitación
-        </label>
+        </Label>
 
-        <input
-          className={`${FIELD_CLASSES} font-mono tracking-widest`}
+        <InviteField
           id="cuenta-invitacion"
           readOnly
           type="text"
           value={inviteCode}
         />
-      </div>
+      </FormField>
 
-      <button
-        className={SECONDARY_BUTTON_CLASSES}
+      <SecondaryButton
         disabled={submitting}
         onClick={handleRotate}
         type="button"
       >
         {submitting ? "Renovando..." : "Renovar el código"}
-      </button>
+      </SecondaryButton>
 
-      <p className={HINT_CLASSES}>
+      <Hint>
         Al renovarlo, el código anterior deja de servir. Quien ya se sumó no pierde el acceso.
-      </p>
+      </Hint>
     </section>
   );
 }

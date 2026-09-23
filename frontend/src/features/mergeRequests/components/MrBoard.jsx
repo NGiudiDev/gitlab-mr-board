@@ -1,7 +1,77 @@
 import { useState } from "react";
+import styled from "styled-components";
+
+import { focusRingStyles, VisuallyHidden } from "../../../app/constants/styles.consts.js";
 
 import { columnsOf } from "../mergeRequestColumns.js";
 import { BoardColumn } from "./BoardColumn.jsx";
+
+const Projects = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const Project = styled.section`
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-surface);
+`;
+
+const ProjectToggle = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.625rem 1rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-surface-raised);
+  }
+
+  ${focusRingStyles}
+
+  &:focus-visible {
+    outline-offset: -2px;
+  }
+`;
+
+const Chevron = styled.span`
+  color: var(--color-text-faint);
+  font-size: 0.6875rem;
+  transform: rotate(${({ $expanded }) => $expanded ? "90deg" : "0"});
+  transition: transform 150ms ease;
+`;
+
+const ProjectName = styled.span`
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 600;
+`;
+
+const ProjectCount = styled.span`
+  margin-left: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  background: var(--color-surface-raised);
+  color: var(--color-text-muted);
+  font-size: 0.6875rem;
+`;
+
+const Columns = styled.div`
+  display: ${({ $expanded }) => $expanded ? "flex" : "none"};
+  gap: 0.75rem;
+  padding: 0.75rem;
+  overflow-x: auto;
+  border-top: 1px solid var(--color-border-soft);
+`;
 
 function repoDomId(repo) {
   return repo.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -30,7 +100,7 @@ export function MrBoard(props) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <Projects>
       {groupByRepo(mergeRequests, allProjects).map((group) => {
         const domId = repoDomId(group.repo);
         const headingId = `proyecto-${domId}`;
@@ -38,36 +108,28 @@ export function MrBoard(props) {
         const isExpanded = !!expanded[group.repo];
 
         return (
-          <section
-            aria-labelledby={headingId}
-            className="border border-border rounded-lg bg-surface overflow-hidden"
-            key={group.repo}
-          >
-            <button
+          <Project aria-labelledby={headingId} key={group.repo}>
+            <ProjectToggle
               aria-controls={panelId}
               aria-expanded={isExpanded}
-              className="w-full flex items-center gap-2 px-4 py-2.5 cursor-pointer hover:bg-surface-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent"
               onClick={() => toggle(group.repo)}
               type="button"
             >
-              <span
-                aria-hidden="true"
-                className={`text-[11px] text-text-faint transition-transform ${isExpanded ? "rotate-90" : ""}`}
-              >
+              <Chevron $expanded={isExpanded} aria-hidden="true">
                 ▶
-              </span>
-              <span className="text-[13px] font-semibold text-text-primary font-mono" id={headingId}>
+              </Chevron>
+              <ProjectName id={headingId}>
                 {group.repo}
-              </span>
-              <span className="text-[11px] text-text-muted bg-surface-raised px-2 py-0.5 rounded-full ml-1">
-                {group.mrs.length} <span className="sr-only">merge requests</span>
-              </span>
-            </button>
+              </ProjectName>
+              <ProjectCount>
+                {group.mrs.length} <VisuallyHidden>merge requests</VisuallyHidden>
+              </ProjectCount>
+            </ProjectToggle>
 
             {/* `aria-controls` necesita que el panel permanezca en el DOM al contraerse. */}
-            <div
+            <Columns
+              $expanded={isExpanded}
               aria-label="Columnas del proyecto"
-              className={`${isExpanded ? "flex" : "hidden"} gap-3 overflow-x-auto p-3 border-t border-border-soft`}
               id={panelId}
               tabIndex={0}
             >
@@ -79,10 +141,10 @@ export function MrBoard(props) {
                   title={column.name}
                 />
               ))}
-            </div>
-          </section>
+            </Columns>
+          </Project>
         );
       })}
-    </div>
+    </Projects>
   );
 }

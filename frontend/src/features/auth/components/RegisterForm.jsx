@@ -1,18 +1,60 @@
 import { useState } from "react";
+import styled from "styled-components";
 
 import {
-  AUTH_FORM_CLASSES,
-  AUTH_FORM_DESCRIPTION_CLASSES,
-  AUTH_FORM_HEADING_CLASSES,
-  AUTH_FORM_SUBMIT_BUTTON_CLASSES,
-  AUTH_FORM_SWITCH_CLASSES,
-  BUTTON_LINK_CLASSES,
-  ERROR_ALERT_CLASSES,
-  FIELD_CLASSES,
-  LABEL_CLASSES,
+  Alert,
+  AuthForm,
+  AuthFormDescription,
+  AuthFormHeading,
+  AuthFormSwitch,
+  AuthSubmitButton,
+  ButtonLink,
+  Field,
+  focusRingStyles,
+  SpacedLabel,
 } from "../../../app/constants/styles.consts.js";
 
-const CHOICE_CLASSES = "flex-1 rounded-md border px-3 py-2 text-[12.5px] cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+const ChoiceFieldset = styled.fieldset`
+  margin: 0 0 1rem;
+  padding: 0;
+  border: 0;
+`;
+
+const ChoiceLegend = styled.legend`
+  margin-bottom: 0.5rem;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+`;
+
+const ChoiceGroup = styled.div`
+  display: flex;
+  gap: 0.5rem;
+`;
+
+const ChoiceButton = styled.button`
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid ${({ $active }) => $active ? "var(--color-accent)" : "var(--color-control)"};
+  border-radius: 0.375rem;
+  background: ${({ $active }) => $active ? "var(--color-surface-raised)" : "transparent"};
+  color: ${({ $active }) => $active ? "var(--color-text-primary)" : "var(--color-text-muted)"};
+  font-size: 0.78125rem;
+  font-weight: ${({ $active }) => $active ? 600 : 400};
+  cursor: pointer;
+
+  &:hover {
+    color: var(--color-text-primary);
+  }
+
+  ${focusRingStyles}
+`;
+
+const RegisterHint = styled.p`
+  margin: -0.5rem 0 0.75rem;
+  color: var(--color-text-faint);
+  font-size: 0.71875rem;
+`;
 
 const MINIMUM_PASSWORD_LENGTH = 8;
 
@@ -49,64 +91,53 @@ export function RegisterForm(props) {
 
   const visibleError = localError ?? error;
 
-  function choiceClasses(isActive) {
-    return `${CHOICE_CLASSES} ${isActive
-      ? "border-accent bg-surface-raised font-semibold text-text-primary"
-      : "border-control text-text-muted hover:text-text-primary"}`;
-  }
-
   return (
-    <form
-      aria-labelledby="registro-heading"
-      className={AUTH_FORM_CLASSES}
-      onSubmit={handleSubmit}
-    >
-      <h1 className={AUTH_FORM_HEADING_CLASSES} id="registro-heading">
+    <AuthForm aria-labelledby="registro-heading" onSubmit={handleSubmit}>
+      <AuthFormHeading id="registro-heading">
         Crear una cuenta
-      </h1>
+      </AuthFormHeading>
 
-      <p className={AUTH_FORM_DESCRIPTION_CLASSES}>
+      <AuthFormDescription>
         Ingresá tu email y una contraseña de al menos {MINIMUM_PASSWORD_LENGTH} caracteres.
-      </p>
+      </AuthFormDescription>
 
       {visibleError ? (
-        <p className={ERROR_ALERT_CLASSES} role="alert">
+        <Alert role="alert">
           {visibleError}
-        </p>
+        </Alert>
       ) : null}
 
-      <fieldset className="mb-4">
-        <legend className="text-[12px] font-semibold text-text-muted mb-2">
+      <ChoiceFieldset>
+        <ChoiceLegend>
           ¿Cómo querés entrar?
-        </legend>
-        <div className="flex gap-2">
-          <button
+        </ChoiceLegend>
+        <ChoiceGroup>
+          <ChoiceButton
+            $active={joinExisting}
             aria-pressed={joinExisting}
-            className={choiceClasses(joinExisting)}
             onClick={() => setJoinExisting(true)}
             type="button"
           >
             Sumarme a un equipo
-          </button>
-          <button
+          </ChoiceButton>
+          <ChoiceButton
+            $active={!joinExisting}
             aria-pressed={!joinExisting}
-            className={choiceClasses(!joinExisting)}
             onClick={() => setJoinExisting(false)}
             type="button"
           >
             Crear un equipo
-          </button>
-        </div>
-      </fieldset>
+          </ChoiceButton>
+        </ChoiceGroup>
+      </ChoiceFieldset>
 
       {joinExisting ? (
         <>
-          <label className={`${LABEL_CLASSES} mb-3`} htmlFor="registro-invitacion">
+          <SpacedLabel htmlFor="registro-invitacion">
             Código de invitación
-            <input
+            <Field
               aria-describedby="registro-invitacion-ayuda"
               autoCapitalize="characters"
-              className={FIELD_CLASSES}
               id="registro-invitacion"
               name="inviteCode"
               onChange={(event) => setInviteCode(event.target.value)}
@@ -115,18 +146,17 @@ export function RegisterForm(props) {
               type="text"
               value={inviteCode}
             />
-          </label>
-          <p className="-mt-2 mb-3 text-[11.5px] font-normal text-text-faint" id="registro-invitacion-ayuda">
+          </SpacedLabel>
+          <RegisterHint id="registro-invitacion-ayuda">
             Te lo da quien administra el tablero de tu equipo. Con él ves los mismos proyectos, sin cargar credenciales de GitLab.
-          </p>
+          </RegisterHint>
         </>
       ) : (
         <>
-          <label className={`${LABEL_CLASSES} mb-3`} htmlFor="registro-cuenta">
+          <SpacedLabel htmlFor="registro-cuenta">
             Nombre del equipo (opcional)
-            <input
+            <Field
               aria-describedby="registro-cuenta-ayuda"
-              className={FIELD_CLASSES}
               id="registro-cuenta"
               maxLength={80}
               name="accountName"
@@ -134,19 +164,18 @@ export function RegisterForm(props) {
               type="text"
               value={accountName}
             />
-          </label>
-          <p className="-mt-2 mb-3 text-[11.5px] font-normal text-text-faint" id="registro-cuenta-ayuda">
+          </SpacedLabel>
+          <RegisterHint id="registro-cuenta-ayuda">
             Vas a quedar administrador: cargás una vez los proyectos y el access token de GitLab, y el resto del equipo se suma con un código.
-          </p>
+          </RegisterHint>
         </>
       )}
 
-      <label className={`${LABEL_CLASSES} mb-3`} htmlFor="registro-email">
+      <SpacedLabel htmlFor="registro-email">
         Email
-        <input
+        <Field
           autoCapitalize="none"
           autoComplete="email"
-          className={FIELD_CLASSES}
           id="registro-email"
           maxLength={254}
           name="email"
@@ -156,13 +185,12 @@ export function RegisterForm(props) {
           type="email"
           value={email}
         />
-      </label>
+      </SpacedLabel>
 
-      <label className={`${LABEL_CLASSES} mb-3`} htmlFor="registro-nombre">
+      <SpacedLabel htmlFor="registro-nombre">
         Nombre visible (opcional)
-        <input
+        <Field
           autoComplete="name"
-          className={FIELD_CLASSES}
           id="registro-nombre"
           maxLength={80}
           name="displayName"
@@ -170,13 +198,12 @@ export function RegisterForm(props) {
           type="text"
           value={displayName}
         />
-      </label>
+      </SpacedLabel>
 
-      <label className={`${LABEL_CLASSES} mb-3`} htmlFor="registro-password">
+      <SpacedLabel htmlFor="registro-password">
         Contraseña
-        <input
+        <Field
           autoComplete="new-password"
-          className={FIELD_CLASSES}
           id="registro-password"
           minLength={MINIMUM_PASSWORD_LENGTH}
           name="password"
@@ -185,13 +212,12 @@ export function RegisterForm(props) {
           type="password"
           value={password}
         />
-      </label>
+      </SpacedLabel>
 
-      <label className={`${LABEL_CLASSES} mb-3`} htmlFor="registro-confirmacion">
+      <SpacedLabel htmlFor="registro-confirmacion">
         Repetí la contraseña
-        <input
+        <Field
           autoComplete="new-password"
-          className={FIELD_CLASSES}
           id="registro-confirmacion"
           minLength={MINIMUM_PASSWORD_LENGTH}
           name="passwordConfirmation"
@@ -200,26 +226,18 @@ export function RegisterForm(props) {
           type="password"
           value={confirmation}
         />
-      </label>
+      </SpacedLabel>
 
-      <button
-        className={AUTH_FORM_SUBMIT_BUTTON_CLASSES}
-        disabled={submitting}
-        type="submit"
-      >
+      <AuthSubmitButton disabled={submitting} type="submit">
         {submitting ? "Creando la cuenta..." : "Crear cuenta"}
-      </button>
+      </AuthSubmitButton>
 
-      <p className={AUTH_FORM_SWITCH_CLASSES}>
+      <AuthFormSwitch>
         ¿Ya tenés cuenta?{" "}
-        <button
-          className={BUTTON_LINK_CLASSES}
-          onClick={onShowLogin}
-          type="button"
-        >
+        <ButtonLink onClick={onShowLogin} type="button">
           Ingresar
-        </button>
-      </p>
-    </form>
+        </ButtonLink>
+      </AuthFormSwitch>
+    </AuthForm>
   );
 }

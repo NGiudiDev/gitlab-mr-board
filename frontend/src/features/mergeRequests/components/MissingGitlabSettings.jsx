@@ -1,28 +1,35 @@
 import { Link } from "react-router";
+import styled from "styled-components";
 
 import { APP_PATHS } from "../../../app/constants/routes.consts.js";
-import { PRIMARY_BUTTON_CLASSES } from "../../../app/constants/styles.consts.js";
+import { Button } from "../../../app/constants/styles.consts.js";
 
 import { BoardStatus } from "./BoardStatus.jsx";
+
+const Message = styled.p`
+  margin: 0 0 0.75rem;
+`;
+
+const SettingsLink = styled(Button).attrs({ as: Link })`
+  display: inline-block;
+  text-decoration: none;
+`;
 
 export function MissingGitlabSettings(props) {
   const { canConfigure = false } = props;
 
   return (
     <BoardStatus>
-      <p className="mb-3">
+      <Message>
         {canConfigure
           ? "Todavía no configuraste GitLab en tu cuenta."
           : "Tu cuenta todavía no tiene datos de GitLab. Pedile a quien la administra que cargue los proyectos y el access token."}
-      </p>
+      </Message>
 
       {canConfigure ? (
-        <Link
-          className={PRIMARY_BUTTON_CLASSES}
-          to={APP_PATHS.account}
-        >
+        <SettingsLink to={APP_PATHS.account}>
           Configurar en Mi cuenta
-        </Link>
+        </SettingsLink>
       ) : null}
     </BoardStatus>
   );

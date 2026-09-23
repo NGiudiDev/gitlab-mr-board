@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { buildMergeRequest } from "../../../../test/fixtures/mergeRequests.js";
@@ -45,14 +45,14 @@ describe("BoardColumn", () => {
       mergeRequests: [buildMergeRequest({ id: "101-1" }), buildMergeRequest({ id: "101-2" })],
     });
 
-    expect(container.querySelector(".sr-only").textContent).toBe("2 merge requests");
+    expect(screen.getByText("2 merge requests")).toBeTruthy();
   });
 
   it("muestra la columna vacía sin tarjetas", () => {
     const { container } = renderColumn({ mergeRequests: [] });
 
     expect(container.querySelectorAll("article")).toHaveLength(0);
-    expect(container.querySelector(".sr-only").textContent).toBe("0 merge requests");
+    expect(screen.getByText("0 merge requests")).toBeTruthy();
   });
 
   it("expone la lista de tarjetas con rol de lista", () => {

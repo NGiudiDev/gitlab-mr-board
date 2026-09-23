@@ -1,6 +1,6 @@
 # Interfaz visual
 
-El tablero usa tema oscuro y Tailwind CSS. Los tokens extendidos se definen en `frontend/tailwind.config.js`; los estilos globales viven en `frontend/src/assets/main.css`.
+El tablero usa tema oscuro y styled-components. Los tokens, el reset y los estilos globales viven en `frontend/src/app/GlobalStyles.jsx`; los estilos específicos permanecen junto a sus componentes y los patrones compartidos, en `frontend/src/app/constants/styles.consts.js`.
 
 ## Layout
 
@@ -12,13 +12,13 @@ El tablero reúne en una sola fila los controles de la vista —a la izquierda�
 
 | Concepto | Token principal | Uso |
 |---|---|---|
-| Fondo | `bg` | Página |
-| Superficie | `surface` | Paneles y columnas |
-| Acento | `accent` | Acciones y foco |
-| Borde de control | `control` | Límite perceptible de inputs y botones |
-| Listo | `ready` | Estado correcto |
-| Pendiente | `draft` | Trabajo en curso |
-| Bloqueado | `conflict` | Error o conflicto |
+| Fondo | `--color-bg` | Página |
+| Superficie | `--color-surface` | Paneles y columnas |
+| Acento | `--color-accent` | Acciones y foco |
+| Borde de control | `--color-control` | Límite perceptible de inputs y botones |
+| Listo | `--color-ready` | Estado correcto |
+| Pendiente | `--color-draft` | Trabajo en curso |
+| Bloqueado | `--color-conflict` | Error o conflicto |
 
 Las tarjetas muestran badges de pipeline, discusiones, aprobaciones y conflictos, más el título, las ramas, los responsables y el autor. Las secciones se agrupan por repositorio y pueden colapsarse.
 

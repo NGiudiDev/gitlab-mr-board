@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 
 import {
-  FIELD_CLASSES,
-  LABEL_CLASSES,
-  PRIMARY_BUTTON_CLASSES,
-  SECTION_DESCRIPTION_CLASSES,
-  SECTION_HEADING_CLASSES,
+  Field,
+  InlineFeedback,
+  SectionDescription,
+  SectionHeading,
+  SpacedLabel,
+  TopSpacedButton,
 } from "../../../app/constants/styles.consts.js";
 
 export function ProfilePanel(props) {
@@ -48,21 +49,20 @@ export function ProfilePanel(props) {
 
   return (
     <section aria-labelledby="perfil-heading">
-      <h2 className={SECTION_HEADING_CLASSES} id="perfil-heading">
+      <SectionHeading id="perfil-heading">
         Mi perfil
-      </h2>
+      </SectionHeading>
 
-      <p className={SECTION_DESCRIPTION_CLASSES}>
+      <SectionDescription>
         Estos datos identifican tu sesión. Si cambiás el email, usá el nuevo la próxima vez que ingreses.
-      </p>
+      </SectionDescription>
 
       <form onSubmit={handleSubmit}>
-        <label className={`${LABEL_CLASSES} mb-3`} htmlFor="perfil-email">
+        <SpacedLabel htmlFor="perfil-email">
           Email
-          <input
+          <Field
             autoCapitalize="none"
             autoComplete="email"
-            className={FIELD_CLASSES}
             disabled={submitting}
             id="perfil-email"
             maxLength={254}
@@ -73,13 +73,12 @@ export function ProfilePanel(props) {
             type="email"
             value={profile.email}
           />
-        </label>
+        </SpacedLabel>
 
-        <label className={`${LABEL_CLASSES} mb-1`} htmlFor="perfil-display-name">
+        <SpacedLabel htmlFor="perfil-display-name">
           Nombre visible
-          <input
+          <Field
             autoComplete="name"
-            className={FIELD_CLASSES}
             disabled={submitting}
             id="perfil-display-name"
             name="displayName"
@@ -87,23 +86,19 @@ export function ProfilePanel(props) {
             type="text"
             value={profile.displayName}
           />
-        </label>
+        </SpacedLabel>
 
         {error ? (
-          <p className="mt-3 text-xs text-conflict" role="alert">{error}</p>
+          <InlineFeedback role="alert">{error}</InlineFeedback>
         ) : null}
 
         {notice ? (
-          <p className="mt-3 text-xs text-ready" role="status">{notice}</p>
+          <InlineFeedback $success role="status">{notice}</InlineFeedback>
         ) : null}
 
-        <button
-          className={`${PRIMARY_BUTTON_CLASSES} mt-4`}
-          disabled={submitting}
-          type="submit"
-        >
+        <TopSpacedButton disabled={submitting} type="submit">
           {submitting ? "Guardando…" : "Guardar perfil"}
-        </button>
+        </TopSpacedButton>
       </form>
     </section>
   );

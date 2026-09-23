@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { createTestDatabase } from "../../../../test/database.js";
-import { createAuthRepository } from "../../auth/services/authRepository.js";
+import { createUserRepository } from "../../users/services/userRepository.js";
 import { createAccountRepository } from "./accountRepository.js";
 import { createAccountService } from "./accountService.js";
 
@@ -13,7 +13,7 @@ const START_DATE = new Date("2026-09-01T10:00:00.000Z");
  */
 async function createContext() {
   const database = await createTestDatabase();
-  const users = createAuthRepository(database);
+  const users = createUserRepository(database);
   let codeNumber = 0;
 
   return {

@@ -1,12 +1,12 @@
 import { useState } from "react";
 
 import {
-  ERROR_ALERT_CLASSES,
-  FIELD_CLASSES,
-  LABEL_CLASSES,
-  PRIMARY_BUTTON_CLASSES,
-  SECTION_DESCRIPTION_CLASSES,
-  SECTION_HEADING_CLASSES,
+  Alert,
+  Button,
+  Field,
+  SectionDescription,
+  SectionHeading,
+  SpacedLabel,
 } from "../../../app/constants/styles.consts.js";
 
 export function PasswordPanel(props) {
@@ -33,39 +33,37 @@ export function PasswordPanel(props) {
 
   return (
     <section aria-labelledby="contrasena-heading">
-      <h2 className={SECTION_HEADING_CLASSES} id="contrasena-heading">
+      <SectionHeading id="contrasena-heading">
         Mi contraseña
-      </h2>
+      </SectionHeading>
 
-      <p className={SECTION_DESCRIPTION_CLASSES}>
+      <SectionDescription>
         Al cambiarla se cierran todas tus sesiones, así que vas a tener que ingresar de nuevo.
-      </p>
+      </SectionDescription>
 
       {error ? (
-        <p className={ERROR_ALERT_CLASSES} role="alert">
+        <Alert role="alert">
           {error}
-        </p>
+        </Alert>
       ) : null}
 
       <form onSubmit={handleSubmit}>
-        <label className={`${LABEL_CLASSES} mb-3`} htmlFor="cuenta-actual">
+        <SpacedLabel htmlFor="cuenta-actual">
           Contraseña actual
-          <input
+          <Field
             autoComplete="current-password"
-            className={FIELD_CLASSES}
             id="cuenta-actual"
             onChange={(event) => setCurrentPassword(event.target.value)}
             required
             type="password"
             value={currentPassword}
           />
-        </label>
+        </SpacedLabel>
 
-        <label className={`${LABEL_CLASSES} mb-3`} htmlFor="cuenta-nueva">
+        <SpacedLabel htmlFor="cuenta-nueva">
           Contraseña nueva
-          <input
+          <Field
             autoComplete="new-password"
-            className={FIELD_CLASSES}
             id="cuenta-nueva"
             minLength={8}
             onChange={(event) => setNewPassword(event.target.value)}
@@ -73,13 +71,12 @@ export function PasswordPanel(props) {
             type="password"
             value={newPassword}
           />
-        </label>
+        </SpacedLabel>
 
-        <label className={`${LABEL_CLASSES} mb-3`} htmlFor="cuenta-confirmacion">
+        <SpacedLabel htmlFor="cuenta-confirmacion">
           Repetí la contraseña nueva
-          <input
+          <Field
             autoComplete="new-password"
-            className={FIELD_CLASSES}
             id="cuenta-confirmacion"
             minLength={8}
             onChange={(event) => setConfirmation(event.target.value)}
@@ -87,15 +84,11 @@ export function PasswordPanel(props) {
             type="password"
             value={confirmation}
           />
-        </label>
+        </SpacedLabel>
 
-        <button
-          className={PRIMARY_BUTTON_CLASSES}
-          disabled={submitting}
-          type="submit"
-        >
+        <Button disabled={submitting} type="submit">
           {submitting ? "Guardando..." : "Cambiar contraseña"}
-        </button>
+        </Button>
       </form>
     </section>
   );

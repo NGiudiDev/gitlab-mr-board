@@ -2,7 +2,7 @@ import { Navigate, Route, Routes, useNavigate } from "react-router";
 
 import { AppLayout } from "./components/AppLayout.jsx";
 import { APP_PATHS } from "./constants/routes.consts.js";
-import { STATUS_PANEL_CLASSES } from "./constants/styles.consts.js";
+import { StatusPanel } from "./constants/styles.consts.js";
 
 import { resetAccountStore } from "../features/accounts/hooks/useAccount.js";
 import { AccountPage } from "../features/accounts/pages/AccountPage.jsx";
@@ -31,9 +31,9 @@ export function App() {
   if (session.status === "checking") {
     return (
       <AppLayout>
-        <div className={STATUS_PANEL_CLASSES} role="status">
+        <StatusPanel role="status">
           Verificando tu sesión...
-        </div>
+        </StatusPanel>
       </AppLayout>
     );
   }
