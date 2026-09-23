@@ -16,6 +16,7 @@ src/
     auth/                          routes/ services/ utils/
     gitlabSettings/                routes/ services/ utils/
     mergeRequests/                 routes/ services/ utils/
+    users/                         routes/ services/ utils/
   shared/                          database.js httpError.js
   scripts/                         Herramientas de línea de comandos
 ```
@@ -27,7 +28,7 @@ En `shared/` va únicamente lo que usan varias features. Lo que usa una sola viv
 ### Composición y entradas
 
 - `src/index.js`: prepara la aplicación y recién entonces inicia el servidor local en el puerto configurado. No contiene rutas ni lógica de negocio.
-- `src/app.js`: construye Express mediante `createApp()`, abre la base y aplica el esquema mediante `createConfiguredApp()`, y exporta por omisión el handler que usa Vercel. Configura CORS y JSON, registra el health check, monta los routers de cada feature —exigiendo sesión en `/api`, y rol `admin` en `/api/users` y en la escritura de la cuenta y de la configuración de GitLab— y centraliza los errores no controlados. Importa cada router por su ruta completa: no hay barrels.
+- `src/app.js`: construye Express mediante `createApp()`, abre la base y aplica el esquema mediante `createConfiguredApp()`, y exporta por omisión el handler que usa Vercel. Configura CORS y JSON, registra el health check, monta los routers de cada feature —exigiendo sesión en `/api`, y rol `admin` en la administración de usuarios y en la escritura de la cuenta y de la configuración de GitLab— y centraliza los errores no controlados. Importa cada router por su ruta completa: no hay barrels.
 - `src/config.js`: carga `backend/.env`, valida las variables obligatorias y expone la configuración normalizada.
 - `src/scripts/users.js`: herramienta de línea de comandos para administrar cuentas y usuarios. Es un punto de entrada más, como `index.js`, y no forma parte de la API.
 
@@ -40,11 +41,17 @@ En `shared/` va únicamente lo que usan varias features. Lo que usa una sola viv
 
 ### Feature `auth`
 
-- `routes/auth.js`: sesión y datos propios —contraseña y nickname de GitLab—. Publica además los middlewares `createRequireSession` y `createRequireAdmin`, que reutilizan las otras features.
-- `routes/users.js`: administración de los usuarios de la cuenta, sólo para rol `admin`.
-- `services/authRepository.js`: acceso a usuarios y sesiones.
-- `services/authService.js`: reglas de alta, registro, ingreso, vencimiento de sesión, cambio de contraseña y de nickname de GitLab, borrado, pertenencia a la cuenta y freno de fuerza bruta, con el repositorio, el servicio de cuentas y el reloj inyectados. El registro resuelve la cuenta —la crea, o la busca por su código—, y por eso recibe `accountService`.
-- `utils/`: derivación de contraseñas, validación del nickname de GitLab y lectura de cookies.
+- `routes/auth.js`: registro, login, sesión y cambio de la propia contraseña. Publica además los middlewares `createRequireSession` y `createRequireAdmin`, que reutilizan las otras features.
+- `services/authRepository.js`: acceso exclusivo a sesiones.
+- `services/authService.js`: registro que crea o resuelve la cuenta, ingreso, vencimiento y cierre de sesión, contraseñas y freno de fuerza bruta.
+- `utils/`: derivación de contraseñas y lectura de cookies.
+
+### Feature `users`
+
+- `routes/users.js`: perfil y nickname propios para cualquier sesión; listado, alta administrada y estados para rol `admin`.
+- `services/userRepository.js`: acceso exclusivo a la tabla `users`.
+- `services/userService.js`: validación, alta, perfil, nickname de GitLab, pertenencia a la cuenta, listado, estados y borrado.
+- `utils/gitlabUsername.js`: validación del nickname personal de GitLab.
 
 ### Feature `gitlabSettings`
 
@@ -70,7 +77,7 @@ En `shared/` va únicamente lo que usan varias features. Lo que usa una sola viv
 
 ## Construcción y arranque
 
-`createApp()` construye la aplicación sin abrir un puerto y `src/index.js` es el único responsable de invocar `listen()`, así que la aplicación puede ejecutarse en memoria o en distintos entornos. Tanto `createApp()` como `createMergeRequestsRouter()` reciben por inyección la fuente de merge requests y el reloj de la caché, lo que permite controlar sus dependencias sin consultar GitLab ni depender del tiempo real. `createApp()` acepta además los servicios de cuentas, de autenticación y de configuración de GitLab ya construidos; si le falta alguno, abre el pool de `DATABASE_URL` y arma los tres sobre esa misma conexión.
+`createApp()` construye la aplicación sin abrir un puerto y `src/index.js` es el único responsable de invocar `listen()`, así que la aplicación puede ejecutarse en memoria o en distintos entornos. Tanto `createApp()` como `createMergeRequestsRouter()` reciben por inyección la fuente de merge requests y el reloj de la caché, lo que permite controlar sus dependencias sin consultar GitLab ni depender del tiempo real. `createApp()` acepta además los servicios de cuentas, autenticación, usuarios y configuración de GitLab ya construidos; si le falta alguno, abre el pool de `DATABASE_URL` y arma los cuatro sobre esa misma conexión.
 
 `createConfiguredApp()` abre una sola base y aplica el esquema antes de construir los servicios. El handler exportado por omisión conserva esa inicialización por proceso para las invocaciones de Vercel y la descarta si falla, de modo que una interrupción transitoria de Neon pueda reintentarse. Si la preparación no termina, responde HTTP 503; el arranque local reutiliza la misma función y no abre el puerto hasta que la base está lista.
 
@@ -128,7 +135,7 @@ Devuelve el estado del proceso. Sirve como chequeo de vida, pero no comprueba la
 
 ### `/api/auth/*`
 
-Administran la sesión y los datos propios. `register` da de alta un usuario y abre su sesión, sumándolo a la cuenta de `inviteCode` o creando una nueva con `accountName`; `login` recibe `{ email, password }` y responde con el usuario, entregando el token en una cookie `HttpOnly`; `logout` la invalida; `me` devuelve el usuario de la sesión vigente; `profile` cambia el nombre visible y el email propios sin cerrar la sesión; `password` cambia la contraseña propia exigiendo la actual; `gitlab-username` guarda el nickname de GitLab propio sin cerrar la sesión.
+Administran la autenticación. `register` da de alta un usuario y abre su sesión, sumándolo a la cuenta de `inviteCode` o creando una nueva con `accountName`; `login` recibe `{ email, password }` y responde con el usuario, entregando el token en una cookie `HttpOnly`; `logout` la invalida; `me` devuelve el usuario de la sesión vigente; `password` cambia la contraseña propia exigiendo la actual.
 
 ### `/api/account`
 
@@ -136,7 +143,9 @@ La cuenta de la sesión: su nombre, cuánta gente la integra y, sólo para un `a
 
 ### `/api/users/*`
 
-Administración de usuarios: listado, alta con rol, habilitación y deshabilitación. Exigen rol `admin`, no sólo sesión, y alcanzan **sólo a la cuenta de quien administra**: el `email` es único en toda la base, así que sin ese límite un administrador llegaría a los usuarios de otra cuenta. Sobre alguien de otra cuenta responden 404.
+`PATCH /api/users/me/profile` cambia el nombre visible y el email propios; `PUT /api/users/me/gitlab-username` guarda el nickname personal de GitLab. Ambas exigen sólo sesión y devuelven la identidad actualizada.
+
+El listado, el alta con rol y la habilitación o deshabilitación exigen rol `admin` y alcanzan **sólo a la cuenta de quien administra**: el `email` es único en toda la base, así que sin ese límite un administrador llegaría a los usuarios de otra cuenta. Sobre alguien de otra cuenta responden 404.
 
 No hay ruta para restablecer la contraseña de otra persona: fijarle la contraseña a alguien equivale a poder entrar como esa persona, así que la operación quedó sólo en `npm run users -- password`, que exige acceso al servidor.
 

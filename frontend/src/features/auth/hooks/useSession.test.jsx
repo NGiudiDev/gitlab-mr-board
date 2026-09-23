@@ -10,8 +10,6 @@ import {
   logout,
   PASSWORD_CHANGED_MESSAGE,
   register,
-  saveGitlabUsername,
-  saveProfile,
   SESSION_EXPIRED_MESSAGE,
   useSession,
 } from "./useSession.js";
@@ -259,74 +257,6 @@ describe("register", () => {
     expect(result).toBe(false);
     expect(getState().status).toBe("anonymous");
     expect(getState().error).toBe("Ya existe un usuario con el email «ana@example.com».");
-  });
-});
-
-describe("saveGitlabUsername", () => {
-  it("envía el nickname y guarda la identidad que devuelve el backend", async () => {
-    const updated = { ...TEST_USER, gitlabUsername: "otro-nick" };
-    fetchMock.mockResolvedValueOnce(jsonResponse({ user: updated }));
-
-    const failure = await saveGitlabUsername("otro-nick");
-
-    expect(failure).toBeNull();
-    expect(fetchMock).toHaveBeenCalledWith("http://localhost:3001/api/auth/gitlab-username", {
-      credentials: "include",
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ gitlabUsername: "otro-nick" }),
-    });
-    expect(getState().user).toEqual(updated);
-  });
-
-  it("devuelve el mensaje del backend sin tocar la sesión", async () => {
-    fetchMock.mockResolvedValueOnce(jsonResponse({ error: "Indicá tu nickname de GitLab." }, 400));
-
-    const failure = await saveGitlabUsername("");
-
-    expect(failure).toBe("Indicá tu nickname de GitLab.");
-    expect(getState().user).toBeNull();
-  });
-
-  it("avisa cuando no se pudo conectar al backend", async () => {
-    fetchMock.mockRejectedValueOnce(new Error("sin red"));
-
-    expect(await saveGitlabUsername("otro-nick")).toBe("No se pudo conectar al backend.");
-  });
-});
-
-describe("saveProfile", () => {
-  it("envía el perfil y guarda la identidad que devuelve el backend", async () => {
-    const updated = { ...TEST_USER, email: "anita@example.com", displayName: "Ana Pérez" };
-    fetchMock.mockResolvedValueOnce(jsonResponse({ user: updated }));
-
-    const failure = await saveProfile({ email: "anita@example.com", displayName: "Ana Pérez" });
-
-    expect(failure).toBeNull();
-    expect(fetchMock).toHaveBeenCalledWith("http://localhost:3001/api/auth/profile", {
-      credentials: "include",
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: "anita@example.com", displayName: "Ana Pérez" }),
-    });
-    expect(getState().user).toEqual(updated);
-  });
-
-  it("devuelve el mensaje del backend sin tocar la identidad", async () => {
-    fetchMock.mockResolvedValueOnce(jsonResponse({ error: "El email ya existe." }, 409));
-
-    const failure = await saveProfile({ email: "ana@example.com", displayName: "Ana" });
-
-    expect(failure).toBe("El email ya existe.");
-    expect(getState().user).toBeNull();
-    expect(getState().submitting).toBe(false);
-  });
-
-  it("avisa cuando no se pudo conectar al backend", async () => {
-    fetchMock.mockRejectedValueOnce(new Error("sin red"));
-
-    expect(await saveProfile({ email: "ana@example.com", displayName: "Ana" }))
-      .toBe("No se pudo conectar al backend.");
   });
 });
 

@@ -8,13 +8,15 @@ import { createAccountsRouter } from "./features/accounts/routes/accounts.js";
 import { createAccountRepository } from "./features/accounts/services/accountRepository.js";
 import { createAccountService } from "./features/accounts/services/accountService.js";
 import { createAuthRouter, createRequireSession } from "./features/auth/routes/auth.js";
-import { createUsersRouter } from "./features/auth/routes/users.js";
 import { createAuthRepository } from "./features/auth/services/authRepository.js";
 import { createAuthService } from "./features/auth/services/authService.js";
 import { createGitLabSettingsRouter } from "./features/gitlabSettings/routes/gitlabSettings.js";
 import { createGitLabSettingsRepository } from "./features/gitlabSettings/services/gitlabSettingsRepository.js";
 import { createGitLabSettingsService } from "./features/gitlabSettings/services/gitlabSettingsService.js";
 import { createMergeRequestsRouter } from "./features/mergeRequests/routes/mergeRequests.js";
+import { createUsersRouter } from "./features/users/routes/users.js";
+import { createUserRepository } from "./features/users/services/userRepository.js";
+import { createUserService } from "./features/users/services/userService.js";
 import { applySchema, createNeonDatabase } from "./shared/database.js";
 
 let configuredAppPromise;
@@ -36,24 +38,31 @@ const errorHandler = (error, _request, response, _next) => {
  *
  * @param database Base devuelta por `createNeonDatabase`, o su equivalente en
  * memoria para los test.
- * @returns Servicios de cuentas, de autenticación y de configuración de GitLab.
+ * @returns Servicios de cuentas, autenticación, usuarios y configuración de GitLab.
  */
 function createServices(database) {
   const accountService = createAccountService({
     repository: createAccountRepository(database),
   });
+  const authRepository = createAuthRepository(database);
+  const userService = createUserService({
+    repository: createUserRepository(database),
+    invalidateSessions: authRepository.deleteSessionsOfUser,
+  });
 
   return {
     accountService,
     authService: createAuthService({
-      repository: createAuthRepository(database),
+      repository: authRepository,
       accountService,
+      userService,
       sessionDurationDays: config.sessionDurationDays,
     }),
     gitlabSettingsService: createGitLabSettingsService({
       repository: createGitLabSettingsRepository(database),
       cipher: createSecretCipher(config.encryptionKey),
     }),
+    userService,
   };
 }
 
@@ -67,10 +76,10 @@ function createServices(database) {
  * @returns Los servicios que necesita la aplicación.
  */
 function resolveServices(options) {
-  const { accountService, authService, gitlabSettingsService } = options;
+  const { accountService, authService, gitlabSettingsService, userService } = options;
 
-  if (accountService && authService && gitlabSettingsService) {
-    return { accountService, authService, gitlabSettingsService };
+  if (accountService && authService && gitlabSettingsService && userService) {
+    return { accountService, authService, gitlabSettingsService, userService };
   }
 
   const configured = createServices(createNeonDatabase(config.databaseUrl));
@@ -79,6 +88,7 @@ function resolveServices(options) {
     accountService: accountService ?? configured.accountService,
     authService: authService ?? configured.authService,
     gitlabSettingsService: gitlabSettingsService ?? configured.gitlabSettingsService,
+    userService: userService ?? configured.userService,
   };
 }
 
@@ -88,7 +98,12 @@ function resolveServices(options) {
  */
 function createApp(options = {}) {
   const { fetchMergeRequests, now } = options;
-  const { accountService, authService, gitlabSettingsService } = resolveServices(options);
+  const {
+    accountService,
+    authService,
+    gitlabSettingsService,
+    userService,
+  } = resolveServices(options);
   const app = express();
 
   // `credentials` es lo que permite que el navegador mande la cookie de sesión
@@ -102,7 +117,7 @@ function createApp(options = {}) {
 
   app.use("/api/auth", createAuthRouter(authService));
   app.use("/api/account", createAccountsRouter(authService, accountService));
-  app.use("/api/users", createUsersRouter(authService));
+  app.use("/api/users", createUsersRouter(authService, userService));
   app.use("/api/gitlab-settings", createGitLabSettingsRouter(authService, gitlabSettingsService));
   app.use(
     "/api",

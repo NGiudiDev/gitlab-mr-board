@@ -12,7 +12,16 @@ import { SESSION_COOKIE_NAME } from "../../auth/routes/auth.js";
  * cookie, para no repetirla en cada test del tablero.
  */
 async function createBoardClient(options = {}) {
-  const { account, accountService, app, authService, cookie, gitlabSettingsService, user } = await createAuthenticatedApp(options);
+  const {
+    account,
+    accountService,
+    app,
+    authService,
+    cookie,
+    gitlabSettingsService,
+    user,
+    userService,
+  } = await createAuthenticatedApp(options);
 
   return {
     account,
@@ -22,6 +31,7 @@ async function createBoardClient(options = {}) {
     cookie,
     gitlabSettingsService,
     user,
+    userService,
     get: (path, sessionCookie = cookie) =>
       requestApp(app, path, { headers: { cookie: sessionCookie } }),
   };
@@ -243,19 +253,19 @@ describe("caché de GET /api/pull-requests", () => {
 
   it("comparte la respuesta entre los miembros de la cuenta, con el nickname de cada uno", async () => {
     let calls = 0;
-    const { account, authService, get } = await createBoardClient({
+    const { account, authService, get, userService } = await createBoardClient({
       now: () => 0,
       fetchMergeRequests: async () => {
         calls++;
         return buildPayload(calls);
       },
     });
-    const other = await authService.createUser({
+    const other = await userService.createUser({
       accountId: account.id,
       email: "bruno@example.com",
       password: TEST_PASSWORD,
     });
-    await authService.changeGitlabUsername(other.id, "bruno-gitlab");
+    await userService.changeGitlabUsername(other.id, "bruno-gitlab");
     const { token } = await authService.login({ email: "bruno@example.com", password: TEST_PASSWORD });
 
     const mine = await get("/api/pull-requests");
@@ -269,7 +279,13 @@ describe("caché de GET /api/pull-requests", () => {
 
   it("no comparte la caché entre cuentas distintas", async () => {
     let calls = 0;
-    const { accountService, authService, get, gitlabSettingsService } = await createBoardClient({
+    const {
+      accountService,
+      authService,
+      get,
+      gitlabSettingsService,
+      userService,
+    } = await createBoardClient({
       now: () => 0,
       fetchMergeRequests: async () => {
         calls++;
@@ -277,7 +293,7 @@ describe("caché de GET /api/pull-requests", () => {
       },
     });
     const otherAccount = await accountService.create("Otro equipo");
-    await authService.createUser({
+    await userService.createUser({
       accountId: otherAccount.id,
       email: "beto@example.com",
       password: TEST_PASSWORD,

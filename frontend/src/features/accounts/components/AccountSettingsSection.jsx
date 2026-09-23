@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+import { renameAccount } from "../hooks/useAccount.js";
+
 import {
   DETAIL_LIST_CLASSES,
   DETAIL_VALUE_CLASSES,
@@ -12,8 +14,6 @@ import {
   SECTION_HEADING_CLASSES,
   SUCCESS_ALERT_CLASSES,
 } from "../../../app/constants/styles.consts.js";
-
-import { renameAccount } from "../hooks/useAccount.js";
 
 /** Describe la cantidad de integrantes con singular y plural correctos. */
 function membersLabel(memberCount) {

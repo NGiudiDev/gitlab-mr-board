@@ -5,7 +5,8 @@ import { APP_PATHS } from "../constants/routes.consts.js";
 import { MENU_ICON_CLASSES, MENU_ITEM_CLASSES } from "../constants/styles.consts.js";
 
 import { useAccount } from "../../features/accounts/hooks/useAccount.js";
-import { getUserInitials } from "../../features/user/utils/user.utils.js";
+import { isAdmin } from "../../features/accounts/utils/account.utils.js";
+import { getUserInitials } from "../../features/users/utils/user.utils.js";
 
 export function AccountMenu(props) {
   const {
@@ -154,7 +155,7 @@ export function AccountMenu(props) {
               >
                 <path d="M3.5 16.5h13M5 16.5v-9h10v9M7.5 10h1m3 0h1m-5 3h1m3 0h1M4 7.5 10 3l6 4.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              {user.role === "admin" ? "Editar cuenta" : "Ver cuenta"}
+              {isAdmin(user) ? "Editar cuenta" : "Ver cuenta"}
             </Link>
 
             <button

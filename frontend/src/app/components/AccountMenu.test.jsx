@@ -1,13 +1,15 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { MemoryRouter, useLocation } from "react-router";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { jsonResponse, resetSharedState, TEST_ACCOUNT, TEST_USER } from "../../../test/sharedState.js";
-import { APP_PATHS } from "../constants/routes.consts.js";
-import { getUserInitials } from "../../features/user/utils/user.utils.js";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import userEvent from "@testing-library/user-event";
 
 import { AccountMenu } from "./AccountMenu.jsx";
+
+import { jsonResponse, resetSharedState, TEST_ACCOUNT, TEST_USER } from "../../../test/sharedState.js";
+import { getUserInitials } from "../../features/users/utils/user.utils.js";
+
+import { APP_PATHS } from "../constants/routes.consts.js";
 
 const ADMIN_USER = { ...TEST_USER, role: "admin" };
 

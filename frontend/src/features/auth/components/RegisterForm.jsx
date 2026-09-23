@@ -16,16 +16,6 @@ const CHOICE_CLASSES = "flex-1 rounded-md border px-3 py-2 text-[12.5px] cursor-
 
 const MINIMUM_PASSWORD_LENGTH = 8;
 
-/**
- * Formulario de alta de cuenta.
- *
- * Hay dos caminos y son excluyentes: sumarse a una cuenta que ya existe con su
- * código de invitación, o abrir una cuenta nueva y quedar su administrador.
- * Quien se suma no configura nada de GitLab: eso ya está en la cuenta.
- *
- * Valida en el navegador lo mismo que el backend para avisar antes de enviar,
- * pero la regla que manda es la del backend.
- */
 export function RegisterForm(props) {
   const { error = null, onShowLogin = () => {}, onSubmit = () => {}, submitting = false } = props;
 

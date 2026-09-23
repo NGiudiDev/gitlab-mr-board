@@ -1,3 +1,5 @@
+import { isAdmin } from "../../features/accounts/utils/account.utils.js";
+
 import { NAVIGATION_SECTIONS } from "../constants/routes.consts.js";
 
 /**
@@ -7,7 +9,7 @@ import { NAVIGATION_SECTIONS } from "../constants/routes.consts.js";
  * @returns {Array<{ id: string, label: string, path: string, adminOnly?: boolean, menuOnly?: boolean }>} Secciones permitidas.
  */
 export function getNavigationSectionsForUser(user) {
-  if (user?.role === "admin") return NAVIGATION_SECTIONS;
+  if (isAdmin(user)) return NAVIGATION_SECTIONS;
 
   return NAVIGATION_SECTIONS.filter((section) => !section.adminOnly);
 }

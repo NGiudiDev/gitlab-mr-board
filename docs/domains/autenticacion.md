@@ -13,9 +13,9 @@ Cada usuario pertenece a una **cuenta**, que es la que comparte el tablero y sus
 | `POST /api/auth/login` | Público |
 | `POST /api/auth/logout` | Público; sin sesión no hace nada y responde 204 |
 | `GET /api/auth/me` | Sesión |
-| `PATCH /api/auth/profile` | Sesión |
+| `PATCH /api/users/me/profile` | Sesión |
 | `PUT /api/auth/password` | Sesión |
-| `PUT /api/auth/gitlab-username` | Sesión |
+| `PUT /api/users/me/gitlab-username` | Sesión |
 | `GET /api/account` | Sesión; el código de invitación sólo vuelve a un `admin` |
 | `GET /api/gitlab-settings` | Sesión; siempre sobre la cuenta propia |
 | `GET /api/pull-requests` | Sesión |
@@ -60,7 +60,7 @@ Al actualizar una instalación que todavía tiene `users.username`, el esquema r
 - De él depende la [vista personal](vista-personal.md): sin nickname el tablero no puede saber cuáles de los merge requests son de quien mira. Es nullable, y hasta que se carga la vista personal lo pide.
 - Se aceptan letras, números, punto, guion y guion bajo, empezando con letra o número, que es lo que admite GitLab. Hasta 255 caracteres.
 - El tablero lo devuelve en `meta.viewerUsername` junto con los merge requests, para no obligar al frontend a pedirlo por separado.
-- Guardarlo **no cierra la sesión**: no es una credencial. `PUT /api/auth/gitlab-username` devuelve la identidad actualizada para que el frontend refresque su store.
+- Guardarlo **no cierra la sesión**: no es una credencial. `PUT /api/users/me/gitlab-username` devuelve la identidad actualizada para que el frontend refresque su store.
 
 ### Contraseña
 
@@ -142,6 +142,6 @@ El estado de la sesión vive en el store `features/auth/hooks/useSession.js`, co
 3. `AccountMenu` reúne detrás de un avatar quién está conectado, su email, el equipo, los accesos separados a «Mi perfil» y «Mi cuenta», y la acción para cerrar sesión; al cerrarla se descartan también los datos del tablero y de la cuenta. La navegación visible del layout ofrece el tablero y, según el rol, `UserAdmin`, según la [arquitectura del frontend](../architecture/frontend.md#navegación-entre-secciones).
 4. Si el tablero recibe un 401, el store da la sesión por terminada y la app vuelve al login con el aviso correspondiente.
 
-La lista de usuarios es lo único que no vive en un store compartido: la consume una sola pantalla, así que `useUsers` la mantiene en estado local.
+La lista y la edición de usuarios viven en `features/users`. No necesitan otro store compartido: `useUsers` y `useCurrentUser` mantienen sólo el estado local de sus pantallas y sincronizan la identidad resultante con la sesión.
 
 Todas las peticiones al backend usan `credentials: 'include'`: la cookie es `HttpOnly` y, en desarrollo, el backend está en otro puerto.

@@ -62,6 +62,68 @@ describe("permisos de /api/users", () => {
   });
 });
 
+describe("perfil propio", () => {
+  it("actualiza el perfil y conserva la sesión abierta", async () => {
+    const { request } = await createClient("user");
+
+    const response = await request("/api/users/me/profile", {
+      method: "PATCH",
+      body: { email: "anita@example.com", displayName: "Ana Pérez" },
+    });
+    const currentSession = await request("/api/auth/me");
+
+    expect(response.status).toBe(200);
+    expect(response.json().user).toMatchObject({
+      email: "anita@example.com",
+      displayName: "Ana Pérez",
+    });
+    expect(currentSession.json().user.email).toBe("anita@example.com");
+  });
+
+  it("valida el perfil y exige sesión", async () => {
+    const { app, request } = await createClient("user");
+    await session.userService.createUser({
+      accountId: session.account.id,
+      email: "beto@example.com",
+      password: TEST_PASSWORD,
+    });
+
+    expect((await request("/api/users/me/profile", {
+      method: "PATCH",
+      body: { email: "a" },
+    })).status).toBe(400);
+    expect((await request("/api/users/me/profile", {
+      method: "PATCH",
+      body: { email: "beto@example.com" },
+    })).status).toBe(409);
+    expect((await requestApp(app, "/api/users/me/profile", {
+      method: "PATCH",
+      body: { displayName: "Ana" },
+    })).status).toBe(401);
+  });
+
+  it("guarda el nickname de GitLab y valida su formato", async () => {
+    const { app, request } = await createClient("user");
+
+    const response = await request("/api/users/me/gitlab-username", {
+      method: "PUT",
+      body: { gitlabUsername: "ana-gitlab" },
+    });
+    const currentSession = await request("/api/auth/me");
+
+    expect(response.json().user.gitlabUsername).toBe("ana-gitlab");
+    expect(currentSession.json().user.gitlabUsername).toBe("ana-gitlab");
+    expect((await request("/api/users/me/gitlab-username", {
+      method: "PUT",
+      body: { gitlabUsername: "-ana" },
+    })).status).toBe(400);
+    expect((await requestApp(app, "/api/users/me/gitlab-username", {
+      method: "PUT",
+      body: { gitlabUsername: "ana-gitlab" },
+    })).status).toBe(401);
+  });
+});
+
 describe("GET /api/users", () => {
   it("lista los usuarios con su rol y estado, sin credenciales", async () => {
     const { request } = await createClient("admin");
@@ -78,7 +140,7 @@ describe("GET /api/users", () => {
   it("no incluye los usuarios de otra cuenta", async () => {
     const { request } = await createClient("admin");
     const otherAccount = await session.accountService.create("Otro equipo");
-    await session.authService.createUser({
+    await session.userService.createUser({
       accountId: otherAccount.id,
       email: "beto@example.com",
       password: TEST_PASSWORD,
@@ -221,7 +283,7 @@ describe("PATCH /api/users/:email/status", () => {
   it("responde 404 y no toca al usuario cuando es de otra cuenta", async () => {
     const { request } = await createClient("admin");
     const otherAccount = await session.accountService.create("Otro equipo");
-    await session.authService.createUser({
+    await session.userService.createUser({
       accountId: otherAccount.id,
       email: "beto@example.com",
       password: TEST_PASSWORD,

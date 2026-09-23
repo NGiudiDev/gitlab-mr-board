@@ -172,7 +172,7 @@ describe("POST /api/auth/login", () => {
   });
 
   it("responde 403 cuando el usuario está deshabilitado", async () => {
-    await services.authService.setUserStatus(TEST_EMAIL, "disabled");
+    await services.userService.setUserStatus(TEST_EMAIL, "disabled");
 
     const response = await login(TEST_EMAIL, TEST_PASSWORD);
 
@@ -210,95 +210,6 @@ describe("GET /api/auth/me", () => {
   it("responde 401 con una cookie que no corresponde a ninguna sesión", async () => {
     const response = await requestApp(appFor(), "/api/auth/me", {
       headers: { cookie: `${SESSION_COOKIE_NAME}=token-inventado` },
-    });
-
-    expect(response.status).toBe(401);
-  });
-});
-
-describe("PATCH /api/auth/profile", () => {
-  /** Guarda el perfil propio reenviando la cookie de sesión. */
-  function saveProfile(app, cookie, body) {
-    return requestApp(app, "/api/auth/profile", {
-      method: "PATCH",
-      headers: { cookie },
-      body,
-    });
-  }
-
-  it("actualiza el perfil y conserva la sesión abierta", async () => {
-    const app = appFor();
-    const cookie = readSetCookie(await login(TEST_EMAIL, TEST_PASSWORD), SESSION_COOKIE_NAME) ?? "";
-
-    const response = await saveProfile(app, cookie, {
-      email: "anita@example.com",
-      displayName: "Ana Pérez",
-    });
-    const session = await requestApp(app, "/api/auth/me", { headers: { cookie } });
-
-    expect(response.status).toBe(200);
-    expect(response.json().user).toMatchObject({ email: "anita@example.com", displayName: "Ana Pérez" });
-    expect(session.json().user).toMatchObject({ email: "anita@example.com", displayName: "Ana Pérez" });
-  });
-
-  it("responde 400 ante un email inválido y 409 si ya existe", async () => {
-    const app = appFor();
-    const cookie = readSetCookie(await login(TEST_EMAIL, TEST_PASSWORD), SESSION_COOKIE_NAME) ?? "";
-    await services.authService.createUser({
-      accountId: services.account.id,
-      email: "beto@example.com",
-      password: TEST_PASSWORD,
-    });
-
-    expect((await saveProfile(app, cookie, { email: "a" })).status).toBe(400);
-    expect((await saveProfile(app, cookie, { email: "beto@example.com" })).status).toBe(409);
-  });
-
-  it("responde 401 sin sesión", async () => {
-    const response = await requestApp(appFor(), "/api/auth/profile", {
-      method: "PATCH",
-      body: { email: "anita@example.com", displayName: "Ana Pérez" },
-    });
-
-    expect(response.status).toBe(401);
-  });
-});
-
-describe("PUT /api/auth/gitlab-username", () => {
-  /** Guarda el nickname propio reenviando la cookie de sesión. */
-  function saveGitlabUsername(app, cookie, gitlabUsername) {
-    return requestApp(app, "/api/auth/gitlab-username", {
-      method: "PUT",
-      headers: { cookie },
-      body: { gitlabUsername },
-    });
-  }
-
-  it("guarda el nickname y devuelve la identidad actualizada", async () => {
-    const app = appFor();
-    const cookie = readSetCookie(await login(TEST_EMAIL, TEST_PASSWORD), SESSION_COOKIE_NAME) ?? "";
-
-    const response = await saveGitlabUsername(app, cookie, "ana-gitlab");
-    const session = await requestApp(app, "/api/auth/me", { headers: { cookie } });
-
-    expect(response.status).toBe(200);
-    expect(response.json().user.gitlabUsername).toBe("ana-gitlab");
-    // La sesión sigue abierta: el nickname no es una credencial.
-    expect(session.json().user.gitlabUsername).toBe("ana-gitlab");
-  });
-
-  it("responde 400 cuando el nickname no es válido", async () => {
-    const app = appFor();
-    const cookie = readSetCookie(await login(TEST_EMAIL, TEST_PASSWORD), SESSION_COOKIE_NAME) ?? "";
-
-    expect((await saveGitlabUsername(app, cookie, "")).status).toBe(400);
-    expect((await saveGitlabUsername(app, cookie, "-ana")).status).toBe(400);
-  });
-
-  it("responde 401 sin sesión", async () => {
-    const response = await requestApp(appFor(), "/api/auth/gitlab-username", {
-      method: "PUT",
-      body: { gitlabUsername: "ana-gitlab" },
     });
 
     expect(response.status).toBe(401);

@@ -17,9 +17,9 @@ El código se divide entre la composición general y las funcionalidades del dom
 - `src/app/constants/routes.consts.js`: mantiene las URLs y los metadatos de navegación como única fuente de verdad.
 - `src/app/constants/styles.consts.js`: centraliza los patrones visuales compartidos por componentes de distintas features.
 - `src/features/accounts/`: contiene el store y los componentes de la cuenta, además de `pages/AccountPage.jsx`, descritos en el [dominio de cuentas](../domains/cuentas.md).
-- `src/features/auth/`: contiene el store de la sesión, el hook de la lista de usuarios, sus componentes y las pages de ingreso, alta, administración y perfil, descritos en el [dominio de autenticación](../domains/autenticacion.md).
+- `src/features/auth/`: contiene el store de la sesión y las pantallas de ingreso, registro y cambio de contraseña, descritos en el [dominio de autenticación](../domains/autenticacion.md).
+- `src/features/users/`: contiene el perfil, el nickname personal de GitLab, la administración de usuarios, sus hooks y utilidades.
 - `src/features/gitlabAccount/`: contiene la sección, el formulario, los estados de carga y lectura, y el hook de la configuración de GitLab de la cuenta, descritos en la [configuración de GitLab](../domains/configuracion-gitlab.md).
-- `src/features/gitlabUser/`: contiene la configuración del nickname de GitLab propio de cada persona.
 - `src/features/mergeRequests/hooks/useMergeRequests.js`: contiene el store compartido, el acceso al backend y el polling.
 - `src/features/mergeRequests/components/`: contiene los componentes del tablero de merge requests.
 - `src/features/mergeRequests/pages/BoardPage.jsx`: compone la pantalla completa del tablero y sus estados.
@@ -106,7 +106,7 @@ Al cerrar la sesión la app navega a `/ingresar` y descarta los stores del table
 
 No hay un provider: todos los consumidores del hook se suscriben a la misma instancia. El estado que deba observar más de un componente debe incorporarse al store; `useState` se reserva para estado local de interfaz, como las secciones expandidas de `MrBoard`.
 
-`features/auth/hooks/useSession.js` mantiene un segundo store con el mismo patrón, porque la sesión también la observan varios componentes, y `features/accounts/hooks/useAccount.js` un tercero para la cuenta, que miran el menú de la barra superior y la pantalla del equipo. Ese último se recarga cuando el `accountId` de la sesión deja de coincidir con la cuenta que tiene guardada, que es lo que pasa al entrar con otro usuario. La lista de usuarios, en cambio, la consume una sola pantalla: `useUsers` la resuelve con estado local.
+`features/auth/hooks/useSession.js` mantiene un segundo store con el mismo patrón, porque la sesión también la observan varios componentes, y `features/accounts/hooks/useAccount.js` un tercero para la cuenta, que miran el menú de la barra superior y la pantalla del equipo. Ese último se recarga cuando el `accountId` de la sesión deja de coincidir con la cuenta que tiene guardada, que es lo que pasa al entrar con otro usuario. `features/users/hooks/useCurrentUser.js` sincroniza en la sesión la identidad editada; la lista de usuarios la consume una sola pantalla y `useUsers` la resuelve con estado local.
 
 ### Ciclo de suscripción y polling
 

@@ -6,17 +6,20 @@ import { STATUS_PANEL_CLASSES } from "./constants/styles.consts.js";
 
 import { resetAccountStore } from "../features/accounts/hooks/useAccount.js";
 import { AccountPage } from "../features/accounts/pages/AccountPage.jsx";
+import { isAdmin } from "../features/accounts/utils/account.utils.js";
 import { useSession } from "../features/auth/hooks/useSession.js";
 import { LoginPage } from "../features/auth/pages/LoginPage.jsx";
-import { ProfilePage } from "../features/auth/pages/ProfilePage.jsx";
 import { RegisterPage } from "../features/auth/pages/RegisterPage.jsx";
-import { UsersPage } from "../features/auth/pages/UsersPage.jsx";
 import { resetStore } from "../features/mergeRequests/hooks/useMergeRequests.js";
 import { BoardPage } from "../features/mergeRequests/pages/BoardPage.jsx";
+import { useCurrentUser } from "../features/users/hooks/useCurrentUser.js";
+import { ProfilePage } from "../features/users/pages/ProfilePage.jsx";
+import { UsersPage } from "../features/users/pages/UsersPage.jsx";
 
 export function App() {
   const navigate = useNavigate();
   const session = useSession();
+  const currentUser = useCurrentUser();
 
   async function handleLogout() {
     await session.logout();
@@ -36,7 +39,7 @@ export function App() {
   }
 
   if (session.status === "authenticated") {
-    const isAdmin = session.user.role === "admin";
+    const hasAdminRole = isAdmin(session.user);
 
     return (
       <AppLayout onLogout={handleLogout} user={session.user}>
@@ -44,8 +47,8 @@ export function App() {
           <Route
             element={(
               <BoardPage
-                canChoosePerson={isAdmin}
-                canConfigureGitlab={isAdmin}
+                canChoosePerson={hasAdminRole}
+                canConfigureGitlab={hasAdminRole}
               />
             )}
             path={APP_PATHS.board}
@@ -54,8 +57,8 @@ export function App() {
           <Route
             element={(
               <AccountPage
-                onSaveGitlabUsername={session.saveGitlabUsername}
-                submitting={session.submitting}
+                onSaveGitlabUsername={currentUser.saveGitlabUsername}
+                submitting={currentUser.submitting}
                 user={session.user}
               />
             )}
@@ -66,8 +69,9 @@ export function App() {
             element={(
               <ProfilePage
                 onChangePassword={session.changeOwnPassword}
-                onSaveProfile={session.saveProfile}
-                submitting={session.submitting}
+                onSaveProfile={currentUser.saveProfile}
+                passwordSubmitting={session.submitting}
+                profileSubmitting={currentUser.submitting}
                 user={session.user}
               />
             )}
@@ -75,7 +79,7 @@ export function App() {
           />
 
           <Route
-            element={isAdmin
+            element={hasAdminRole
               ? <UsersPage currentEmail={session.user.email} />
               : <Navigate replace to={APP_PATHS.board} />}
             path={APP_PATHS.users}

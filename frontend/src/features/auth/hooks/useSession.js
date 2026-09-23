@@ -16,10 +16,6 @@ const INITIAL_STATE = {
   submitting: false,
 };
 
-/**
- * Mismo patrón que el store del tablero: el estado vive a nivel de módulo y
- * `useSyncExternalStore` lo conecta a React sin provider ni librería externa.
- */
 let state = INITIAL_STATE;
 const listeners = new Set();
 
@@ -162,65 +158,6 @@ function register({ email, password, displayName, accountName, inviteCode }) {
 }
 
 /**
- * Guarda el nombre visible y el email de la propia persona.
- *
- * @param {{ email: string, displayName: string }} profile Perfil editado.
- * @returns {Promise<string | null>} El mensaje de error, o `null` si se guardó.
- */
-async function saveProfile(profile) {
-  setState({ submitting: true });
-
-  try {
-    const response = await requestSession("/api/auth/profile", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(profile),
-    });
-
-    if (!response.ok) return await readErrorMessage(response);
-
-    const { user } = await response.json();
-    setState({ user });
-    return null;
-  } catch {
-    return NETWORK_ERROR_MESSAGE;
-  } finally {
-    setState({ submitting: false });
-  }
-}
-
-/**
- * Guarda el nickname de GitLab de la propia persona.
- *
- * Es lo único de GitLab que no es de la cuenta: con él la vista personal sabe
- * cuáles de los merge requests del equipo son de quien mira.
- *
- * @param {string} gitlabUsername Nickname tal como lo escribió la persona.
- * @returns {Promise<string | null>} El mensaje de error, o `null` si se guardó.
- */
-async function saveGitlabUsername(gitlabUsername) {
-  setState({ submitting: true });
-
-  try {
-    const response = await requestSession("/api/auth/gitlab-username", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ gitlabUsername }),
-    });
-
-    if (!response.ok) return await readErrorMessage(response);
-
-    const { user } = await response.json();
-    setState({ user });
-    return null;
-  } catch {
-    return NETWORK_ERROR_MESSAGE;
-  } finally {
-    setState({ submitting: false });
-  }
-}
-
-/**
  * Cambia la contraseña propia. El backend cierra todas las sesiones, así que
  * al terminar la app vuelve al login con el aviso correspondiente.
  *
@@ -269,6 +206,13 @@ function expireSession() {
   setState({ user: null, status: "anonymous", error: SESSION_EXPIRED_MESSAGE, notice: null });
 }
 
+/** Sincroniza en la sesión la identidad actualizada por la feature de usuarios. */
+function updateSessionUser(user) {
+  if (state.status !== "authenticated") return;
+
+  setState({ user });
+}
+
 /**
  * Deja el store como al arrancar la app. Sólo para test.
  *
@@ -288,7 +232,7 @@ function useSession() {
     loadSessionOnce();
   }, []);
 
-  return { ...snapshot, changeOwnPassword, login, logout, register, saveGitlabUsername, saveProfile };
+  return { ...snapshot, changeOwnPassword, login, logout, register };
 }
 
 export {
@@ -300,8 +244,7 @@ export {
   PASSWORD_CHANGED_MESSAGE,
   register,
   resetSessionStore,
-  saveGitlabUsername,
-  saveProfile,
   SESSION_EXPIRED_MESSAGE,
+  updateSessionUser,
   useSession,
 };

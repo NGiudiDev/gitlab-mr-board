@@ -2,8 +2,9 @@ import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { TEST_USER } from "../../../../test/sharedState.js";
 import { PasswordPanel } from "./PasswordPanel.jsx";
+
+import { TEST_USER } from "../../../../test/sharedState.js";
 
 /** Deja que se resuelvan las promesas pendientes y React vuelva a renderizar. */
 async function flush() {

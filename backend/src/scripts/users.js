@@ -6,6 +6,8 @@ import { createAccountRepository } from "../features/accounts/services/accountRe
 import { createAccountService } from "../features/accounts/services/accountService.js";
 import { createAuthRepository } from "../features/auth/services/authRepository.js";
 import { createAuthService } from "../features/auth/services/authService.js";
+import { createUserRepository } from "../features/users/services/userRepository.js";
+import { createUserService } from "../features/users/services/userService.js";
 import { applySchema, createNeonDatabase } from "../shared/database.js";
 
 const USAGE = `Gestión de cuentas y usuarios del tablero.
@@ -150,7 +152,7 @@ async function askNewPassword() {
  * es el camino de recuperación para dejar lista una instalación vacía. Con
  * `--invite` se suma a la cuenta de ese código y el rol lo decide `--role`.
  */
-async function createUserCommand(authService, accountService, args) {
+async function createUserCommand(userService, accountService, args) {
   const email = args[0];
   if (!email || email.startsWith("--")) {
     throw new Error("Indicá el email. Ejemplo: create ana@example.com --account \"Mi equipo\"");
@@ -162,7 +164,7 @@ async function createUserCommand(authService, accountService, args) {
     : await accountService.create(readOption(args, "account"));
   const role = inviteCode && readOption(args, "role") !== "admin" ? "user" : "admin";
 
-  const user = await authService.createUser({
+  const user = await userService.createUser({
     accountId: account.id,
     email,
     password: await askNewPassword(),
@@ -189,13 +191,13 @@ async function changePasswordCommand(authService, args) {
 }
 
 /** Habilita o deshabilita el acceso de un usuario. */
-async function setStatusCommand(authService, args, status) {
+async function setStatusCommand(userService, args, status) {
   const email = args[0];
   if (!email) {
     throw new Error("Indicá el email. Ejemplo: disable ana@example.com");
   }
 
-  const user = await authService.setUserStatus(email, status);
+  const user = await userService.setUserStatus(email, status);
 
   console.log(status === "disabled"
     ? `Usuario «${user.email}» deshabilitado. Se cerraron sus sesiones abiertas.`
@@ -203,13 +205,13 @@ async function setStatusCommand(authService, args, status) {
 }
 
 /** Borra un usuario junto con sus sesiones. */
-async function deleteUserCommand(authService, args) {
+async function deleteUserCommand(userService, args) {
   const email = args[0];
   if (!email) {
     throw new Error("Indicá el email. Ejemplo: delete ana@example.com");
   }
 
-  const deleted = await authService.deleteUser(email);
+  const deleted = await userService.deleteUser(email);
 
   console.log(deleted
     ? `Usuario «${email}» borrado, junto con sus sesiones.`
@@ -217,8 +219,8 @@ async function deleteUserCommand(authService, args) {
 }
 
 /** Lista los usuarios de todas las cuentas, indicando a cuál pertenece cada uno. */
-async function listUsersCommand(authService, accountService) {
-  const users = await authService.listAllUsers();
+async function listUsersCommand(userService, accountService) {
+  const users = await userService.listAllUsers();
 
   if (users.length === 0) {
     console.log("Todavía no hay usuarios. Creá el primero acá, o registrate en el tablero: quien abre una cuenta queda su administrador.");
@@ -260,15 +262,21 @@ async function main() {
   await applySchema(database);
 
   const accountService = createAccountService({ repository: createAccountRepository(database) });
+  const authRepository = createAuthRepository(database);
+  const userService = createUserService({
+    repository: createUserRepository(database),
+    invalidateSessions: authRepository.deleteSessionsOfUser,
+  });
   const authService = createAuthService({
-    repository: createAuthRepository(database),
+    repository: authRepository,
     accountService,
+    userService,
     sessionDurationDays: config.sessionDurationDays,
   });
 
   try {
     if (command === "create") {
-      await createUserCommand(authService, accountService, args);
+      await createUserCommand(userService, accountService, args);
       return;
     }
 
@@ -278,17 +286,17 @@ async function main() {
     }
 
     if (command === "disable" || command === "enable") {
-      await setStatusCommand(authService, args, command === "disable" ? "disabled" : "active");
+      await setStatusCommand(userService, args, command === "disable" ? "disabled" : "active");
       return;
     }
 
     if (command === "delete") {
-      await deleteUserCommand(authService, args);
+      await deleteUserCommand(userService, args);
       return;
     }
 
     if (command === "list") {
-      await listUsersCommand(authService, accountService);
+      await listUsersCommand(userService, accountService);
       return;
     }
 

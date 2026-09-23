@@ -11,6 +11,8 @@ import {
   SUCCESS_ALERT_CLASSES,
 } from "../../../app/constants/styles.consts.js";
 
+import { isAdmin } from "../../accounts/utils/account.utils.js";
+
 import { useUsers } from "../hooks/useUsers.js";
 
 const ACTION_CLASSES = "px-2.5 py-1 rounded-md border border-control text-[12px] text-text-primary hover:border-accent cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
@@ -220,7 +222,7 @@ export function UserAdmin(props) {
                     </th>
                     <td className="py-2 pr-4 text-text-primary">{user.displayName}</td>
                     <td className="py-2 pr-4 text-text-muted">
-                      {user.role === "admin" ? "Administrador" : "Usuario"}
+                      {isAdmin(user) ? "Administrador" : "Usuario"}
                     </td>
                     <td className="py-2 pr-4 text-text-muted">
                       {user.status === "active" ? "Habilitado" : "Deshabilitado"}

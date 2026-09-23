@@ -1,15 +1,19 @@
+import { useAccount } from "../hooks/useAccount.js";
+
+
+import { AccountMemberInviteSection } from "../components/AccountMemberInviteSection.jsx";
+import { AccountSettingsSection } from "../components/AccountSettingsSection.jsx";
+import { GitlabAccountSettingsSection } from "../../gitlabAccount/components/GitlabAccountSettingsSection.jsx";
+import { GitlabUserSettingsSection } from "../../users/components/GitlabUserSettingsSection.jsx";
+
+import { fetchMergeRequests } from "../../mergeRequests/hooks/useMergeRequests.js";
+import { isAdmin } from "../utils/account.utils.js";
+
 import {
   LOADING_TEXT_CLASSES,
   PAGE_SECTIONS_CLASSES,
 } from "../../../app/constants/styles.consts.js";
 
-import { GitlabAccountSettingsSection } from "../../gitlabAccount/components/GitlabAccountSettingsSection.jsx";
-import { GitlabUserSettingsSection } from "../../gitlabUser/components/GitlabUserSettingsSection.jsx";
-import { fetchMergeRequests } from "../../mergeRequests/hooks/useMergeRequests.js";
-
-import { AccountMemberInviteSection } from "../components/AccountMemberInviteSection.jsx";
-import { AccountSettingsSection } from "../components/AccountSettingsSection.jsx";
-import { useAccount } from "../hooks/useAccount.js";
 
 export function AccountPage(props) {
   const { onSaveGitlabUsername, submitting, user } = props;
@@ -21,7 +25,8 @@ export function AccountPage(props) {
     submitting: accountSubmitting,
     rotateInviteCode,
   } = useAccount(user.accountId);
-  const isAdmin = user.role === "admin";
+
+  const hasAdminRole = isAdmin(user);
 
   return (
     <div className={PAGE_SECTIONS_CLASSES}>
@@ -39,7 +44,7 @@ export function AccountPage(props) {
         <AccountSettingsSection account={account} />
       )}
 
-      {isAdmin && account?.inviteCode ? (
+      {hasAdminRole && account?.inviteCode ? (
         <AccountMemberInviteSection
           inviteCode={account.inviteCode}
           onRotate={rotateInviteCode}
@@ -48,7 +53,7 @@ export function AccountPage(props) {
       ) : null}
 
       <GitlabAccountSettingsSection
-        canEdit={isAdmin}
+        canEdit={hasAdminRole}
         onSaved={() => fetchMergeRequests(true)}
       />
 

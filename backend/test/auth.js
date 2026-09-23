@@ -10,12 +10,9 @@ import { createAuthRepository } from "../src/features/auth/services/authReposito
 import { createAuthService } from "../src/features/auth/services/authService.js";
 import { createGitLabSettingsRepository } from "../src/features/gitlabSettings/services/gitlabSettingsRepository.js";
 import { createGitLabSettingsService } from "../src/features/gitlabSettings/services/gitlabSettingsService.js";
+import { createUserRepository } from "../src/features/users/services/userRepository.js";
+import { createUserService } from "../src/features/users/services/userService.js";
 import { createTestDatabase } from "./database.js";
-
-/** Abre un repositorio de autenticación en memoria, aislado por test. */
-async function createTestRepository() {
-  return createAuthRepository(await createTestDatabase());
-}
 
 /** Crea el servicio de cuentas sobre una base ya abierta. */
 function createTestAccountService(database) {
@@ -36,24 +33,31 @@ function createTestGitLabSettingsService(database) {
 }
 
 /**
- * Arma los tres servicios sobre una misma base en memoria.
+ * Arma los cuatro servicios sobre una misma base en memoria.
  *
  * Comparten la conexión porque las claves foráneas entre sus tablas sólo valen
  * dentro de la misma base.
  *
  * @param database Base con el esquema ya aplicado.
- * @returns Servicios de cuentas, autenticación y configuración de GitLab.
+ * @returns Servicios de cuentas, autenticación, usuarios y configuración de GitLab.
  */
 function createTestServices(database) {
   const accountService = createTestAccountService(database);
+  const authRepository = createAuthRepository(database);
+  const userService = createUserService({
+    repository: createUserRepository(database),
+    invalidateSessions: authRepository.deleteSessionsOfUser,
+  });
 
   return {
     accountService,
     authService: createAuthService({
-      repository: createAuthRepository(database),
+      repository: authRepository,
       accountService,
+      userService,
     }),
     gitlabSettingsService: createTestGitLabSettingsService(database),
+    userService,
   };
 }
 
@@ -65,7 +69,7 @@ async function createEmptyServices() {
 /**
  * Arma los servicios con una cuenta y un usuario de prueba ya dados de alta.
  *
- * Devuelve los tres para poder pasárselos enteros a `createApp`: si alguno
+ * Devuelve los cuatro para poder pasárselos enteros a `createApp`: si alguno
  * faltara, la app armaría el resto contra Neon.
  *
  * @param role Rol del usuario de prueba; `admin` para las rutas de gestión.
@@ -76,7 +80,7 @@ async function createTestServicesWithUser(role = "user") {
   const services = await createEmptyServices();
   const account = await services.accountService.create(TEST_ACCOUNT_NAME);
 
-  await services.authService.createUser({
+  await services.userService.createUser({
     accountId: account.id,
     email: TEST_EMAIL,
     password: TEST_PASSWORD,
@@ -100,24 +104,31 @@ async function createTestServicesWithUser(role = "user") {
  * @returns App, servicios, cuenta, usuario y la cookie de sesión a reenviar.
  */
 async function createAuthenticatedApp(options = {}, role = "user") {
-  const { account, accountService, authService, gitlabSettingsService } = await createTestServicesWithUser(role);
+  const {
+    account,
+    accountService,
+    authService,
+    gitlabSettingsService,
+    userService,
+  } = await createTestServicesWithUser(role);
 
   const { user, token } = await authService.login({
     email: TEST_EMAIL,
     password: TEST_PASSWORD,
   });
 
-  await authService.changeGitlabUsername(user.id, TEST_GITLAB_USERNAME);
+  await userService.changeGitlabUsername(user.id, TEST_GITLAB_USERNAME);
   await gitlabSettingsService.save(account.id, {
     projectIds: TEST_PROJECT_IDS,
     accessToken: TEST_TOKEN,
   });
 
   return {
-    app: createApp({ ...options, accountService, authService, gitlabSettingsService }),
+    app: createApp({ ...options, accountService, authService, gitlabSettingsService, userService }),
     accountService,
     authService,
     gitlabSettingsService,
+    userService,
     account,
     user: { ...user, gitlabUsername: TEST_GITLAB_USERNAME },
     cookie: `${SESSION_COOKIE_NAME}=${token}`,
@@ -130,7 +141,6 @@ export {
   createTestAccountService,
   createTestDatabase,
   createTestGitLabSettingsService,
-  createTestRepository,
   createTestServices,
   createTestServicesWithUser,
 };
