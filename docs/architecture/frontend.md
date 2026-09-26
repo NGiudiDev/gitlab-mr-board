@@ -12,22 +12,23 @@ El código se divide entre la composición general y las funcionalidades del dom
 
 - `src/main.jsx`: carga los estilos globales y monta React mediante `createRoot`, `StrictMode` y `BrowserRouter`.
 - `src/config.js`: centraliza y valida la configuración expuesta por Vite.
-- `src/app/App.jsx`: decide si mostrar las rutas públicas o privadas según la sesión y asocia cada URL con una page de su feature.
-- `src/app/GlobalStyles.jsx`: define tokens, reset y estilos globales mediante `createGlobalStyle`.
-- `src/app/components/AppLayout.jsx`: define el layout —barra superior, navegación entre secciones y contenido—; `LoggedUserMenu.jsx` reúne allí la identidad, el equipo y el cierre de sesión.
+- `src/app/app.jsx`: decide si mostrar las rutas públicas o privadas según la sesión y asocia cada URL con una page de su feature.
+- `src/app/app.styles.jsx`: define tokens, reset, estilos globales y componentes visuales compartidos.
+- `src/app/components/app_layout/`: reúne implementación, estilos y test del layout —barra superior, navegación entre secciones y contenido—; `features/users/components/logged_user_menu/` hace lo mismo con la identidad, el equipo y el cierre de sesión.
 - `src/app/constants/routes.consts.js`: mantiene las URLs y los metadatos de navegación como única fuente de verdad.
 - `src/app/constants/styles.consts.js`: centraliza los patrones visuales compartidos por componentes de distintas features.
-- `src/features/accounts/`: contiene el store y los componentes de la cuenta, además de `pages/AccountPage.jsx`, descritos en el [dominio de cuentas](../domains/cuentas.md).
+- `src/features/accounts/`: contiene el store y los componentes de la cuenta, además de `pages/account_page/`, descritos en el [dominio de cuentas](../domains/cuentas.md).
 - `src/features/auth/`: contiene el store de la sesión y las pantallas de ingreso, registro y cambio de contraseña, descritos en el [dominio de autenticación](../domains/autenticacion.md).
 - `src/features/users/`: contiene el perfil, el nickname personal de GitLab, la administración de usuarios, sus hooks y utilidades.
 - `src/features/gitlabAccount/`: contiene la sección, el formulario, los estados de carga y lectura, y el hook de la configuración de GitLab de la cuenta, descritos en la [configuración de GitLab](../domains/configuracion-gitlab.md).
 - `src/features/mergeRequests/hooks/useMergeRequests.js`: contiene el store compartido, el acceso al backend y el polling.
-- `src/features/mergeRequests/components/`: contiene los componentes del tablero de merge requests.
-- `src/features/mergeRequests/pages/BoardPage.jsx`: compone la pantalla completa del tablero y sus estados.
-- `src/features/mergeRequests/personalView.js`: selecciona los datos de la vista personal a partir del contrato del backend.
+- `src/features/mergeRequests/components/`: contiene una carpeta por componente del tablero de merge requests.
+- `src/features/mergeRequests/pages/board_page/`: compone la pantalla completa del tablero y sus estados.
+- `src/features/mergeRequests/constants/merge_request_columns.consts.js`: define las columnas visibles y su orden.
+- `src/features/mergeRequests/utils/personal_view.utils.js`: selecciona los datos de la vista personal a partir del contrato del backend.
 - `test/`: reúne la configuración, los fixtures y las utilidades compartidas según la [estrategia de test](../development/test.md).
 
-Las funcionalidades nuevas deben seguir la estructura `src/features/<feature>/components/`, `hooks/` y `pages/`. Una page representa la pantalla asociada a una URL y compone componentes de su feature; `src/app/` se reserva para el layout, las rutas y la composición de alto nivel.
+Las funcionalidades nuevas siguen la estructura `src/features/<feature>/{components,hooks,pages,constants,utils}/`. Cada componente y page tiene una carpeta `snake_case` que reúne su `.jsx`, su `.style.js` cuando corresponde y su test. Una page representa la pantalla asociada a una URL y compone componentes de su feature; `src/app/` se reserva para el layout, las rutas y la composición de alto nivel.
 
 ## Composición de componentes
 
@@ -77,7 +78,7 @@ App
 - `MrCard` resume el merge request, presenta los responsables que informa `responsiblePeople` y enlaza a GitLab.
 - `BlockerBadge` presenta pipeline, discusiones, aprobaciones y conflictos con texto, icono y estilo semántico.
 
-`mergeRequestColumns.js` define una sola vez las columnas compartidas y reparte cada merge request en la de su clasificación. `personalView.js` busca la persona seleccionada y filtra sus tareas por el `username` que el backend marcó como responsable, según el [dominio de merge requests](../domains/merge-requests.md#responsable).
+`constants/merge_request_columns.consts.js` define una sola vez las columnas compartidas y reparte cada merge request en la de su clasificación. `utils/personal_view.utils.js` busca la persona seleccionada y filtra sus tareas por el `username` que el backend marcó como responsable, según el [dominio de merge requests](../domains/merge-requests.md#responsable).
 
 Los componentes presentacionales reciben valores mediante props y notifican acciones mediante callbacks como `onRefresh`. No mutan las props ni el estado recibido.
 
@@ -138,9 +139,9 @@ Una región viva con `aria-live="polite"` comunica el inicio, el error y la fina
 
 ## Presentación y diseño visual
 
-styled-components mantiene los estilos exclusivos junto a cada componente. Los colores, superficies, tipografías y estados semánticos se definen como custom properties en `src/app/GlobalStyles.jsx`; su uso se detalla en la [arquitectura de la interfaz visual](interfaz-visual.md).
+styled-components mantiene los estilos exclusivos en el `.style.js` de cada componente. Los colores, superficies, tipografías y estados semánticos se definen como custom properties en `src/app/app.styles.jsx`; su uso se detalla en la [arquitectura de la interfaz visual](interfaz-visual.md).
 
-`src/app/constants/styles.consts.js` expone sólo componentes visuales y mixins que comparten varias features. Las variantes visuales usan props transitorias con prefijo `$` para evitar que lleguen al DOM.
+`src/app/app.styles.jsx` expone los componentes visuales compartidos y `src/app/constants/styles.consts.js`, sólo los mixins CSS reutilizables. Las variantes visuales usan props transitorias con prefijo `$` para evitar que lleguen al DOM.
 
 Ambas vistas usan secciones verticales por proyecto. Cada sección despliega seis columnas horizontales en un contenedor desplazable y cada columna limita su altura para desplazar las tarjetas verticalmente. La vista personal conserva exactamente esta estructura y sólo filtra los merge requests entregados al tablero.
 

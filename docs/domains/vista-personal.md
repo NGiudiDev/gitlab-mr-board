@@ -59,7 +59,7 @@ La interfaz debe funcionar con teclado, conservar foco visible y anunciar los ca
 
 El filtrado ocurre en el frontend sobre la respuesta ya consolidada, así que no hace falta un endpoint nuevo y se conservan la caché y el polling. El backend expone `authorUsername`, el `username` de reviewers y aprobadores, `responsiblePeople` por merge request, `meta.people` para el selector y `meta.viewerUsername` con el nickname de quien pide el tablero. Ese último campo es lo único de la respuesta que no se comparte entre los miembros de la cuenta: la ruta lo completa al entregarla.
 
-Como todos esos campos llegan normalizados de la misma fuente, `personalView.js` compara los `username` por igualdad exacta. Sólo selecciona datos: no contiene reglas de negocio.
+Como todos esos campos llegan normalizados de la misma fuente, `utils/personal_view.utils.js` compara los `username` por igualdad exacta. Sólo selecciona datos: no contiene reglas de negocio.
 
 ## Casos límite
 
@@ -71,7 +71,7 @@ Como todos esos campos llegan normalizados de la misma fuente, `personalView.js`
 
 ## Implementación
 
-`personalView.js` busca la persona y filtra sus merge requests; el store conserva `viewMode` y `selectedUsername` durante la sesión; `Board` decide de quién son las tareas —`selectedUsername` para un `admin`, `meta.viewerUsername` para el resto— y `ViewControls` muestra el selector sólo con `canChoosePerson`; `MrBoard` recibe la colección completa o la filtrada sin cambiar su estructura. No se agregó ninguna dependencia de routing ni de estado global.
+`utils/personal_view.utils.js` busca la persona y filtra sus merge requests; el store conserva `viewMode` y `selectedUsername` durante la sesión; `BoardPage` decide de quién son las tareas —`selectedUsername` para un `admin`, `meta.viewerUsername` para el resto— y `ViewControls` muestra el selector sólo con `canChoosePerson`; `MrBoard` recibe la colección completa o la filtrada sin cambiar su estructura. No se agregó ninguna dependencia de routing ni de estado global.
 
 ## Decisiones pendientes
 

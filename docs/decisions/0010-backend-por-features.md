@@ -31,7 +31,7 @@ src/
 - **La separación por capas se conserva dentro de cada feature.** Sigue valiendo que las rutas HTTP van en `routes/`, la lógica de negocio en `services/` y las utilidades en `utils/`; lo que cambia es que ahora esas carpetas cuelgan de la feature.
 - **Cada feature declara sus propios tipos** en su `types.ts`. El archivo central desapareció.
 - **`shared/` es sólo para lo que usan varias features**: el acceso a Postgres, sus tipos y el error HTTP. Lo que usa una sola feature vive dentro de ella, aunque parezca genérico —el limitador de concurrencia y el cifrador de secretos son ejemplos—.
-- **No hay barrels.** `app.ts` importa cada router por su ruta completa, igual que `App.jsx` importa cada componente por la suya.
+- **No hay barrels.** `app.js` importa cada router por su ruta completa, igual que `app.jsx` importa cada page por la suya.
 - Los contratos que sólo existen para los test se mudaron a `backend/test/types.ts`, fuera del código que se despliega.
 
 ## Alternativas consideradas

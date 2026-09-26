@@ -3,13 +3,13 @@ import { Navigate, Route, Routes, useNavigate } from "react-router";
 import { useCurrentUser } from "../features/users/hooks/useCurrentUser.js";
 import { useSession } from "../features/auth/hooks/useSession.js";
 
-import { AccountPage } from "../features/accounts/pages/AccountPage.jsx";
+import { AccountPage } from "../features/accounts/pages/account_page/account_page.jsx";
 import { AppLayout } from "./components/app_layout/app_layout.jsx";
-import { BoardPage } from "../features/mergeRequests/pages/BoardPage.jsx";
-import { LoginPage } from "../features/auth/pages/LoginPage.jsx";
-import { ProfilePage } from "../features/users/pages/ProfilePage.jsx";
-import { RegisterPage } from "../features/auth/pages/RegisterPage.jsx";
-import { UsersPage } from "../features/users/pages/UsersPage.jsx";
+import { BoardPage } from "../features/mergeRequests/pages/board_page/board_page.jsx";
+import { LoginPage } from "../features/auth/pages/login_page/login_page.jsx";
+import { ProfilePage } from "../features/users/pages/profile_page/profile_page.jsx";
+import { RegisterPage } from "../features/auth/pages/register_page/register_page.jsx";
+import { UsersPage } from "../features/users/pages/users_page/users_page.jsx";
 
 import { Styles } from "./app.styles.jsx";
 

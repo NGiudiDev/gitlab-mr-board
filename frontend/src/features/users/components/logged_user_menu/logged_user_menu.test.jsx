@@ -4,7 +4,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import userEvent from "@testing-library/user-event";
 
-import { LoggedUserMenu } from "./LoggedUserMenu.jsx";
+import { LoggedUserMenu } from "./logged_user_menu.jsx";
 
 import { jsonResponse, resetSharedState, TEST_ACCOUNT, TEST_USER } from "../../../../../test/sharedState.js";
 import { getUserInitials } from "../../utils/user.utils.js";

@@ -3,7 +3,7 @@ import { MemoryRouter, useLocation } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 
-import { App } from "./App.jsx";
+import { App } from "./app.jsx";
 
 import { buildMergeRequest, buildResponse } from "../../test/fixtures/mergeRequests.js";
 import { jsonResponse, resetSharedState, signInTestUser, TEST_ACCOUNT, TEST_USER } from "../../test/sharedState.js";

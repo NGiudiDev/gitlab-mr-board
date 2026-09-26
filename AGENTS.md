@@ -76,11 +76,11 @@
 
 ### Frontend
 
-- Organizar cada funcionalidad en `frontend/src/features/<feature>/`, con `components/`, `hooks/` y `pages/`: una page compone la pantalla asociada a una URL y los componentes resuelven piezas reutilizables. Reservar `frontend/src/app/` para el layout, las rutas y la composición general.
+- Organizar cada funcionalidad en `frontend/src/features/<feature>/`, con `components/`, `hooks/`, `pages/`, `constants/` y `utils/` según corresponda. Cada componente y page vive en una carpeta `snake_case` propia, con implementación, estilos exclusivos (`<nombre>.style.js`) y test juntos. Una page compone la pantalla asociada a una URL y los componentes resuelven piezas reutilizables. Reservar `frontend/src/app/` para el layout, las rutas y la composición general.
 
-- «Mi cuenta» reúne el equipo (`features/accounts/components/AccountSettingsSection.jsx`), su invitación (`features/accounts/components/AccountMemberInviteSection.jsx`), la configuración compartida de GitLab (`features/gitlabAccount/`) y el nickname propio de GitLab (`features/users/components/GitlabUserSettingsSection.jsx`). `AccountPage.jsx` compone estas responsabilidades como secciones hermanas. «Mi perfil» vive en `features/users/pages/ProfilePage.jsx` y reúne los datos del usuario (`features/users/components/ProfilePanel.jsx`) con la contraseña (`features/auth/components/PasswordPanel.jsx`). Al sumar un dato, ubicarlo según su contexto de edición.
+- «Mi cuenta» reúne el equipo (`features/accounts/components/account_settings_section/`), su invitación (`features/accounts/components/account_member_invite_section/`), la configuración compartida de GitLab (`features/gitlabAccount/`) y el nickname propio de GitLab (`features/users/components/gitlab_user_settings_section/`). `account_page.jsx` compone estas responsabilidades como secciones hermanas. «Mi perfil» vive en `features/users/pages/profile_page/` y reúne los datos del usuario (`features/users/components/profile_panel/`) con la contraseña (`features/auth/components/password_panel/`). Al sumar un dato, ubicarlo según su contexto de edición.
 
-- **El layout y la navegación viven en `frontend/src/app/`**: `components/AppLayout.jsx` contiene la barra superior y el único `main`; `constants/routes.consts.js`, las rutas y secciones navegables; y `components/LoggedUserMenu.jsx`, el avatar y su desplegable para abrir «Mi perfil» o «Mi cuenta» y cerrar la sesión. `App.jsx` asocia cada URL con una page de su feature mediante React Router. Al agregar una sección, sumar su URL a `APP_PATHS`, su navegación a `NAVIGATION_SECTIONS`, su `Route` a `App.jsx` y actualizar [`docs/architecture/frontend.md`](docs/architecture/frontend.md#navegación-entre-secciones).
+- **El layout y la navegación viven en `frontend/src/app/`**: `components/app_layout/app_layout.jsx` contiene la barra superior y el único `main`; `constants/routes.consts.js`, las rutas y secciones navegables; y `features/users/components/logged_user_menu/logged_user_menu.jsx`, el avatar y su desplegable para abrir «Mi perfil» o «Mi cuenta» y cerrar la sesión. `app.jsx` asocia cada URL con una page de su feature mediante React Router. Al agregar una sección, sumar su URL a `APP_PATHS`, su navegación a `NAVIGATION_SECTIONS`, su `Route` a `app.jsx` y actualizar [`docs/architecture/frontend.md`](docs/architecture/frontend.md#navegación-entre-secciones).
 
 - Centralizar las variables de entorno en `frontend/src/config.js`. Al agregar una, actualizar `frontend/.env.example` y `docs/development/entorno-local.md`.
 
@@ -90,13 +90,13 @@
 
 - Seguir el orden de imports, bloques del componente y espacios de JSX de la [guía de calidad de código](docs/development/calidad-codigo.md#estilo-de-código).
 
-- Estilos con **styled-components**. Cada componente define junto a sí sus estilos exclusivos; los componentes visuales y mixins usados por distintas features viven en `frontend/src/app/constants/styles.consts.js`, y `frontend/src/app/GlobalStyles.jsx` concentra los tokens, el reset y los estilos globales.
+- Estilos con **styled-components**. Cada componente define sus estilos exclusivos en su archivo `.style.js` y los consume mediante un objeto `Styles`; los componentes visuales compartidos viven en `frontend/src/app/app.styles.jsx`, los mixins en `frontend/src/app/constants/styles.consts.js` y `GlobalStyles` concentra allí mismo los tokens, el reset y los estilos globales.
 
 - Usar props transitorias con prefijo `$` para variantes exclusivamente visuales, de modo que no lleguen al DOM. No introducir `className` con estilos, hojas CSS ni estilos inline salvo que una integración externa lo exija.
 
 - **El estado compartido va al store**: `hooks/useMergeRequests.js` para el tablero, `features/auth/hooks/useSession.js` para la sesión y `features/accounts/hooks/useAccount.js` para la cuenta, los tres con `useSyncExternalStore`; `useState` queda para estado local del componente. Al cerrar sesión hay que reiniciarlos todos. Toda petición al backend viaja con `credentials: 'include'`.
 
-- Al agregar o renombrar una clasificación, mantener sincronizadas la clasificación que calcula `mergeRequestRules.js` en el backend, las columnas de `mergeRequestColumns.js` y `docs/domains/merge-requests.md`. Al cambiar la asignación de responsables, modificar `computeResponsiblePeople`, cubrir las combinaciones en `mergeRequestRules.test.js` y actualizar ese mismo documento.
+- Al agregar o renombrar una clasificación, mantener sincronizadas la clasificación que calcula `mergeRequestRules.js` en el backend, las columnas de `features/mergeRequests/constants/merge_request_columns.consts.js` y `docs/domains/merge-requests.md`. Al cambiar la asignación de responsables, modificar `computeResponsiblePeople`, cubrir las combinaciones en `mergeRequestRules.test.js` y actualizar ese mismo documento.
 
 - La vista por persona ([`docs/domains/vista-personal.md`](docs/domains/vista-personal.md)) filtra por el `username` que el backend marcó responsable; no recalcular ni duplicar esa regla en el frontend.
 

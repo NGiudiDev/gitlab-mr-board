@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import { AppLayout } from "./AppLayout.jsx";
+import { AppLayout } from "./app_layout.jsx";
 
 import { jsonResponse, resetSharedState, TEST_ACCOUNT, TEST_USER } from "../../../../test/sharedState.js";
 import { getNavigationSectionsForUser } from "../../utils/routes.utils.js";

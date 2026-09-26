@@ -1,6 +1,6 @@
 # Interfaz visual
 
-El tablero usa tema oscuro y styled-components. Los tokens, el reset y los estilos globales viven en `frontend/src/app/GlobalStyles.jsx`; los estilos específicos permanecen junto a sus componentes y los patrones compartidos, en `frontend/src/app/constants/styles.consts.js`.
+El tablero usa tema oscuro y styled-components. Los tokens, el reset, los estilos globales y los componentes visuales compartidos viven en `frontend/src/app/app.styles.jsx`; los estilos específicos permanecen en el `.style.js` de cada componente y los mixins compartidos, en `frontend/src/app/constants/styles.consts.js`.
 
 ## Layout
 

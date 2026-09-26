@@ -4,7 +4,7 @@ import { useAccount } from "../../../accounts/hooks/useAccount.js";
 
 import { Styles } from "./logged_user_menu.style.js";
 
-import { getUserInitials, isAdmin, } from "../../utils/user.utils.js";
+import { getUserInitials, isAdmin } from "../../utils/user.utils.js";
 
 import { APP_PATHS } from "../../../../app/constants/routes.consts.js";
 
