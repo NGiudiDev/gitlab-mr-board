@@ -1,13 +1,6 @@
 import { useEffect, useState } from "react";
 
-import {
-  Alert,
-  Button,
-  Field,
-  FormField,
-  Hint,
-  Label,
-} from "../../../app/constants/styles.consts.js";
+import { Styles } from "../../../app/app.styles.jsx";
 
 export function GitlabAccountSettingsForm(props) {
   const {
@@ -52,23 +45,23 @@ export function GitlabAccountSettingsForm(props) {
   return (
     <form onSubmit={handleSubmit}>
       {formError ? (
-        <Alert role="alert">
+        <Styles.Alert role="alert">
           {formError}
-        </Alert>
+        </Styles.Alert>
       ) : null}
 
       {message ? (
-        <Alert $success role="status">
+        <Styles.Alert $success role="status">
           {message}
-        </Alert>
+        </Styles.Alert>
       ) : null}
 
-      <FormField>
-        <Label htmlFor="gitlab-proyectos">
+      <Styles.FormField>
+        <Styles.Label htmlFor="gitlab-proyectos">
           IDs de los proyectos
-        </Label>
+        </Styles.Label>
 
-        <Field
+        <Styles.Field
           aria-describedby="gitlab-proyectos-ayuda"
           id="gitlab-proyectos"
           inputMode="numeric"
@@ -79,17 +72,17 @@ export function GitlabAccountSettingsForm(props) {
           value={projectIds}
         />
 
-        <Hint id="gitlab-proyectos-ayuda">
+        <Styles.Hint id="gitlab-proyectos-ayuda">
           Números separados por comas, por ejemplo 123, 456. Los encontrás en la portada de cada proyecto en GitLab.
-        </Hint>
-      </FormField>
+        </Styles.Hint>
+      </Styles.FormField>
 
-      <FormField>
-        <Label htmlFor="gitlab-token">
+      <Styles.FormField>
+        <Styles.Label htmlFor="gitlab-token">
           Access token
-        </Label>
+        </Styles.Label>
 
-        <Field
+        <Styles.Field
           aria-describedby="gitlab-token-ayuda"
           autoComplete="off"
           id="gitlab-token"
@@ -99,16 +92,16 @@ export function GitlabAccountSettingsForm(props) {
           type="password"
           value={accessToken}
         />
-        <Hint id="gitlab-token-ayuda">
+        <Styles.Hint id="gitlab-token-ayuda">
           {hasStoredToken
             ? `Ya hay uno guardado, terminado en «${settings.tokenHint}». Dejá el campo vacío para conservarlo.`
             : "PAT de GitLab con el alcance read_api. Se guarda cifrado y no se muestra nunca más."}
-        </Hint>
-      </FormField>
+        </Styles.Hint>
+      </Styles.FormField>
 
-      <Button disabled={saving} type="submit">
+      <Styles.Button disabled={saving} type="submit">
         {saving ? "Guardando..." : "Guardar configuración"}
-      </Button>
+      </Styles.Button>
     </form>
   );
 }

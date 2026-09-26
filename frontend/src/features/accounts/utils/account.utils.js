@@ -1,3 +1,4 @@
+//TODO: Eliminar de aca. Esto es parte de la lógica de usuarios.
 /**
  * Indica si una persona puede administrar su cuenta.
  *

@@ -1,6 +1,6 @@
 import styled, { keyframes } from "styled-components";
 
-import { VisuallyHidden } from "../../../app/constants/styles.consts.js";
+import { Styles } from "../../../app/app.styles.jsx";
 
 const pulse = keyframes`
   50% { opacity: 0.5; }
@@ -43,7 +43,7 @@ export function GitlabAccountSettingsSkeleton(props) {
 
   return (
     <div aria-busy="true" role="status">
-      <VisuallyHidden>Cargando la configuración...</VisuallyHidden>
+      <Styles.VisuallyHidden>Cargando la configuración...</Styles.VisuallyHidden>
 
       <SkeletonContent aria-hidden="true">
         <div>

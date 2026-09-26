@@ -1,5 +1,6 @@
 import { useAccount } from "../hooks/useAccount.js";
 
+import { Styles } from "../../../app/app.styles.jsx";
 
 import { AccountMemberInviteSection } from "../components/AccountMemberInviteSection.jsx";
 import { AccountSettingsSection } from "../components/AccountSettingsSection.jsx";
@@ -8,13 +9,6 @@ import { GitlabUserSettingsSection } from "../../users/components/GitlabUserSett
 
 import { fetchMergeRequests } from "../../mergeRequests/hooks/useMergeRequests.js";
 import { isAdmin } from "../utils/account.utils.js";
-
-import {
-  Alert,
-  LoadingText,
-  PageSections,
-} from "../../../app/constants/styles.consts.js";
-
 
 export function AccountPage(props) {
   const { onSaveGitlabUsername, submitting, user } = props;
@@ -30,16 +24,16 @@ export function AccountPage(props) {
   const hasAdminRole = isAdmin(user);
 
   return (
-    <PageSections>
+    <Styles.PageSections>
       {accountLoading && !account ? (
         <section aria-label="Estado de la cuenta">
-          <LoadingText role="status">Cargando la cuenta...</LoadingText>
+          <Styles.LoadingText role="status">Cargando la cuenta...</Styles.LoadingText>
         </section>
       ) : accountError && !account ? (
         <section aria-label="Estado de la cuenta">
-          <Alert role="alert">
+          <Styles.Alert role="alert">
             {accountError}
-          </Alert>
+          </Styles.Alert>
         </section>
       ) : (
         <AccountSettingsSection account={account} />
@@ -63,6 +57,6 @@ export function AccountPage(props) {
         submitting={submitting}
         user={user}
       />
-    </PageSections>
+    </Styles.PageSections>
   );
 }

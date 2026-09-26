@@ -1,7 +1,8 @@
 import { useState } from "react";
 import styled from "styled-components";
 
-import { focusRingStyles, VisuallyHidden } from "../../../app/constants/styles.consts.js";
+import { Styles } from "../../../app/app.styles.jsx";
+import { focusRingStyles } from "../../../app/constants/styles.consts.js";
 
 import { columnsOf } from "../mergeRequestColumns.js";
 import { BoardColumn } from "./BoardColumn.jsx";
@@ -122,7 +123,7 @@ export function MrBoard(props) {
                 {group.repo}
               </ProjectName>
               <ProjectCount>
-                {group.mrs.length} <VisuallyHidden>merge requests</VisuallyHidden>
+                {group.mrs.length} <Styles.VisuallyHidden>merge requests</Styles.VisuallyHidden>
               </ProjectCount>
             </ProjectToggle>
 

@@ -1,16 +1,6 @@
 import { useState } from "react";
 
-import {
-  Alert,
-  AuthForm,
-  AuthFormDescription,
-  AuthFormHeading,
-  AuthFormSwitch,
-  AuthSubmitButton,
-  ButtonLink,
-  Field,
-  SpacedLabel,
-} from "../../../app/constants/styles.consts.js";
+import { Styles } from "../../../app/app.styles.jsx";
 
 export function LoginForm(props) {
   const {
@@ -30,28 +20,28 @@ export function LoginForm(props) {
   }
 
   return (
-    <AuthForm aria-labelledby="login-heading" onSubmit={handleSubmit}>
-      <AuthFormHeading id="login-heading">
+    <Styles.AuthForm aria-labelledby="login-heading" onSubmit={handleSubmit}>
+      <Styles.AuthFormHeading id="login-heading">
         Tablero de MRs
-      </AuthFormHeading>
+      </Styles.AuthFormHeading>
 
-      <AuthFormDescription>Ingresá con tu email para ver el tablero.</AuthFormDescription>
+      <Styles.AuthFormDescription>Ingresá con tu email para ver el tablero.</Styles.AuthFormDescription>
 
       {error ? (
-        <Alert role="alert">
+        <Styles.Alert role="alert">
           {error}
-        </Alert>
+        </Styles.Alert>
       ) : null}
 
       {notice ? (
-        <Alert $success role="status">
+        <Styles.Alert $success role="status">
           {notice}
-        </Alert>
+        </Styles.Alert>
       ) : null}
 
-      <SpacedLabel htmlFor="login-email">
+      <Styles.SpacedLabel htmlFor="login-email">
         Email
-        <Field
+        <Styles.Field
           autoCapitalize="none"
           autoComplete="email"
           id="login-email"
@@ -63,11 +53,11 @@ export function LoginForm(props) {
           type="text"
           value={email}
         />
-      </SpacedLabel>
+      </Styles.SpacedLabel>
 
-      <SpacedLabel htmlFor="login-password">
+      <Styles.SpacedLabel htmlFor="login-password">
         Contraseña
-        <Field
+        <Styles.Field
           autoComplete="current-password"
           id="login-password"
           name="password"
@@ -76,18 +66,18 @@ export function LoginForm(props) {
           type="password"
           value={password}
         />
-      </SpacedLabel>
+      </Styles.SpacedLabel>
 
-      <AuthSubmitButton disabled={submitting} type="submit">
+      <Styles.AuthSubmitButton disabled={submitting} type="submit">
         {submitting ? "Ingresando..." : "Ingresar"}
-      </AuthSubmitButton>
+      </Styles.AuthSubmitButton>
 
-      <AuthFormSwitch>
+      <Styles.AuthFormSwitch>
         ¿No tenés cuenta?{" "}
-        <ButtonLink onClick={onShowRegister} type="button">
+        <Styles.ButtonLink onClick={onShowRegister} type="button">
           Crear una cuenta
-        </ButtonLink>
-      </AuthFormSwitch>
-    </AuthForm>
+        </Styles.ButtonLink>
+      </Styles.AuthFormSwitch>
+    </Styles.AuthForm>
   );
 }

@@ -1,39 +1,44 @@
 import { Navigate, Route, Routes, useNavigate } from "react-router";
 
-import { AppLayout } from "./components/AppLayout.jsx";
-import { APP_PATHS } from "./constants/routes.consts.js";
-import { StatusPanel } from "./constants/styles.consts.js";
-
-import { resetAccountStore } from "../features/accounts/hooks/useAccount.js";
-import { AccountPage } from "../features/accounts/pages/AccountPage.jsx";
-import { isAdmin } from "../features/accounts/utils/account.utils.js";
-import { useSession } from "../features/auth/hooks/useSession.js";
-import { LoginPage } from "../features/auth/pages/LoginPage.jsx";
-import { RegisterPage } from "../features/auth/pages/RegisterPage.jsx";
-import { resetStore } from "../features/mergeRequests/hooks/useMergeRequests.js";
-import { BoardPage } from "../features/mergeRequests/pages/BoardPage.jsx";
 import { useCurrentUser } from "../features/users/hooks/useCurrentUser.js";
+import { useSession } from "../features/auth/hooks/useSession.js";
+
+import { AccountPage } from "../features/accounts/pages/AccountPage.jsx";
+import { AppLayout } from "./components/app_layout/app_layout.jsx";
+import { BoardPage } from "../features/mergeRequests/pages/BoardPage.jsx";
+import { LoginPage } from "../features/auth/pages/LoginPage.jsx";
 import { ProfilePage } from "../features/users/pages/ProfilePage.jsx";
+import { RegisterPage } from "../features/auth/pages/RegisterPage.jsx";
 import { UsersPage } from "../features/users/pages/UsersPage.jsx";
 
+import { Styles } from "./app.styles.jsx";
+
+import { isAdmin } from "../features/accounts/utils/account.utils.js";
+import { resetAccountStore } from "../features/accounts/hooks/useAccount.js";
+import { resetStore } from "../features/mergeRequests/hooks/useMergeRequests.js";
+
+import { APP_PATHS } from "./constants/routes.consts.js";
+
 export function App() {
+  const currentUser = useCurrentUser();
   const navigate = useNavigate();
   const session = useSession();
-  const currentUser = useCurrentUser();
 
   async function handleLogout() {
     await session.logout();
+    
     resetStore();
     resetAccountStore();
+    
     navigate(APP_PATHS.login, { replace: true });
   }
 
   if (session.status === "checking") {
     return (
       <AppLayout>
-        <StatusPanel role="status">
+        <Styles.StatusPanel role="status">
           Verificando tu sesión...
-        </StatusPanel>
+        </Styles.StatusPanel>
       </AppLayout>
     );
   }

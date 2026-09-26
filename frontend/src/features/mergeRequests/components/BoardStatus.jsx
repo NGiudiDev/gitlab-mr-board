@@ -1,7 +1,7 @@
-import { StatusPanel } from "../../../app/constants/styles.consts.js";
+import { Styles } from "../../../app/app.styles.jsx";
 
 export function BoardStatus(props) {
   const { children, role = "status" } = props;
 
-  return <StatusPanel role={role}>{children}</StatusPanel>;
+  return <Styles.StatusPanel role={role}>{children}</Styles.StatusPanel>;
 }

@@ -14,7 +14,7 @@ El código se divide entre la composición general y las funcionalidades del dom
 - `src/config.js`: centraliza y valida la configuración expuesta por Vite.
 - `src/app/App.jsx`: decide si mostrar las rutas públicas o privadas según la sesión y asocia cada URL con una page de su feature.
 - `src/app/GlobalStyles.jsx`: define tokens, reset y estilos globales mediante `createGlobalStyle`.
-- `src/app/components/AppLayout.jsx`: define el layout —barra superior, navegación entre secciones y contenido—; `AccountMenu.jsx` reúne allí la identidad, el equipo y el cierre de sesión.
+- `src/app/components/AppLayout.jsx`: define el layout —barra superior, navegación entre secciones y contenido—; `LoggedUserMenu.jsx` reúne allí la identidad, el equipo y el cierre de sesión.
 - `src/app/constants/routes.consts.js`: mantiene las URLs y los metadatos de navegación como única fuente de verdad.
 - `src/app/constants/styles.consts.js`: centraliza los patrones visuales compartidos por componentes de distintas features.
 - `src/features/accounts/`: contiene el store y los componentes de la cuenta, además de `pages/AccountPage.jsx`, descritos en el [dominio de cuentas](../domains/cuentas.md).
@@ -36,7 +36,7 @@ Las funcionalidades nuevas deben seguir la estructura `src/features/<feature>/co
 ```text
 App
 └── AppLayout
-    ├── AccountMenu                  (con sesión)
+    ├── LoggedUserMenu                  (con sesión)
     ├── LoginPage / RegisterPage     (sin sesión)
     │   └── LoginForm / RegisterForm
     ├── BoardPage                    (sección «Tablero»)
@@ -61,7 +61,7 @@ App
 - `AppLayout` presenta la barra superior con el nombre del tablero, la navegación principal y el avatar que abre el menú de cuenta, y envuelve el contenido en el único `main` de la aplicación. «Mi perfil» se abre desde «Editar perfil» y «Mi cuenta» desde «Editar cuenta» —o «Ver cuenta» sin permisos de escritura—; ninguna ocupa un botón propio en la barra. La barra aparece sólo con la sesión abierta, porque el ingreso y el alta son pantallas completas con su propio encabezado principal.
 - `LoginForm` pide email y contraseña, muestra el error que devuelve el backend y ofrece pasar al alta.
 - `RegisterForm` da de alta la persona y elige entre sus dos caminos excluyentes: sumarse a un equipo con su código de invitación, o abrir uno nuevo. Valida en el navegador las mismas reglas que el backend para avisar antes de enviar.
-- `AccountMenu` concentra detrás de un avatar el nombre visible, el email, el equipo, los accesos separados al perfil y a la cuenta, y el cierre de sesión. Se cierra al elegir una acción, al interactuar fuera o con `Escape`, que devuelve el foco al avatar.
+- `LoggedUserMenu` concentra detrás de un avatar el nombre visible, el email, el equipo, los accesos separados al perfil y a la cuenta, y el cierre de sesión. Se cierra al elegir una acción, al interactuar fuera o con `Escape`, que devuelve el foco al avatar.
 - `AccountPage` y `ProfilePage` componen exclusivamente las pantallas de cuenta y perfil; `App` asocia cada page con su URL.
 - `AccountSettingsSection` presenta el equipo: su nombre y cuánta gente lo integra.
 - `AccountMemberInviteSection` presenta a un `admin` el código de invitación y permite renovarlo; `AccountPage` la compone como una sección independiente dentro de «Mi cuenta».
@@ -83,7 +83,7 @@ Los componentes presentacionales reciben valores mediante props y notifican acci
 
 ## Navegación entre secciones
 
-React Router mantiene una URL por pantalla: `/ingresar`, `/registro`, `/tablero`, `/perfil`, `/cuenta` y `/usuarios`. `BrowserRouter` envuelve la aplicación; `App` declara los `Routes`; y los enlaces de `AppLayout` y `AccountMenu` permiten historial, recarga y acceso directo. El rewrite de `frontend/vercel.json` devuelve `index.html` para esas rutas en producción.
+React Router mantiene una URL por pantalla: `/ingresar`, `/registro`, `/tablero`, `/perfil`, `/cuenta` y `/usuarios`. `BrowserRouter` envuelve la aplicación; `App` declara los `Routes`; y los enlaces de `AppLayout` y `LoggedUserMenu` permiten historial, recarga y acceso directo. El rewrite de `frontend/vercel.json` devuelve `index.html` para esas rutas en producción.
 
 `routes.consts.js` define `APP_PATHS` y `NAVIGATION_SECTIONS` como única fuente de verdad. `profile` y `account` llevan `menuOnly` porque se abren desde el avatar y no se muestran en la navegación principal. Al agregar una pantalla hay que sumar su URL, su metadato de navegación si corresponde y su `Route` pública o privada.
 

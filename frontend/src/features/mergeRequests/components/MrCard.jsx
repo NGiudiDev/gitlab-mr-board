@@ -1,6 +1,7 @@
 import styled from "styled-components";
 
-import { focusRingStyles, VisuallyHidden } from "../../../app/constants/styles.consts.js";
+import { Styles } from "../../../app/app.styles.jsx";
+import { focusRingStyles } from "../../../app/constants/styles.consts.js";
 
 import { BlockerBadge } from "./BlockerBadge.jsx";
 
@@ -94,7 +95,7 @@ export function MrCard(props) {
         target="_blank"
       >
         {mr.title}
-        <VisuallyHidden>(abre en una pestaña nueva)</VisuallyHidden>
+        <Styles.VisuallyHidden>(abre en una pestaña nueva)</Styles.VisuallyHidden>
       </TitleLink>
 
       <Branches>

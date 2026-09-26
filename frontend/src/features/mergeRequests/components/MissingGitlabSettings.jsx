@@ -1,8 +1,8 @@
 import { Link } from "react-router";
 import styled from "styled-components";
 
+import { Styles } from "../../../app/app.styles.jsx";
 import { APP_PATHS } from "../../../app/constants/routes.consts.js";
-import { Button } from "../../../app/constants/styles.consts.js";
 
 import { BoardStatus } from "./BoardStatus.jsx";
 
@@ -10,7 +10,7 @@ const Message = styled.p`
   margin: 0 0 0.75rem;
 `;
 
-const SettingsLink = styled(Button).attrs({ as: Link })`
+const SettingsLink = styled(Styles.Button).attrs({ as: Link })`
   display: inline-block;
   text-decoration: none;
 `;

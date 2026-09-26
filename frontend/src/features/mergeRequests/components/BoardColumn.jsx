@@ -1,6 +1,6 @@
 import styled from "styled-components";
 
-import { VisuallyHidden } from "../../../app/constants/styles.consts.js";
+import { Styles } from "../../../app/app.styles.jsx";
 
 import { MrCard } from "./MrCard.jsx";
 
@@ -59,7 +59,7 @@ export function BoardColumn(props) {
         <ColumnTitle id={headingId}>{title}</ColumnTitle>
         <Count>
           <span aria-hidden="true">{mergeRequests.length}</span>
-          <VisuallyHidden>{mergeRequests.length} merge requests</VisuallyHidden>
+          <Styles.VisuallyHidden>{mergeRequests.length} merge requests</Styles.VisuallyHidden>
         </Count>
       </ColumnHeader>
 

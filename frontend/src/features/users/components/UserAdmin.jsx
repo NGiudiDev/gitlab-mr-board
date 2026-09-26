@@ -1,17 +1,8 @@
 import { useState } from "react";
 import styled from "styled-components";
 
-import {
-  Alert,
-  Button,
-  Field,
-  focusRingStyles,
-  Label,
-  LoadingText,
-  SectionDescription,
-  SectionHeading,
-  VisuallyHidden,
-} from "../../../app/constants/styles.consts.js";
+import { Styles } from "../../../app/app.styles.jsx";
+import { focusRingStyles } from "../../../app/constants/styles.consts.js";
 
 import { isAdmin } from "../../accounts/utils/account.utils.js";
 
@@ -44,7 +35,7 @@ const FormGrid = styled.div`
   }
 `;
 
-const CreateButton = styled(Button)`
+const CreateButton = styled(Styles.Button)`
   margin-top: 0.75rem;
 `;
 
@@ -138,9 +129,9 @@ function CreateUserForm(props) {
       </FormHeading>
 
       <FormGrid>
-        <Label htmlFor="alta-email">
+        <Styles.Label htmlFor="alta-email">
           Email
-          <Field
+          <Styles.Field
             autoCapitalize="none"
             autoComplete="email"
             id="alta-email"
@@ -152,22 +143,22 @@ function CreateUserForm(props) {
             type="email"
             value={form.email}
           />
-        </Label>
+        </Styles.Label>
 
-        <Label htmlFor="alta-nombre">
+        <Styles.Label htmlFor="alta-nombre">
           Nombre visible (opcional)
-          <Field
+          <Styles.Field
             id="alta-nombre"
             maxLength={80}
             onChange={updateField("displayName")}
             type="text"
             value={form.displayName}
           />
-        </Label>
+        </Styles.Label>
 
-        <Label htmlFor="alta-password">
+        <Styles.Label htmlFor="alta-password">
           Contraseña inicial
-          <Field
+          <Styles.Field
             autoComplete="new-password"
             id="alta-password"
             minLength={8}
@@ -176,11 +167,11 @@ function CreateUserForm(props) {
             type="password"
             value={form.password}
           />
-        </Label>
+        </Styles.Label>
 
-        <Label htmlFor="alta-rol">
+        <Styles.Label htmlFor="alta-rol">
           Rol
-          <Field
+          <Styles.Field
             as="select"
             id="alta-rol"
             onChange={updateField("role")}
@@ -188,8 +179,8 @@ function CreateUserForm(props) {
           >
             <option value="user">Usuario</option>
             <option value="admin">Administrador</option>
-          </Field>
-        </Label>
+          </Styles.Field>
+        </Styles.Label>
       </FormGrid>
 
       <CreateButton disabled={submitting} type="submit">
@@ -255,34 +246,34 @@ export function UserAdmin(props) {
 
   return (
     <AdminSection aria-labelledby="usuarios-heading">
-      <SectionHeading id="usuarios-heading">
+      <Styles.SectionHeading id="usuarios-heading">
         Usuarios
-      </SectionHeading>
+      </Styles.SectionHeading>
 
-      <SectionDescription>
+      <Styles.SectionDescription>
         Las personas de tu cuenta. Todas ven el mismo tablero: no tienen que cargar credenciales de GitLab.
-      </SectionDescription>
+      </Styles.SectionDescription>
 
       {actionError || error ? (
-        <Alert role="alert">
+        <Styles.Alert role="alert">
           {actionError ?? error}
-        </Alert>
+        </Styles.Alert>
       ) : null}
 
       {message ? (
-        <Alert $success role="status">
+        <Styles.Alert $success role="status">
           {message}
-        </Alert>
+        </Styles.Alert>
       ) : null}
 
       <CreateUserForm onCreate={handleCreate} submitting={busyEmail !== null} />
 
       {loading ? (
-        <LoadingText role="status">Cargando usuarios...</LoadingText>
+        <Styles.LoadingText role="status">Cargando usuarios...</Styles.LoadingText>
       ) : (
         <TableViewport>
           <UsersTable>
-            <VisuallyHidden as="caption">Personas de la cuenta y sus permisos</VisuallyHidden>
+            <Styles.VisuallyHidden as="caption">Personas de la cuenta y sus permisos</Styles.VisuallyHidden>
             <TableHead>
               <tr>
                 <HeaderCell scope="col">Email</HeaderCell>

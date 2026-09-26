@@ -1,13 +1,6 @@
 import { useEffect, useState } from "react";
 
-import {
-  Field,
-  InlineFeedback,
-  SectionDescription,
-  SectionHeading,
-  SpacedLabel,
-  TopSpacedButton,
-} from "../../../app/constants/styles.consts.js";
+import { Styles } from "../../../app/app.styles.jsx";
 
 export function ProfilePanel(props) {
   const {
@@ -49,18 +42,18 @@ export function ProfilePanel(props) {
 
   return (
     <section aria-labelledby="perfil-heading">
-      <SectionHeading id="perfil-heading">
+      <Styles.SectionHeading id="perfil-heading">
         Mi perfil
-      </SectionHeading>
+      </Styles.SectionHeading>
 
-      <SectionDescription>
+      <Styles.SectionDescription>
         Estos datos identifican tu sesión. Si cambiás el email, usá el nuevo la próxima vez que ingreses.
-      </SectionDescription>
+      </Styles.SectionDescription>
 
       <form onSubmit={handleSubmit}>
-        <SpacedLabel htmlFor="perfil-email">
+        <Styles.SpacedLabel htmlFor="perfil-email">
           Email
-          <Field
+          <Styles.Field
             autoCapitalize="none"
             autoComplete="email"
             disabled={submitting}
@@ -73,11 +66,11 @@ export function ProfilePanel(props) {
             type="email"
             value={profile.email}
           />
-        </SpacedLabel>
+        </Styles.SpacedLabel>
 
-        <SpacedLabel htmlFor="perfil-display-name">
+        <Styles.SpacedLabel htmlFor="perfil-display-name">
           Nombre visible
-          <Field
+          <Styles.Field
             autoComplete="name"
             disabled={submitting}
             id="perfil-display-name"
@@ -86,19 +79,19 @@ export function ProfilePanel(props) {
             type="text"
             value={profile.displayName}
           />
-        </SpacedLabel>
+        </Styles.SpacedLabel>
 
         {error ? (
-          <InlineFeedback role="alert">{error}</InlineFeedback>
+          <Styles.InlineFeedback role="alert">{error}</Styles.InlineFeedback>
         ) : null}
 
         {notice ? (
-          <InlineFeedback $success role="status">{notice}</InlineFeedback>
+          <Styles.InlineFeedback $success role="status">{notice}</Styles.InlineFeedback>
         ) : null}
 
-        <TopSpacedButton disabled={submitting} type="submit">
+        <Styles.TopSpacedButton disabled={submitting} type="submit">
           {submitting ? "Guardando…" : "Guardar perfil"}
-        </TopSpacedButton>
+        </Styles.TopSpacedButton>
       </form>
     </section>
   );

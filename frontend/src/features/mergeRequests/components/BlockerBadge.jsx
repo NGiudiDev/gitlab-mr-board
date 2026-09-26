@@ -105,10 +105,11 @@ export function BlockerBadge(props) {
     >
       <span aria-hidden="true">{iconFor(type, data)}</span>
       <span>{labelFor(type, data)}</span>
-      {linkUrl ? <VisuallyHidden>(abre en una pestaña nueva)</VisuallyHidden> : null}
+      {linkUrl ? <Styles.VisuallyHidden>(abre en una pestaña nueva)</Styles.VisuallyHidden> : null}
     </Badge>
   );
 }
 import styled from "styled-components";
 
-import { focusRingStyles, VisuallyHidden } from "../../../app/constants/styles.consts.js";
+import { Styles } from "../../../app/app.styles.jsx";
+import { focusRingStyles } from "../../../app/constants/styles.consts.js";

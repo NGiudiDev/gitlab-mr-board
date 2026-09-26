@@ -1,18 +1,8 @@
 import { useState } from "react";
 import styled from "styled-components";
 
-import {
-  Alert,
-  AuthForm,
-  AuthFormDescription,
-  AuthFormHeading,
-  AuthFormSwitch,
-  AuthSubmitButton,
-  ButtonLink,
-  Field,
-  focusRingStyles,
-  SpacedLabel,
-} from "../../../app/constants/styles.consts.js";
+import { Styles } from "../../../app/app.styles.jsx";
+import { focusRingStyles } from "../../../app/constants/styles.consts.js";
 
 const ChoiceFieldset = styled.fieldset`
   margin: 0 0 1rem;
@@ -92,19 +82,19 @@ export function RegisterForm(props) {
   const visibleError = localError ?? error;
 
   return (
-    <AuthForm aria-labelledby="registro-heading" onSubmit={handleSubmit}>
-      <AuthFormHeading id="registro-heading">
+    <Styles.AuthForm aria-labelledby="registro-heading" onSubmit={handleSubmit}>
+      <Styles.AuthFormHeading id="registro-heading">
         Crear una cuenta
-      </AuthFormHeading>
+      </Styles.AuthFormHeading>
 
-      <AuthFormDescription>
+      <Styles.AuthFormDescription>
         Ingresá tu email y una contraseña de al menos {MINIMUM_PASSWORD_LENGTH} caracteres.
-      </AuthFormDescription>
+      </Styles.AuthFormDescription>
 
       {visibleError ? (
-        <Alert role="alert">
+        <Styles.Alert role="alert">
           {visibleError}
-        </Alert>
+        </Styles.Alert>
       ) : null}
 
       <ChoiceFieldset>
@@ -133,9 +123,9 @@ export function RegisterForm(props) {
 
       {joinExisting ? (
         <>
-          <SpacedLabel htmlFor="registro-invitacion">
+          <Styles.SpacedLabel htmlFor="registro-invitacion">
             Código de invitación
-            <Field
+            <Styles.Field
               aria-describedby="registro-invitacion-ayuda"
               autoCapitalize="characters"
               id="registro-invitacion"
@@ -146,16 +136,16 @@ export function RegisterForm(props) {
               type="text"
               value={inviteCode}
             />
-          </SpacedLabel>
+          </Styles.SpacedLabel>
           <RegisterHint id="registro-invitacion-ayuda">
             Te lo da quien administra el tablero de tu equipo. Con él ves los mismos proyectos, sin cargar credenciales de GitLab.
           </RegisterHint>
         </>
       ) : (
         <>
-          <SpacedLabel htmlFor="registro-cuenta">
+          <Styles.SpacedLabel htmlFor="registro-cuenta">
             Nombre del equipo (opcional)
-            <Field
+            <Styles.Field
               aria-describedby="registro-cuenta-ayuda"
               id="registro-cuenta"
               maxLength={80}
@@ -164,16 +154,16 @@ export function RegisterForm(props) {
               type="text"
               value={accountName}
             />
-          </SpacedLabel>
+          </Styles.SpacedLabel>
           <RegisterHint id="registro-cuenta-ayuda">
             Vas a quedar administrador: cargás una vez los proyectos y el access token de GitLab, y el resto del equipo se suma con un código.
           </RegisterHint>
         </>
       )}
 
-      <SpacedLabel htmlFor="registro-email">
+      <Styles.SpacedLabel htmlFor="registro-email">
         Email
-        <Field
+        <Styles.Field
           autoCapitalize="none"
           autoComplete="email"
           id="registro-email"
@@ -185,11 +175,11 @@ export function RegisterForm(props) {
           type="email"
           value={email}
         />
-      </SpacedLabel>
+      </Styles.SpacedLabel>
 
-      <SpacedLabel htmlFor="registro-nombre">
+      <Styles.SpacedLabel htmlFor="registro-nombre">
         Nombre visible (opcional)
-        <Field
+        <Styles.Field
           autoComplete="name"
           id="registro-nombre"
           maxLength={80}
@@ -198,11 +188,11 @@ export function RegisterForm(props) {
           type="text"
           value={displayName}
         />
-      </SpacedLabel>
+      </Styles.SpacedLabel>
 
-      <SpacedLabel htmlFor="registro-password">
+      <Styles.SpacedLabel htmlFor="registro-password">
         Contraseña
-        <Field
+        <Styles.Field
           autoComplete="new-password"
           id="registro-password"
           minLength={MINIMUM_PASSWORD_LENGTH}
@@ -212,11 +202,11 @@ export function RegisterForm(props) {
           type="password"
           value={password}
         />
-      </SpacedLabel>
+      </Styles.SpacedLabel>
 
-      <SpacedLabel htmlFor="registro-confirmacion">
+      <Styles.SpacedLabel htmlFor="registro-confirmacion">
         Repetí la contraseña
-        <Field
+        <Styles.Field
           autoComplete="new-password"
           id="registro-confirmacion"
           minLength={MINIMUM_PASSWORD_LENGTH}
@@ -226,18 +216,18 @@ export function RegisterForm(props) {
           type="password"
           value={confirmation}
         />
-      </SpacedLabel>
+      </Styles.SpacedLabel>
 
-      <AuthSubmitButton disabled={submitting} type="submit">
+      <Styles.AuthSubmitButton disabled={submitting} type="submit">
         {submitting ? "Creando la cuenta..." : "Crear cuenta"}
-      </AuthSubmitButton>
+      </Styles.AuthSubmitButton>
 
-      <AuthFormSwitch>
+      <Styles.AuthFormSwitch>
         ¿Ya tenés cuenta?{" "}
-        <ButtonLink onClick={onShowLogin} type="button">
+        <Styles.ButtonLink onClick={onShowLogin} type="button">
           Ingresar
-        </ButtonLink>
-      </AuthFormSwitch>
-    </AuthForm>
+        </Styles.ButtonLink>
+      </Styles.AuthFormSwitch>
+    </Styles.AuthForm>
   );
 }

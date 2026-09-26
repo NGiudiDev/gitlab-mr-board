@@ -1,13 +1,8 @@
 import styled from "styled-components";
 
-import {
-  DetailList,
-  DetailValue,
-  Label,
-  LoadingText,
-} from "../../../app/constants/styles.consts.js";
+import { Styles } from "../../../app/app.styles.jsx";
 
-const ProjectIds = styled(DetailValue)`
+const ProjectIds = styled(Styles.DetailValue)`
   margin-bottom: 0.75rem;
   font-family: var(--font-mono);
 `;
@@ -17,21 +12,21 @@ export function GitlabAccountSettingsSummary(props) {
 
   if (!settings) {
     return (
-      <LoadingText role="status">
+      <Styles.LoadingText role="status">
         Todavía no hay proyectos ni access token cargados. Pedíselo a quien administra la cuenta.
-      </LoadingText>
+      </Styles.LoadingText>
     );
   }
 
   return (
-    <DetailList>
-      <Label as="dt">Proyectos</Label>
+    <Styles.DetailList>
+      <Styles.Label as="dt">Proyectos</Styles.Label>
       <ProjectIds>{settings.projectIds.join(", ")}</ProjectIds>
 
-      <Label as="dt">Access token</Label>
-      <DetailValue>
+      <Styles.Label as="dt">Access token</Styles.Label>
+      <Styles.DetailValue>
         Guardado, terminado en «{settings.tokenHint}».
-      </DetailValue>
-    </DetailList>
+      </Styles.DetailValue>
+    </Styles.DetailList>
   );
 }

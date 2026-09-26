@@ -1,8 +1,4 @@
-import {
-  Alert,
-  SectionDescription,
-  SectionHeading,
-} from "../../../app/constants/styles.consts.js";
+import { Styles } from "../../../app/app.styles.jsx";
 
 import { useGitlabSettings } from "../hooks/useGitlabSettings.js";
 import { GitlabAccountSettingsForm } from "./GitlabAccountSettingsForm.jsx";
@@ -16,20 +12,20 @@ export function GitlabAccountSettingsSection(props) {
 
   return (
     <section aria-labelledby="gitlab-heading">
-      <SectionHeading id="gitlab-heading">
+      <Styles.SectionHeading id="gitlab-heading">
         Cuenta de GitLab
-      </SectionHeading>
+      </Styles.SectionHeading>
 
-      <SectionDescription>
+      <Styles.SectionDescription>
         {canEdit
           ? "El tablero muestra los merge requests de estos proyectos. Los cargás una vez y los ve todo el equipo."
           : "El tablero se alimenta de estos proyectos. Los carga quien administra la cuenta, así que no tenés que cargar tu propio access token."}
-      </SectionDescription>
+      </Styles.SectionDescription>
 
       {error ? (
-        <Alert role="alert">
+        <Styles.Alert role="alert">
           {error}
-        </Alert>
+        </Styles.Alert>
       ) : null}
 
       {loading ? (

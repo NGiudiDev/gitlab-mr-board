@@ -1,22 +1,11 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 
+import { Styles } from "../../../app/app.styles.jsx";
+
 import { renameAccount } from "../hooks/useAccount.js";
 
-import {
-  Alert,
-  Button,
-  DetailList,
-  DetailValue,
-  Field,
-  FormField,
-  Hint,
-  Label,
-  SectionDescription,
-  SectionHeading,
-} from "../../../app/constants/styles.consts.js";
-
-const SpacedDetailValue = styled(DetailValue)`
+const SpacedDetailValue = styled(Styles.DetailValue)`
   margin-bottom: 0.75rem;
 `;
 
@@ -67,34 +56,34 @@ export function AccountSettingsSection(props) {
 
   return (
     <section aria-labelledby="cuenta-heading">
-      <SectionHeading id="cuenta-heading">
+      <Styles.SectionHeading id="cuenta-heading">
         Mi cuenta
-      </SectionHeading>
+      </Styles.SectionHeading>
 
-      <SectionDescription>
+      <Styles.SectionDescription>
         La cuenta agrupa a las personas que ven el mismo tablero, con los mismos proyectos y el mismo access token de GitLab.
-      </SectionDescription>
+      </Styles.SectionDescription>
 
       {formError ? (
-        <Alert role="alert">
+        <Styles.Alert role="alert">
           {formError}
-        </Alert>
+        </Styles.Alert>
       ) : null}
 
       {message ? (
-        <Alert $success role="status">
+        <Styles.Alert $success role="status">
           {message}
-        </Alert>
+        </Styles.Alert>
       ) : null}
 
       {canEdit ? (
         <form onSubmit={handleSubmit}>
-          <FormField>
-            <Label htmlFor="cuenta-nombre">
+          <Styles.FormField>
+            <Styles.Label htmlFor="cuenta-nombre">
               Nombre de la cuenta
-            </Label>
+            </Styles.Label>
 
-            <Field
+            <Styles.Field
               aria-describedby="cuenta-nombre-ayuda"
               id="cuenta-nombre"
               maxLength={80}
@@ -104,23 +93,23 @@ export function AccountSettingsSection(props) {
               value={name}
             />
 
-            <Hint id="cuenta-nombre-ayuda">
+            <Styles.Hint id="cuenta-nombre-ayuda">
               La integran {membersLabel(account.memberCount)}.
-            </Hint>
-          </FormField>
+            </Styles.Hint>
+          </Styles.FormField>
 
-          <Button disabled={submitting} type="submit">
+          <Styles.Button disabled={submitting} type="submit">
             {submitting ? "Guardando..." : "Guardar el nombre"}
-          </Button>
+          </Styles.Button>
         </form>
       ) : (
-        <DetailList>
-          <Label as="dt">Cuenta</Label>
+        <Styles.DetailList>
+          <Styles.Label as="dt">Cuenta</Styles.Label>
           <SpacedDetailValue>{account.name}</SpacedDetailValue>
 
-          <Label as="dt">Integrantes</Label>
-          <DetailValue>{membersLabel(account.memberCount)}</DetailValue>
-        </DetailList>
+          <Styles.Label as="dt">Integrantes</Styles.Label>
+          <Styles.DetailValue>{membersLabel(account.memberCount)}</Styles.DetailValue>
+        </Styles.DetailList>
       )}
     </section>
   );

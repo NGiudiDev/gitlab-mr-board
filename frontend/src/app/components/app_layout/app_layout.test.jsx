@@ -6,10 +6,10 @@ import userEvent from "@testing-library/user-event";
 
 import { AppLayout } from "./AppLayout.jsx";
 
-import { jsonResponse, resetSharedState, TEST_ACCOUNT, TEST_USER } from "../../../test/sharedState.js";
-import { getNavigationSectionsForUser } from "../utils/routes.utils.js";
+import { jsonResponse, resetSharedState, TEST_ACCOUNT, TEST_USER } from "../../../../test/sharedState.js";
+import { getNavigationSectionsForUser } from "../../utils/routes.utils.js";
 
-import { APP_PATHS } from "../constants/routes.consts.js";
+import { APP_PATHS } from "../../constants/routes.consts.js";
 
 const ADMIN_USER = { ...TEST_USER, role: "admin" };
 

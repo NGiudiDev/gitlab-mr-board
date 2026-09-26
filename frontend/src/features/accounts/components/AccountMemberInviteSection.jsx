@@ -1,22 +1,13 @@
 import { useState } from "react";
 import styled from "styled-components";
 
-import {
-  Alert,
-  Field,
-  FormField,
-  Hint,
-  Label,
-  SecondaryButton,
-  SectionDescription,
-  SectionHeading,
-} from "../../../app/constants/styles.consts.js";
+import { Styles } from "../../../app/app.styles.jsx";
 
-const InviteDescription = styled(SectionDescription)`
+const InviteDescription = styled(Styles.SectionDescription)`
   margin-bottom: 0.75rem;
 `;
 
-const InviteField = styled(Field)`
+const InviteField = styled(Styles.Field)`
   font-family: var(--font-mono);
   letter-spacing: 0.1em;
 `;
@@ -51,30 +42,30 @@ export function AccountMemberInviteSection(props) {
 
   return (
     <section aria-labelledby="invitacion-heading">
-      <SectionHeading id="invitacion-heading">
+      <Styles.SectionHeading id="invitacion-heading">
         Invitar al equipo
-      </SectionHeading>
+      </Styles.SectionHeading>
 
       <InviteDescription>
         Quien se registre con este código entra a esta cuenta y ve el mismo tablero, sin cargar ninguna credencial de GitLab.
       </InviteDescription>
 
       {error ? (
-        <Alert role="alert">
+        <Styles.Alert role="alert">
           {error}
-        </Alert>
+        </Styles.Alert>
       ) : null}
 
       {message ? (
-        <Alert $success role="status">
+        <Styles.Alert $success role="status">
           {message}
-        </Alert>
+        </Styles.Alert>
       ) : null}
 
-      <FormField>
-        <Label htmlFor="cuenta-invitacion">
+      <Styles.FormField>
+        <Styles.Label htmlFor="cuenta-invitacion">
           Código de invitación
-        </Label>
+        </Styles.Label>
 
         <InviteField
           id="cuenta-invitacion"
@@ -82,19 +73,19 @@ export function AccountMemberInviteSection(props) {
           type="text"
           value={inviteCode}
         />
-      </FormField>
+      </Styles.FormField>
 
-      <SecondaryButton
+      <Styles.SecondaryButton
         disabled={submitting}
         onClick={handleRotate}
         type="button"
       >
         {submitting ? "Renovando..." : "Renovar el código"}
-      </SecondaryButton>
+      </Styles.SecondaryButton>
 
-      <Hint>
+      <Styles.Hint>
         Al renovarlo, el código anterior deja de servir. Quien ya se sumó no pierde el acceso.
-      </Hint>
+      </Styles.Hint>
     </section>
   );
 }

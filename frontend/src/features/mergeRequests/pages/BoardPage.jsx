@@ -1,10 +1,7 @@
 import styled from "styled-components";
 
-import {
-  StatusPanel,
-  visuallyHiddenStyles,
-  VisuallyHidden,
-} from "../../../app/constants/styles.consts.js";
+import { Styles } from "../../../app/app.styles.jsx";
+import { visuallyHiddenStyles } from "../../../app/constants/styles.consts.js";
 
 import { BoardStatus } from "../components/BoardStatus.jsx";
 import { MissingGitlabSettings } from "../components/MissingGitlabSettings.jsx";
@@ -148,10 +145,10 @@ export function BoardPage(props) {
       </Toolbar>
 
       {failedWithoutData ? (
-        <StatusPanel role="alert">
+        <Styles.StatusPanel role="alert">
           <ErrorHeading>No se pudo conectar al backend.</ErrorHeading>
           <ErrorDetail>{error}</ErrorDetail>
-        </StatusPanel>
+        </Styles.StatusPanel>
       ) : (
         <>
           <section aria-labelledby="tablero-heading">
@@ -196,7 +193,7 @@ export function BoardPage(props) {
         </>
       )}
 
-      <VisuallyHidden aria-atomic="true" aria-live="polite">{statusAnnouncement}</VisuallyHidden>
+      <Styles.VisuallyHidden aria-atomic="true" aria-live="polite">{statusAnnouncement}</Styles.VisuallyHidden>
     </>
   );
 }

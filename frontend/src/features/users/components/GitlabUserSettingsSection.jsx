@@ -1,15 +1,6 @@
 import { useEffect, useState } from "react";
 
-import {
-  Alert,
-  Button,
-  Field,
-  FormField,
-  Hint,
-  Label,
-  SectionDescription,
-  SectionHeading,
-} from "../../../app/constants/styles.consts.js";
+import { Styles } from "../../../app/app.styles.jsx";
 
 /**
  * Nickname de GitLab de la propia persona.
@@ -50,34 +41,34 @@ export function GitlabUserSettingsSection(props) {
 
   return (
     <section aria-labelledby="identidad-heading">
-      <SectionHeading id="identidad-heading">
+      <Styles.SectionHeading id="identidad-heading">
         Usuario de GitLab
-      </SectionHeading>
+      </Styles.SectionHeading>
 
-      <SectionDescription>
+      <Styles.SectionDescription>
         Con tu nickname el tablero reconoce cuáles de los merge requests del equipo son tuyos.
-      </SectionDescription>
+      </Styles.SectionDescription>
 
       {error ? (
-        <Alert role="alert">
+        <Styles.Alert role="alert">
           {error}
-        </Alert>
+        </Styles.Alert>
       ) : null}
 
       {message ? (
-        <Alert $success role="status">
+        <Styles.Alert $success role="status">
           {message}
-        </Alert>
+        </Styles.Alert>
       ) : null}
 
       <form onSubmit={handleSubmit}>
         {/* La ayuda queda fuera del `label` para que no forme parte del nombre
             accesible del campo; `aria-describedby` la asocia igual. */}
-        <FormField>
-          <Label htmlFor="identidad-nickname">
+        <Styles.FormField>
+          <Styles.Label htmlFor="identidad-nickname">
             Nickname de GitLab
-          </Label>
-          <Field
+          </Styles.Label>
+          <Styles.Field
             aria-describedby="identidad-nickname-ayuda"
             autoCapitalize="none"
             id="identidad-nickname"
@@ -87,14 +78,14 @@ export function GitlabUserSettingsSection(props) {
             type="text"
             value={gitlabUsername}
           />
-          <Hint id="identidad-nickname-ayuda">
+          <Styles.Hint id="identidad-nickname-ayuda">
             Tu nombre de usuario en GitLab, sin la arroba.
-          </Hint>
-        </FormField>
+          </Styles.Hint>
+        </Styles.FormField>
 
-        <Button disabled={submitting} type="submit">
+        <Styles.Button disabled={submitting} type="submit">
           {submitting ? "Guardando..." : "Guardar mi nickname"}
-        </Button>
+        </Styles.Button>
       </form>
     </section>
   );

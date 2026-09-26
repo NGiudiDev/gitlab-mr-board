@@ -4,12 +4,12 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import userEvent from "@testing-library/user-event";
 
-import { AccountMenu } from "./AccountMenu.jsx";
+import { LoggedUserMenu } from "./LoggedUserMenu.jsx";
 
-import { jsonResponse, resetSharedState, TEST_ACCOUNT, TEST_USER } from "../../../test/sharedState.js";
-import { getUserInitials } from "../../features/users/utils/user.utils.js";
+import { jsonResponse, resetSharedState, TEST_ACCOUNT, TEST_USER } from "../../../../../test/sharedState.js";
+import { getUserInitials } from "../../utils/user.utils.js";
 
-import { APP_PATHS } from "../constants/routes.consts.js";
+import { APP_PATHS } from "../../../../app/constants/routes.consts.js";
 
 const ADMIN_USER = { ...TEST_USER, role: "admin" };
 
@@ -32,13 +32,13 @@ function LocationProbe() {
 function renderMenu(props = {}) {
   return render(
     <MemoryRouter>
-      <AccountMenu {...props} />
+      <LoggedUserMenu {...props} />
       <LocationProbe />
     </MemoryRouter>,
   );
 }
 
-describe("AccountMenu", () => {
+describe("LoggedUserMenu", () => {
   it("resume la sesión en un avatar y revela los datos al abrirlo", async () => {
     renderMenu({ user: TEST_USER });
 

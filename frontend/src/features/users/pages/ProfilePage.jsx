@@ -1,4 +1,4 @@
-import { PageSections } from "../../../app/constants/styles.consts.js";
+import { Styles } from "../../../app/app.styles.jsx";
 
 import { PasswordPanel } from "../../auth/components/PasswordPanel.jsx";
 import { ProfilePanel } from "../components/ProfilePanel.jsx";
@@ -13,7 +13,7 @@ export function ProfilePage(props) {
   } = props;
 
   return (
-    <PageSections>
+    <Styles.PageSections>
       <ProfilePanel onSave={onSaveProfile} submitting={profileSubmitting} user={user} />
 
       <PasswordPanel
@@ -21,6 +21,6 @@ export function ProfilePage(props) {
         submitting={passwordSubmitting}
         user={user}
       />
-    </PageSections>
+    </Styles.PageSections>
   );
 }

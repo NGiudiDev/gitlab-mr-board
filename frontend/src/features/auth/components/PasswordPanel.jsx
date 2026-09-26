@@ -1,13 +1,6 @@
 import { useState } from "react";
 
-import {
-  Alert,
-  Button,
-  Field,
-  SectionDescription,
-  SectionHeading,
-  SpacedLabel,
-} from "../../../app/constants/styles.consts.js";
+import { Styles } from "../../../app/app.styles.jsx";
 
 export function PasswordPanel(props) {
   const { onChangePassword = () => {}, submitting = false, user = null } = props;
@@ -33,24 +26,24 @@ export function PasswordPanel(props) {
 
   return (
     <section aria-labelledby="contrasena-heading">
-      <SectionHeading id="contrasena-heading">
+      <Styles.SectionHeading id="contrasena-heading">
         Mi contraseña
-      </SectionHeading>
+      </Styles.SectionHeading>
 
-      <SectionDescription>
+      <Styles.SectionDescription>
         Al cambiarla se cierran todas tus sesiones, así que vas a tener que ingresar de nuevo.
-      </SectionDescription>
+      </Styles.SectionDescription>
 
       {error ? (
-        <Alert role="alert">
+        <Styles.Alert role="alert">
           {error}
-        </Alert>
+        </Styles.Alert>
       ) : null}
 
       <form onSubmit={handleSubmit}>
-        <SpacedLabel htmlFor="cuenta-actual">
+        <Styles.SpacedLabel htmlFor="cuenta-actual">
           Contraseña actual
-          <Field
+          <Styles.Field
             autoComplete="current-password"
             id="cuenta-actual"
             onChange={(event) => setCurrentPassword(event.target.value)}
@@ -58,11 +51,11 @@ export function PasswordPanel(props) {
             type="password"
             value={currentPassword}
           />
-        </SpacedLabel>
+        </Styles.SpacedLabel>
 
-        <SpacedLabel htmlFor="cuenta-nueva">
+        <Styles.SpacedLabel htmlFor="cuenta-nueva">
           Contraseña nueva
-          <Field
+          <Styles.Field
             autoComplete="new-password"
             id="cuenta-nueva"
             minLength={8}
@@ -71,11 +64,11 @@ export function PasswordPanel(props) {
             type="password"
             value={newPassword}
           />
-        </SpacedLabel>
+        </Styles.SpacedLabel>
 
-        <SpacedLabel htmlFor="cuenta-confirmacion">
+        <Styles.SpacedLabel htmlFor="cuenta-confirmacion">
           Repetí la contraseña nueva
-          <Field
+          <Styles.Field
             autoComplete="new-password"
             id="cuenta-confirmacion"
             minLength={8}
@@ -84,11 +77,11 @@ export function PasswordPanel(props) {
             type="password"
             value={confirmation}
           />
-        </SpacedLabel>
+        </Styles.SpacedLabel>
 
-        <Button disabled={submitting} type="submit">
+        <Styles.Button disabled={submitting} type="submit">
           {submitting ? "Guardando..." : "Cambiar contraseña"}
-        </Button>
+        </Styles.Button>
       </form>
     </section>
   );

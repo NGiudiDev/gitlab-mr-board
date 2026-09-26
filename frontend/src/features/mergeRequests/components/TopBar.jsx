@@ -1,6 +1,6 @@
 import styled from "styled-components";
 
-import { SecondaryButton } from "../../../app/constants/styles.consts.js";
+import { Styles } from "../../../app/app.styles.jsx";
 
 function dotColor({ loading, error, lastFetched }) {
   if (loading) return "var(--color-draft)";
@@ -42,7 +42,7 @@ const StatusDot = styled.span`
   background: ${({ $color }) => $color};
 `;
 
-const RefreshButton = styled(SecondaryButton)`
+const RefreshButton = styled(Styles.SecondaryButton)`
   padding: 0.375rem 0.75rem;
   background: var(--color-surface-raised);
   font-size: 0.8125rem;
