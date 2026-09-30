@@ -17,6 +17,7 @@ El código se divide entre la composición general y las funcionalidades del dom
 - `src/app/components/app_layout/`: reúne implementación, estilos y test del layout —barra superior, navegación entre secciones y contenido—; `features/users/components/logged_user_menu/` hace lo mismo con la identidad, el equipo y el cierre de sesión.
 - `src/app/constants/routes.consts.js`: mantiene las URLs y los metadatos de navegación como única fuente de verdad.
 - `src/app/constants/styles.consts.js`: centraliza los patrones visuales compartidos por componentes de distintas features.
+- `src/features/api/`: contiene las constantes y la validación de la URL base de la API. El transporte HTTP común todavía no está centralizado.
 - `src/features/accounts/`: contiene el store y los componentes de la cuenta, además de `pages/account_page/`, descritos en el [dominio de cuentas](../domains/cuentas.md).
 - `src/features/auth/`: contiene el store de la sesión y las pantallas de ingreso, registro y cambio de contraseña, descritos en el [dominio de autenticación](../domains/autenticacion.md).
 - `src/features/users/`: contiene el perfil, el nickname personal de GitLab, la administración de usuarios, sus hooks y utilidades.
@@ -28,7 +29,21 @@ El código se divide entre la composición general y las funcionalidades del dom
 - `src/features/mergeRequests/utils/personal_view.utils.js`: selecciona los datos de la vista personal a partir del contrato del backend.
 - `test/`: reúne la configuración, los fixtures y las utilidades compartidas según la [estrategia de test](../development/test.md).
 
-Las funcionalidades nuevas siguen la estructura `src/features/<feature>/{components,hooks,pages,constants,utils}/`. Cada componente y page tiene una carpeta `snake_case` que reúne su `.jsx`, su `.style.js` cuando corresponde y su test. Una page representa la pantalla asociada a una URL y compone componentes de su feature; `src/app/` se reserva para el layout, las rutas y la composición de alto nivel.
+Las funcionalidades nuevas siguen la estructura `src/features/<feature>/{components,hooks,pages,constants,utils}/`. Cada componente y page tiene una carpeta `snake_case` que reúne su `.jsx` y su `.style.js` cuando necesita estilos exclusivos. Los test de comportamiento viven junto al módulo; las pages que sólo componen una ruta se cubren desde `app.test.jsx` y desde los test de sus componentes. Una page representa la pantalla asociada a una URL; `src/app/` se reserva para el layout, las rutas y la composición de alto nivel.
+
+### Dirección de dependencias
+
+La separación no depende sólo de las carpetas, sino de qué capa puede importar a cuál:
+
+- `main.jsx` conoce únicamente la composición raíz, los estilos globales y React.
+- `app/` importa pages, stores y utilidades de las features para resolver rutas, sesión, permisos visibles y layout.
+- Una page compone su pantalla. `AccountPage` integra cuenta, configuración compartida de GitLab, nickname personal y la recarga del tablero; `ProfilePage` integra perfil y contraseña. La coordinación entre dominios queda en esas pages.
+- Los componentes importan módulos de su propia feature y primitivas visuales de `app/`. `LoggedUserMenu` es el punto de integración entre la identidad de users y el nombre obtenido del store de accounts.
+- Los hooks encapsulan el acceso remoto y el estado de su feature. `useCurrentUser` sincroniza la identidad resultante con el store de auth y `useMergeRequests` termina la sesión allí cuando recibe un 401.
+- Si una necesidad técnica se repite entre features, se mueve a infraestructura compartida. La validación de la URL base ya vive en `features/api/`; las funciones de transporte todavía permanecen dentro de cada hook.
+- Los archivos `.style.js` pueden extender primitivas y mixins de `app/`, pero no contienen estado, acceso a datos ni reglas de dominio.
+
+No se usan barrels: cada import señala el archivo dueño del contrato.
 
 ## Composición de componentes
 
@@ -84,13 +99,13 @@ Los componentes presentacionales reciben valores mediante props y notifican acci
 
 ## Navegación entre secciones
 
-React Router mantiene una URL por pantalla: `/ingresar`, `/registro`, `/tablero`, `/perfil`, `/cuenta` y `/usuarios`. `BrowserRouter` envuelve la aplicación; `App` declara los `Routes`; y los enlaces de `AppLayout` y `LoggedUserMenu` permiten historial, recarga y acceso directo. El rewrite de `frontend/vercel.json` devuelve `index.html` para esas rutas en producción.
+React Router mantiene una URL por pantalla: `/login`, `/register`, `/board`, `/profile`, `/account` y `/users`. `BrowserRouter` envuelve la aplicación; `App` declara los `Routes`; y los enlaces de `AppLayout` y `LoggedUserMenu` permiten historial, recarga y acceso directo. El rewrite de `frontend/vercel.json` devuelve `index.html` para esas rutas en producción.
 
 `routes.consts.js` define `APP_PATHS` y `NAVIGATION_SECTIONS` como única fuente de verdad. `profile` y `account` llevan `menuOnly` porque se abren desde el avatar y no se muestran en la navegación principal. Al agregar una pantalla hay que sumar su URL, su metadato de navegación si corresponde y su `Route` pública o privada.
 
-Las rutas privadas redirigen a `/ingresar` sin sesión y las públicas redirigen a `/tablero` con una sesión abierta. `getNavigationSectionsForUser(user)` decide qué enlaces puede ver cada persona y `/usuarios` redirige al tablero si el rol no es `admin`. «Mi perfil» siempre es editable por su titular; dentro de «Mi cuenta», el rol decide si el contenido compartido se edita o se consulta, mientras que el nickname personal siempre puede actualizarse. Esconder o redirigir una sección es una cortesía de la interfaz: el backend valida el rol ruta por ruta, según el [dominio de autenticación](../domains/autenticacion.md).
+Las rutas privadas redirigen a `/login` sin sesión y las públicas redirigen a `/board` con una sesión abierta. `getNavigationSectionsForUser(user)` decide qué enlaces puede ver cada persona y `/users` redirige al tablero si el rol no es `admin`. «Mi perfil» siempre es editable por su titular; dentro de «Mi cuenta», el rol decide si el contenido compartido se edita o se consulta, mientras que el nickname personal siempre puede actualizarse. Esconder o redirigir una sección es una cortesía de la interfaz: el backend valida el rol ruta por ruta, según el [dominio de autenticación](../domains/autenticacion.md).
 
-Al cerrar la sesión la app navega a `/ingresar` y descarta los stores del tablero y de la cuenta.
+Al cerrar la sesión la app navega a `/login` y descarta los stores del tablero y de la cuenta.
 
 ## Estado compartido
 
@@ -107,39 +122,44 @@ Al cerrar la sesión la app navega a `/ingresar` y descarta los stores del table
 
 No hay un provider: todos los consumidores del hook se suscriben a la misma instancia. El estado que deba observar más de un componente debe incorporarse al store; `useState` se reserva para estado local de interfaz, como las secciones expandidas de `MrBoard`.
 
-`features/auth/hooks/useSession.js` mantiene un segundo store con el mismo patrón, porque la sesión también la observan varios componentes, y `features/accounts/hooks/useAccount.js` un tercero para la cuenta, que miran el menú de la barra superior y la pantalla del equipo. Ese último se recarga cuando el `accountId` de la sesión deja de coincidir con la cuenta que tiene guardada, que es lo que pasa al entrar con otro usuario. `features/users/hooks/useCurrentUser.js` sincroniza en la sesión la identidad editada; la lista de usuarios la consume una sola pantalla y `useUsers` la resuelve con estado local.
+`features/auth/hooks/useSession.js` mantiene un segundo store con el mismo patrón, porque la sesión también la observan varios componentes, y `features/accounts/hooks/useAccount.js` un tercero para la cuenta, que miran el menú de la barra superior y la pantalla del equipo. Ese último se recarga cuando el `accountId` de la sesión deja de coincidir con la cuenta que tiene guardada, que es lo que pasa al entrar con otro usuario. `features/users/hooks/useCurrentUser.js` sincroniza en la sesión la identidad editada. `useUsers` y `useGitlabSettings` conservan estado local porque cada uno tiene un único consumidor de pantalla; los formularios mantienen localmente sus campos, mensajes y estado de envío.
 
 ### Ciclo de suscripción y polling
 
-El primer consumidor que monta el hook inicia una carga y un intervalo de actualización de cinco minutos. Un contador registra cuántos consumidores siguen activos; el intervalo se detiene cuando desmonta el último.
+El primer consumidor que monta `useMergeRequests` inicia una carga y un intervalo de actualización de cinco minutos. Un contador registra cuántos consumidores siguen activos; el intervalo se detiene cuando desmonta el último.
 
 React ejecuta los efectos dos veces durante el montaje de desarrollo por `StrictMode`. La promesa `initialLoad` actúa como guarda para evitar que ese ciclo dispare dos cargas iniciales simultáneas. Todo cambio en las suscripciones, temporizadores o peticiones debe conservar este comportamiento idempotente y limpiar sus recursos al desmontar.
 
 ## Acceso al backend
 
-`fetchMergeRequests()` solicita `GET /api/pull-requests` sobre la URL base validada por `src/config.js`. `VITE_API_BASE_URL` debe ser una URL HTTP(S), se normaliza sin barra final y usa `http://localhost:3001` cuando no está definida. La lista de variables y su configuración se mantiene en la [guía de entorno local](../development/entorno-local.md).
+`src/config.js` expone la URL base validada con las constantes y utilidades de `features/api/`. `VITE_API_BASE_URL` debe ser una URL HTTP(S) y se normaliza sin barra final. Sin configuración usa `http://localhost:3001` durante el desarrollo y el mismo origen en producción; `frontend/vercel.json` deriva entonces `/api/*` al backend. La lista de variables y su configuración se mantiene en la [guía de entorno local](../development/entorno-local.md).
 
-La actualización manual invoca `fetchMergeRequests(true)` y agrega `?force=true` para omitir la caché del backend. El polling usa la consulta normal y permite reutilizarla.
+Cada hook de datos encapsula hoy sus llamadas con `fetch`, siempre con `credentials: "include"`: sesión, cuenta, usuarios, configuración de GitLab y tablero. El tablero traduce un 401 en expiración de la sesión; los demás hooks resuelven errores por separado porque el transporte, la lectura de errores y la expiración todavía no están centralizados.
+
+`fetchMergeRequests()` solicita `GET /api/pull-requests`. La actualización manual invoca `fetchMergeRequests(true)` y agrega `?force=true` para omitir la caché del backend. El polling usa la consulta normal y permite reutilizarla.
 
 Antes de cada solicitud se activa `loading` y se limpia el error anterior. Una respuesta correcta reemplaza los datos, actualiza los metadatos y registra `lastFetched`. Una respuesta HTTP fallida intenta obtener el mensaje JSON del backend y, si no está disponible, usa el código de estado.
 
-Los datos anteriores no se eliminan al fallar una actualización. Si nunca hubo una carga exitosa, `App` presenta un error bloqueante; si ya existen resultados, mantiene el tablero visible y comunica el error desde la barra de estado.
+Los datos anteriores no se eliminan al fallar una actualización. Si nunca hubo una carga exitosa, `BoardPage` presenta un error bloqueante; si ya existen resultados, mantiene el tablero visible y comunica el error desde la barra de estado.
 
 ## Estados de la interfaz
 
-`App` contempla explícitamente los siguientes estados:
+`BoardPage` contempla explícitamente los siguientes estados:
 
+- **Falta configuración de GitLab**: reemplaza el tablero por una explicación y, para un `admin`, un acceso a «Mi cuenta».
 - **Carga inicial**: muestra un indicador mientras no existen datos.
 - **Sin resultados**: informa que no hay merge requests abiertos.
 - **Error sin datos**: presenta una alerta con el detalle recibido.
 - **Datos disponibles**: muestra el tablero y la hora de la última actualización.
+- **Vista personal sin identidad**: pide elegir una persona al `admin` o configurar el nickname propio al resto.
+- **Vista personal sin tareas**: conserva la persona elegida e informa que no tiene tareas pendientes.
 - **Actualización en segundo plano**: conserva el contenido y anuncia el progreso.
 
 Una región viva con `aria-live="polite"` comunica el inicio, el error y la finalización de cada actualización sin mover el foco.
 
 ## Presentación y diseño visual
 
-styled-components mantiene los estilos exclusivos en el `.style.js` de cada componente. Los colores, superficies, tipografías y estados semánticos se definen como custom properties en `src/app/app.styles.jsx`; su uso se detalla en la [arquitectura de la interfaz visual](interfaz-visual.md).
+styled-components mantiene los estilos exclusivos en el `.style.js` de cada componente. La paleta base, las superficies, las tipografías y los estados semánticos se definen como custom properties en `src/app/app.styles.jsx`; su uso se detalla en la [arquitectura de la interfaz visual](interfaz-visual.md). `MrCard` conserva localmente los colores de las clasificaciones `review` y `qa`; el resto usa tokens globales.
 
 `src/app/app.styles.jsx` expone los componentes visuales compartidos y `src/app/constants/styles.consts.js`, sólo los mixins CSS reutilizables. Las variantes visuales usan props transitorias con prefijo `$` para evitar que lleguen al DOM.
 

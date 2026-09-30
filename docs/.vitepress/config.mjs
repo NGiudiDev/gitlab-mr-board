@@ -54,6 +54,7 @@ const sidebar = [
       { text: "Merge Requests", link: "/domains/merge-requests" },
       { text: "Vista personal", link: "/domains/vista-personal" },
       { text: "Autenticación", link: "/domains/autenticacion" },
+      { text: "Cuentas", link: "/domains/cuentas" },
       { text: "Configuración de GitLab", link: "/domains/configuracion-gitlab" },
     ],
   },

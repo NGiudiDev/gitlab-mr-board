@@ -4,7 +4,7 @@ El tablero usa tema oscuro y styled-components. Los tokens, el reset, los estilo
 
 ## Layout
 
-El layout es deliberadamente mínimo: una barra superior fija con el nombre del tablero, la navegación entre secciones y un avatar que despliega la cuenta y la sesión, y debajo el contenido a todo el ancho disponible hasta `1600px`. La barra usa el mismo fondo de página con un borde inferior, sin superficie propia, para que el tablero domine la pantalla.
+El layout es deliberadamente mínimo: una barra superior `sticky` con el nombre del tablero, la navegación entre secciones y un avatar que despliega la cuenta y la sesión, y debajo el contenido a todo el ancho disponible hasta `1600px`. La barra usa el mismo fondo de página con un borde inferior, sin superficie propia, para que el tablero domine la pantalla. Tanto la barra como la navegación permiten wrap cuando falta ancho.
 
 El tablero reúne en una sola fila los controles de la vista —a la izquierda— y el resumen, el estado de sincronización y la actualización manual —a la derecha—, separados del contenido por un borde suave. El orden del DOM coincide con el visual, así que el recorrido por teclado sigue la lectura.
 
@@ -14,13 +14,18 @@ El tablero reúne en una sola fila los controles de la vista —a la izquierda�
 |---|---|---|
 | Fondo | `--color-bg` | Página |
 | Superficie | `--color-surface` | Paneles y columnas |
+| Superficie elevada | `--color-surface-raised` | Campos, tarjetas y sección activa |
 | Acento | `--color-accent` | Acciones y foco |
+| Bordes | `--color-border`, `--color-border-soft` | Separación estructural y interna |
 | Borde de control | `--color-control` | Límite perceptible de inputs y botones |
 | Listo | `--color-ready` | Estado correcto |
 | Pendiente | `--color-draft` | Trabajo en curso |
 | Bloqueado | `--color-conflict` | Error o conflicto |
+| Texto | `--color-text-primary`, `--color-text-muted`, `--color-text-faint` | Jerarquía tipográfica |
 
-Las tarjetas muestran badges de pipeline, discusiones, aprobaciones y conflictos, más el título, las ramas, los responsables y el autor. Las secciones se agrupan por repositorio y pueden colapsarse.
+Las variantes suaves de listo, pendiente y bloqueado sirven como fondo de alertas y badges. El borde izquierdo de cada tarjeta representa su clasificación: `ready_to_merge`, `mr_warning`, `in_progress` y `backlog` reutilizan tokens globales; `review` y `qa` tienen por ahora colores locales en `MrCard`.
+
+Las tarjetas muestran badges de pipeline, discusiones, aprobaciones y conflictos, más el título, las ramas, los responsables y el autor. Las secciones se agrupan por repositorio y empiezan contraídas; al abrirse muestran seis columnas de `250px`, con scroll horizontal en el proyecto y vertical en cada lista de tarjetas.
 
 Todo cambio visual debe revisarse en tema oscuro, con scroll horizontal y vertical, y en los estados de carga, error y vacío.
 
