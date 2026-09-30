@@ -25,7 +25,7 @@ El tablero reúne en una sola fila los controles de la vista —a la izquierda�
 
 Las variantes suaves de listo, pendiente y bloqueado sirven como fondo de alertas y badges. El borde izquierdo de cada tarjeta representa su clasificación: `ready_to_merge`, `mr_warning`, `in_progress` y `backlog` reutilizan tokens globales; `review` y `qa` tienen por ahora colores locales en `MrCard`.
 
-Las tarjetas muestran badges de pipeline, discusiones, aprobaciones y conflictos, más el título, las ramas, los responsables y el autor. Las secciones se agrupan por repositorio y empiezan contraídas; al abrirse muestran seis columnas de `250px`, con scroll horizontal en el proyecto y vertical en cada lista de tarjetas.
+Las tarjetas muestran badges de pipeline, discusiones, aprobaciones y conflictos, más el título, las ramas, los responsables y el autor. Las secciones se agrupan por repositorio y empiezan contraídas; al abrirse muestran siete columnas de `250px`, con scroll horizontal en el proyecto y vertical en cada lista de tarjetas.
 
 Todo cambio visual debe revisarse en tema oscuro, con scroll horizontal y vertical, y en los estados de carga, error y vacío.
 

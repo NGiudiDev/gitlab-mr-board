@@ -1,4 +1,5 @@
 const MERGE_REQUEST_COLUMNS = [
+  { id: "unknown", name: "Estado desconocido" },
   { id: "in_progress", name: "En progreso" },
   { id: "mr_warning", name: "Pendientes" },
   { id: "review", name: "Code Review" },

@@ -16,7 +16,7 @@ Se aplica la primera regla coincidente:
 
 ## Columnas del tablero
 
-El frontend define las columnas visibles y su orden en `features/mergeRequests/constants/merge_request_columns.consts.js`: En progreso, Pendientes, Code Review, QA, Listas para mergear y Pausados. Agrupa por proyecto y reparte cada MR en la columna de su clasificación. Los MRs con clasificación `unknown` no tienen columna, así que no se muestran.
+El frontend define las columnas visibles y su orden en `features/mergeRequests/constants/merge_request_columns.consts.js`: Estado desconocido, En progreso, Pendientes, Code Review, QA, Listas para mergear y Pausados. Agrupa por proyecto y reparte cada MR en la columna de su clasificación. Los MRs con clasificación `unknown` aparecen en Estado desconocido, la primera columna.
 
 ## Responsable
 

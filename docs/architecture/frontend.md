@@ -163,7 +163,7 @@ styled-components mantiene los estilos exclusivos en el `.style.js` de cada comp
 
 `src/app/app.styles.jsx` expone los componentes visuales compartidos y `src/app/constants/styles.consts.js`, sólo los mixins CSS reutilizables. Las variantes visuales usan props transitorias con prefijo `$` para evitar que lleguen al DOM.
 
-Ambas vistas usan secciones verticales por proyecto. Cada sección despliega seis columnas horizontales en un contenedor desplazable y cada columna limita su altura para desplazar las tarjetas verticalmente. La vista personal conserva exactamente esta estructura y sólo filtra los merge requests entregados al tablero.
+Ambas vistas usan secciones verticales por proyecto. Cada sección despliega siete columnas horizontales en un contenedor desplazable y cada columna limita su altura para desplazar las tarjetas verticalmente. La vista personal conserva exactamente esta estructura y sólo filtra los merge requests entregados al tablero.
 
 ## Accesibilidad
 

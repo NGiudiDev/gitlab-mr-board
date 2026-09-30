@@ -5,7 +5,15 @@ import { describe, expect, it } from "vitest";
 import { buildMergeRequest } from "../../../../../test/fixtures/mergeRequests.js";
 import { MrBoard } from "./mr_board.jsx";
 
-const COLUMN_NAMES = ["En progreso", "Pendientes", "Code Review", "QA", "Listas para mergear", "Pausados"];
+const COLUMN_NAMES = [
+  "Estado desconocido",
+  "En progreso",
+  "Pendientes",
+  "Code Review",
+  "QA",
+  "Listas para mergear",
+  "Pausados",
+];
 
 function renderBoard(props = {}) {
   return render(<MrBoard allProjects={[]} mergeRequests={[]} {...props} />);
@@ -71,7 +79,7 @@ describe("agrupación por proyecto", () => {
 });
 
 describe("columnas por estado", () => {
-  it("muestra las seis columnas en el orden documentado", async () => {
+  it("muestra las siete columnas en el orden documentado", async () => {
     const user = userEvent.setup();
     const { container } = renderBoard({ allProjects: ["equipo/tablero"] });
     await user.click(screen.getByRole("button"));
@@ -90,6 +98,7 @@ describe("columnas por estado", () => {
         buildMergeRequest({ id: "101-4", mergeability: "qa" }),
         buildMergeRequest({ id: "101-5", mergeability: "ready_to_merge" }),
         buildMergeRequest({ id: "101-6", mergeability: "backlog" }),
+        buildMergeRequest({ id: "101-7", mergeability: "unknown" }),
       ],
     });
     await user.click(screen.getByRole("button"));
@@ -99,7 +108,7 @@ describe("columnas por estado", () => {
     );
   });
 
-  it("no muestra los merge requests con clasificación desconocida", async () => {
+  it("muestra los merge requests sin clasificación en la primera columna", async () => {
     const user = userEvent.setup();
     const { container } = renderBoard({
       allProjects: ["equipo/tablero"],
@@ -107,8 +116,8 @@ describe("columnas por estado", () => {
     });
     await user.click(screen.getByRole("button"));
 
-    expect(container.textContent).not.toContain("Desconocidos");
-    expect(container.textContent).not.toContain("Estado sin clasificar");
+    expect(columnsOfFirstProject(container)[0]).toEqual({ title: "Estado desconocido", total: 1 });
+    expect(container.textContent).toContain("Estado sin clasificar");
   });
 
   it("acumula en una misma columna los merge requests con igual clasificación", async () => {
