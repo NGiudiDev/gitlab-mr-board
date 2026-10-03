@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { MaskedField } from "../../../../app/components/masked_field/masked_field.jsx";
+
 import { Styles as AppStyles } from "../../../../app/app.styles.jsx";
 import { Styles } from "./register_form.style.js";
 
@@ -154,33 +156,30 @@ export function RegisterForm(props) {
         />
       </AppStyles.SpacedLabel>
 
-      <AppStyles.SpacedLabel htmlFor="registro-password">
-        Contraseña
-        <AppStyles.Field
-          autoComplete="new-password"
-          id="registro-password"
-          minLength={MINIMUM_PASSWORD_LENGTH}
-          name="password"
-          onChange={(event) => setPassword(event.target.value)}
-          required
-          type="password"
-          value={password}
-        />
-      </AppStyles.SpacedLabel>
+      <MaskedField
+        autoComplete="new-password"
+        id="registro-password"
+        label="Contraseña"
+        minLength={MINIMUM_PASSWORD_LENGTH}
+        name="password"
+        onChange={(event) => setPassword(event.target.value)}
+        required
+        spaced
+        value={password}
+      />
 
-      <AppStyles.SpacedLabel htmlFor="registro-confirmacion">
-        Repetí la contraseña
-        <AppStyles.Field
-          autoComplete="new-password"
-          id="registro-confirmacion"
-          minLength={MINIMUM_PASSWORD_LENGTH}
-          name="passwordConfirmation"
-          onChange={(event) => setConfirmation(event.target.value)}
-          required
-          type="password"
-          value={confirmation}
-        />
-      </AppStyles.SpacedLabel>
+      <MaskedField
+        autoComplete="new-password"
+        id="registro-confirmacion"
+        label="Repetí la contraseña"
+        minLength={MINIMUM_PASSWORD_LENGTH}
+        name="passwordConfirmation"
+        onChange={(event) => setConfirmation(event.target.value)}
+        required
+        spaced
+        value={confirmation}
+        visibilityLabel="contraseña repetida"
+      />
 
       <AppStyles.AuthSubmitButton disabled={submitting} type="submit">
         {submitting ? "Creando la cuenta..." : "Crear cuenta"}

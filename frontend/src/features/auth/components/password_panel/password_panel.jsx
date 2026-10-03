@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { MaskedField } from "../../../../app/components/masked_field/masked_field.jsx";
+
 import { Styles } from "../../../../app/app.styles.jsx";
 
 export function PasswordPanel(props) {
@@ -41,43 +43,40 @@ export function PasswordPanel(props) {
       ) : null}
 
       <form onSubmit={handleSubmit}>
-        <Styles.SpacedLabel htmlFor="cuenta-actual">
-          Contraseña actual
-          <Styles.Field
-            autoComplete="current-password"
-            id="cuenta-actual"
-            onChange={(event) => setCurrentPassword(event.target.value)}
-            required
-            type="password"
-            value={currentPassword}
-          />
-        </Styles.SpacedLabel>
+        <MaskedField
+          autoComplete="current-password"
+          id="cuenta-actual"
+          label="Contraseña actual"
+          onChange={(event) => setCurrentPassword(event.target.value)}
+          required
+          spaced
+          value={currentPassword}
+          visibilityLabel="contraseña actual"
+        />
 
-        <Styles.SpacedLabel htmlFor="cuenta-nueva">
-          Contraseña nueva
-          <Styles.Field
-            autoComplete="new-password"
-            id="cuenta-nueva"
-            minLength={8}
-            onChange={(event) => setNewPassword(event.target.value)}
-            required
-            type="password"
-            value={newPassword}
-          />
-        </Styles.SpacedLabel>
+        <MaskedField
+          autoComplete="new-password"
+          id="cuenta-nueva"
+          label="Contraseña nueva"
+          minLength={8}
+          onChange={(event) => setNewPassword(event.target.value)}
+          required
+          spaced
+          value={newPassword}
+          visibilityLabel="contraseña nueva"
+        />
 
-        <Styles.SpacedLabel htmlFor="cuenta-confirmacion">
-          Repetí la contraseña nueva
-          <Styles.Field
-            autoComplete="new-password"
-            id="cuenta-confirmacion"
-            minLength={8}
-            onChange={(event) => setConfirmation(event.target.value)}
-            required
-            type="password"
-            value={confirmation}
-          />
-        </Styles.SpacedLabel>
+        <MaskedField
+          autoComplete="new-password"
+          id="cuenta-confirmacion"
+          label="Repetí la contraseña nueva"
+          minLength={8}
+          onChange={(event) => setConfirmation(event.target.value)}
+          required
+          spaced
+          value={confirmation}
+          visibilityLabel="contraseña nueva repetida"
+        />
 
         <Styles.Button disabled={submitting} type="submit">
           {submitting ? "Guardando..." : "Cambiar contraseña"}

@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+import { MaskedField } from "../../../../app/components/masked_field/masked_field.jsx";
+
 import { Styles } from "../../../../app/app.styles.jsx";
 
 export function GitlabAccountSettingsForm(props) {
@@ -78,19 +80,16 @@ export function GitlabAccountSettingsForm(props) {
       </Styles.FormField>
 
       <Styles.FormField>
-        <Styles.Label htmlFor="gitlab-token">
-          Access token
-        </Styles.Label>
-
-        <Styles.Field
+        <MaskedField
           aria-describedby="gitlab-token-ayuda"
           autoComplete="off"
           id="gitlab-token"
+          label="Access token"
           onChange={(event) => setAccessToken(event.target.value)}
           required={!hasStoredToken}
           spellCheck="false"
-          type="password"
           value={accessToken}
+          visibilityLabel="access token"
         />
         <Styles.Hint id="gitlab-token-ayuda">
           {hasStoredToken

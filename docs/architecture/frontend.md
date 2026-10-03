@@ -14,7 +14,7 @@ El código se divide entre la composición general y las funcionalidades del dom
 - `src/config.js`: centraliza y valida la configuración expuesta por Vite.
 - `src/app/app.jsx`: decide si mostrar las rutas públicas o privadas según la sesión y asocia cada URL con una page de su feature.
 - `src/app/app.styles.jsx`: define tokens, reset, estilos globales y componentes visuales compartidos.
-- `src/app/components/app_layout/`: reúne implementación, estilos y test del layout —barra superior, navegación entre secciones y contenido—; `features/users/components/logged_user_menu/` hace lo mismo con la identidad, el equipo y el cierre de sesión.
+- `src/app/components/`: contiene los componentes visuales compartidos, como el layout general y el campo enmascarado con control de visibilidad; `features/users/components/logged_user_menu/` resuelve la identidad, el equipo y el cierre de sesión.
 - `src/app/constants/routes.consts.js`: mantiene las URLs y los metadatos de navegación como única fuente de verdad.
 - `src/app/constants/styles.consts.js`: centraliza los patrones visuales compartidos por componentes de distintas features.
 - `src/features/api/`: contiene las constantes y la validación de la URL base de la API. El transporte HTTP común todavía no está centralizado.
@@ -180,6 +180,7 @@ La interfaz apunta a WCAG 2.2 nivel AA y aplica estas decisiones:
 - El panel de cada proyecto permanece en el DOM cuando está contraído para que la referencia de `aria-controls` siga siendo válida.
 - Las columnas usan encabezados y listas semánticas.
 - Los botones y enlaces tienen nombres accesibles y foco visible.
+- Los campos de contraseña y secretos incluyen un botón etiquetado que permite mostrar u ocultar su valor sin modificarlo.
 - Los enlaces externos informan que abren una pestaña nueva y usan `rel="noopener"`.
 - Los badges combinan texto, iconos y color; ningún estado depende solo del color.
 - Las animaciones y transiciones se reducen cuando el sistema indica `prefers-reduced-motion`.

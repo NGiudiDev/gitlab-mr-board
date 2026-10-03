@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { MaskedField } from "../../../../app/components/masked_field/masked_field.jsx";
+
 import { Styles } from "../../../../app/app.styles.jsx";
 
 export function LoginForm(props) {
@@ -57,18 +59,16 @@ export function LoginForm(props) {
         />
       </Styles.SpacedLabel>
 
-      <Styles.SpacedLabel htmlFor="login-password">
-        Contraseña
-        <Styles.Field
-          autoComplete="current-password"
-          id="login-password"
-          name="password"
-          onChange={(event) => setPassword(event.target.value)}
-          required
-          type="password"
-          value={password}
-        />
-      </Styles.SpacedLabel>
+      <MaskedField
+        autoComplete="current-password"
+        id="login-password"
+        label="Contraseña"
+        name="password"
+        onChange={(event) => setPassword(event.target.value)}
+        required
+        spaced
+        value={password}
+      />
 
       <Styles.AuthSubmitButton disabled={submitting} type="submit">
         {submitting ? "Ingresando..." : "Ingresar"}

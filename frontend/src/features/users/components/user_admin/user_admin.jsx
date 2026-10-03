@@ -1,11 +1,14 @@
 import { useState } from "react";
 
+import { useUsers } from "../../hooks/useUsers.js";
+
+import { MaskedField } from "../../../../app/components/masked_field/masked_field.jsx";
+
 import { Styles as AppStyles } from "../../../../app/app.styles.jsx";
+import { Styles } from "./user_admin.style.js";
 
 import { isAdmin } from "../../../accounts/utils/account.utils.js";
 
-import { useUsers } from "../../hooks/useUsers.js";
-import { Styles } from "./user_admin.style.js";
 
 const EMPTY_FORM = { email: "", displayName: "", password: "", role: "user" };
 
@@ -67,18 +70,16 @@ function CreateUserForm(props) {
           />
         </AppStyles.Label>
 
-        <AppStyles.Label htmlFor="alta-password">
-          Contraseña inicial
-          <AppStyles.Field
-            autoComplete="new-password"
-            id="alta-password"
-            minLength={8}
-            onChange={updateField("password")}
-            required
-            type="password"
-            value={form.password}
-          />
-        </AppStyles.Label>
+        <MaskedField
+          autoComplete="new-password"
+          id="alta-password"
+          label="Contraseña inicial"
+          minLength={8}
+          onChange={updateField("password")}
+          required
+          value={form.password}
+          visibilityLabel="contraseña inicial"
+        />
 
         <AppStyles.Label htmlFor="alta-rol">
           Rol
