@@ -4,6 +4,7 @@ import { config } from "../../../config.js";
 
 const SESSION_EXPIRED_MESSAGE = "Tu sesión expiró. Volvé a ingresar.";
 const PASSWORD_CHANGED_MESSAGE = "Contraseña actualizada. Volvé a ingresar con la nueva.";
+const PASSWORD_RESET_COMPLETED_MESSAGE = "Contraseña restablecida. Ya podés ingresar con la nueva.";
 const NETWORK_ERROR_MESSAGE = "No se pudo conectar al backend.";
 
 const INITIAL_STATE = {
@@ -206,6 +207,69 @@ function expireSession() {
   setState({ user: null, status: "anonymous", error: SESSION_EXPIRED_MESSAGE, notice: null });
 }
 
+/**
+ * Solicita el enlace público para elegir una nueva contraseña.
+ *
+ * @param {{ email: string }} input Email de la cuenta.
+ * @returns {Promise<boolean>} `true` cuando el backend aceptó la solicitud.
+ */
+async function requestPasswordReset({ email }) {
+  setState({ submitting: true, error: null, notice: null });
+
+  try {
+    const response = await requestSession("/api/auth/password-reset-requests", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+
+    if (!response.ok) {
+      setState({ error: await readErrorMessage(response) });
+      return false;
+    }
+
+    const { message } = await response.json();
+    setState({ error: null, notice: message });
+    return true;
+  } catch {
+    setState({ error: NETWORK_ERROR_MESSAGE });
+    return false;
+  } finally {
+    setState({ submitting: false });
+  }
+}
+
+/**
+ * Consume un enlace público y define una contraseña nueva.
+ *
+ * @param {{ token: string, newPassword: string }} input Token y contraseña elegida.
+ * @returns {Promise<boolean>} `true` cuando la contraseña se actualizó.
+ */
+async function resetPassword({ token, newPassword }) {
+  setState({ submitting: true, error: null, notice: null });
+
+  try {
+    const response = await requestSession("/api/auth/password-resets", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, newPassword }),
+    });
+
+    if (!response.ok) {
+      setState({ error: await readErrorMessage(response) });
+      return false;
+    }
+
+    setState({ error: null, notice: PASSWORD_RESET_COMPLETED_MESSAGE });
+    return true;
+  } catch {
+    setState({ error: NETWORK_ERROR_MESSAGE });
+    return false;
+  } finally {
+    setState({ submitting: false });
+  }
+}
+
 /** Sincroniza en la sesión la identidad actualizada por la feature de usuarios. */
 function updateSessionUser(user) {
   if (state.status !== "authenticated") return;
@@ -232,7 +296,15 @@ function useSession() {
     loadSessionOnce();
   }, []);
 
-  return { ...snapshot, changeOwnPassword, login, logout, register };
+  return {
+    ...snapshot,
+    changeOwnPassword,
+    login,
+    logout,
+    register,
+    requestPasswordReset,
+    resetPassword,
+  };
 }
 
 export {
@@ -242,7 +314,10 @@ export {
   login,
   logout,
   PASSWORD_CHANGED_MESSAGE,
+  PASSWORD_RESET_COMPLETED_MESSAGE,
   register,
+  requestPasswordReset,
+  resetPassword,
   resetSessionStore,
   SESSION_EXPIRED_MESSAGE,
   updateSessionUser,

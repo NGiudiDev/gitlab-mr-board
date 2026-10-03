@@ -1,9 +1,11 @@
 export const APP_PATHS = Object.freeze({
   account: "/account",
   board: "/board",
+  forgotPassword: "/forgot-password",
   login: "/login",
   profile: "/profile",
   register: "/register",
+  resetPassword: "/reset-password",
   users: "/users",
 });
 

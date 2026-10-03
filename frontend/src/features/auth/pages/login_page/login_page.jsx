@@ -13,6 +13,7 @@ export function LoginPage(props) {
     <LoginForm
       error={error}
       notice={notice}
+      onShowForgotPassword={() => navigate(APP_PATHS.forgotPassword)}
       onShowRegister={() => navigate(APP_PATHS.register)}
       onSubmit={onLogin}
       submitting={submitting}

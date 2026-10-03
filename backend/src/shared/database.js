@@ -1,7 +1,7 @@
 import { neonConfig, Pool } from "@neondatabase/serverless";
 
 // El esquema se aplica en cada arranque: `IF NOT EXISTS` lo vuelve idempotente
-// y evita sumar una herramienta de migraciones para cuatro tablas.
+// y evita sumar una herramienta de migraciones para cinco tablas.
 //
 // Cada sentencia va por separado porque el driver acepta una por consulta.
 const SCHEMA_STATEMENTS = [
@@ -61,6 +61,16 @@ const SCHEMA_STATEMENTS = [
   )`,
 
   "CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id)",
+
+  `CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash TEXT NOT NULL UNIQUE,
+    created_at TIMESTAMPTZ NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL
+  )`,
+
+  "CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user_id ON password_reset_tokens(user_id)",
 
   // Las credenciales son de la cuenta: las carga un administrador y con ellas
   // se arma el tablero de todos sus miembros.

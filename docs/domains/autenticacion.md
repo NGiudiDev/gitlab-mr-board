@@ -11,6 +11,8 @@ Cada usuario pertenece a una **cuenta**, que es la que comparte el tablero y sus
 | `GET /health` | Público, para que el monitoreo externo siga funcionando |
 | `POST /api/auth/register` | Público |
 | `POST /api/auth/login` | Público |
+| `POST /api/auth/password-reset-requests` | Público; solicita un enlace sin revelar si el email existe |
+| `POST /api/auth/password-resets` | Público; consume un enlace de un solo uso |
 | `POST /api/auth/logout` | Público; sin sesión no hace nada y responde 204 |
 | `GET /api/auth/me` | Sesión |
 | `PATCH /api/users/me/profile` | Sesión |
@@ -32,10 +34,11 @@ La separación de permisos se valida en el backend, ruta por ruta. Que la interf
 
 ## Modelo de datos
 
-La base Postgres vive en Neon, en la instancia que indica `DATABASE_URL`, y tiene cuatro tablas; las dos de la autenticación son:
+La base Postgres vive en Neon, en la instancia que indica `DATABASE_URL`, y tiene cinco tablas; tres pertenecen a la autenticación:
 
 - **`users`**: `id`, `account_id`, `email`, `display_name`, `password_hash`, `role`, `status`, `gitlab_username`, `created_at`, `last_login_at`. Las dos marcas temporales son `TIMESTAMPTZ` y el dominio las expone como cadenas ISO.
 - **`sessions`**: `id`, `user_id`, `token_hash`, `created_at`, `expires_at`. Se borran en cascada al eliminar el usuario.
+- **`password_reset_tokens`**: `id`, `user_id`, `token_hash`, `created_at`, `expires_at`. Guarda sólo el hash de cada enlace pendiente y se borra en cascada con el usuario.
 
 Las otras dos, `accounts` y `account_gitlab_settings`, pertenecen al [dominio de cuentas](cuentas.md) y a la [configuración de GitLab](configuracion-gitlab.md).
 
@@ -69,6 +72,12 @@ Al actualizar una instalación que todavía tiene `users.username`, el esquema r
 - La comparación es de tiempo constante. Cuando el email no existe igual se deriva una clave descartable, de modo que el tiempo de respuesta no revele qué emails están registrados.
 - Cambiar la contraseña cierra todas las sesiones abiertas de esa persona.
 
+#### Restablecimiento sin sesión
+
+Desde el login se puede solicitar un enlace para elegir una contraseña nueva. La respuesta es siempre la misma para un email válido, exista o no una cuenta activa, para no exponer usuarios registrados. Cada solicitud reemplaza cualquier enlace anterior de esa persona; el token aleatorio se guarda sólo como hash SHA-256, vence según `PASSWORD_RESET_DURATION_MINUTES` y se consume de forma atómica una sola vez.
+
+Nodemailer entrega el mensaje por SMTP únicamente en producción. En desarrollo genera el correo sin conectarse a ningún servidor y deja el enlace en la terminal. Al completar el cambio se invalidan todas las sesiones y los demás enlaces pendientes de la persona.
+
 ### Sesión
 
 - Al ingresar se genera un token aleatorio de 32 bytes. En la base sólo se guarda su hash SHA-256: un volcado del archivo no alcanza para suplantar a nadie.
@@ -79,6 +88,8 @@ Al actualizar una instalación que todavía tiene `users.username`, el esquema r
 ### Freno de fuerza bruta
 
 Cinco intentos fallidos seguidos sobre el mismo email bloquean el ingreso durante 15 minutos, con **HTTP 429**. El contador vive en memoria del proceso: se reinicia al reiniciar el backend, y es una defensa contra el ensayo automático, no contra un atacante con acceso al servidor.
+
+Las solicitudes de restablecimiento admiten cinco pedidos por hora y por origen. El límite también vive en memoria y evita que la ruta se use para bombardear una casilla con correos.
 
 ## Altas
 
@@ -138,7 +149,7 @@ El script usa la misma configuración que el backend, así que necesita un `back
 El estado de la sesión vive en el store `features/auth/hooks/useSession.js`, con el mismo patrón que el del tablero:
 
 1. Al abrir la app se consulta `GET /api/auth/me`. Mientras tanto se muestra «Verificando tu sesión...», para no hacer parpadear el formulario.
-2. Sin sesión se presenta `LoginForm`, que ofrece cambiar a `RegisterForm`; ese formulario elige entre sumarse a un equipo con su código o abrir uno nuevo. Con sesión, el tablero, que recién se monta autenticado para que el polling no dispare peticiones que el backend vaya a rechazar.
+2. Sin sesión se presenta `LoginForm`, que ofrece cambiar a `RegisterForm` o solicitar un enlace en `/forgot-password`. El enlace abre `/reset-password?token=…`, donde se confirma la contraseña nueva. El registro elige entre sumarse a un equipo con su código o abrir uno nuevo. Con sesión se monta el tablero, para que el polling no dispare peticiones que el backend vaya a rechazar.
 3. `LoggedUserMenu` reúne detrás de un avatar quién está conectado, su email, el equipo, los accesos separados a «Mi perfil» y «Mi cuenta», y la acción para cerrar sesión; al cerrarla se descartan también los datos del tablero y de la cuenta. La navegación visible del layout ofrece el tablero y, según el rol, `UserAdmin`, según la [arquitectura del frontend](../architecture/frontend.md#navegación-entre-secciones).
 4. Si el tablero recibe un 401, el store da la sesión por terminada y la app vuelve al login con el aviso correspondiente.
 

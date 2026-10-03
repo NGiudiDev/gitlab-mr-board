@@ -93,7 +93,7 @@ describe("LoginForm", () => {
   });
 });
 
-describe("LoginForm: avisos y registro", () => {
+describe("LoginForm: avisos y navegación", () => {
   it("presenta el aviso como región de estado, no como error", () => {
     renderLoginForm({ notice: "Contraseña actualizada. Volvé a ingresar con la nueva." });
 
@@ -109,5 +109,14 @@ describe("LoginForm: avisos y registro", () => {
     await userEvent.click(screen.getByRole("button", { name: "Crear una cuenta" }));
 
     expect(onShowRegister).toHaveBeenCalledTimes(1);
+  });
+
+  it("ofrece restablecer la contraseña y avisa al padre", async () => {
+    const onShowForgotPassword = vi.fn();
+    renderLoginForm({ onShowForgotPassword });
+
+    await userEvent.click(screen.getByRole("button", { name: "¿Olvidaste tu contraseña?" }));
+
+    expect(onShowForgotPassword).toHaveBeenCalledTimes(1);
   });
 });

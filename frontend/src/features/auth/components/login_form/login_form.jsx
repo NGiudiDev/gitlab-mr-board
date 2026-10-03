@@ -8,6 +8,7 @@ export function LoginForm(props) {
   const {
     error = null,
     notice = null,
+    onShowForgotPassword = () => {},
     onShowRegister = () => {},
     onSubmit = () => {},
     submitting = false,
@@ -73,6 +74,12 @@ export function LoginForm(props) {
       <Styles.AuthSubmitButton disabled={submitting} type="submit">
         {submitting ? "Ingresando..." : "Ingresar"}
       </Styles.AuthSubmitButton>
+
+      <Styles.AuthFormSwitch>
+        <Styles.ButtonLink onClick={onShowForgotPassword} type="button">
+          ¿Olvidaste tu contraseña?
+        </Styles.ButtonLink>
+      </Styles.AuthFormSwitch>
 
       <Styles.AuthFormSwitch>
         ¿No tenés cuenta?{" "}

@@ -189,6 +189,66 @@ describe("POST /api/auth/login", () => {
   });
 });
 
+describe("POST /api/auth/password-reset-requests", () => {
+  function requestReset(email, app = appFor()) {
+    return requestApp(app, "/api/auth/password-reset-requests", {
+      method: "POST",
+      body: { email },
+    });
+  }
+
+  it("responde el mismo mensaje para un email registrado y uno inexistente", async () => {
+    const registered = await requestReset(TEST_EMAIL);
+    const unknown = await requestReset("nadie@example.com");
+
+    expect(registered.status).toBe(202);
+    expect(unknown.status).toBe(202);
+    expect(registered.json()).toEqual(unknown.json());
+    expect(registered.json().message).toContain("Si el email está registrado");
+  });
+
+  it("valida el formato del email", async () => {
+    const response = await requestReset("email-invalido");
+
+    expect(response.status).toBe(400);
+    expect(response.json().error).toBe("Ingresá un email válido.");
+  });
+
+  it("limita los pedidos consecutivos del mismo origen", async () => {
+    const app = appFor();
+
+    for (let request = 0; request < 5; request++) {
+      expect((await requestReset("nadie@example.com", app)).status).toBe(202);
+    }
+
+    expect((await requestReset("nadie@example.com", app)).status).toBe(429);
+  });
+});
+
+describe("POST /api/auth/password-resets", () => {
+  it("aplica un token sin exigir una sesión", async () => {
+    const resetPassword = vi.spyOn(services.authService, "resetPassword").mockResolvedValue();
+
+    const response = await requestApp(appFor(), "/api/auth/password-resets", {
+      method: "POST",
+      body: { token: "token", newPassword: "contrasena-nueva" },
+    });
+
+    expect(response.status).toBe(204);
+    expect(resetPassword).toHaveBeenCalledWith("token", "contrasena-nueva");
+  });
+
+  it("rechaza un token ausente o vencido", async () => {
+    const response = await requestApp(appFor(), "/api/auth/password-resets", {
+      method: "POST",
+      body: { token: "invalido", newPassword: "contrasena-nueva" },
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.json().error).toContain("inválido o venció");
+  });
+});
+
 describe("GET /api/auth/me", () => {
   it("devuelve el usuario de la sesión vigente", async () => {
     const app = appFor();

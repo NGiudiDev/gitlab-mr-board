@@ -10,6 +10,7 @@ import { createAccountService } from "./features/accounts/services/accountServic
 import { createAuthRouter, createRequireSession } from "./features/auth/routes/auth.js";
 import { createAuthRepository } from "./features/auth/services/authRepository.js";
 import { createAuthService } from "./features/auth/services/authService.js";
+import { createPasswordResetMailer } from "./features/auth/services/passwordResetMailer.js";
 import { createGitLabSettingsRouter } from "./features/gitlabSettings/routes/gitlabSettings.js";
 import { createGitLabSettingsRepository } from "./features/gitlabSettings/services/gitlabSettingsRepository.js";
 import { createGitLabSettingsService } from "./features/gitlabSettings/services/gitlabSettingsService.js";
@@ -45,6 +46,7 @@ function createServices(database) {
     repository: createAccountRepository(database),
   });
   const authRepository = createAuthRepository(database);
+  const passwordResetMailer = createPasswordResetMailer(config.mail);
   const userService = createUserService({
     repository: createUserRepository(database),
     invalidateSessions: authRepository.deleteSessionsOfUser,
@@ -55,6 +57,9 @@ function createServices(database) {
     authService: createAuthService({
       repository: authRepository,
       accountService,
+      frontendBaseUrl: config.frontendBaseUrl,
+      passwordResetDurationMinutes: config.passwordResetDurationMinutes,
+      passwordResetMailer,
       userService,
       sessionDurationDays: config.sessionDurationDays,
     }),

@@ -9,7 +9,10 @@ import {
   login,
   logout,
   PASSWORD_CHANGED_MESSAGE,
+  PASSWORD_RESET_COMPLETED_MESSAGE,
   register,
+  requestPasswordReset,
+  resetPassword,
   SESSION_EXPIRED_MESSAGE,
   useSession,
 } from "./useSession.js";
@@ -257,6 +260,64 @@ describe("register", () => {
     expect(result).toBe(false);
     expect(getState().status).toBe("anonymous");
     expect(getState().error).toBe("Ya existe un usuario con el email «ana@example.com».");
+  });
+});
+
+describe("requestPasswordReset", () => {
+  it("envía el email y conserva el mensaje genérico del backend", async () => {
+    const message = "Si el email está registrado, vas a recibir un enlace.";
+    fetchMock.mockResolvedValueOnce(jsonResponse({ message }, 202));
+
+    const result = await requestPasswordReset({ email: "ana@example.com" });
+
+    expect(result).toBe(true);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:3001/api/auth/password-reset-requests",
+      {
+        credentials: "include",
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: "ana@example.com" }),
+      },
+    );
+    expect(getState().notice).toBe(message);
+  });
+
+  it("muestra el error del backend", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse({ error: "Ingresá un email válido." }, 400));
+
+    const result = await requestPasswordReset({ email: "invalido" });
+
+    expect(result).toBe(false);
+    expect(getState().error).toBe("Ingresá un email válido.");
+  });
+});
+
+describe("resetPassword", () => {
+  it("envía el token y la contraseña nueva", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse(null, 204));
+
+    const result = await resetPassword({ token: "token", newPassword: "contrasena-nueva" });
+
+    expect(result).toBe(true);
+    expect(fetchMock).toHaveBeenCalledWith("http://localhost:3001/api/auth/password-resets", {
+      credentials: "include",
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: "token", newPassword: "contrasena-nueva" }),
+    });
+    expect(getState().notice).toBe(PASSWORD_RESET_COMPLETED_MESSAGE);
+  });
+
+  it("conserva el formulario cuando el enlace no sirve", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse({
+      error: "El enlace de restablecimiento es inválido o venció.",
+    }, 400));
+
+    const result = await resetPassword({ token: "vencido", newPassword: "contrasena-nueva" });
+
+    expect(result).toBe(false);
+    expect(getState().error).toContain("inválido o venció");
   });
 });
 

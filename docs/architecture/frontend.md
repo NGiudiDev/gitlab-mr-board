@@ -19,7 +19,7 @@ El código se divide entre la composición general y las funcionalidades del dom
 - `src/app/constants/styles.consts.js`: centraliza los patrones visuales compartidos por componentes de distintas features.
 - `src/features/api/`: contiene las constantes y la validación de la URL base de la API. El transporte HTTP común todavía no está centralizado.
 - `src/features/accounts/`: contiene el store y los componentes de la cuenta, además de `pages/account_page/`, descritos en el [dominio de cuentas](../domains/cuentas.md).
-- `src/features/auth/`: contiene el store de la sesión y las pantallas de ingreso, registro y cambio de contraseña, descritos en el [dominio de autenticación](../domains/autenticacion.md).
+- `src/features/auth/`: contiene el store de la sesión y las pantallas de ingreso, registro, solicitud y restablecimiento de contraseña, descritos en el [dominio de autenticación](../domains/autenticacion.md).
 - `src/features/users/`: contiene el perfil, el nickname personal de GitLab, la administración de usuarios, sus hooks y utilidades.
 - `src/features/gitlabAccount/`: contiene la sección, el formulario, los estados de carga y lectura, y el hook de la configuración de GitLab de la cuenta, descritos en la [configuración de GitLab](../domains/configuracion-gitlab.md).
 - `src/features/mergeRequests/hooks/useMergeRequests.js`: contiene el store compartido, el acceso al backend y el polling.
@@ -99,7 +99,7 @@ Los componentes presentacionales reciben valores mediante props y notifican acci
 
 ## Navegación entre secciones
 
-React Router mantiene una URL por pantalla: `/login`, `/register`, `/board`, `/profile`, `/account` y `/users`. `BrowserRouter` envuelve la aplicación; `App` declara los `Routes`; y los enlaces de `AppLayout` y `LoggedUserMenu` permiten historial, recarga y acceso directo. El rewrite de `frontend/vercel.json` devuelve `index.html` para esas rutas en producción.
+React Router mantiene una URL por pantalla: `/login`, `/register`, `/forgot-password`, `/reset-password`, `/board`, `/profile`, `/account` y `/users`. `BrowserRouter` envuelve la aplicación; `App` declara los `Routes`; y los enlaces de `AppLayout` y `LoggedUserMenu` permiten historial, recarga y acceso directo. El rewrite de `frontend/vercel.json` devuelve `index.html` para esas rutas en producción.
 
 `routes.consts.js` define `APP_PATHS` y `NAVIGATION_SECTIONS` como única fuente de verdad. `profile` y `account` llevan `menuOnly` porque se abren desde el avatar y no se muestran en la navegación principal. Al agregar una pantalla hay que sumar su URL, su metadato de navegación si corresponde y su `Route` pública o privada.
 

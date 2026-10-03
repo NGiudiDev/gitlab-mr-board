@@ -88,7 +88,7 @@ afterEach(async () => {
 });
 
 describe("applySchema", () => {
-  it("crea las cuatro tablas en una base vacía", async () => {
+  it("crea las cinco tablas en una base vacía", async () => {
     const database = await openEmptyDatabase();
 
     await applySchema(database);
@@ -99,7 +99,7 @@ describe("applySchema", () => {
     );
 
     expect(rows.map((row) => row.table_name))
-      .toEqual(["account_gitlab_settings", "accounts", "sessions", "users"]);
+      .toEqual(["account_gitlab_settings", "accounts", "password_reset_tokens", "sessions", "users"]);
   });
 
   it("es idempotente: aplicarlo dos veces no falla ni duplica cuentas", async () => {

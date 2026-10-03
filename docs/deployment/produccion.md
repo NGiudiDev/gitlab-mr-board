@@ -24,13 +24,14 @@ No hay paso de compilación: Node ejecuta directamente los archivos de `src/` ([
 
 En Vercel, crear un proyecto con `backend/` como Root Directory y dejar que detecte Express. `src/app.js` exporta el handler de la Function y comparte con el arranque local la preparación de la base; no configurar Build Command ni Output Directory.
 
-Proporcionar las variables de entorno y almacenar `ENCRYPTION_KEY` como secreto. Los PAT de GitLab ya no son configuración del despliegue: los carga un administrador de cada cuenta desde «Mi cuenta» y se guardan cifrados en la base ([configuración de GitLab](../domains/configuracion-gitlab.md)).
+Proporcionar las variables de entorno y almacenar `ENCRYPTION_KEY` y `SMTP_PASSWORD` como secretos. Para el restablecimiento de contraseñas también son obligatorias `FRONTEND_BASE_URL`, `MAIL_FROM` y `SMTP_HOST`; completar el resto de la configuración SMTP según el proveedor. Los PAT de GitLab ya no son configuración del despliegue: los carga un administrador de cada cuenta desde «Mi cuenta» y se guardan cifrados en la base ([configuración de GitLab](../domains/configuracion-gitlab.md)).
 
 El login guarda usuarios, sesiones y la configuración de GitLab en la base Postgres de `DATABASE_URL`, alojada en Neon ([ADR 0009](../decisions/0009-neon-como-base-de-datos.md)). Al ser una base administrada, el despliegue ya no necesita volumen persistente y el sistema de archivos puede ser efímero. El esquema se aplica solo al arrancar. El primer usuario se crea registrándose en el tablero —queda administrador— o con `npm run users --prefix backend -- create <email>`, según el [dominio de autenticación](../domains/autenticacion.md).
 
 ## Operación
 
 - Publicar ambos servicios detrás de HTTPS y dejar `COOKIE_SECURE=true`, para que la cookie de sesión no viaje en claro. Con `NODE_ENV=production` ya queda activo.
+- Verificar que el proveedor SMTP acepte el remitente de `MAIL_FROM` y que los enlaces enviados usen el origen HTTPS correcto de `FRONTEND_BASE_URL`.
 - Mantener las llamadas del frontend en el mismo origen mediante el rewrite de Vercel. Si se publica otro frontend que consulte directamente al backend, agregar explícitamente su origen permitido en `backend/src/app.js` y revisar también la política de la cookie de sesión.
 - Usar `/health` como chequeo de vida, sabiendo que no valida GitLab.
 - Se pueden correr varias instancias: comparten la base, pero no la caché del tablero, que sigue siendo por proceso ([ADR 0002](../decisions/0002-cache-en-memoria.md)).

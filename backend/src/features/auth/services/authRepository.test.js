@@ -64,3 +64,46 @@ describe("repositorio de sesiones", () => {
     expect(await repository.findSessionByTokenHash("nueva")).not.toBeNull();
   });
 });
+
+describe("repositorio de restablecimientos", () => {
+  const token = {
+    id: "restablecimiento-1",
+    userId: "usuario-1",
+    tokenHash: "hash-token",
+    createdAt: "2026-01-01T00:00:00.000Z",
+    expiresAt: "2026-01-01T00:30:00.000Z",
+  };
+
+  it("consume una sola vez un token vigente", async () => {
+    await repository.insertPasswordResetToken(token);
+
+    expect(await repository.consumePasswordResetToken(
+      token.tokenHash,
+      "2026-01-01T00:15:00.000Z",
+    )).toEqual(token);
+    expect(await repository.consumePasswordResetToken(
+      token.tokenHash,
+      "2026-01-01T00:15:00.000Z",
+    )).toBeNull();
+  });
+
+  it("no consume un token vencido y permite limpiarlo", async () => {
+    await repository.insertPasswordResetToken(token);
+
+    expect(await repository.consumePasswordResetToken(
+      token.tokenHash,
+      token.expiresAt,
+    )).toBeNull();
+    expect(await repository.deleteExpiredPasswordResetTokens(token.expiresAt)).toBe(1);
+  });
+
+  it("borra los tokens anteriores de la persona", async () => {
+    await repository.insertPasswordResetToken(token);
+    await repository.deletePasswordResetTokensOfUser(userId);
+
+    expect(await repository.consumePasswordResetToken(
+      token.tokenHash,
+      "2026-01-01T00:15:00.000Z",
+    )).toBeNull();
+  });
+});

@@ -20,7 +20,8 @@
     "@neondatabase/serverless": "1.1.0",
     "cors": "2.8.6",
     "dotenv": "16.6.1",
-    "express": "4.22.2"
+    "express": "4.22.2",
+    "nodemailer": "10.0.13"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.8",

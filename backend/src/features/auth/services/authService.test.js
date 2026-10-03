@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createTestDatabase } from "../../../../test/database.js";
 import { createAccountRepository } from "../../accounts/services/accountRepository.js";
@@ -12,10 +12,11 @@ const PASSWORD = "contrasena-de-prueba";
 const START_DATE = new Date("2026-09-01T10:00:00.000Z");
 const openServices = [];
 
-async function createContext(sessionDurationDays) {
+async function createContext(sessionDurationDays, overrides = {}) {
   const database = await createTestDatabase();
   const authRepository = createAuthRepository(database);
   let currentTime = START_DATE.getTime();
+  const sentPasswordResets = [];
   const accountService = createAccountService({
     repository: createAccountRepository(database),
     now: () => new Date(currentTime),
@@ -31,7 +32,12 @@ async function createContext(sessionDurationDays) {
     accountService,
     userService,
     now: () => new Date(currentTime),
+    frontendBaseUrl: "https://tablero.example.com",
+    passwordResetMailer: {
+      send: async (message) => { sentPasswordResets.push(message); },
+    },
     ...(sessionDurationDays === undefined ? {} : { sessionDurationDays }),
+    ...overrides,
   });
   const account = await accountService.create("Equipo de prueba");
   openServices.push(authService);
@@ -43,13 +49,14 @@ async function createContext(sessionDurationDays) {
     authRepository,
     authService,
     inviteCode: account.inviteCode,
+    sentPasswordResets,
     userRepository,
     userService,
   };
 }
 
-async function createContextWithUser(sessionDurationDays) {
-  const context = await createContext(sessionDurationDays);
+async function createContextWithUser(sessionDurationDays, overrides) {
+  const context = await createContext(sessionDurationDays, overrides);
   await context.userService.createUser({
     accountId: context.accountId,
     email: "ana@example.com",
@@ -198,6 +205,115 @@ describe("contraseñas", () => {
     await expect(authService.changePassword("zoe@example.com", "contrasena-nueva"))
       .rejects.toMatchObject({ status: 404 });
     await expect(authService.changePassword("ana@example.com", "corta"))
+      .rejects.toMatchObject({ status: 400 });
+  });
+
+  it("invalida los enlaces pendientes cuando la contraseña cambia por otro camino", async () => {
+    const { authService, sentPasswordResets } = await createContextWithUser();
+    await authService.requestPasswordReset("ana@example.com");
+    const resetToken = new URL(sentPasswordResets[0].resetUrl).searchParams.get("token");
+
+    await authService.changePassword("ana@example.com", "contrasena-nueva");
+
+    await expect(authService.resetPassword(resetToken, "otra-contrasena"))
+      .rejects.toMatchObject({ status: 400 });
+  });
+
+  it("envía un enlace temporal sin guardar el token en claro", async () => {
+    const { authService, sentPasswordResets } = await createContextWithUser();
+
+    await authService.requestPasswordReset(" ANA@EXAMPLE.COM ");
+
+    expect(sentPasswordResets).toHaveLength(1);
+    expect(sentPasswordResets[0]).toMatchObject({
+      to: "ana@example.com",
+      expiresInMinutes: 30,
+    });
+    expect(sentPasswordResets[0].resetUrl).toMatch(
+      /^https:\/\/tablero\.example\.com\/reset-password\?token=.{43}$/,
+    );
+  });
+
+  it("no revela si el email no existe o está deshabilitado", async () => {
+    const { authService, sentPasswordResets, userService } = await createContextWithUser();
+
+    await expect(authService.requestPasswordReset("nadie@example.com")).resolves.toBeUndefined();
+    await userService.setUserStatus("ana@example.com", "disabled");
+    await expect(authService.requestPasswordReset("ana@example.com")).resolves.toBeUndefined();
+
+    expect(sentPasswordResets).toHaveLength(0);
+  });
+
+  it("restablece la contraseña una vez y cierra las sesiones", async () => {
+    const { authService, sentPasswordResets } = await createContextWithUser();
+    const { token: sessionToken } = await authService.login({
+      email: "ana@example.com",
+      password: PASSWORD,
+    });
+    await authService.requestPasswordReset("ana@example.com");
+    const resetToken = new URL(sentPasswordResets[0].resetUrl).searchParams.get("token");
+
+    await authService.resetPassword(resetToken, "contrasena-nueva");
+
+    expect(await authService.authenticate(sessionToken)).toBeNull();
+    await expect(authService.login({ email: "ana@example.com", password: "contrasena-nueva" }))
+      .resolves.toBeDefined();
+    await expect(authService.resetPassword(resetToken, "otra-contrasena"))
+      .rejects.toThrow("El enlace de restablecimiento es inválido o venció.");
+  });
+
+  it("rechaza un enlace vencido", async () => {
+    const { advance, authService, sentPasswordResets } = await createContextWithUser();
+    await authService.requestPasswordReset("ana@example.com");
+    const resetToken = new URL(sentPasswordResets[0].resetUrl).searchParams.get("token");
+    advance(30 * 60 * 1000);
+
+    await expect(authService.resetPassword(resetToken, "contrasena-nueva"))
+      .rejects.toMatchObject({ status: 400 });
+  });
+
+  it("un pedido nuevo invalida el enlace anterior", async () => {
+    const { authService, sentPasswordResets } = await createContextWithUser();
+    await authService.requestPasswordReset("ana@example.com");
+    await authService.requestPasswordReset("ana@example.com");
+    const firstToken = new URL(sentPasswordResets[0].resetUrl).searchParams.get("token");
+    const secondToken = new URL(sentPasswordResets[1].resetUrl).searchParams.get("token");
+
+    await expect(authService.resetPassword(firstToken, "contrasena-nueva"))
+      .rejects.toMatchObject({ status: 400 });
+    await expect(authService.resetPassword(secondToken, "contrasena-nueva"))
+      .resolves.toBeUndefined();
+  });
+
+  it("una contraseña inválida no consume el enlace", async () => {
+    const { authService, sentPasswordResets } = await createContextWithUser();
+    await authService.requestPasswordReset("ana@example.com");
+    const resetToken = new URL(sentPasswordResets[0].resetUrl).searchParams.get("token");
+
+    await expect(authService.resetPassword(resetToken, "corta"))
+      .rejects.toMatchObject({ status: 400 });
+    await expect(authService.resetPassword(resetToken, "contrasena-nueva"))
+      .resolves.toBeUndefined();
+  });
+
+  it("descarta el token si falla el envío", async () => {
+    const logger = { error: vi.fn() };
+    let attemptedReset;
+    const { authService } = await createContextWithUser(undefined, {
+      logger,
+      passwordResetMailer: {
+        send: async (message) => {
+          attemptedReset = message;
+          throw new Error("SMTP no disponible");
+        },
+      },
+    });
+
+    await expect(authService.requestPasswordReset("ana@example.com")).resolves.toBeUndefined();
+    const resetToken = new URL(attemptedReset.resetUrl).searchParams.get("token");
+
+    expect(logger.error).toHaveBeenCalled();
+    await expect(authService.resetPassword(resetToken, "contrasena-nueva"))
       .rejects.toMatchObject({ status: 400 });
   });
 });

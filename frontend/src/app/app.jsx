@@ -7,8 +7,10 @@ import { AccountPage } from "../features/accounts/pages/account_page/account_pag
 import { AppLayout } from "./components/app_layout/app_layout.jsx";
 import { BoardPage } from "../features/mergeRequests/pages/board_page/board_page.jsx";
 import { LoginPage } from "../features/auth/pages/login_page/login_page.jsx";
+import { ForgotPasswordPage } from "../features/auth/pages/forgot_password_page/forgot_password_page.jsx";
 import { ProfilePage } from "../features/users/pages/profile_page/profile_page.jsx";
 import { RegisterPage } from "../features/auth/pages/register_page/register_page.jsx";
+import { ResetPasswordPage } from "../features/auth/pages/reset_password_page/reset_password_page.jsx";
 import { UsersPage } from "../features/users/pages/users_page/users_page.jsx";
 
 import { Styles } from "./app.styles.jsx";
@@ -101,6 +103,18 @@ export function App() {
       <Routes>
         <Route
           element={(
+            <ForgotPasswordPage
+              error={session.error}
+              notice={session.notice}
+              onRequestPasswordReset={session.requestPasswordReset}
+              submitting={session.submitting}
+            />
+          )}
+          path={APP_PATHS.forgotPassword}
+        />
+
+        <Route
+          element={(
             <LoginPage
               error={session.error}
               notice={session.notice}
@@ -120,6 +134,17 @@ export function App() {
             />
           )}
           path={APP_PATHS.register}
+        />
+
+        <Route
+          element={(
+            <ResetPasswordPage
+              error={session.error}
+              onResetPassword={session.resetPassword}
+              submitting={session.submitting}
+            />
+          )}
+          path={APP_PATHS.resetPassword}
         />
 
         <Route element={<Navigate replace to={APP_PATHS.login} />} path="*" />

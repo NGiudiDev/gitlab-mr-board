@@ -11,6 +11,19 @@ const SESSION_COOKIE_NAME = "mr_board_session";
 // podría llenar la base de usuarios. El conteo vive en memoria del proceso.
 const MAX_REGISTRATIONS_PER_WINDOW = 5;
 const REGISTRATION_WINDOW_MS = 60 * 60 * 1000;
+const MAX_PASSWORD_RESET_REQUESTS_PER_WINDOW = 5;
+const PASSWORD_RESET_REQUEST_WINDOW_MS = 60 * 60 * 1000;
+const PASSWORD_RESET_REQUESTED_MESSAGE = "Si el email está registrado, vas a recibir un enlace para restablecer tu contraseña.";
+
+/** Descarta eventos viejos y avisa si el origen llegó al límite. */
+function requestLimitReached(eventsByAddress, address, windowMs, maximum) {
+  const limit = Date.now() - windowMs;
+  const recent = (eventsByAddress.get(address) ?? []).filter((at) => at > limit);
+
+  eventsByAddress.set(address, recent);
+
+  return recent.length >= maximum;
+}
 
 /**
  * Opciones de la cookie de sesión.
@@ -90,8 +103,8 @@ function createRequireAdmin(authService) {
 }
 
 /**
- * Crea el router de sesión: registro, login, logout, usuario actual y cambio
- * de la propia contraseña.
+ * Crea el router de sesión: registro, login, recuperación, logout, usuario
+ * actual y cambio de la propia contraseña.
  *
  * @param authService Servicio de autenticación ya construido.
  * @returns Router para montar bajo `/api/auth`.
@@ -99,15 +112,16 @@ function createRequireAdmin(authService) {
 function createAuthRouter(authService) {
   const router = express.Router();
   const registrationsByAddress = new Map();
+  const passwordResetRequestsByAddress = new Map();
 
   /** Descarta los registros viejos y avisa si el origen llegó al límite. */
   function registrationLimitReached(address) {
-    const limit = Date.now() - REGISTRATION_WINDOW_MS;
-    const recent = (registrationsByAddress.get(address) ?? []).filter((at) => at > limit);
-
-    registrationsByAddress.set(address, recent);
-
-    return recent.length >= MAX_REGISTRATIONS_PER_WINDOW;
+    return requestLimitReached(
+      registrationsByAddress,
+      address,
+      REGISTRATION_WINDOW_MS,
+      MAX_REGISTRATIONS_PER_WINDOW,
+    );
   }
 
   router.post("/register", async (request, response) => {
@@ -149,6 +163,39 @@ function createAuthRouter(authService) {
       response.json({ user: result.user });
     } catch (error) {
       respondWithHttpError(response, error, "al iniciar sesión");
+    }
+  });
+
+  router.post("/password-reset-requests", async (request, response) => {
+    const address = request.ip ?? "desconocido";
+
+    if (requestLimitReached(
+      passwordResetRequestsByAddress,
+      address,
+      PASSWORD_RESET_REQUEST_WINDOW_MS,
+      MAX_PASSWORD_RESET_REQUESTS_PER_WINDOW,
+    )) {
+      response.status(429).json({ error: "Se solicitaron demasiados enlaces. Probá de nuevo más tarde." });
+      return;
+    }
+
+    try {
+      await authService.requestPasswordReset(request.body?.email ?? "");
+      passwordResetRequestsByAddress.get(address)?.push(Date.now());
+      response.status(202).json({ message: PASSWORD_RESET_REQUESTED_MESSAGE });
+    } catch (error) {
+      respondWithHttpError(response, error, "al solicitar un restablecimiento de contraseña");
+    }
+  });
+
+  router.post("/password-resets", async (request, response) => {
+    const { token, newPassword } = request.body ?? {};
+
+    try {
+      await authService.resetPassword(token ?? "", newPassword ?? "");
+      response.status(204).end();
+    } catch (error) {
+      respondWithHttpError(response, error, "al restablecer la contraseña");
     }
   });
 

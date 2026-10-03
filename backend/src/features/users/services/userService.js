@@ -197,4 +197,4 @@ function createUserService(options) {
   };
 }
 
-export { createUserService, normalizeEmail, toAuthenticatedUser };
+export { createUserService, normalizeEmail, parseEmail, toAuthenticatedUser };

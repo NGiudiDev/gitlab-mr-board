@@ -53,8 +53,8 @@ function toDatabase(pglite) {
 async function createTestDatabase() {
   const pglite = await getSharedInstance();
 
-  // `accounts` arrastra en cascada sus usuarios y su configuración de GitLab,
-  // y cada usuario sus sesiones.
+  // `accounts` arrastra en cascada sus usuarios y su configuración de GitLab;
+  // cada usuario arrastra sus sesiones y tokens de restablecimiento.
   await pglite.exec("TRUNCATE accounts CASCADE");
 
   return toDatabase(pglite);

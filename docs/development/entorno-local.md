@@ -22,12 +22,23 @@ Después de actualizar Node.js hay que abrir una terminal nueva y ejecutar nueva
 | `DATABASE_URL` | Sí | — | Cadena de conexión de Neon; conviene la del pooler |
 | `ENCRYPTION_KEY` | Sí | — | Clave con la que se cifran los access token guardados; mínimo 32 caracteres |
 | `GITLAB_BASE_URL` | No | `https://gitlab.com` | Instancia de GitLab |
+| `NODE_ENV` | No | — | En `production` habilita el envío SMTP y la cookie segura; usar `development` localmente |
 | `PORT` | No | `3001` | Puerto del backend |
 | `POLL_CACHE_TTL_MS` | No | `60000` | TTL en milisegundos |
 | `TEAM_LEAD_USERNAME` | No | `NGiudi` | Aprobación del líder |
 | `MIN_APPROVALS` | No | `2` | Mínimo de aprobaciones |
 | `SESSION_DURATION_DAYS` | No | `7` | Días que dura una sesión |
+| `PASSWORD_RESET_DURATION_MINUTES` | No | `30` | Minutos de vigencia del enlace para restablecer una contraseña |
+| `FRONTEND_BASE_URL` | Sí en producción | `http://localhost:5173` | Origen público usado para construir el enlace de restablecimiento |
 | `COOKIE_SECURE` | No | `true` con `NODE_ENV=production` | Exige HTTPS en la cookie de sesión |
+| `MAIL_FROM` | Sí en producción | `GitLab MR Board <no-reply@localhost>` | Remitente de los correos de restablecimiento |
+| `SMTP_HOST` | Sí en producción | — | Servidor SMTP usado por Nodemailer |
+| `SMTP_PORT` | No | `587` | Puerto del servidor SMTP |
+| `SMTP_SECURE` | No | `false` | Usa TLS desde el inicio; normalmente `true` con el puerto 465 |
+| `SMTP_USER` | No | — | Usuario SMTP; debe configurarse junto con `SMTP_PASSWORD` |
+| `SMTP_PASSWORD` | No | — | Contraseña SMTP; debe configurarse junto con `SMTP_USER` |
+
+Nodemailer sólo entrega correos cuando `NODE_ENV=production`. En desarrollo usa su transporte JSON, que no abre una conexión SMTP, y escribe en la terminal el enlace generado para poder recorrer el flujo localmente. Las variables SMTP del `.env.example` son ilustrativas y no se usan durante ese recorrido.
 
 El frontend usa esta variable, expuesta por Vite durante el build:
 

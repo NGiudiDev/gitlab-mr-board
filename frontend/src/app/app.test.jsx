@@ -472,6 +472,60 @@ describe("portero de sesión", () => {
   });
 });
 
+describe("restablecimiento de contraseña sin sesión", () => {
+  const requestMessage = "Si el email está registrado, vas a recibir un enlace para restablecer tu contraseña.";
+
+  beforeEach(() => {
+    resetSharedState();
+    fetchMock.mockImplementation(async (url) => {
+      const path = String(url);
+      if (path.endsWith("/api/auth/me")) return jsonResponse({ error: "Iniciá sesión." }, 401);
+      if (path.endsWith("/api/auth/password-reset-requests")) {
+        return jsonResponse({ message: requestMessage }, 202);
+      }
+      if (path.endsWith("/api/auth/password-resets")) return jsonResponse(null, 204);
+      return jsonResponse({});
+    });
+  });
+
+  it("abre la solicitud desde el login y presenta la respuesta genérica", async () => {
+    await renderApp(APP_PATHS.login);
+
+    fireEvent.click(screen.getByRole("button", { name: "¿Olvidaste tu contraseña?" }));
+    expect(currentPath()).toBe(APP_PATHS.forgotPassword);
+
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "ana@example.com" } });
+    fireEvent.click(screen.getByRole("button", { name: "Enviar enlace" }));
+    await flush();
+
+    expect(screen.getByText(requestMessage).getAttribute("role")).toBe("status");
+  });
+
+  it("permite abrir un enlace y vuelve al login después del cambio", async () => {
+    await renderApp(`${APP_PATHS.resetPassword}?token=token-de-prueba`);
+
+    fireEvent.change(screen.getByLabelText("Contraseña nueva"), {
+      target: { value: "contrasena-nueva" },
+    });
+    fireEvent.change(screen.getByLabelText("Repetí la contraseña nueva"), {
+      target: { value: "contrasena-nueva" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Guardar contraseña" }));
+    await flush();
+
+    expect(currentPath()).toBe(APP_PATHS.login);
+    expect(screen.getByText("Contraseña restablecida. Ya podés ingresar con la nueva.")
+      .getAttribute("role")).toBe("status");
+  });
+
+  it("bloquea un enlace sin token", async () => {
+    await renderApp(APP_PATHS.resetPassword);
+
+    expect(screen.getByRole("alert").textContent).toContain("inválido");
+    expect(screen.getByRole("button", { name: "Guardar contraseña" }).disabled).toBe(true);
+  });
+});
+
 describe("alta de cuenta desde el tablero", () => {
   /** Responde como el backend, con el alta y la lista de usuarios incluidas. */
   function routeApi(responses = {}) {

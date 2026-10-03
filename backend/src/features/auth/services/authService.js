@@ -1,22 +1,28 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 
 import { HttpError } from "../../../shared/httpError.js";
-import { normalizeEmail, toAuthenticatedUser } from "../../users/services/userService.js";
-import { hashPassword, verifyPassword } from "../utils/password.js";
+import { normalizeEmail, parseEmail, toAuthenticatedUser } from "../../users/services/userService.js";
+import { hashPassword, MINIMUM_PASSWORD_LENGTH, verifyPassword } from "../utils/password.js";
 
 const DEFAULT_SESSION_DURATION_DAYS = 7;
+const DEFAULT_PASSWORD_RESET_DURATION_MINUTES = 30;
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+const MILLISECONDS_PER_MINUTE = 60 * 1000;
 const TOKEN_BYTES = 32;
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCK_DURATION_MS = 15 * 60 * 1000;
 
-/** Deriva el identificador con el que se guarda una sesión. */
+/** Deriva el identificador con el que se guarda un token sensible. */
 function hashToken(token) {
   return createHash("sha256").update(token).digest("hex");
 }
 
 /** Aplica las reglas de contraseña traduciendo el fallo a un error HTTP. */
 async function hashNewPassword(password) {
+  if (typeof password !== "string") {
+    throw new HttpError("La contraseña debe ser texto.", 400);
+  }
+
   try {
     return await hashPassword(password);
   } catch (error) {
@@ -44,7 +50,7 @@ async function matchesStoredPassword(password, user) {
  * Se limita al registro de cuentas, login, sesiones y contraseñas. El perfil
  * y la administración de personas pertenecen a `features/users`.
  *
- * @param options Repositorio de sesiones, servicios relacionados y reloj.
+ * @param options Repositorio de autenticación, servicios relacionados y reloj.
  * @returns Servicio de autenticación listo para usar.
  */
 function createAuthService(options) {
@@ -52,7 +58,11 @@ function createAuthService(options) {
     repository,
     userService,
     accountService,
+    frontendBaseUrl = "http://localhost:5173",
+    logger = console,
     now = () => new Date(),
+    passwordResetDurationMinutes = DEFAULT_PASSWORD_RESET_DURATION_MINUTES,
+    passwordResetMailer = { send: async () => {} },
     sessionDurationDays = DEFAULT_SESSION_DURATION_DAYS,
   } = options;
 
@@ -167,13 +177,19 @@ function createAuthService(options) {
     if (session) await repository.deleteSession(session.id);
   }
 
+  /** Guarda el hash nuevo e invalida todo acceso emitido con la contraseña anterior. */
+  async function applyPasswordChange(user, passwordHash) {
+    await userService.setPasswordHash(user.id, passwordHash);
+    await repository.deleteSessionsOfUser(user.id);
+    await repository.deletePasswordResetTokensOfUser(user.id);
+    failedAttemptsByEmail.delete(user.email);
+  }
+
   async function changePassword(email, newPassword) {
     const user = await userService.findByEmail(email);
     if (!user) throw new HttpError(`No existe el usuario con email «${email}».`, 404);
 
-    await userService.setPasswordHash(user.id, await hashNewPassword(newPassword));
-    await repository.deleteSessionsOfUser(user.id);
-    failedAttemptsByEmail.delete(user.email);
+    await applyPasswordChange(user, await hashNewPassword(newPassword));
   }
 
   async function changeOwnPassword(email, currentPassword, newPassword) {
@@ -187,6 +203,74 @@ function createAuthService(options) {
     await changePassword(user.email, newPassword);
   }
 
+  async function requestPasswordReset(emailInput) {
+    const email = parseEmail(emailInput);
+    const currentDate = now();
+
+    await repository.deleteExpiredPasswordResetTokens(currentDate.toISOString());
+
+    const user = await userService.findByEmail(email);
+    if (!user || user.status !== "active") return;
+
+    const expiresAt = new Date(
+      currentDate.getTime() + passwordResetDurationMinutes * MILLISECONDS_PER_MINUTE,
+    );
+    const token = randomBytes(TOKEN_BYTES).toString("base64url");
+
+    await repository.deletePasswordResetTokensOfUser(user.id);
+    await repository.insertPasswordResetToken({
+      id: randomUUID(),
+      userId: user.id,
+      tokenHash: hashToken(token),
+      createdAt: currentDate.toISOString(),
+      expiresAt: expiresAt.toISOString(),
+    });
+
+    const resetUrl = new URL("/reset-password", frontendBaseUrl);
+    resetUrl.searchParams.set("token", token);
+
+    try {
+      await passwordResetMailer.send({
+        to: user.email,
+        resetUrl: resetUrl.toString(),
+        expiresInMinutes: passwordResetDurationMinutes,
+      });
+    } catch (error) {
+      logger.error(`No se pudo enviar el restablecimiento a ${user.email}:`, error);
+      await repository.deletePasswordResetTokensOfUser(user.id).catch((deleteError) => {
+        logger.error("No se pudo descartar el token cuyo correo falló:", deleteError);
+      });
+    }
+  }
+
+  async function resetPassword(token, newPassword) {
+    if (typeof token !== "string" || !token) {
+      throw new HttpError("El enlace de restablecimiento es inválido o venció.", 400);
+    }
+
+    if (typeof newPassword !== "string" || newPassword.length < MINIMUM_PASSWORD_LENGTH) {
+      await hashNewPassword(newPassword);
+    }
+
+    const passwordReset = await repository.consumePasswordResetToken(
+      hashToken(token),
+      now().toISOString(),
+    );
+
+    if (!passwordReset) {
+      throw new HttpError("El enlace de restablecimiento es inválido o venció.", 400);
+    }
+
+    const passwordHash = await hashNewPassword(newPassword);
+
+    const user = await userService.findById(passwordReset.userId);
+    if (!user) {
+      throw new HttpError("El enlace de restablecimiento es inválido o venció.", 400);
+    }
+
+    await applyPasswordChange(user, passwordHash);
+  }
+
   return {
     authenticate,
     changeOwnPassword,
@@ -195,6 +279,8 @@ function createAuthService(options) {
     login,
     logout,
     register,
+    requestPasswordReset,
+    resetPassword,
   };
 }
 
