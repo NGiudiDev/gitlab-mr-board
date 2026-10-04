@@ -25,3 +25,9 @@ El backend calcula los responsables de cada merge request y los publica en `resp
 En En progreso, Pendientes, QA y Listas para mergear el responsable es el autor. En Code Review son responsables únicamente los reviewers asignados que todavía no aprobaron; cuando todos los reviewers ya aprobaron, la responsabilidad vuelve al autor. Si no hay reviewers asignados, el MR no tiene responsable. En Pausados y en `unknown` tampoco hay responsable.
 
 La comparación entre reviewers y aprobadores se hace por `username` sin distinguir mayúsculas de minúsculas. Un nombre visible nunca se usa para decidir si dos personas son la misma.
+
+## Fecha de subida
+
+Los MRs clasificados como `ready_to_merge` pueden tener una fecha de subida opcional. Es una fecha calendario sin hora, con formato `AAAA-MM-DD`, y no proviene de GitLab: cualquier integrante puede definirla, cambiarla o quitarla desde la tarjeta.
+
+La fecha pertenece a la cuenta, por lo que todos sus integrantes ven el mismo valor. El backend la persiste por proyecto e IID, la publica como `uploadDate` y valida que el MR esté en el tablero actual de la cuenta y siga listo para mergear antes de aceptar un cambio. Las demás clasificaciones no presentan el campo.

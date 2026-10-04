@@ -25,7 +25,11 @@ function groupByRepo(mergeRequests, allProjects) {
 }
 
 export function MrBoard(props) {
-  const { allProjects = [], mergeRequests } = props;
+  const {
+    allProjects = [],
+    mergeRequests,
+    onUploadDateChange = async () => {},
+  } = props;
 
   const [expanded, setExpanded] = useState({});
 
@@ -72,6 +76,7 @@ export function MrBoard(props) {
                   idPrefix={domId}
                   key={column.id}
                   mergeRequests={column.mergeRequests}
+                  onUploadDateChange={onUploadDateChange}
                   title={column.name}
                 />
               ))}

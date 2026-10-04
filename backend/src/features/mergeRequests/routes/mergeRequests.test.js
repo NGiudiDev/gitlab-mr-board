@@ -34,6 +34,26 @@ async function createBoardClient(options = {}) {
     userService,
     get: (path, sessionCookie = cookie) =>
       requestApp(app, path, { headers: { cookie: sessionCookie } }),
+    put: (path, body, sessionCookie = cookie) => requestApp(app, path, {
+      method: "PUT",
+      body,
+      headers: { cookie: sessionCookie },
+    }),
+  };
+}
+
+/** Respuesta mínima del servicio del tablero para probar datos propios. */
+function buildBoardPayload(mergeRequests) {
+  return {
+    mergeRequests,
+    meta: {
+      fetchedAt: "2026-10-04T12:00:00.000Z",
+      projectCount: 1,
+      totalMRs: mergeRequests.length,
+      allProjects: ["equipo/tablero"],
+      people: [],
+      viewerUsername: null,
+    },
   };
 }
 
@@ -327,5 +347,99 @@ describe("caché de GET /api/pull-requests", () => {
     expect(failed.status).toBe(502);
     expect(retried.status).toBe(200);
     expect(calls).toBe(2);
+  });
+});
+
+describe("PUT /api/pull-requests/:projectId/:mergeRequestIid/upload-date", () => {
+  const readyMergeRequest = {
+    id: "101-7",
+    projectId: 101,
+    iid: 7,
+    mergeability: "ready_to_merge",
+  };
+
+  async function createUploadDateClient(mergeRequest = readyMergeRequest) {
+    const client = await createBoardClient({
+      fetchMergeRequests: async () => buildBoardPayload([mergeRequest]),
+    });
+    await client.get("/api/pull-requests");
+    return client;
+  }
+
+  it("guarda la fecha y la incorpora a las consultas siguientes", async () => {
+    const { get, put } = await createUploadDateClient();
+
+    const saved = await put(
+      "/api/pull-requests/101/7/upload-date",
+      { uploadDate: "2026-10-15" },
+    );
+    const board = await get("/api/pull-requests");
+
+    expect(saved.status).toBe(200);
+    expect(saved.json()).toEqual({ uploadDate: "2026-10-15" });
+    expect(board.json().mergeRequests[0].uploadDate).toBe("2026-10-15");
+  });
+
+  it("quita una fecha existente", async () => {
+    const { put } = await createUploadDateClient();
+    await put("/api/pull-requests/101/7/upload-date", { uploadDate: "2026-10-15" });
+
+    const removed = await put(
+      "/api/pull-requests/101/7/upload-date",
+      { uploadDate: "" },
+    );
+
+    expect(removed.status).toBe(200);
+    expect(removed.json()).toEqual({ uploadDate: null });
+  });
+
+  it("rechaza una fecha inválida", async () => {
+    const { put } = await createUploadDateClient();
+
+    const response = await put(
+      "/api/pull-requests/101/7/upload-date",
+      { uploadDate: "2026-02-30" },
+    );
+
+    expect(response.status).toBe(400);
+    expect(response.json().error).toBe("La fecha de subida no es válida.");
+  });
+
+  it("rechaza un merge request que no está listo para mergear", async () => {
+    const { put } = await createUploadDateClient({
+      ...readyMergeRequest,
+      mergeability: "review",
+    });
+
+    const response = await put(
+      "/api/pull-requests/101/7/upload-date",
+      { uploadDate: "2026-10-15" },
+    );
+
+    expect(response.status).toBe(409);
+    expect(response.json().error).toContain("listo para mergear");
+  });
+
+  it("no permite escribir sobre un MR ajeno al tablero de la cuenta", async () => {
+    const { put } = await createUploadDateClient();
+
+    const response = await put(
+      "/api/pull-requests/202/7/upload-date",
+      { uploadDate: "2026-10-15" },
+    );
+
+    expect(response.status).toBe(404);
+  });
+
+  it("exige una sesión válida", async () => {
+    const { app } = await createUploadDateClient();
+
+    const response = await requestApp(
+      app,
+      "/api/pull-requests/101/7/upload-date",
+      { method: "PUT", body: { uploadDate: "2026-10-15" } },
+    );
+
+    expect(response.status).toBe(401);
   });
 });

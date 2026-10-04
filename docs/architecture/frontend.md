@@ -90,7 +90,7 @@ App
 - `ViewControls` alterna entre la vista general y la personal. El selector de persona aparece sólo con `canChoosePerson`, que `App` entrega a `BoardPage` para un `admin`: el resto ve siempre sus propias tareas, identificadas por `meta.viewerUsername`.
 - `MrBoard` agrupa los merge requests por proyecto, mantiene el estado local de expansión y los distribuye según su clasificación. Ambas vistas reutilizan este componente; la personal le entrega únicamente las tareas de la persona seleccionada.
 - `BoardColumn` representa una categoría mediante una lista semántica con scroll vertical.
-- `MrCard` resume el merge request, presenta los responsables que informa `responsiblePeople` y enlaza a GitLab.
+- `MrCard` resume el merge request, presenta los responsables que informa `responsiblePeople`, enlaza a GitLab y permite editar la fecha de subida cuando está listo para mergear.
 - `BlockerBadge` presenta pipeline, discusiones, aprobaciones y conflictos con texto, icono y estilo semántico.
 
 `constants/merge_request_columns.consts.js` define una sola vez las columnas compartidas y reparte cada merge request en la de su clasificación. `utils/personal_view.utils.js` busca la persona seleccionada y filtra sus tareas por el `username` que el backend marcó como responsable, según el [dominio de merge requests](../domains/merge-requests.md#responsable).
@@ -138,6 +138,8 @@ Cada hook de datos encapsula hoy sus llamadas con `fetch`, siempre con `credenti
 
 `fetchMergeRequests()` solicita `GET /api/pull-requests`. La actualización manual invoca `fetchMergeRequests(true)` y agrega `?force=true` para omitir la caché del backend. El polling usa la consulta normal y permite reutilizarla.
 
+`saveUploadDate()` envía la fecha calendario al endpoint del MR y, si el guardado termina bien, reemplaza su `uploadDate` en el store. La tarjeta conserva localmente el valor del campo mientras espera, lo restaura ante un error y anuncia el resultado sin bloquear el resto del tablero.
+
 Antes de cada solicitud se activa `loading` y se limpia el error anterior. Una respuesta correcta reemplaza los datos, actualiza los metadatos y registra `lastFetched`. Una respuesta HTTP fallida intenta obtener el mensaje JSON del backend y, si no está disponible, usa el código de estado.
 
 Los datos anteriores no se eliminan al fallar una actualización. Si nunca hubo una carga exitosa, `BoardPage` presenta un error bloqueante; si ya existen resultados, mantiene el tablero visible y comunica el error desde la barra de estado.
@@ -180,6 +182,7 @@ La interfaz apunta a WCAG 2.2 nivel AA y aplica estas decisiones:
 - El panel de cada proyecto permanece en el DOM cuando está contraído para que la referencia de `aria-controls` siga siendo válida.
 - Las columnas usan encabezados y listas semánticas.
 - Los botones y enlaces tienen nombres accesibles y foco visible.
+- La fecha de subida tiene una etiqueta visible, foco de teclado y una región de estado para el guardado o el error.
 - Los campos de contraseña y secretos incluyen un botón etiquetado que permite mostrar u ocultar su valor sin modificarlo.
 - Los enlaces externos informan que abren una pestaña nueva y usan `rel="noopener"`.
 - Los badges combinan texto, iconos y color; ningún estado depende solo del color.

@@ -62,6 +62,44 @@ const TitleLink = styled.a`
   ${focusRingStyles}
 `;
 
+const UploadDateField = styled.div`
+  margin-top: 0.625rem;
+`;
+
+const UploadDateInput = styled.input`
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid var(--color-control);
+  border-radius: 0.375rem;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  color-scheme: dark;
+  font-size: 0.75rem;
+
+  &:disabled {
+    cursor: wait;
+    opacity: 0.65;
+  }
+
+  ${focusRingStyles}
+`;
+
+const UploadDateLabel = styled.label`
+  display: block;
+  color: var(--color-text-muted);
+  font-size: 0.625rem;
+  font-weight: 600;
+`;
+
+const UploadDateStatus = styled.span`
+  display: block;
+  min-height: 0.875rem;
+  margin-top: 0.125rem;
+  color: ${({ $error }) => $error ? "var(--color-conflict)" : "var(--color-text-muted)"};
+  font-size: 0.625rem;
+`;
+
 export const Styles = {
   Badges,
   Branches,
@@ -71,4 +109,8 @@ export const Styles = {
   DetailValue,
   Metadata,
   TitleLink,
+  UploadDateField,
+  UploadDateInput,
+  UploadDateLabel,
+  UploadDateStatus,
 };

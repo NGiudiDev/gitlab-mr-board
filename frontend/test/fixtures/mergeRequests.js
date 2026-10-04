@@ -34,6 +34,7 @@ function buildMergeRequest(overrides = {}) {
     updatedAt: "2026-08-28T10:00:00.000Z",
     createdAt: "2026-08-27T10:00:00.000Z",
     mergeability: "ready_to_merge",
+    uploadDate: null,
     ...overrides,
     blockers: {
       approvals: { ...DEFAULT_APPROVALS },

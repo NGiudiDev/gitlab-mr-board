@@ -45,7 +45,7 @@ No hay umbral mínimo configurado, en línea con la convención de no tratar la 
 
 ## Backend
 
-La suite debe cubrir la matriz y el orden de prioridad de `computeMergeability()`; las combinaciones de autor, reviewers y aprobadores de `computeResponsiblePeople()` junto con `collectPeople()`; la extracción de la ruta del proyecto; URLs, autenticación, errores y paginación del cliente de GitLab; el límite de concurrencia y la liberación de la cola ante fallos; el enriquecimiento, orden y degradación parcial de los merge requests; y `GET /health`, `GET /api/pull-requests`, la caché, `force=true` y la traducción de errores HTTP.
+La suite debe cubrir la matriz y el orden de prioridad de `computeMergeability()`; las combinaciones de autor, reviewers y aprobadores de `computeResponsiblePeople()` junto con `collectPeople()`; la extracción de la ruta del proyecto; URLs, autenticación, errores y paginación del cliente de GitLab; el límite de concurrencia y la liberación de la cola ante fallos; el enriquecimiento, orden y degradación parcial de los merge requests; la persistencia aislada de las fechas de subida; y `GET /health`, las rutas del tablero, la caché, `force=true` y la traducción de errores HTTP.
 
 También debe cubrir la autenticación: derivación y verificación de contraseñas, el esquema y las operaciones de la base, el ciclo de la sesión —alta, registro, ingreso, vencimiento, cierre y bloqueo por intentos fallidos—, la edición del perfil propio, el cambio y el restablecimiento de contraseña, los tokens temporales de un solo uso, el transporte de correo local y SMTP, y las rutas `/api/auth/*` y `/api/users/*`, incluidos el 401 sin sesión, el 403 sin rol `admin` y los límites de registros y solicitudes de restablecimiento.
 
@@ -55,9 +55,9 @@ Y las cuentas: la generación y normalización del código de invitación, el al
 
 Los test de integración construyen Express en memoria con `createApp()`, inyectan la fuente de datos y el reloj cuando corresponde y reemplazan `global.fetch` con respuestas controladas. Los contratos de esas piezas están en la [arquitectura del backend](../architecture/backend.md).
 
-Los test que necesitan persistencia piden una base con `createTestDatabase()` de `backend/test/database.js`. Arrancar PGlite cuesta alrededor de un segundo, así que **la instancia es una sola por archivo de test** y cada llamada vacía las tablas: pedir dos bases dentro del mismo test no da dos bases independientes, sino la misma recién vaciada. Por ese arranque, `testTimeout` y `hookTimeout` están en 30 segundos —casi todos los archivos abren la base en un `beforeEach`—. `backend/test/auth.js` arma la app con una sesión ya iniciada —del rol que pida el test— y devuelve la cookie que hay que reenviar, junto con la cuenta, el usuario y los cuatro servicios; `createEmptyServices()` sirve para probar el alta sobre una base vacía y `createTestServicesWithUser()`, para armar la app a mano.
+Los test que necesitan persistencia piden una base con `createTestDatabase()` de `backend/test/database.js`. Arrancar PGlite cuesta alrededor de un segundo, así que **la instancia es una sola por archivo de test** y cada llamada vacía las tablas: pedir dos bases dentro del mismo test no da dos bases independientes, sino la misma recién vaciada. Por ese arranque, `testTimeout` y `hookTimeout` están en 30 segundos —casi todos los archivos abren la base en un `beforeEach`—. `backend/test/auth.js` arma la app con una sesión ya iniciada —del rol que pida el test— y devuelve la cookie que hay que reenviar, junto con la cuenta, el usuario y los servicios; `createEmptyServices()` sirve para probar el alta sobre una base vacía y `createTestServicesWithUser()`, para armar la app a mano.
 
-Hay que pasarle a `createApp()` **los cuatro servicios** —cuentas, autenticación, usuarios y configuración de GitLab—: si falta alguno, arma el que falte contra la base configurada en lugar de la de memoria.
+Hay que pasarle a `createApp()` **todos los servicios** —cuentas, autenticación, usuarios, configuración de GitLab y fechas de subida—: si falta alguno, arma el que falte contra la base configurada en lugar de la de memoria.
 
 Ese mismo helper deja la configuración de GitLab ya guardada en la cuenta y el nickname cargado en el usuario, porque casi todos los test del tablero los dan por hechos: para probar lo contrario alcanza con `gitlabSettingsService.remove(account.id)`. Los repositorios comparten una sola base en memoria, ya que las claves foráneas entre sus tablas sólo valen dentro de la misma.
 
@@ -68,7 +68,7 @@ Toda la capa de datos es asíncrona, así que los test la esperan: un `expect(se
 
 ## Frontend
 
-Los test de componentes y del store deben cubrir la carga inicial, la actualización manual, el polling y los errores; los estados vacío, de carga y con datos anteriores; la agrupación por proyecto y el reparto en columnas; la expansión de proyectos; la información y los enlaces de tarjetas e indicadores; los roles, nombres accesibles, estados dinámicos e interacción por teclado; la presentación de responsables y columnas tal como los informa el backend; y la selección de persona, el filtrado personal y la conservación de la selección durante las actualizaciones.
+Los test de componentes y del store deben cubrir la carga inicial, la actualización manual, el polling y los errores; los estados vacío, de carga y con datos anteriores; la agrupación por proyecto y el reparto en columnas; la expansión de proyectos; la información y los enlaces de tarjetas e indicadores; la edición, borrado y error de las fechas de subida; los roles, nombres accesibles, estados dinámicos e interacción por teclado; la presentación de responsables y columnas tal como los informa el backend; y la selección de persona, el filtrado personal y la conservación de la selección durante las actualizaciones.
 
 Deben consultar el DOM como lo haría una persona usuaria, sin afirmar props de componentes hijos ni estado interno del store.
 

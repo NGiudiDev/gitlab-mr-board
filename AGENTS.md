@@ -98,6 +98,8 @@
 
 - Al agregar o renombrar una clasificación, mantener sincronizadas la clasificación que calcula `mergeRequestRules.js` en el backend, las columnas de `features/mergeRequests/constants/merge_request_columns.consts.js` y `docs/domains/merge-requests.md`. Al cambiar la asignación de responsables, modificar `computeResponsiblePeople`, cubrir las combinaciones en `mergeRequestRules.test.js` y actualizar ese mismo documento.
 
+- La fecha de subida es un dato compartido de la cuenta, persistido por el backend y editable sólo para MRs clasificados como `ready_to_merge`. El frontend presenta el campo según la clasificación recibida y consume `uploadDate`; el backend vuelve a validar la operación.
+
 - La vista por persona ([`docs/domains/vista-personal.md`](docs/domains/vista-personal.md)) filtra por el `username` que el backend marcó responsable; no recalcular ni duplicar esa regla en el frontend.
 
 - **Los efectos se ejecutan dos veces en desarrollo** por `StrictMode`: todo `useEffect` con suscripciones, timers o peticiones debe limpiar en su retorno y ser idempotente.

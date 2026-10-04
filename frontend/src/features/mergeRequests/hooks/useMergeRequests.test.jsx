@@ -6,6 +6,7 @@ import { jsonResponse, resetSharedState } from "../../../../test/sharedState.js"
 import {
   fetchMergeRequests,
   getState,
+  saveUploadDate,
   selectPerson,
   setViewMode,
   useMergeRequests,
@@ -153,6 +154,44 @@ describe("fetchMergeRequests", () => {
     await fetchMergeRequests(true);
 
     expect(getState().error).toBeNull();
+  });
+});
+
+describe("saveUploadDate", () => {
+  it("guarda la fecha y actualiza el merge request en el store", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse(buildResponse([
+      buildMergeRequest({ id: "101-7", iid: 7, uploadDate: null }),
+    ])));
+    await fetchMergeRequests();
+    fetchMock.mockResolvedValueOnce(jsonResponse({ uploadDate: "2026-10-15" }));
+
+    await saveUploadDate(101, 7, "2026-10-15");
+
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      "http://localhost:3001/api/pull-requests/101/7/upload-date",
+      {
+        method: "PUT",
+        credentials: "include",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ uploadDate: "2026-10-15" }),
+      },
+    );
+    expect(getState().mergeRequests[0].uploadDate).toBe("2026-10-15");
+  });
+
+  it("propaga el mensaje de error sin modificar la fecha anterior", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse(buildResponse([
+      buildMergeRequest({ id: "101-7", iid: 7, uploadDate: "2026-10-10" }),
+    ])));
+    await fetchMergeRequests();
+    fetchMock.mockResolvedValueOnce(jsonResponse(
+      { error: "No se pudo guardar la fecha de subida." },
+      503,
+    ));
+
+    await expect(saveUploadDate(101, 7, "2026-10-15"))
+      .rejects.toThrow("No se pudo guardar la fecha de subida.");
+    expect(getState().mergeRequests[0].uploadDate).toBe("2026-10-10");
   });
 });
 

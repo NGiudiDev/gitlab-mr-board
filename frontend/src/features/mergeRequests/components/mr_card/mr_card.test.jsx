@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { MrCard } from "./mr_card.jsx";
@@ -92,5 +92,57 @@ describe("MrCard", () => {
     renderCard({ title: "Agregar filtro por autor" });
 
     expect(screen.getByRole("article")).not.toBeNull();
+  });
+
+  it("permite editar la fecha de subida cuando está listo para mergear", async () => {
+    const onUploadDateChange = vi.fn().mockResolvedValue(undefined);
+    render(<MrCard
+      mr={buildMergeRequest({ iid: 7, uploadDate: "2026-10-10" })}
+      onUploadDateChange={onUploadDateChange}
+    />);
+    const field = screen.getByLabelText("Fecha de subida");
+
+    await act(async () => {
+      fireEvent.change(field, { target: { value: "2026-10-15" } });
+    });
+
+    expect(onUploadDateChange).toHaveBeenCalledWith(101, 7, "2026-10-15");
+    expect(field.value).toBe("2026-10-15");
+  });
+
+  it("permite quitar la fecha de subida", async () => {
+    const onUploadDateChange = vi.fn().mockResolvedValue(undefined);
+    render(<MrCard
+      mr={buildMergeRequest({ uploadDate: "2026-10-10" })}
+      onUploadDateChange={onUploadDateChange}
+    />);
+
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText("Fecha de subida"), { target: { value: "" } });
+    });
+
+    expect(onUploadDateChange).toHaveBeenCalledWith(101, 1, "");
+  });
+
+  it("no muestra la fecha fuera de Listas para mergear", () => {
+    renderCard({ mergeability: "review" });
+
+    expect(screen.queryByLabelText("Fecha de subida")).toBeNull();
+  });
+
+  it("restaura la fecha anterior e informa si el guardado falla", async () => {
+    const onUploadDateChange = vi.fn().mockRejectedValue(new Error("No se pudo guardar."));
+    render(<MrCard
+      mr={buildMergeRequest({ uploadDate: "2026-10-10" })}
+      onUploadDateChange={onUploadDateChange}
+    />);
+    const field = screen.getByLabelText("Fecha de subida");
+
+    await act(async () => {
+      fireEvent.change(field, { target: { value: "2026-10-15" } });
+    });
+
+    expect(field.value).toBe("2026-10-10");
+    expect(screen.getByRole("alert").textContent).toBe("No se pudo guardar.");
   });
 });

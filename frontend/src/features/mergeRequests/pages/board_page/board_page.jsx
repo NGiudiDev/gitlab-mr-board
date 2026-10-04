@@ -58,6 +58,7 @@ export function BoardPage(props) {
     viewMode,
     selectedUsername,
     fetchMRs,
+    saveUploadDate,
     selectPerson,
     setViewMode,
   } = useMergeRequests();
@@ -151,6 +152,7 @@ export function BoardPage(props) {
               <MrBoard
                 allProjects={meta?.allProjects || []}
                 mergeRequests={visibleMergeRequests}
+                onUploadDateChange={saveUploadDate}
               />
             )}
           </section>

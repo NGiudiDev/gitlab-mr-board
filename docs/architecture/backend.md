@@ -62,10 +62,11 @@ En `shared/` va únicamente lo que usan varias features. Lo que usa una sola viv
 
 ### Feature `mergeRequests`
 
-- `routes/mergeRequests.js`: contrato de `GET /api/pull-requests`, la caché por cuenta y el `viewerUsername` que se completa al responder.
+- `routes/mergeRequests.js`: contratos del tablero, caché por cuenta, `viewerUsername` y validación de que sólo los MRs listos acepten una fecha de subida.
 - `services/gitlabApi.js`: construye el cliente de GitLab para un access token concreto, y encapsula URLs, paginación y acceso limitado a la API v4.
 - `services/mergeRequestService.js`: coordina las consultas, enriquece los merge requests y construye la respuesta del BFF.
 - `services/mergeRequestRules.js`: reglas puras de clasificación, responsabilidad y normalización que no dependen de Express ni de la red.
+- `services/mergeRequestUploadDateService.js` y su repositorio: validación y persistencia por cuenta de la fecha de subida.
 - `utils/`: limitador de concurrencia y reglas de bloqueo técnico.
 
 ### `shared/`
@@ -77,7 +78,7 @@ En `shared/` va únicamente lo que usan varias features. Lo que usa una sola viv
 
 ## Construcción y arranque
 
-`createApp()` construye la aplicación sin abrir un puerto y `src/index.js` es el único responsable de invocar `listen()`, así que la aplicación puede ejecutarse en memoria o en distintos entornos. Tanto `createApp()` como `createMergeRequestsRouter()` reciben por inyección la fuente de merge requests y el reloj de la caché, lo que permite controlar sus dependencias sin consultar GitLab ni depender del tiempo real. `createApp()` acepta además los servicios de cuentas, autenticación, usuarios y configuración de GitLab ya construidos; si le falta alguno, abre el pool de `DATABASE_URL` y arma los cuatro sobre esa misma conexión.
+`createApp()` construye la aplicación sin abrir un puerto y `src/index.js` es el único responsable de invocar `listen()`, así que la aplicación puede ejecutarse en memoria o en distintos entornos. Tanto `createApp()` como `createMergeRequestsRouter()` reciben por inyección la fuente de merge requests y el reloj de la caché, lo que permite controlar sus dependencias sin consultar GitLab ni depender del tiempo real. `createApp()` acepta además todos los servicios ya construidos; si le falta alguno, abre el pool de `DATABASE_URL` y lo arma sobre la conexión compartida.
 
 `createConfiguredApp()` abre una sola base y aplica el esquema antes de construir los servicios. El handler exportado por omisión conserva esa inicialización por proceso para las invocaciones de Vercel y la descarta si falla, de modo que una interrupción transitoria de Neon pueda reintentarse. Si la preparación no termina, responde HTTP 503; el arranque local reutiliza la misma función y no abre el puerto hasta que la base está lista.
 
@@ -92,9 +93,9 @@ Una solicitud a `GET /api/pull-requests` atraviesa el siguiente flujo:
 5. El limitador del proceso permite hasta seis operaciones concurrentes contra GitLab, sin importar cuántas personas consulten a la vez.
 6. Las reglas puras calculan la clasificación del merge request y sus responsables.
 7. Los resultados se ordenan por fecha de actualización descendente y se agregan los metadatos de la consulta, incluidas las personas participantes.
-8. El router conserva la respuesta completa en memoria, le agrega en `meta.viewerUsername` el nickname de GitLab de quien preguntó y la devuelve al frontend.
+8. El router conserva la respuesta de GitLab en memoria, le agrega las fechas de subida persistidas para la cuenta y completa en `meta.viewerUsername` el nickname de quien preguntó antes de devolverla.
 
-Los merge requests no se guardan: cada proceso mantiene su propia caché y la pierde al reiniciarse. La persistencia del backend es la base Postgres alojada en Neon ([ADR 0009](../decisions/0009-neon-como-base-de-datos.md)), con los usuarios y las sesiones descritos en el [dominio de autenticación](../domains/autenticacion.md) y las credenciales de GitLab en la [configuración de GitLab](../domains/configuracion-gitlab.md).
+Los datos obtenidos de GitLab no se guardan: cada proceso mantiene su propia caché y la pierde al reiniciarse. Las fechas de subida sí se persisten en Postgres porque son datos propios del tablero. El resto de la persistencia se describe en el [dominio de autenticación](../domains/autenticacion.md) y en la [configuración de GitLab](../domains/configuracion-gitlab.md).
 
 ## Integración con GitLab
 
@@ -122,6 +123,7 @@ El backend prioriza entregar una vista parcial antes que descartar toda la respu
 
 - Una solicitud normal reutiliza la caché de esa cuenta mientras el TTL siga vigente.
 - Lo único que no se comparte es `meta.viewerUsername`: la ruta lo completa al entregar la respuesta, así que dos personas de la misma cuenta reciben los mismos merge requests con distinta identidad.
+- Las fechas de subida tampoco forman parte de la entrada almacenada: se leen de Postgres y se agregan al responder, de modo que un cambio se vea sin invalidar la caché de GitLab.
 - Junto a la respuesta se guarda la fecha de la configuración con la que se consultó. Cambiar los proyectos o el token la descarta, sin necesidad de avisarle al router.
 - `GET /api/pull-requests?force=true` omite la lectura de la caché, vuelve a consultar GitLab y reemplaza el valor almacenado.
 - La caché solo se actualiza después de obtener una respuesta satisfactoria.
@@ -159,11 +161,15 @@ Configuración de GitLab de la cuenta: los IDs de los proyectos y el access toke
 
 **Exige una sesión válida**: sin ella responde HTTP 401. Si en la cuenta todavía no se configuró GitLab responde HTTP 409 con el código `gitlab_settings_missing`. Devuelve los merge requests consolidados en `mergeRequests` y un objeto `meta` con la fecha de consulta, cantidad de proyectos, total de resultados, nombres de todos los proyectos configurados, las personas participantes en `people` y el nickname de GitLab de quien pregunta en `viewerUsername`.
 
-Cada merge request incluye el nombre y el `username` del autor. El nombre se presenta en la interfaz y `authorUsername` aporta la identidad estable con la que se comparan las personas.
+Cada merge request incluye el nombre y el `username` del autor. El nombre se presenta en la interfaz y `authorUsername` aporta la identidad estable con la que se comparan las personas. `uploadDate` contiene la fecha de subida compartida en formato `AAAA-MM-DD`, o `null` cuando todavía no se definió.
 
 El backend resuelve además la responsabilidad de cada merge request en `responsiblePeople` y publica en `meta.people` la lista de autores y reviewers sin duplicados. El frontend consume ambos campos tal como llegan: las reglas se documentan en el [dominio de merge requests](../domains/merge-requests.md#responsable) y su uso, en la [vista personal](../domains/vista-personal.md).
 
 El parámetro opcional `force=true` fuerza la actualización de la caché. Cualquier otro valor se trata como una solicitud normal.
+
+### `PUT /api/pull-requests/:projectId/:mergeRequestIid/upload-date`
+
+Guarda o reemplaza la fecha de subida con `{ uploadDate: "AAAA-MM-DD" }`; una cadena vacía la quita. Exige sesión, que el MR forme parte del tablero actual de la cuenta y que su clasificación sea `ready_to_merge`. Responde 400 ante IDs o fechas inválidos, 404 si el MR no pertenece al tablero y 409 si no está listo para mergear.
 
 ## Configuración
 
