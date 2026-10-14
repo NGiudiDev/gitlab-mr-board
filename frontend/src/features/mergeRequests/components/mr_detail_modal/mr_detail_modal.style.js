@@ -36,6 +36,8 @@ const Branches = styled.p`
 
 const CloseButton = styled.button`
   flex: 0 0 auto;
+  display: grid;
+  place-items: center;
   width: 2rem;
   height: 2rem;
   padding: 0;
@@ -46,6 +48,11 @@ const CloseButton = styled.button`
   font-size: 1.5rem;
   line-height: 1;
   cursor: pointer;
+
+  svg {
+    width: 1rem;
+    height: 1rem;
+  }
 
   &:hover {
     border-color: var(--color-control);

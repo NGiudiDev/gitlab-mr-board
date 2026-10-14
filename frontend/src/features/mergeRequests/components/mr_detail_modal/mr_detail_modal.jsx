@@ -86,7 +86,9 @@ export function MrDetailModal(props) {
             ref={closeButtonRef}
             type="button"
           >
-            ×
+            <svg aria-hidden="true" fill="none" viewBox="0 0 16 16">
+              <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+            </svg>
           </Styles.CloseButton>
         </Styles.Header>
 

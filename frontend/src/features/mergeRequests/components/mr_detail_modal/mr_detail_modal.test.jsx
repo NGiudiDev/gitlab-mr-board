@@ -124,4 +124,15 @@ describe("MrDetailModal", () => {
     fireEvent.keyDown(closeButton, { key: "Tab", shiftKey: true });
     expect(document.activeElement).toBe(saveButton);
   });
+
+  it("muestra el cierre como un icono decorativo centrable", () => {
+    renderModal();
+
+    const closeButton = screen.getByRole("button", { name: "Cerrar detalle del merge request" });
+    const closeIcon = closeButton.querySelector("svg");
+
+    expect(closeIcon).not.toBeNull();
+    expect(closeIcon.getAttribute("aria-hidden")).toBe("true");
+    expect(closeButton.textContent).toBe("");
+  });
 });
