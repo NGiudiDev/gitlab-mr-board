@@ -68,7 +68,7 @@ Toda la capa de datos es asíncrona, así que los test la esperan: un `expect(se
 
 ## Frontend
 
-Los test de componentes y del store deben cubrir la carga inicial, la actualización manual, el polling y los errores; los estados vacío, de carga y con datos anteriores; la agrupación por proyecto y el reparto en columnas; la expansión de proyectos; la información y los enlaces de tarjetas e indicadores; la edición, borrado y error de las fechas de subida; los roles, nombres accesibles, estados dinámicos e interacción por teclado; la presentación de responsables y columnas tal como los informa el backend; y la selección de persona, el filtrado personal y la conservación de la selección durante las actualizaciones.
+Los test de componentes y del store deben cubrir la carga inicial, la actualización manual, el polling y los errores; los estados vacío, de carga y con datos anteriores; la agrupación por proyecto y el reparto en columnas; la expansión de proyectos; la información y los enlaces de tarjetas e indicadores; la apertura, foco y cierre del detalle; la edición confirmada, borrado y error de las fechas de subida; los roles, nombres accesibles, estados dinámicos e interacción por teclado; la presentación de responsables y columnas tal como los informa el backend; y la selección de persona, el filtrado personal y la conservación de la selección durante las actualizaciones.
 
 Deben consultar el DOM como lo haría una persona usuaria, sin afirmar props de componentes hijos ni estado interno del store.
 

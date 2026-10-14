@@ -28,6 +28,6 @@ La comparación entre reviewers y aprobadores se hace por `username` sin disting
 
 ## Fecha de subida
 
-Los MRs clasificados como `ready_to_merge` pueden tener una fecha de subida opcional. Es una fecha calendario sin hora, con formato `AAAA-MM-DD`, y no proviene de GitLab: cualquier integrante puede definirla, cambiarla o quitarla desde la tarjeta.
+Los MRs clasificados como `ready_to_merge` pueden tener una fecha de subida opcional. Es una fecha calendario sin hora, con formato `AAAA-MM-DD`, y no proviene de GitLab: cualquier integrante puede definirla, cambiarla o quitarla desde el detalle que abre la tarjeta. La edición queda local hasta confirmar con «Guardar».
 
-La fecha pertenece a la cuenta, por lo que todos sus integrantes ven el mismo valor. El backend la persiste por proyecto e IID, la publica como `uploadDate` y valida que el MR esté en el tablero actual de la cuenta y siga listo para mergear antes de aceptar un cambio. Las demás clasificaciones no presentan el campo.
+La fecha pertenece a la cuenta, por lo que todos sus integrantes ven el mismo valor. El backend la persiste por proyecto e IID, la publica como `uploadDate` y valida que el MR esté en el tablero actual de la cuenta y siga listo para mergear antes de aceptar un cambio. El modal replica el resumen del MR para todas las clasificaciones, pero sólo las listas para mergear presentan el campo.
