@@ -1,6 +1,6 @@
 # ADR 0011: agrupar a los usuarios en cuentas que comparten las credenciales de GitLab
 
-- Estado: aceptada
+- Estado: Aceptada
 - Fecha: 2026-09-08
 
 ## Contexto

@@ -1,6 +1,6 @@
 # ADR 0006: resolver el login con usuarios locales en SQLite
 
-- Estado: aceptada
+- Estado: Aceptada
 - Fecha: 2026-09-06
 
 ## Contexto

@@ -18,8 +18,8 @@ const sidebar = [
     link: "/decisions/",
     items: [
       { text: "ADR 0001: Backend for Frontend", link: "/decisions/0001-backend-for-frontend" },
-      { text: "ADR 0002: caché en memoria", link: "/decisions/0002-cache-en-memoria" },
-      { text: "ADR 0003: estrategia de test", link: "/decisions/0003-estrategia-de-test" },
+      { text: "ADR 0002: Caché en memoria", link: "/decisions/0002-cache-en-memoria" },
+      { text: "ADR 0003: Estrategia de test", link: "/decisions/0003-estrategia-de-test" },
       { text: "ADR 0004: sitio de documentación", link: "/decisions/0004-sitio-de-documentacion" },
       { text: "ADR 0005: frontend en React", link: "/decisions/0005-frontend-en-react" },
       { text: "ADR 0006: login local con SQLite", link: "/decisions/0006-login-local-con-sqlite" },

@@ -1,6 +1,6 @@
 # ADR 0005: migrar el frontend de Vue a React
 
-- Estado: aceptada
+- Estado: Aceptada
 - Fecha: 2026-09-02
 
 ## Contexto

@@ -1,6 +1,6 @@
 # ADR 0008: guardar las credenciales de GitLab por usuario y cifradas
 
-- Estado: aceptada, y modificada por el [ADR 0011](0011-cuentas-compartidas.md), que pasó las credenciales del usuario a la cuenta
+- Estado: Aceptada, y modificada por el [ADR 0011](0011-cuentas-compartidas.md), que pasó las credenciales del usuario a la cuenta
 - Fecha: 2026-09-07
 
 ## Contexto

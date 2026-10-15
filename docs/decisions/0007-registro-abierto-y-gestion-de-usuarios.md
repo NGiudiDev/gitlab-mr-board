@@ -1,6 +1,6 @@
 # ADR 0007: abrir el registro y administrar usuarios desde la interfaz
 
-- Estado: aceptada
+- Estado: Aceptada
 - Fecha: 2026-09-06
 - Modifica: [ADR 0006](0006-login-local-con-sqlite.md), que dejaba las altas sólo por línea de comandos
 

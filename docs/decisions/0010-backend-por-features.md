@@ -1,6 +1,6 @@
 # ADR 0010: organizar el backend por features
 
-- Estado: aceptada
+- Estado: Aceptada
 - Fecha: 2026-09-07
 
 ## Contexto

@@ -8,7 +8,7 @@ Fuente de verdad para ejecutar, escribir y validar los test. La elección de her
 - **Frontend:** Vitest, React Testing Library y `happy-dom`.
 - **E2E:** Playwright Test sobre Chromium, en `e2e/`.
 
-Los test unitarios y de integración no acceden a GitLab **ni a Neon**: la persistencia se ejecuta contra PGlite, un Postgres compilado a WebAssembly que corre en memoria dentro del proceso de Vitest ([ADR 0009](../decisions/0009-neon-como-base-de-datos.md)). El SQL de los repositorios se prueba de verdad y `npm test` sigue sin necesitar red, Docker ni credenciales.
+Los test unitarios y de integración no acceden a GitLab **ni a Neon**: los repositorios se ejecutan contra PGlite, PostgreSQL compilado a WebAssembly que corre en memoria dentro del proceso de Vitest ([ADR 0009](../decisions/0009-neon-como-base-de-datos.md)). Así se validan el esquema, las consultas y las restricciones de la base sin que `npm test` necesite red, Docker ni credenciales.
 
 Los E2E recorren la aplicación completa contra proyectos reales dedicados a test y una base de Neon aparte; requieren `GITLAB_TOKEN` y `E2E_DATABASE_URL`.
 
@@ -55,7 +55,7 @@ Y las cuentas: la generación y normalización del código de invitación, el al
 
 Los test de integración construyen Express en memoria con `createApp()`, inyectan la fuente de datos y el reloj cuando corresponde y reemplazan `global.fetch` con respuestas controladas. Los contratos de esas piezas están en la [arquitectura del backend](../architecture/backend.md).
 
-Los test que necesitan persistencia piden una base con `createTestDatabase()` de `backend/test/database.js`. Arrancar PGlite cuesta alrededor de un segundo, así que **la instancia es una sola por archivo de test** y cada llamada vacía las tablas: pedir dos bases dentro del mismo test no da dos bases independientes, sino la misma recién vaciada. Por ese arranque, `testTimeout` y `hookTimeout` están en 30 segundos —casi todos los archivos abren la base en un `beforeEach`—. `backend/test/auth.js` arma la app con una sesión ya iniciada —del rol que pida el test— y devuelve la cookie que hay que reenviar, junto con la cuenta, el usuario y los servicios; `createEmptyServices()` sirve para probar el alta sobre una base vacía y `createTestServicesWithUser()`, para armar la app a mano.
+Los test que necesitan una base de datos piden una con `createTestDatabase()` de `backend/test/database.js`. Arrancar PGlite cuesta alrededor de un segundo, así que **la instancia es una sola por archivo de test** y cada llamada vacía las tablas: pedir dos bases dentro del mismo test no da dos bases independientes, sino la misma recién vaciada. Por ese arranque, `testTimeout` y `hookTimeout` están en 30 segundos —casi todos los archivos abren la base en un `beforeEach`—. `backend/test/auth.js` arma la app con una sesión ya iniciada —del rol que pida el test— y devuelve la cookie que hay que reenviar, junto con la cuenta, el usuario y los servicios; `createEmptyServices()` sirve para probar el alta sobre una base vacía y `createTestServicesWithUser()`, para armar la app a mano.
 
 Hay que pasarle a `createApp()` **todos los servicios** —cuentas, autenticación, usuarios, configuración de GitLab y fechas de subida—: si falta alguno, arma el que falte contra la base configurada en lugar de la de memoria.
 

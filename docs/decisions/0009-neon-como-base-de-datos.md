@@ -1,6 +1,6 @@
 # ADR 0009: reemplazar SQLite local por Neon
 
-- Estado: aceptada
+- Estado: Aceptada
 - Fecha: 2026-09-07
 
 ## Contexto
@@ -16,14 +16,14 @@ Persistir en **Neon**, un Postgres serverless administrado, con el driver oficia
 - `DATABASE_PATH` se reemplaza por `DATABASE_URL`, obligatoria. Conviene la cadena del pooler: el backend abre su propio pool.
 - El esquema se sigue aplicando en cada arranque con `CREATE TABLE IF NOT EXISTS`, ahora desde `index.ts` antes de escuchar. Se mantiene la idea del ADR 0006: tres tablas no justifican una herramienta de migraciones.
 - Los repositorios reciben una interfaz `Database` mínima —`query` y `close`— en lugar del driver. Es lo que permite que los test corran contra otro Postgres sin que el código de producción lo sepa.
-- Los test usan **PGlite**, Postgres compilado a WebAssembly que corre en memoria dentro del proceso de Vitest. `npm test` sigue sin necesitar red, Docker ni credenciales, y el SQL de los repositorios se ejecuta de verdad.
+- Los test usan **PGlite**, PostgreSQL compilado a WebAssembly que corre en memoria dentro del proceso de Vitest. `npm test` sigue sin necesitar red, Docker ni credenciales, y valida el esquema, las consultas y las restricciones de los repositorios.
 
 ## Alternativas consideradas
 
 - **`pg` (node-postgres) contra Neon**: funciona sin nada especial y es neutral respecto del proveedor. Se descartó por poco margen: `@neondatabase/serverless` expone el mismo API de `Pool`, así que cambiarlo más adelante es reemplazar un import, y a cambio deja abierta la puerta a desplegar el backend en una plataforma serverless sin volver a tocar la capa de datos.
 - **Un ORM como Drizzle o Prisma**: da tipos derivados del esquema y migraciones versionadas, pero es una dependencia grande para tres tablas y contradice la idea de proyecto liviano.
 - **Postgres real en los test, con Docker o una rama de Neon**: es lo más fiel, pero `npm test` dejaría de correr solo y la suite pasaría a depender de credenciales y de limpieza entre casos.
-- **Repositorios falsos en memoria para los test**: rápido y sin dependencias, pero el SQL real quedaría sin cubrir.
+- **Repositorios falsos en memoria para los test**: rápido y sin dependencias, pero el esquema, las consultas y las restricciones reales quedarían sin cubrir.
 - **Seguir con SQLite y montar un volumen persistente**: era el esquema documentado antes de adoptar Neon. Resuelve el respaldo pero no el escalado, y ata el despliegue a las plataformas que ofrecen volúmenes.
 
 ## Consecuencias
