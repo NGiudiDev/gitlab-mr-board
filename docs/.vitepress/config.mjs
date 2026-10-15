@@ -1,16 +1,15 @@
 import { defineConfig } from "vitepress";
 
-// El sidebar se declara a mano: con cinco secciones es más explícito que
+// El sidebar se declara a mano: con pocas secciones es más explícito que
 // autogenerarlo, y obliga a decidir el título con el que aparece cada página.
 const sidebar = [
   {
     text: "Arquitectura",
     link: "/architecture/",
     items: [
-      { text: "Visión general", link: "/architecture/vision-general" },
+      { text: "Producto", link: "/architecture/producto" },
       { text: "Backend", link: "/architecture/backend" },
       { text: "Frontend", link: "/architecture/frontend" },
-      { text: "Interfaz visual", link: "/architecture/interfaz-visual" },
     ],
   },
   {
