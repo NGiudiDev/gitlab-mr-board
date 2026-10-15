@@ -56,7 +56,7 @@
 
 - Centralizar la lectura y validación de variables de entorno en `backend/src/config.js`. Al agregar una variable, actualizar `backend/.env.example` y la tabla de configuración del [`README.md`](README.md#configuración). **El token y los proyectos de GitLab no son configuración del proceso**: los guarda cada cuenta en la base y viven en `services/gitlabSettingsService.js`.
 
-- Usar **JavaScript y ES modules** ([ADR 0012](docs/decisions/0012-javascript-sin-typescript.md)), con extensión `.js` en los imports relativos, como exige Node. No hay compilación: Node ejecuta `src/` tal cual.
+- Usar **JavaScript y ES modules**, con extensión `.js` en los imports relativos, como exige Node. No hay compilación: Node ejecuta `src/` tal cual.
 
 - Las rutas validan sus parámetros y devuelven el error HTTP que corresponda (400, 404, 500, etc.). Al agregar un endpoint, documentarlo; si requiere un router nuevo, montarlo desde `backend/src/app.js`. **Todo lo que cuelgue de `/api` exige sesión**: el middleware está montado en `createApp()` y una ruta pública nueva debe justificarse.
 

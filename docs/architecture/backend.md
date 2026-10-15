@@ -1,6 +1,6 @@
 # Arquitectura del backend
 
-El backend es un **Backend for Frontend (BFF)** construido con Node.js y Express, en JavaScript ([ADR 0012](../decisions/0012-javascript-sin-typescript.md)). Mantiene los token de GitLab fuera del navegador, consolida la información de varios proyectos y entrega al frontend un contrato adaptado al tablero.
+El backend es un **Backend for Frontend (BFF)** construido con Node.js y Express, en JavaScript. Mantiene los token de GitLab fuera del navegador, consolida la información de varios proyectos y entrega al frontend un contrato adaptado al tablero.
 
 Usa ES modules, así que los imports relativos llevan la extensión `.js` explícita, como exige Node. No hay compilación: Node ejecuta directamente los archivos de `src/`.
 
