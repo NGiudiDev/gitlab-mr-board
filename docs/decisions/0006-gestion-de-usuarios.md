@@ -1,11 +1,11 @@
-# ADR 0007: Gestión de usuarios
+# ADR 0006: Gestión de usuarios
 
 - Estado: Aceptada
 - Fecha: 2026-09-06
 
 ## Contexto
 
-El [ADR 0006](0006-autenticacion-local-con-sesiones.md) incorporó el login de usuarios existentes, pero mantuvo su creación como una tarea operativa mediante `npm run users`. Ese mecanismo exige acceso al servidor y no alcanza para que un equipo gestione sus integrantes desde la aplicación.
+El [ADR 0005](0005-autenticacion-local-con-sesiones.md) incorporó el login de usuarios existentes, pero mantuvo su creación como una tarea operativa mediante `npm run users`. Ese mecanismo exige acceso al servidor y no alcanza para que un equipo gestione sus integrantes desde la aplicación.
 
 Además, cada usuario pertenece a una cuenta y sólo puede acceder a los datos compartidos por ella. La incorporación y administración de personas debe respetar ese límite sin introducir un administrador global ni confiar en restricciones de la interfaz.
 

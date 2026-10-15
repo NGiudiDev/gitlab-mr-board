@@ -8,7 +8,7 @@ Fuente de verdad para ejecutar, escribir y validar los test. La elección de her
 - **Frontend:** Vitest, React Testing Library y `happy-dom`.
 - **E2E:** Playwright Test sobre Chromium, en `e2e/`.
 
-Los test unitarios y de integración no acceden a GitLab **ni a Neon**: los repositorios se ejecutan contra PGlite, PostgreSQL compilado a WebAssembly que corre en memoria dentro del proceso de Vitest ([ADR 0009](../decisions/0009-neon-como-base-de-datos.md)). Así se validan el esquema, las consultas y las restricciones de la base sin que `npm test` necesite red, Docker ni credenciales.
+Los test unitarios y de integración no acceden a GitLab **ni a Neon**: los repositorios se ejecutan contra PGlite, PostgreSQL compilado a WebAssembly que corre en memoria dentro del proceso de Vitest ([ADR 0007](../decisions/0007-neon-como-base-de-datos.md)). Así se validan el esquema, las consultas y las restricciones de la base sin que `npm test` necesite red, Docker ni credenciales.
 
 Los E2E recorren la aplicación completa contra proyectos reales dedicados a test y una base de Neon aparte; requieren `GITLAB_TOKEN` y `E2E_DATABASE_URL`.
 

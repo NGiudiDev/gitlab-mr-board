@@ -1,6 +1,6 @@
 # Cuentas
 
-La **cuenta** es el grupo de personas que comparte un tablero. Sus proyectos y su access token de GitLab se cargan una sola vez y alimentan el tablero de todos sus miembros: quien se suma no configura nada de GitLab. Los motivos y las alternativas descartadas están en el [ADR 0011](../decisions/0011-cuentas-compartidas.md); este documento describe el modelo y las reglas.
+La **cuenta** es el grupo de personas que comparte un tablero. Sus proyectos y su access token de GitLab se cargan una sola vez y alimentan el tablero de todos sus miembros: quien se suma no configura nada de GitLab. Los motivos y las alternativas descartadas están en el [ADR 0008](../decisions/0008-cuentas-compartidas.md); este documento describe el modelo y las reglas.
 
 Cada usuario pertenece a **exactamente una** cuenta, y no hay forma de cambiarse: para mirar el tablero de otro equipo hay que tener un usuario en ese equipo.
 
@@ -28,7 +28,7 @@ El `email` es **único en toda la base** y no dentro de la cuenta: identifica a 
 - Renovarlo deja sin efecto el anterior. Quien ya se sumó no pierde el acceso: la pertenencia queda en su usuario, no en el código.
 
 ::: warning El código abre el tablero
-Quien tenga el código puede registrarse y ver los merge requests del equipo. Es el mismo riesgo del registro abierto ([ADR 0007](../decisions/0007-gestion-de-usuarios.md)), acotado a quien lo recibió. Ante una filtración, renovarlo alcanza para cerrar la puerta.
+Quien tenga el código puede registrarse y ver los merge requests del equipo. Es el mismo riesgo del registro abierto ([ADR 0006](../decisions/0006-gestion-de-usuarios.md)), acotado a quien lo recibió. Ante una filtración, renovarlo alcanza para cerrar la puerta.
 :::
 
 ## Cómo se entra a una cuenta
@@ -80,7 +80,7 @@ Los datos inválidos responden **HTTP 400** con el motivo en español; una cuent
 
 ## Migración desde la configuración por persona
 
-El esquema se aplica en cada arranque, así que la migración corre sola la primera vez ([ADR 0009](../decisions/0009-neon-como-base-de-datos.md)):
+El esquema se aplica en cada arranque, así que la migración corre sola la primera vez ([ADR 0007](../decisions/0007-neon-como-base-de-datos.md)):
 
 1. Si hay usuarios sin cuenta, se crea **una sola** llamada «Mi equipo» y se los suma a todos: ya eran un equipo que miraba el mismo tablero.
 2. Si todavía existe `users.username`, se renombra a `email` conservando su valor para que nadie pierda el acceso antes de actualizarlo desde «Mi perfil».

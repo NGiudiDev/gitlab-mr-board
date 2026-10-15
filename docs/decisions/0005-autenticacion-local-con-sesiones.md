@@ -1,4 +1,4 @@
-# ADR 0006: Login de usuarios
+# ADR 0005: Login de usuarios
 
 - Estado: Aceptada
 - Fecha: 2026-09-06
@@ -17,9 +17,9 @@ Autenticar con **email y contraseña propios del tablero** y mantener sesiones o
 - Al iniciar sesión se genera un token aleatorio. El navegador lo recibe en una cookie `HttpOnly`, `SameSite=Lax` y `Secure` en producción; la base guarda únicamente su hash SHA-256.
 - Cada sesión tiene vencimiento y puede invalidarse al cerrar sesión, cambiar o restablecer la contraseña, o deshabilitar al usuario.
 - Las rutas protegidas resuelven la identidad y los permisos en el backend; ocultar controles en el frontend no reemplaza esa validación.
-- Los usuarios y las sesiones se persisten en PostgreSQL alojado en Neon, según el [ADR 0009](0009-neon-como-base-de-datos.md). El motor de persistencia es una decisión separada del mecanismo de autenticación.
+- Los usuarios y las sesiones se persisten en PostgreSQL alojado en Neon, según el [ADR 0007](0007-neon-como-base-de-datos.md). El motor de persistencia es una decisión separada del mecanismo de autenticación.
 
-El [ADR 0007](0007-gestion-de-usuarios.md) amplía esta decisión con registro y administración de usuarios. El modelo y las reglas vigentes, incluida la recuperación de contraseñas, se mantienen en el [dominio de autenticación](../domains/autenticacion.md).
+El [ADR 0006](0006-gestion-de-usuarios.md) amplía esta decisión con registro y administración de usuarios. El modelo y las reglas vigentes, incluida la recuperación de contraseñas, se mantienen en el [dominio de autenticación](../domains/autenticacion.md).
 
 ## Alternativas consideradas
 

@@ -6,7 +6,7 @@ Usa ES modules, así que los imports relativos llevan la extensión `.js` explí
 
 ## Organización del código
 
-`src/` se organiza **por feature primero y por capa después**, con el mismo criterio que el frontend ([ADR 0010](../decisions/0010-backend-por-features.md)):
+`src/` se organiza **por feature primero y por capa después**, con el mismo criterio que el frontend:
 
 ```text
 src/
