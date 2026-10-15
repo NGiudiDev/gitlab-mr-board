@@ -10,7 +10,7 @@
 
 - Al agregar una feature, actualizar la documentación afectada: este archivo, `docs/` y comentarios inline si aplica.
 
-- **Toda la documentación vive en la raíz**: `AGENTS.md` y `docs/`, organizada por propósito (`architecture/`, `decisions/`, `development/`, `deployment/`, `domains/`). No crear carpetas `docs/` dentro de `backend/` ni `frontend/`.
+- **Toda la documentación vive en la raíz**: `README.md`, `AGENTS.md` y `docs/`, organizada por propósito (`architecture/`, `decisions/`, `development/`, `domains/`). No crear carpetas `docs/` dentro de `backend/` ni `frontend/`.
 
 - `docs/` se publica con VitePress (`npm run docs:dev`). Al agregar un documento, sumarlo al sidebar de `docs/.vitepress/config.mjs` y correr `npm run docs:build`, que falla ante enlaces internos rotos. Los índices de carpeta se llaman `README.md`; `rewrites` los sirve como `index.md`.
 
@@ -54,7 +54,7 @@
 
 - Mantener puras las reglas de `features/mergeRequests/services/mergeRequestRules.js` e inyectar sus dependencias (fuente de datos, reloj) en lugar de acoplarlas al módulo.
 
-- Centralizar la lectura y validación de variables de entorno en `backend/src/config.js`. Al agregar una variable, actualizar `backend/.env.example` y la tabla de `docs/development/entorno-local.md`. **El token y los proyectos de GitLab no son configuración del proceso**: los guarda cada cuenta en la base y viven en `services/gitlabSettingsService.js`.
+- Centralizar la lectura y validación de variables de entorno en `backend/src/config.js`. Al agregar una variable, actualizar `backend/.env.example` y la tabla de configuración del [`README.md`](README.md#configuración). **El token y los proyectos de GitLab no son configuración del proceso**: los guarda cada cuenta en la base y viven en `services/gitlabSettingsService.js`.
 
 - Usar **JavaScript y ES modules** ([ADR 0012](docs/decisions/0012-javascript-sin-typescript.md)), con extensión `.js` en los imports relativos, como exige Node. No hay compilación: Node ejecuta `src/` tal cual.
 
@@ -82,7 +82,7 @@
 
 - **El layout y la navegación viven en `frontend/src/app/`**: `components/app_layout/app_layout.jsx` contiene la barra superior y el único `main`; `constants/routes.consts.js`, las rutas y secciones navegables; y `features/users/components/logged_user_menu/logged_user_menu.jsx`, el avatar y su desplegable para abrir «Mi perfil» o «Mi cuenta» y cerrar la sesión. `app.jsx` asocia cada URL con una page de su feature mediante React Router. Al agregar una sección, sumar su URL a `APP_PATHS`, su navegación a `NAVIGATION_SECTIONS`, su `Route` a `app.jsx` y actualizar [`docs/architecture/frontend.md`](docs/architecture/frontend.md#navegación-entre-secciones).
 
-- Centralizar las variables de entorno en `frontend/src/config.js`. Al agregar una, actualizar `frontend/.env.example` y `docs/development/entorno-local.md`.
+- Centralizar las variables de entorno en `frontend/src/config.js`. Al agregar una, actualizar `frontend/.env.example` y la tabla de configuración del [`README.md`](README.md#frontend).
 
 - Usar **React 19 con componentes de función** en archivos `.jsx` ([ADR 0005](docs/decisions/0005-frontend-en-react.md)), con **una responsabilidad por componente**: si crece demasiado, extraer subcomponentes dentro de su feature.
 

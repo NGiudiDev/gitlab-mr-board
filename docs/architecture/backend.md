@@ -175,4 +175,4 @@ Guarda o reemplaza la fecha de subida con `{ uploadDate: "AAAA-MM-DD" }`; una ca
 
 `src/config.js` carga `backend/.env`. `DATABASE_URL` y `ENCRYPTION_KEY` son obligatorias; si falta alguna, el proceso informa el problema y termina. Los valores opcionales controlan la URL de GitLab, el puerto, el TTL de la caché, las reglas de aprobación y la ubicación y duración de las sesiones. El access token y los proyectos no son configuración del proceso: los carga un administrador de cada cuenta y se guardan en la base.
 
-La lista completa, sus valores predeterminados y el procedimiento de actualización se mantienen en la [guía de entorno local](../development/entorno-local.md).
+La lista completa, sus valores predeterminados y el procedimiento de actualización se mantienen en el [README de la raíz](https://github.com/NGiudiDev/gitlab-mr-board/blob/main/README.md#backend).

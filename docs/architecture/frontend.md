@@ -134,7 +134,7 @@ React ejecuta los efectos dos veces durante el montaje de desarrollo por `Strict
 
 ## Acceso al backend
 
-`src/config.js` expone la URL base validada con las constantes y utilidades de `features/api/`. `VITE_API_BASE_URL` debe ser una URL HTTP(S) y se normaliza sin barra final. Sin configuración usa `http://localhost:3001` durante el desarrollo y el mismo origen en producción; `frontend/vercel.json` deriva entonces `/api/*` al backend. La lista de variables y su configuración se mantiene en la [guía de entorno local](../development/entorno-local.md).
+`src/config.js` expone la URL base validada con las constantes y utilidades de `features/api/`. `VITE_API_BASE_URL` debe ser una URL HTTP(S) y se normaliza sin barra final. Sin configuración usa `http://localhost:3001` durante el desarrollo y el mismo origen en producción; `frontend/vercel.json` deriva entonces `/api/*` al backend. La lista de variables y su configuración se mantiene en el [README de la raíz](https://github.com/NGiudiDev/gitlab-mr-board/blob/main/README.md#frontend).
 
 Cada hook de datos encapsula hoy sus llamadas con `fetch`, siempre con `credentials: "include"`: sesión, cuenta, usuarios, configuración de GitLab y tablero. El tablero traduce un 401 en expiración de la sesión; los demás hooks resuelven errores por separado porque el transporte, la lectura de errores y la expiración todavía no están centralizados.
 
