@@ -113,6 +113,8 @@ npm run lint
 
 La documentación técnica vive en [`docs/`](docs/README.md) y se publica con VitePress:
 
+La versión publicada está en [GitHub Pages](https://ngiudidev.github.io/gitlab-mr-board/). Cada cambio que llega a `main` genera y despliega el sitio automáticamente.
+
 | Comando | Uso |
 |---|---|
 | `npm run docs:dev` | Inicia el sitio local de documentación |

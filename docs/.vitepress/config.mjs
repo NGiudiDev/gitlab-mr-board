@@ -57,8 +57,7 @@ export default defineConfig({
     "README.md": "index.md",
     ":section/README.md": ":section/index.md",
   },
-  // El sitio se sirve local. `DOCS_BASE` ajusta la ruta si algún día se
-  // publica bajo un subdirectorio.
+  // El desarrollo local usa `/`; el workflow define el subdirectorio de Pages.
   base: process.env.DOCS_BASE ?? "/",
   cleanUrls: true,
   // 5173 y 4173 los usa el frontend; el sitio de docs no debe competir por ellos.
