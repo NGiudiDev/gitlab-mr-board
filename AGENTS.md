@@ -60,7 +60,7 @@
 
 - Las rutas validan sus parámetros y devuelven el error HTTP que corresponda (400, 404, 500, etc.). Al agregar un endpoint, documentarlo; si requiere un router nuevo, montarlo desde `backend/src/app.js`. **Todo lo que cuelgue de `/api` exige sesión**: el middleware está montado en `createApp()` y una ruta pública nueva debe justificarse.
 
-- La feature `auth` se limita al registro que crea o permite unirse a una cuenta, el login, las sesiones y el cambio de contraseña. La feature `users` es dueña del perfil, el nickname de GitLab, el alta administrada, el listado, los estados y la persistencia de usuarios. Las reglas están en [`docs/domains/autenticacion.md`](docs/domains/autenticacion.md) ([ADR 0006](docs/decisions/0006-login-local-con-sqlite.md) y [ADR 0007](docs/decisions/0007-registro-abierto-y-gestion-de-usuarios.md)). No devolver el hash de una contraseña ni el token de sesión en ninguna respuesta, y mantener ambos repositorios inyectables para los test en memoria.
+- La feature `auth` se limita al registro que crea o permite unirse a una cuenta, el login, las sesiones y el cambio de contraseña. La feature `users` es dueña del perfil, el nickname de GitLab, el alta administrada, el listado, los estados y la persistencia de usuarios. Las reglas están en [`docs/domains/autenticacion.md`](docs/domains/autenticacion.md) ([ADR 0006](docs/decisions/0006-autenticacion-local-con-sesiones.md) y [ADR 0007](docs/decisions/0007-gestion-de-usuarios.md)). No devolver el hash de una contraseña ni el token de sesión en ninguna respuesta, y mantener ambos repositorios inyectables para los test en memoria.
 
 - **Todo usuario pertenece a una cuenta, y la cuenta es la unidad que comparte el tablero** ([`docs/domains/cuentas.md`](docs/domains/cuentas.md), [ADR 0011](docs/decisions/0011-cuentas-compartidas.md)). La feature `accounts` es dueña de la tabla `accounts` y del código de invitación. Al sumar una operación que lea o escriba datos de la cuenta, tomar el `accountId` **de la sesión** y nunca del cuerpo de la petición, y cubrir en los test que no alcance a otra cuenta.
 
@@ -84,7 +84,7 @@
 
 - Centralizar las variables de entorno en `frontend/src/config.js`. Al agregar una, actualizar `frontend/.env.example` y la tabla de configuración del [`README.md`](README.md#frontend).
 
-- Usar **React 19 con componentes de función** en archivos `.jsx` ([ADR 0005](docs/decisions/0005-frontend-en-react.md)), con **una responsabilidad por componente**: si crece demasiado, extraer subcomponentes dentro de su feature.
+- Usar **React 19 con componentes de función** en archivos `.jsx`, con **una responsabilidad por componente**: si crece demasiado, extraer subcomponentes dentro de su feature.
 
 - Preferir exports nombrados para componentes; usar `export default` sólo cuando una integración lo exija.
 

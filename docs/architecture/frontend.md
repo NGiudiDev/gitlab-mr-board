@@ -1,6 +1,6 @@
 # Arquitectura del frontend
 
-El frontend es una aplicación de página única construida con React 19, Vite y styled-components, según el [ADR 0005](../decisions/0005-frontend-en-react.md). Consume exclusivamente el contrato consolidado del backend; no accede directamente a GitLab ni conoce su token.
+El frontend es una aplicación de página única construida con React 19, Vite y styled-components. Consume exclusivamente el contrato consolidado del backend; no accede directamente a GitLab ni conoce su token.
 
 La lógica de negocio vive en el backend. El frontend presenta lo que recibe resuelto —clasificación, responsables y personas— y sólo conserva decisiones de presentación: qué columnas mostrar y en qué orden, agrupar, ordenar visualmente, formatear y filtrar por lo que ya viene calculado.
 

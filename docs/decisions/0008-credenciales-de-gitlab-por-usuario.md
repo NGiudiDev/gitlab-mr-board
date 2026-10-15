@@ -7,7 +7,7 @@
 
 Hasta ahora el tablero se alimentaba de un único token y una única lista de proyectos, cargados en `backend/.env` como `GITLAB_TOKEN` y `PROJECT_IDS`. Eso obligaba a que todo el equipo mirara los mismos proyectos con el mismo PAT, y a que cambiar cualquiera de los dos fuera una edición de archivo más un reinicio del backend.
 
-Desde el [ADR 0006](0006-login-local-con-sqlite.md) el backend ya tiene usuarios propios y una base SQLite, así que existe dónde guardar una configuración por persona.
+Desde el [ADR 0006](0006-autenticacion-local-con-sesiones.md) el backend ya tiene usuarios propios y sesiones persistidas, así que existe un modelo al que asociar la configuración de GitLab.
 
 ## Decisión
 
@@ -25,7 +25,7 @@ Las reglas y el modelo de datos se documentan en la [configuración de GitLab](.
 - **Una única configuración global guardada en la base, editable sólo por un administrador**: cambio más chico, pero mantiene el token compartido y no resuelve que cada persona siga proyectos distintos.
 - **Conservar el `.env` como respaldo cuando alguien no configuró nada**: dos fuentes de verdad para el mismo dato, con una precedencia que hay que explicar y que oculta de quién es el token que se está usando.
 - **Guardar el token sin cifrar, como el hash de las contraseñas**: no alcanza. Una contraseña se puede guardar derivada porque sólo hay que verificarla; el token hay que poder recuperarlo para consultar GitLab, así que la única protección posible es el cifrado reversible.
-- **OAuth con GitLab**: evitaría custodiar tokens, pero exige registrar una aplicación y mantener el intercambio de tokens; sigue siendo la evolución natural, igual que en el [ADR 0006](0006-login-local-con-sqlite.md).
+- **OAuth con GitLab**: evitaría custodiar tokens, pero exige registrar una aplicación y mantener el intercambio de tokens; sigue siendo la evolución natural, igual que en el [ADR 0006](0006-autenticacion-local-con-sesiones.md).
 
 ## Consecuencias
 

@@ -1,4 +1,4 @@
-# ADR 0004: generar un sitio de documentación con VitePress
+# ADR 0004: Documentación con VitePress
 
 - Estado: Aceptada
 - Fecha: 2026-09-02

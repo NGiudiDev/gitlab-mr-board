@@ -28,7 +28,7 @@ El `email` es **único en toda la base** y no dentro de la cuenta: identifica a 
 - Renovarlo deja sin efecto el anterior. Quien ya se sumó no pierde el acceso: la pertenencia queda en su usuario, no en el código.
 
 ::: warning El código abre el tablero
-Quien tenga el código puede registrarse y ver los merge requests del equipo. Es el mismo riesgo del registro abierto ([ADR 0007](../decisions/0007-registro-abierto-y-gestion-de-usuarios.md)), acotado a quien lo recibió. Ante una filtración, renovarlo alcanza para cerrar la puerta.
+Quien tenga el código puede registrarse y ver los merge requests del equipo. Es el mismo riesgo del registro abierto ([ADR 0007](../decisions/0007-gestion-de-usuarios.md)), acotado a quien lo recibió. Ante una filtración, renovarlo alcanza para cerrar la puerta.
 :::
 
 ## Cómo se entra a una cuenta

@@ -1,6 +1,6 @@
 # Autenticación
 
-El tablero exige una sesión iniciada. Los motivos y las alternativas descartadas están en el [ADR 0006](../decisions/0006-login-local-con-sqlite.md) y el [ADR 0007](../decisions/0007-registro-abierto-y-gestion-de-usuarios.md), el [ADR 0009](../decisions/0009-neon-como-base-de-datos.md) explica por qué la base pasó de SQLite local a Neon y el [ADR 0011](../decisions/0011-cuentas-compartidas.md), por qué los usuarios se agrupan en cuentas; este documento describe el modelo y las reglas.
+El tablero exige una sesión iniciada. Los motivos y las alternativas descartadas están en el [ADR 0006](../decisions/0006-autenticacion-local-con-sesiones.md) y el [ADR 0007](../decisions/0007-gestion-de-usuarios.md); el [ADR 0009](../decisions/0009-neon-como-base-de-datos.md) documenta la persistencia actual en Neon y el [ADR 0011](../decisions/0011-cuentas-compartidas.md), por qué los usuarios se agrupan en cuentas. Este documento describe el modelo y las reglas vigentes.
 
 Cada usuario pertenece a una **cuenta**, que es la que comparte el tablero y sus credenciales de GitLab. Todo lo propio de la cuenta —su nombre, su código de invitación y qué puede cada rol— está en el [dominio de cuentas](cuentas.md).
 

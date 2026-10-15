@@ -5,7 +5,7 @@
 
 ## Contexto
 
-El [ADR 0006](0006-login-local-con-sqlite.md) resolvió la persistencia con una base SQLite local abierta con `node:sqlite`, y anticipó su límite: «el archivo de la base es un dato que hay que respaldar y no se comparte entre instancias. Un escalado horizontal exige reevaluar esta decisión».
+La primera implementación de la autenticación definida en el [ADR 0006](0006-autenticacion-local-con-sesiones.md) persistía usuarios y sesiones en una base SQLite local abierta con `node:sqlite`. El archivo de la base requería respaldo, no se compartía entre instancias y no servía para un despliegue con sistema de archivos efímero.
 
 Ese límite se volvió concreto. La base guarda ahora usuarios, sesiones y —desde el [ADR 0008](0008-credenciales-de-gitlab-por-usuario.md)— las credenciales de GitLab de cada persona. Un archivo en el disco del proceso significa que cualquier despliegue con sistema de archivos efímero borra las cuentas, que no se puede correr más de una instancia, y que el respaldo es un procedimiento manual aparte.
 
@@ -14,7 +14,7 @@ Ese límite se volvió concreto. La base guarda ahora usuarios, sesiones y —de
 Persistir en **Neon**, un Postgres serverless administrado, con el driver oficial `@neondatabase/serverless`.
 
 - `DATABASE_PATH` se reemplaza por `DATABASE_URL`, obligatoria. Conviene la cadena del pooler: el backend abre su propio pool.
-- El esquema se sigue aplicando en cada arranque con `CREATE TABLE IF NOT EXISTS`, ahora desde `index.ts` antes de escuchar. Se mantiene la idea del ADR 0006: tres tablas no justifican una herramienta de migraciones.
+- El esquema se sigue aplicando en cada arranque mediante operaciones idempotentes, antes de atender solicitudes. Su tamaño actual no justifica incorporar una herramienta de migraciones.
 - Los repositorios reciben una interfaz `Database` mínima —`query` y `close`— en lugar del driver. Es lo que permite que los test corran contra otro Postgres sin que el código de producción lo sepa.
 - Los test usan **PGlite**, PostgreSQL compilado a WebAssembly que corre en memoria dentro del proceso de Vitest. `npm test` sigue sin necesitar red, Docker ni credenciales, y valida el esquema, las consultas y las restricciones de los repositorios.
 
