@@ -37,6 +37,7 @@ const ColumnTitle = styled.h3`
 `;
 
 const Count = styled.span`
+  position: relative;
   padding: 0.125rem 0.375rem;
   border-radius: 9999px;
   background: var(--color-surface);

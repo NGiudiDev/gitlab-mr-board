@@ -88,6 +88,41 @@ async function fetchMergeRequests(force = false) {
   }
 }
 
+/** Guarda la fecha de subida y actualiza el MR compartido por todo el tablero. */
+async function saveUploadDate(projectId, mergeRequestIid, uploadDate) {
+  const response = await fetch(
+    `${config.apiBaseUrl}/api/pull-requests/${projectId}/${mergeRequestIid}/upload-date`,
+    {
+      method: "PUT",
+      credentials: "include",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ uploadDate }),
+    },
+  );
+
+  if (response.status === 401) {
+    expireSession();
+    throw new Error("Tu sesión venció. Volvé a ingresar para guardar la fecha.");
+  }
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body.error || `Error ${response.status}`);
+  }
+
+  const result = await response.json();
+  setState({
+    mergeRequests: state.mergeRequests.map((mergeRequest) => (
+      String(mergeRequest.projectId) === String(projectId)
+      && mergeRequest.iid === mergeRequestIid
+        ? { ...mergeRequest, uploadDate: result.uploadDate }
+        : mergeRequest
+    )),
+  });
+
+  return result.uploadDate;
+}
+
 function loadOnce() {
   if (initialLoad) return initialLoad;
 
@@ -145,6 +180,7 @@ function useMergeRequests() {
   return {
     ...snapshot,
     fetchMRs: fetchMergeRequests,
+    saveUploadDate,
     selectPerson,
     setViewMode,
   };
@@ -154,6 +190,7 @@ export {
   fetchMergeRequests,
   getState,
   resetStore,
+  saveUploadDate,
   selectPerson,
   setViewMode,
   useMergeRequests,

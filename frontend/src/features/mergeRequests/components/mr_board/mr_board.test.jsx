@@ -194,6 +194,19 @@ describe("expansión de proyectos", () => {
     expect(tableroButton.getAttribute("aria-expanded")).toBe("false");
   });
 
+  it("mantiene los textos accesibles dentro de su columna al expandirla", async () => {
+    const user = userEvent.setup();
+    const { container } = renderBoard({ allProjects: ["equipo/tablero"] });
+
+    await user.click(screen.getByRole("button"));
+
+    const firstCount = projectSections(container)[0]
+      .querySelector("section[aria-labelledby^=\"columna-\"] span");
+
+    expect(firstCount).not.toBeNull();
+    expect(getComputedStyle(firstCount).position).toBe("relative");
+  });
+
   it("nombra cada sección con la ruta del proyecto", () => {
     const { container } = renderBoard({ allProjects: ["equipo/tablero"] });
     const headingId = projectSections(container)[0].getAttribute("aria-labelledby");

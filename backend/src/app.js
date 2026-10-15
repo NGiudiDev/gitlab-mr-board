@@ -15,6 +15,8 @@ import { createGitLabSettingsRouter } from "./features/gitlabSettings/routes/git
 import { createGitLabSettingsRepository } from "./features/gitlabSettings/services/gitlabSettingsRepository.js";
 import { createGitLabSettingsService } from "./features/gitlabSettings/services/gitlabSettingsService.js";
 import { createMergeRequestsRouter } from "./features/mergeRequests/routes/mergeRequests.js";
+import { createMergeRequestUploadDateRepository } from "./features/mergeRequests/services/mergeRequestUploadDateRepository.js";
+import { createMergeRequestUploadDateService } from "./features/mergeRequests/services/mergeRequestUploadDateService.js";
 import { createUsersRouter } from "./features/users/routes/users.js";
 import { createUserRepository } from "./features/users/services/userRepository.js";
 import { createUserService } from "./features/users/services/userService.js";
@@ -39,7 +41,7 @@ const errorHandler = (error, _request, response, _next) => {
  *
  * @param database Base devuelta por `createNeonDatabase`, o su equivalente en
  * memoria para los test.
- * @returns Servicios de cuentas, autenticación, usuarios y configuración de GitLab.
+ * @returns Servicios de la aplicación.
  */
 function createServices(database) {
   const accountService = createAccountService({
@@ -67,6 +69,9 @@ function createServices(database) {
       repository: createGitLabSettingsRepository(database),
       cipher: createSecretCipher(config.encryptionKey),
     }),
+    mergeRequestUploadDateService: createMergeRequestUploadDateService({
+      repository: createMergeRequestUploadDateRepository(database),
+    }),
     userService,
   };
 }
@@ -81,10 +86,28 @@ function createServices(database) {
  * @returns Los servicios que necesita la aplicación.
  */
 function resolveServices(options) {
-  const { accountService, authService, gitlabSettingsService, userService } = options;
+  const {
+    accountService,
+    authService,
+    gitlabSettingsService,
+    mergeRequestUploadDateService,
+    userService,
+  } = options;
 
-  if (accountService && authService && gitlabSettingsService && userService) {
-    return { accountService, authService, gitlabSettingsService, userService };
+  if (
+    accountService
+    && authService
+    && gitlabSettingsService
+    && mergeRequestUploadDateService
+    && userService
+  ) {
+    return {
+      accountService,
+      authService,
+      gitlabSettingsService,
+      mergeRequestUploadDateService,
+      userService,
+    };
   }
 
   const configured = createServices(createNeonDatabase(config.databaseUrl));
@@ -93,6 +116,8 @@ function resolveServices(options) {
     accountService: accountService ?? configured.accountService,
     authService: authService ?? configured.authService,
     gitlabSettingsService: gitlabSettingsService ?? configured.gitlabSettingsService,
+    mergeRequestUploadDateService:
+      mergeRequestUploadDateService ?? configured.mergeRequestUploadDateService,
     userService: userService ?? configured.userService,
   };
 }
@@ -107,6 +132,7 @@ function createApp(options = {}) {
     accountService,
     authService,
     gitlabSettingsService,
+    mergeRequestUploadDateService,
     userService,
   } = resolveServices(options);
   const app = express();
@@ -127,7 +153,12 @@ function createApp(options = {}) {
   app.use(
     "/api",
     createRequireSession(authService),
-    createMergeRequestsRouter({ fetchMergeRequests, now, gitlabSettingsService }),
+    createMergeRequestsRouter({
+      fetchMergeRequests,
+      gitlabSettingsService,
+      mergeRequestUploadDateService,
+      now,
+    }),
   );
   app.use(errorHandler);
 

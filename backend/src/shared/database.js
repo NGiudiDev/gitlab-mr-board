@@ -81,6 +81,19 @@ const SCHEMA_STATEMENTS = [
     updated_at TIMESTAMPTZ NOT NULL
   )`,
 
+  // La fecha de subida es propia del tablero y se comparte entre todos los
+  // miembros de la cuenta; GitLab no ofrece este dato.
+  `CREATE TABLE IF NOT EXISTS merge_request_upload_dates (
+    account_id TEXT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+    project_id TEXT NOT NULL,
+    merge_request_iid INTEGER NOT NULL CHECK (merge_request_iid > 0),
+    upload_date DATE NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL,
+    PRIMARY KEY (account_id, project_id, merge_request_iid)
+  )`,
+
+  "CREATE INDEX IF NOT EXISTS idx_merge_request_upload_dates_account_id ON merge_request_upload_dates(account_id)",
+
   // Los usuarios anteriores a las cuentas se agrupan en una sola: ya eran un
   // equipo que miraba el mismo tablero, así que lo siguen compartiendo.
   `INSERT INTO accounts (id, name, invite_code, created_at)
