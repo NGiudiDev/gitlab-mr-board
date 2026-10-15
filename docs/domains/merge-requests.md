@@ -1,33 +1,36 @@
-# Dominio de Merge Requests
+# Merge Requests
 
-El sistema consulta los MRs abiertos de `PROJECT_IDS` y agrega aprobaciones, discusiones pendientes, último pipeline, conflictos, autor y reviewers. Las etiquetas y el estado draft se leen de GitLab para clasificar, pero no forman parte del contrato: el tablero no los muestra.
+El backend consulta los proyectos configurados por la cuenta y enriquece cada merge request abierto con aprobaciones, discusiones, pipeline, conflictos, autor y reviewers. Luego aplica las reglas de este dominio antes de responder al frontend.
 
 ## Clasificación
 
-Se aplica la primera regla coincidente:
+Se usa la primera condición coincidente:
 
-1. `backlog`: tiene la etiqueta `backlog`.
-2. `in_progress`: es draft o WIP.
-3. `mr_warning`: tiene conflictos, discusiones pendientes o un pipeline fallido, cancelado, ejecutándose o pendiente.
-4. `ready_to_merge`: tiene `qa_approved`.
-5. `review`: faltan aprobaciones o la del líder.
-6. `qa`: tiene `qa_pending` y no presenta bloqueos técnicos ni aprobaciones pendientes.
-7. `unknown`: no coincide con ninguna condición anterior.
+| Prioridad | Clasificación | Columna | Condición |
+|---:|---|---|---|
+| 1 | `backlog` | Pausados | Tiene la etiqueta `backlog`. |
+| 2 | `in_progress` | En progreso | Es draft o WIP. |
+| 3 | `mr_warning` | Pendientes | Tiene conflictos, discusiones pendientes o pipeline fallido, cancelado, ejecutándose o pendiente. |
+| 4 | `ready_to_merge` | Listas para mergear | Tiene la etiqueta `qa_approved`. |
+| 5 | `review` | Code Review | Faltan aprobaciones requeridas. |
+| 6 | `qa` | QA | Tiene `qa_pending` y no coincidió con una regla anterior. |
+| 7 | `unknown` | Estado desconocido | No coincide con ninguna condición. |
 
-## Columnas del tablero
-
-El frontend define las columnas visibles y su orden en `features/mergeRequests/constants/merge_request_columns.consts.js`: Estado desconocido, En progreso, Pendientes, Code Review, QA, Listas para mergear y Pausados. Agrupa por proyecto y reparte cada MR en la columna de su clasificación. Los MRs con clasificación `unknown` aparecen en Estado desconocido, la primera columna.
+El frontend define el orden visible de las columnas, pero usa esta clasificación sin recalcularla.
 
 ## Responsable
 
-El backend calcula los responsables de cada merge request y los publica en `responsiblePeople`, una lista de identidades con `name` y `username`. El frontend no reimplementa la regla: presenta esa lista en la tarjeta y la usa para filtrar la [vista personal](vista-personal.md).
+El backend publica en `responsiblePeople` las personas con una acción pendiente:
 
-En En progreso, Pendientes, QA y Listas para mergear el responsable es el autor. En Code Review son responsables únicamente los reviewers asignados que todavía no aprobaron; cuando todos los reviewers ya aprobaron, la responsabilidad vuelve al autor. Si no hay reviewers asignados, el MR no tiene responsable. En Pausados y en `unknown` tampoco hay responsable.
+- En `in_progress`, `mr_warning`, `qa` y `ready_to_merge`, el responsable es el autor.
+- En `review`, son responsables los reviewers asignados que todavía no aprobaron.
+- Si todos los reviewers aprobaron, la responsabilidad vuelve al autor.
+- Sin reviewers, o en `backlog` y `unknown`, no hay responsables.
 
-La comparación entre reviewers y aprobadores se hace por `username` sin distinguir mayúsculas de minúsculas. Un nombre visible nunca se usa para decidir si dos personas son la misma.
+La comparación usa `username` sin distinguir mayúsculas; el nombre visible nunca identifica a una persona. `meta.people` reúne autores y reviewers sin duplicados para la [vista personal](vista-personal.md).
 
 ## Fecha de subida
 
-Los MRs clasificados como `ready_to_merge` pueden tener una fecha de subida opcional. Es una fecha calendario sin hora, con formato `AAAA-MM-DD`, y no proviene de GitLab: cualquier integrante puede definirla, cambiarla o quitarla desde el detalle que abre la tarjeta. La edición queda local hasta confirmar con «Guardar».
+Un MR `ready_to_merge` puede tener una fecha de subida opcional en formato `AAAA-MM-DD`. No proviene de GitLab: es un dato del tablero compartido por toda la cuenta.
 
-La fecha pertenece a la cuenta, por lo que todos sus integrantes ven el mismo valor. El backend la persiste por proyecto e IID, la publica como `uploadDate` y valida que el MR esté en el tablero actual de la cuenta y siga listo para mergear antes de aceptar un cambio. El modal replica el resumen del MR para todas las clasificaciones, pero sólo las listas para mergear presentan el campo.
+El backend la persiste por cuenta, proyecto e IID y la publica como `uploadDate`. Antes de crearla, modificarla o quitarla, vuelve a comprobar que el MR pertenezca al tablero y siga listo para mergear.

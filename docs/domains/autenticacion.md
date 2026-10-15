@@ -1,158 +1,97 @@
 # Autenticación
 
-El tablero exige una sesión iniciada. Los motivos y las alternativas descartadas están en el [ADR 0005](../decisions/0005-autenticacion-local-con-sesiones.md) y el [ADR 0006](../decisions/0006-gestion-de-usuarios.md); el [ADR 0007](../decisions/0007-neon-como-base-de-datos.md) documenta la persistencia actual en Neon y el [ADR 0008](../decisions/0008-cuentas-compartidas.md), por qué los usuarios se agrupan en cuentas. Este documento describe el modelo y las reglas vigentes.
+Este dominio define la identidad local, las credenciales, las sesiones y el ciclo de vida de los usuarios. Cada usuario pertenece a una cuenta; invitaciones, roles y aislamiento se definen en [Cuentas](cuentas.md).
 
-Cada usuario pertenece a una **cuenta**, que es la que comparte el tablero y sus credenciales de GitLab. Todo lo propio de la cuenta —su nombre, su código de invitación y qué puede cada rol— está en el [dominio de cuentas](cuentas.md).
+Los motivos de la solución están en el [ADR 0005](../decisions/0005-autenticacion-local-con-sesiones.md) y el [ADR 0006](../decisions/0006-gestion-de-usuarios.md).
 
-## Qué queda protegido
+## Usuario
 
-| Ruta | Permiso |
+| Dato | Regla |
 |---|---|
-| `GET /health` | Público, para que el monitoreo externo siga funcionando |
-| `POST /api/auth/register` | Público |
-| `POST /api/auth/login` | Público |
-| `POST /api/auth/password-reset-requests` | Público; solicita un enlace sin revelar si el email existe |
-| `POST /api/auth/password-resets` | Público; consume un enlace de un solo uso |
-| `POST /api/auth/logout` | Público; sin sesión no hace nada y responde 204 |
-| `GET /api/auth/me` | Sesión |
-| `PATCH /api/users/me/profile` | Sesión |
-| `PUT /api/auth/password` | Sesión |
-| `PUT /api/users/me/gitlab-username` | Sesión |
-| `GET /api/account` | Sesión; el código de invitación sólo vuelve a un `admin` |
-| `GET /api/gitlab-settings` | Sesión; siempre sobre la cuenta propia |
-| `GET /api/pull-requests` | Sesión |
-| `PATCH /api/account` y `POST /api/account/invite-code` | Sesión con rol `admin` |
-| `PUT` y `DELETE /api/gitlab-settings` | Sesión con rol `admin` |
-| `GET` y `POST /api/users` | Sesión con rol `admin`; sólo alcanzan a la cuenta propia |
-| `PATCH /api/users/:email/status` | Sesión con rol `admin`; sólo alcanza a la cuenta propia |
+| Email | Se normaliza a minúsculas, admite hasta 254 caracteres y es único en toda la base. |
+| Nombre visible | Se recorta; si queda vacío, usa el email. |
+| Cuenta | Es obligatoria e inmutable para ese usuario. |
+| Rol | `user` o `admin`, siempre dentro de la cuenta. |
+| Estado | `active` o `disabled`; deshabilitar invalida todas las sesiones. |
+| Último ingreso | Se actualiza al crear una sesión. |
 
-Sin sesión válida, las rutas protegidas responden **HTTP 401** con `{ "error": "Iniciá sesión para ver el tablero." }`. Con sesión pero sin permisos, **HTTP 403**. Sobre un usuario de otra cuenta, **HTTP 404**: para quien administra, ese usuario no existe.
-
-Validar la sesión consulta la base, así que un fallo de esa consulta responde **HTTP 503** y no 401: confundir una base caída con una sesión inválida desloguearía a todo el equipo ante una interrupción pasajera.
-
-La separación de permisos se valida en el backend, ruta por ruta. Que la interfaz esconda un control es una cortesía, no la barrera.
-
-## Modelo de datos
-
-La base Postgres vive en Neon, en la instancia que indica `DATABASE_URL`, y tiene cinco tablas; tres pertenecen a la autenticación:
-
-- **`users`**: `id`, `account_id`, `email`, `display_name`, `password_hash`, `role`, `status`, `gitlab_username`, `created_at`, `last_login_at`. Las dos marcas temporales son `TIMESTAMPTZ` y el dominio las expone como cadenas ISO.
-- **`sessions`**: `id`, `user_id`, `token_hash`, `created_at`, `expires_at`. Se borran en cascada al eliminar el usuario.
-- **`password_reset_tokens`**: `id`, `user_id`, `token_hash`, `created_at`, `expires_at`. Guarda sólo el hash de cada enlace pendiente y se borra en cascada con el usuario.
-
-Las otras dos, `accounts` y `account_gitlab_settings`, pertenecen al [dominio de cuentas](cuentas.md) y a la [configuración de GitLab](configuracion-gitlab.md).
-
-El esquema se aplica en cada arranque con sentencias `IF NOT EXISTS`, así que no hay una herramienta de migraciones. Los cambios de forma que eso no cubre —como el paso a cuentas— van como sentencias idempotentes en la misma lista.
-
-Al actualizar una instalación que todavía tiene `users.username`, el esquema renombra esa columna a `email` y conserva las sesiones y los identificadores existentes. Esos valores anteriores siguen sirviendo para un primer ingreso; al guardar el perfil se exige reemplazarlos por un email válido. Las altas nuevas siempre requieren email.
-
-### Email
-
-- El `email` se normaliza a minúsculas y sin espacios en los extremos: `Ana@Example.com` y `ana@example.com` son la misma persona.
-- Debe tener formato de email y no puede superar los 254 caracteres.
-- Es **único en toda la base**, no dentro de la cuenta: identifica a la persona al iniciar sesión.
-- Cada persona puede cambiar su nombre visible y su email desde el menú del avatar. La sesión continúa abierta porque referencia el ID inmutable; si cambia el email, debe usar el nuevo en el próximo ingreso.
-- `account_id` es obligatorio: no hay usuarios sin cuenta.
-- `role` vale `user` o `admin`, y siempre **dentro de su cuenta**. Ambos roles ven el mismo tablero; el detalle de qué puede cada uno está en el [dominio de cuentas](cuentas.md#qué-puede-cada-rol).
-- `status` vale `active` o `disabled`. Deshabilitar corta el acceso de inmediato, incluso el de las sesiones ya emitidas.
+La API nunca devuelve `password_hash`, hashes de tokens ni el token de sesión.
 
 ### Nickname de GitLab
 
-- El nombre de usuario de la persona en GitLab, sin la arroba. Se carga en «Mi cuenta», en la tarjeta «Usuario de GitLab», y el campo muestra el valor guardado en la sesión.
-- Es **de cada persona y no de la cuenta**: los proyectos y el access token los carga quien administra, pero con qué nombre aparece cada uno en los merge requests es suyo.
-- De él depende la [vista personal](vista-personal.md): sin nickname el tablero no puede saber cuáles de los merge requests son de quien mira. Es nullable, y hasta que se carga la vista personal lo pide.
-- Se aceptan letras, números, punto, guion y guion bajo, empezando con letra o número, que es lo que admite GitLab. Hasta 255 caracteres.
-- El tablero lo devuelve en `meta.viewerUsername` junto con los merge requests, para no obligar al frontend a pedirlo por separado.
-- Guardarlo **no cierra la sesión**: no es una credencial. `PUT /api/users/me/gitlab-username` devuelve la identidad actualizada para que el frontend refresque su store.
+El nickname identifica a la persona dentro de GitLab y pertenece al usuario, no a la cuenta. Admite letras, números, punto, guion y guion bajo, debe comenzar con una letra o un número y puede tener hasta 255 caracteres.
 
-### Contraseña
+Es opcional, pero la [vista personal](vista-personal.md) lo necesita para reconocer a quien consulta. El tablero lo publica como `meta.viewerUsername`; actualizarlo no cierra la sesión.
 
-- Mínimo 8 caracteres.
-- Se guarda derivada con scrypt, con formato `scrypt$N$r$p$sal$clave`. La sal es distinta en cada alta y los parámetros viajan en el propio hash, para poder endurecerlos sin invalidar lo ya guardado.
-- La comparación es de tiempo constante. Cuando el email no existe igual se deriva una clave descartable, de modo que el tiempo de respuesta no revele qué emails están registrados.
-- Cambiar la contraseña cierra todas las sesiones abiertas de esa persona.
+## Contraseñas
 
-#### Restablecimiento sin sesión
+- Deben tener al menos 8 caracteres.
+- Se derivan con scrypt y una sal aleatoria; nunca se guardan ni registran en claro.
+- La comparación usa tiempo constante. Un email inexistente ejecuta igualmente una derivación descartable para no revelar usuarios por tiempo de respuesta.
+- Cambiar o restablecer la contraseña invalida todas las sesiones y enlaces pendientes de la persona.
 
-Desde el login se puede solicitar un enlace para elegir una contraseña nueva. La respuesta es siempre la misma para un email válido, exista o no una cuenta activa, para no exponer usuarios registrados. Cada solicitud reemplaza cualquier enlace anterior de esa persona; el token aleatorio se guarda sólo como hash SHA-256, vence según `PASSWORD_RESET_DURATION_MINUTES` y se consume de forma atómica una sola vez.
+La recuperación sin sesión usa un token aleatorio de un solo uso. La base conserva únicamente su hash SHA-256 y su vencimiento, definido por `PASSWORD_RESET_DURATION_MINUTES`. La respuesta a la solicitud es la misma exista o no un usuario activo con ese email.
 
-Nodemailer entrega el mensaje por SMTP únicamente en producción. En desarrollo genera el correo sin conectarse a ningún servidor y deja el enlace en la terminal. Al completar el cambio se invalidan todas las sesiones y los demás enlaces pendientes de la persona.
+En producción Nodemailer envía el enlace por SMTP; en desarrollo lo escribe en la terminal.
 
-### Sesión
+## Sesiones
 
-- Al ingresar se genera un token aleatorio de 32 bytes. En la base sólo se guarda su hash SHA-256: un volcado del archivo no alcanza para suplantar a nadie.
-- Dura `SESSION_DURATION_DAYS` días (7 por omisión) y viaja en la cookie `mr_board_session`, marcada `HttpOnly`, `SameSite=Lax` y `Path=/`. `COOKIE_SECURE` agrega `Secure` donde hay HTTPS.
-- Cada ingreso borra de la base las sesiones ya vencidas.
-- Una sesión vencida se descarta al primer uso y el frontend vuelve al login avisando que expiró.
+Cada ingreso genera un token aleatorio de 32 bytes. La base guarda sólo su hash SHA-256 y el navegador recibe el valor en la cookie `mr_board_session`, con `HttpOnly`, `SameSite=Lax`, `Path=/` y `Secure` cuando corresponde.
 
-### Freno de fuerza bruta
+La duración se configura con `SESSION_DURATION_DAYS`. Una sesión vencida o perteneciente a un usuario deshabilitado no autentica y se elimina cuando corresponde.
 
-Cinco intentos fallidos seguidos sobre el mismo email bloquean el ingreso durante 15 minutos, con **HTTP 429**. El contador vive en memoria del proceso: se reinicia al reiniciar el backend, y es una defensa contra el ensayo automático, no contra un atacante con acceso al servidor.
+## Límites de acceso
 
-Las solicitudes de restablecimiento admiten cinco pedidos por hora y por origen. El límite también vive en memoria y evita que la ruta se use para bombardear una casilla con correos.
-
-## Altas
-
-Hay tres caminos, con permisos distintos:
-
-| Camino | Quién | Cuenta y rol que asigna |
+| Operación | Límite | Alcance |
 |---|---|---|
-| Registro en el tablero | Cualquiera | Con código de invitación, esa cuenta con rol `user`; sin código, una cuenta nueva con rol `admin` |
-| Pantalla de usuarios | Sólo `admin` | Su propia cuenta, con el rol que elija |
-| `npm run users` | Quien tenga acceso al servidor | La de `--invite`, o una nueva con `--account` |
+| Login fallido | Cinco intentos; bloqueo de 15 minutos. | Por email y proceso. |
+| Registro público | Cinco altas por hora. | Por origen y proceso. |
+| Solicitud de recuperación | Cinco pedidos por hora. | Por origen y proceso. |
 
-El registro abre la sesión en el mismo paso: quien se acaba de dar de alta ya probó quién es. Es una ruta pública que escribe en la base, así que tiene su propio freno: **cinco altas por hora y por origen**, contadas en memoria del proceso.
+Estos contadores viven en memoria y se reinician con el proceso.
 
-Que quien abre una cuenta quede su administrador es lo que permite que un equipo empiece a usar el tablero sin pasar por la línea de comandos. El detalle de cada camino está en el [dominio de cuentas](cuentas.md#cómo-se-entra-a-una-cuenta).
+## Alta y gestión
 
-::: warning El tablero no es cerrado
-Con el registro abierto, cualquiera que alcance la URL puede crearse una cuenta. Sólo ve un tablero vacío hasta que configure GitLab, y **no llega al de ningún equipo sin su código de invitación**. Para cerrarlo del todo, el cambio es dar de alta con `status: 'disabled'` y habilitar desde la pantalla de usuarios.
-:::
+El registro puede crear una cuenta nueva o usar un código para sumarse a una existente. La matriz completa está en [Cómo se entra a una cuenta](cuentas.md#cómo-se-entra-a-una-cuenta).
 
-## Pantallas de configuración
+Un `admin` puede listar, crear, habilitar y deshabilitar usuarios de su propia cuenta. No puede operar sobre otra cuenta ni cambiar su propio estado. Deshabilitar a una persona corta inmediatamente todas sus sesiones.
 
-La barra superior ofrece el tablero y, para un `admin`, la administración de usuarios. El menú del avatar separa la información personal de la compartida:
+Cada persona puede editar su email, nombre visible, nickname de GitLab y contraseña. Un administrador no puede establecer la contraseña de otra persona desde la API.
 
-- **«Mi perfil»**, desde «Editar perfil», reúne el perfil propio y el cambio de la propia contraseña indicando la actual como confirmación. Al cambiar la contraseña se cierran todas sus sesiones y la app vuelve al ingreso.
-- **«Mi cuenta»**, desde «Editar cuenta» para un `admin` o «Ver cuenta» para el resto, reúne el equipo y su invitación ([cuentas](cuentas.md#pantalla-mi-equipo)), la configuración de GitLab compartida ([configuración de GitLab](configuracion-gitlab.md)) y el nickname personal de GitLab. Sólo un `admin` puede modificar los datos compartidos; cada persona puede cambiar su nickname.
-- **«Usuarios»**, sólo para un `admin`, lista **los usuarios de su cuenta** con su email, rol, estado y último ingreso, y permite dar de alta, habilitar y deshabilitar. Restablecer una contraseña ajena quedó fuera de la interfaz: se hace con `npm run users -- password <email>`.
+## Endpoints
 
-Deshabilitar la propia cuenta está impedido: dejaría a la cuenta sin ningún administrador si es el único, y en cualquier caso cerraría la sesión en curso.
+| Ruta | Acceso | Uso |
+|---|---|---|
+| `POST /api/auth/register` | Público | Crea el usuario y abre una sesión. |
+| `POST /api/auth/login` | Público | Valida credenciales y abre una sesión. |
+| `POST /api/auth/password-reset-requests` | Público | Solicita un enlace de recuperación. |
+| `POST /api/auth/password-resets` | Público | Consume el enlace y cambia la contraseña. |
+| `POST /api/auth/logout` | Público | Invalida la sesión si existe y limpia la cookie. |
+| `GET /api/auth/me` | Sesión | Devuelve la identidad vigente. |
+| `PUT /api/auth/password` | Sesión | Cambia la contraseña propia. |
+| `PATCH /api/users/me/profile` | Sesión | Cambia email y nombre visible propios. |
+| `PUT /api/users/me/gitlab-username` | Sesión | Cambia el nickname propio. |
+| `GET`, `POST /api/users` | Admin | Lista o crea usuarios de la cuenta. |
+| `PATCH /api/users/:email/status` | Admin | Habilita o deshabilita un integrante. |
+
+Una ruta protegida responde 401 sin sesión y 403 sin rol suficiente. Un usuario de otra cuenta responde 404 para no revelar su existencia. Si falla la base al validar la sesión, responde 503 y no invalida las credenciales.
 
 ## Gestión por línea de comandos
 
-La línea de comandos sigue siendo el camino de recuperación cuando nadie puede entrar.
+El script operativo usa la misma configuración del backend y solicita las contraseñas por teclado.
+
+| Subcomando | Efecto |
+|---|---|
+| `create <email> --account <nombre>` | Crea una cuenta y su administrador. |
+| `create <email> --invite <código> [--role admin]` | Agrega un usuario a una cuenta existente. |
+| `password <email>` | Cambia la contraseña e invalida sesiones. |
+| `disable <email>` / `enable <email>` | Cambia el estado del usuario. |
+| `delete <email>` | Elimina el usuario y sus sesiones. |
+| `list` | Lista los usuarios de la base. |
+| `accounts` | Lista cuentas, invitaciones y cantidad de integrantes. |
+
+Ejemplo:
 
 ```bash
 npm run users --prefix backend -- create ana@example.com --name "Ana Pérez" --account "Mi equipo"
 ```
-
-| Subcomando | Efecto |
-|---|---|
-| `create <email> [--name "Nombre"] [--account "Cuenta"]` | Abre una cuenta nueva y deja al usuario como su administrador |
-| `create <email> --invite <código> [--name "Nombre"] [--role admin]` | Suma al usuario a la cuenta de ese código |
-| `password <email>` | Cambia la contraseña y cierra sus sesiones |
-| `disable <email>` | Corta el acceso, incluidas las sesiones abiertas |
-| `enable <email>` | Vuelve a habilitarlo |
-| `delete <email>` | Lo borra junto con sus sesiones; no falla si no existe |
-| `list` | Lista email, rol, estado, cuenta y nombre visible de toda la base |
-| `accounts` | Lista las cuentas con su código de invitación y cuánta gente las integra |
-
-`accounts` es el camino para recuperar un código de invitación cuando no queda nadie que pueda entrar a verlo. Borrar es la única operación que quita datos de forma irreversible; la interfaz no la ofrece, porque para cortar el acceso alcanza con deshabilitar, que además conserva el historial. Borrar al último miembro de una cuenta la deja vacía: nadie puede entrar a ella, y su configuración de GitLab queda intacta por si se suma alguien con el código.
-
-La contraseña nunca se pasa por argumento: se pide por teclado, no se muestra al escribirla y se confirma dos veces. Así no queda en el historial de la terminal ni en la lista de procesos.
-
-El script usa la misma configuración que el backend, así que necesita un `backend/.env` válido.
-
-## Recorrido en el frontend
-
-El estado de la sesión vive en el store `features/auth/hooks/useSession.js`, con el mismo patrón que el del tablero:
-
-1. Al abrir la app se consulta `GET /api/auth/me`. Mientras tanto se muestra «Verificando tu sesión...», para no hacer parpadear el formulario.
-2. Sin sesión se presenta `LoginForm`, que ofrece cambiar a `RegisterForm` o solicitar un enlace en `/forgot-password`. El enlace abre `/reset-password?token=…`, donde se confirma la contraseña nueva. El registro elige entre sumarse a un equipo con su código o abrir uno nuevo. Con sesión se monta el tablero, para que el polling no dispare peticiones que el backend vaya a rechazar.
-3. `LoggedUserMenu` reúne detrás de un avatar quién está conectado, su email, el equipo, los accesos separados a «Mi perfil» y «Mi cuenta», y la acción para cerrar sesión; al cerrarla se descartan también los datos del tablero y de la cuenta. La navegación visible del layout ofrece el tablero y, según el rol, `UserAdmin`, según la [arquitectura del frontend](../architecture/frontend.md#navegación-entre-secciones).
-4. Si el tablero recibe un 401, el store da la sesión por terminada y la app vuelve al login con el aviso correspondiente.
-
-La lista y la edición de usuarios viven en `features/users`. No necesitan otro store compartido: `useUsers` y `useCurrentUser` mantienen sólo el estado local de sus pantallas y sincronizan la identidad resultante con la sesión.
-
-Todas las peticiones al backend usan `credentials: 'include'`: la cookie es `HttpOnly` y, en desarrollo, el backend está en otro puerto.

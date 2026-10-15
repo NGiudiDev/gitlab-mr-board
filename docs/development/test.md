@@ -1,137 +1,97 @@
-# Estrategia de test
+# Test
 
-Fuente de verdad para ejecutar, escribir y validar los test. La elección de herramientas y sus consecuencias están en el [ADR 0003](../decisions/0003-estrategia-de-test.md).
+Esta página es la fuente de verdad para ejecutar, escribir y validar los test. El [ADR 0003](../decisions/0003-estrategia-de-test.md) explica por qué se eligió esta estrategia.
 
-## Estado y herramientas
+## Niveles y herramientas
 
-- **Backend:** Vitest sobre Node.js.
-- **Frontend:** Vitest, React Testing Library y `happy-dom`.
-- **E2E:** Playwright Test sobre Chromium, en `e2e/`.
+| Nivel | Herramientas | Dependencias externas |
+|---|---|---|
+| Unitario e integración del backend | Vitest y PGlite | Ninguna |
+| Componentes y stores del frontend | Vitest, React Testing Library y happy-dom | Ninguna |
+| Extremo a extremo | Playwright sobre Chromium | GitLab y Neon dedicados a test |
 
-Los test unitarios y de integración no acceden a GitLab **ni a Neon**: los repositorios se ejecutan contra PGlite, PostgreSQL compilado a WebAssembly que corre en memoria dentro del proceso de Vitest ([ADR 0007](../decisions/0007-neon-como-base-de-datos.md)). Así se validan el esquema, las consultas y las restricciones de la base sin que `npm test` necesite red, Docker ni credenciales.
-
-Los E2E recorren la aplicación completa contra proyectos reales dedicados a test y una base de Neon aparte; requieren `GITLAB_TOKEN` y `E2E_DATABASE_URL`.
+`npm test` no accede a GitLab ni a Neon. PGlite ejecuta el esquema y los repositorios con PostgreSQL en memoria; los servicios externos se reemplazan por dobles controlados.
 
 ## Comandos
 
 | Comando | Alcance |
 |---|---|
-| `npm test` en la raíz | Suites unitarias y de integración de ambos paquetes |
-| `npm test` en `backend/` o `frontend/` | La suite de ese paquete |
-| `npm run test:watch` en un paquete | Su suite en modo interactivo |
-| `npm run test:e2e` en la raíz | Recorrido E2E contra GitLab real |
-| `npm run test:e2e:ui` en la raíz | El mismo recorrido en el modo interactivo de Playwright |
-| `npm run test:coverage` en la raíz | Cobertura de ambos paquetes |
-| `npm run test:coverage` en `backend/` o `frontend/` | Cobertura de ese paquete |
+| `npm test` | Test unitarios y de integración de backend y frontend. |
+| `npm test --prefix backend` | Backend. |
+| `npm test --prefix frontend` | Frontend. |
+| `npm run test:watch --prefix <paquete>` | Suite de un paquete en modo interactivo. |
+| `npm run test:coverage` | Cobertura de ambos paquetes. |
+| `npm run test:e2e` | Recorrido E2E. |
+| `npm run test:e2e:ui` | E2E en la interfaz de Playwright. |
 
-`npm test` deja los E2E afuera a propósito: dependen de credenciales y de datos externos.
-
-## Cobertura
-
-Cada paquete la calcula con el proveedor `v8` de Vitest sobre todos sus módulos de producción, incluidos los que todavía no tienen test. Quedan afuera los propios archivos de test y `frontend/src/main.jsx`, que únicamente monta la aplicación.
-
-El resumen sale por consola y el detalle navegable queda en `coverage/index.html` de cada paquete, junto con `lcov.info` para las herramientas que lo consuman. La tabla de consola omite los archivos con 100 % en todas las columnas: para verlos a todos, abrir el reporte HTML.
-
-No hay umbral mínimo configurado, en línea con la convención de no tratar la cobertura como único indicador.
+Los E2E quedan fuera de `npm test` porque requieren credenciales y datos externos preparados.
 
 ## Convenciones
 
-- Ubicar cada test junto al módulo cubierto con el sufijo `.test.js` o `.test.jsx`, según el tipo de archivo. En el backend eso significa dentro de la feature: los del tablero viven en `features/mergeRequests/` y `src/app.test.js` cubre sólo la composición.
-- Reservar `test/` dentro de cada paquete para configuración, fixtures y utilidades compartidas.
-- Priorizar reglas de negocio y comportamiento observable; evitar snapshots extensos y aserciones sobre estilos generados.
-- Mantener cada test independiente y ejecutable en cualquier orden.
+- Ubicar cada archivo `.test.js` o `.test.jsx` junto al módulo cubierto.
+- Reservar `test/` de cada paquete para configuración, fixtures y helpers compartidos.
+- Probar reglas de negocio y comportamiento observable, no detalles internos ni estilos generados.
+- Mantener los casos independientes y ejecutables en cualquier orden.
 - Agregar un test de regresión para toda corrección de un defecto.
-- No usar la cobertura como único indicador: primero cubrir todas las ramas de clasificación y los contratos críticos.
+- Consultar el frontend como lo haría una persona, priorizando roles, nombres accesibles y eventos reales.
+- Cubrir los errores y límites relevantes, no sólo el camino satisfactorio.
 
-## Backend
+## Cobertura esperada
 
-La suite debe cubrir la matriz y el orden de prioridad de `computeMergeability()`; las combinaciones de autor, reviewers y aprobadores de `computeResponsiblePeople()` junto con `collectPeople()`; la extracción de la ruta del proyecto; URLs, autenticación, errores y paginación del cliente de GitLab; el límite de concurrencia y la liberación de la cola ante fallos; el enriquecimiento, orden y degradación parcial de los merge requests; la persistencia aislada de las fechas de subida; y `GET /health`, las rutas del tablero, la caché, `force=true` y la traducción de errores HTTP.
+| Área | Escenarios mínimos |
+|---|---|
+| Reglas del backend | Prioridad de clasificación, responsables, validaciones y aislamiento por cuenta. |
+| Integraciones del backend | Persistencia, paginación, concurrencia, caché y degradación ante fallos externos. |
+| Contratos HTTP | Respuestas correctas y errores 400, 401, 403, 404, 409, 429, 502 y 503 cuando correspondan. |
+| Frontend | Rutas, estados de carga/error/vacío, roles, stores, formularios e interacción por teclado. |
+| Flujos críticos | Registro, sesión, configuración de GitLab, tablero, vista personal e invitación. |
 
-También debe cubrir la autenticación: derivación y verificación de contraseñas, el esquema y las operaciones de la base, el ciclo de la sesión —alta, registro, ingreso, vencimiento, cierre y bloqueo por intentos fallidos—, la edición del perfil propio, el cambio y el restablecimiento de contraseña, los tokens temporales de un solo uso, el transporte de correo local y SMTP, y las rutas `/api/auth/*` y `/api/users/*`, incluidos el 401 sin sesión, el 403 sin rol `admin` y los límites de registros y solicitudes de restablecimiento.
+La cobertura usa el proveedor `v8` y sirve para encontrar huecos; no hay un umbral global. El reporte HTML queda en `coverage/index.html` dentro de cada paquete.
 
-Y la configuración de GitLab: el ida y vuelta del cifrado, su fallo ante una clave distinta o un valor alterado, la validación de IDs y token, la conservación del token guardado, el aislamiento entre cuentas, las rutas `/api/gitlab-settings` con su 403 para quien no administra, el `meta.viewerUsername` del tablero y su 409 sin configuración. Ninguna respuesta ni log debe contener un access token en claro.
+## Infraestructura de test
 
-Y las cuentas: la generación y normalización del código de invitación, el alta de una cuenta con su nombre por omisión, el conteo de miembros, la renovación del código, las rutas `/api/account` con su 403, que el código no vuelva a quien no administra, el registro por los dos caminos, el aislamiento de la administración de usuarios entre cuentas y la migración del esquema desde la configuración por persona.
+### Backend
 
-Los test de integración construyen Express en memoria con `createApp()`, inyectan la fuente de datos y el reloj cuando corresponde y reemplazan `global.fetch` con respuestas controladas. Los contratos de esas piezas están en la [arquitectura del backend](../architecture/backend.md).
+`createTestDatabase()` crea una instancia de PGlite por archivo y vacía sus tablas entre casos. Arrancarla es costoso, por eso dos llamadas dentro del mismo archivo devuelven la misma base reiniciada, no bases independientes.
 
-Los test que necesitan una base de datos piden una con `createTestDatabase()` de `backend/test/database.js`. Arrancar PGlite cuesta alrededor de un segundo, así que **la instancia es una sola por archivo de test** y cada llamada vacía las tablas: pedir dos bases dentro del mismo test no da dos bases independientes, sino la misma recién vaciada. Por ese arranque, `testTimeout` y `hookTimeout` están en 30 segundos —casi todos los archivos abren la base en un `beforeEach`—. `backend/test/auth.js` arma la app con una sesión ya iniciada —del rol que pida el test— y devuelve la cookie que hay que reenviar, junto con la cuenta, el usuario y los servicios; `createEmptyServices()` sirve para probar el alta sobre una base vacía y `createTestServicesWithUser()`, para armar la app a mano.
+Los test de rutas construyen Express en memoria con `createApp()`. Deben inyectar todos los servicios usados por la aplicación; si falta uno, `createApp()` intenta construirlo con la base configurada. `backend/test/auth.js` prepara una sesión y una cuenta, mientras que los dobles de GitLab y correo evitan cualquier acceso externo.
 
-Hay que pasarle a `createApp()` **todos los servicios** —cuentas, autenticación, usuarios, configuración de GitLab y fechas de subida—: si falta alguno, arma el que falte contra la base configurada en lugar de la de memoria.
+Toda la capa de datos es asíncrona: las aserciones sobre servicios y repositorios siempre esperan sus promesas.
 
-Ese mismo helper deja la configuración de GitLab ya guardada en la cuenta y el nickname cargado en el usuario, porque casi todos los test del tablero los dan por hechos: para probar lo contrario alcanza con `gitlabSettingsService.remove(account.id)`. Los repositorios comparten una sola base en memoria, ya que las claves foráneas entre sus tablas sólo valen dentro de la misma.
+### Frontend
 
-La migración a cuentas se prueba en `src/shared/database.test.js`, que arma el esquema anterior en su propio PGlite —no el compartido, que ya viene migrado— y comprueba lo que `applySchema()` rescata y lo que descarta.
+Los stores viven a nivel de módulo. Cada caso los reinicia con `resetSharedState()` y, cuando necesita el tablero autenticado, usa `signInTestUser()`.
 
-Toda la capa de datos es asíncrona, así que los test la esperan: un `expect(servicio.metodo())` sin `await` compara contra una promesa y falla con «expected Promise{…}».
-
-
-## Frontend
-
-Los test de componentes y del store deben cubrir la carga inicial, la actualización manual, el polling y los errores; los estados vacío, de carga y con datos anteriores; la agrupación por proyecto y el reparto en columnas; la expansión de proyectos; la información y los enlaces de tarjetas e indicadores; la apertura, foco y cierre del detalle; la edición confirmada, borrado y error de las fechas de subida; los roles, nombres accesibles, estados dinámicos e interacción por teclado; la presentación de responsables y columnas tal como los informa el backend; y la selección de persona, el filtrado personal y la conservación de la selección durante las actualizaciones.
-
-Deben consultar el DOM como lo haría una persona usuaria, sin afirmar props de componentes hijos ni estado interno del store.
-
-Deben cubrir además el portero de sesión: la verificación inicial, el ingreso, el alta por sus dos caminos —con código de invitación y creando un equipo—, la solicitud y aplicación de un restablecimiento, la edición del perfil propio, el cambio de la propia contraseña, el guardado del nickname de GitLab, los accesos separados a «Mi perfil» y «Mi cuenta» desde el dropdown, la administración de usuarios visible sólo para un `admin`, el cierre de sesión y la vuelta al login cuando el backend responde 401. También deben comprobar las URLs públicas y privadas, el acceso directo y las redirecciones por sesión y rol.
-
-Y la configuración de GitLab: la carga de lo guardado, el campo del token que arranca vacío y sólo se envía si se escribe, los errores de validación del backend, la vista de sólo lectura de quien no administra la cuenta, y el 409 del tablero con su acceso directo a «Mi cuenta» para quien puede resolverlo.
-
-Y la cuenta: el nombre y la cantidad de integrantes, el código de invitación con su renovación, que nada de eso se pueda editar sin rol `admin`, y el nombre del equipo en la barra superior.
-
-Y la vista personal según el rol: que un `admin` pueda elegir a quién mirar y que el resto vea directamente sus propias tareas, sin selector, con el aviso correspondiente cuando falta el nickname.
-
-Los tres stores —tablero, sesión y cuenta— viven a nivel de módulo: cada test debe reiniciarlos con `resetSharedState()` de `frontend/test/sharedState.js`, y las pruebas del tablero dan la sesión por abierta con `signInTestUser()`. El tablero **no es la primera petición** que hace la app —la barra superior pide la cuenta antes—, así que simular su respuesta exige enrutar por URL y no por orden de llamada. Las actualizaciones asíncronas se esperan con `act()`. Con temporizadores falsos se usa `fireEvent`; `user-event` se reserva para test con reloj real.
-
-La composición y el ciclo del store se detallan en la [arquitectura del frontend](../architecture/frontend.md).
+Las respuestas HTTP se enrutan por URL, no por orden de llamada, porque la aplicación puede solicitar sesión, cuenta y tablero en paralelo. Las actualizaciones se esperan con `act()`; con temporizadores falsos se usa `fireEvent`, y `user-event` queda para casos con reloj real.
 
 ## Test E2E
 
-El recorrido vive en `e2e/tablero.spec.js` y se configura en `playwright.config.js`. Antes de la primera ejecución hay que descargar el navegador una vez:
+Antes de la primera ejecución, instalar Chromium:
 
 ```bash
 npx playwright install chromium
 ```
 
-Los E2E corren contra GitLab real, así que necesitan estas variables. Copiar `.env.example` de la raíz como `.env` —`e2e/config.js` lo carga si existe, y lo que ya esté en el entorno tiene prioridad, así que en CI alcanza con los secretos—. Si falta alguna variable, la suite falla con el detalle antes de levantar los servidores.
+Copiar `.env.example` de la raíz como `.env` y completar sus variables. Ese archivo es la fuente de verdad de la configuración E2E. Usar siempre proyectos de GitLab y una base de Neon dedicados a test; nunca datos de trabajo o producción.
 
-| Variable | Obligatoria | Uso |
-|---|---:|---|
-| `GITLAB_TOKEN` | Sí | PAT con alcance `read_api` sobre los proyectos de test; el recorrido lo carga en «Mi cuenta» |
-| `E2E_PROJECT_IDS` | Sí | IDs de los proyectos dedicados a test, separados por comas |
-| `E2E_PROJECT_PATH` | Sí | Ruta `grupo/proyecto` de la sección que expande el recorrido |
-| `E2E_GITLAB_USERNAME` | Sí | Nickname de GitLab que el recorrido carga y verifica en «Mi cuenta» |
-| `E2E_MR_TITLE` | Sí | Título exacto (mayúsculas incluidas) del merge request que se verifica |
-| `E2E_MR_COLUMN` | Sí | Columna donde debe aparecer ese merge request |
-| `E2E_DATABASE_URL` | Sí | Base de Neon dedicada a test; el usuario del recorrido se borra y se recrea en cada corrida |
-| `E2E_GITLAB_BASE_URL` | No | Instancia de GitLab; por omisión `https://gitlab.com` |
-| `E2E_EMAIL` | No | Email del usuario del recorrido; por omisión `e2e@example.com` |
+Playwright levanta el backend en el puerto 3101 y el frontend en el 4173. `e2e/globalSetup.js` recrea únicamente los usuarios del recorrido para que cada ejecución empiece igual. El flujo verifica autenticación, configuración compartida, tablero real, actualización, vista personal, navegación, cierre de sesión e ingreso por invitación.
 
-Usar proyectos creados para test, nunca los de trabajo real: el recorrido depende de que ese merge request siga abierto y en su columna.
-
-Playwright levanta ambos servicios con `webServer`, sin reutilizar procesos existentes: el backend en el puerto 3101 con una `ENCRYPTION_KEY` fija —la base es descartable—, y el build del frontend servido con `vite preview` en 4173, uno de los dos orígenes que acepta el CORS del backend.
-
-Antes de levantarlos, `e2e/globalSetup.js` borra y vuelve a crear con `npm run users` el usuario del recorrido —y borra el invitado que ese recorrido da de alta—, para que cada corrida arranque siempre igual: el usuario se recrea con una cuenta nueva, sin proyectos ni token. Sólo toca esos dos usuarios, nunca el resto de la base; las cuentas de corridas anteriores quedan vacías y sin nadie que pueda entrar. `E2E_DATABASE_URL` es obligatoria y nunca cae en `DATABASE_URL`, para que un descuido no toque la base de trabajo. Las credenciales se pueden cambiar con `E2E_EMAIL` y `E2E_PASSWORD`.
-
-El recorrido crítico ingresa con ese usuario, comprueba las URLs durante la navegación, verifica que el tablero reclame la configuración de GitLab, carga `GITLAB_TOKEN`, `E2E_PROJECT_IDS` y su nickname con `E2E_GITLAB_USERNAME` en «Mi cuenta», y espera una respuesta real de GitLab; después expande el proyecto configurado, verifica la columna y los bloqueadores del merge request conocido, fuerza una actualización que omite la caché, recorre los controles principales con teclado hasta la vista personal, comprueba las dos pantallas del dropdown y que el nickname guardado siga precargado, copia el código de invitación, cierra la sesión comprobando que recargar no devuelva el tablero y, con ese código, da de alta un segundo usuario que ve el mismo tablero sin cargar ninguna credencial.
-
-Para verlo correr: `npm run test:e2e:ui` abre el modo interactivo con watch y time-travel por paso, y `npm run test:e2e -- --headed` lo ejecuta en una ventana visible (`--debug` agrega el Inspector paso a paso). Las trazas de los reintentos se revisan después con `npx playwright show-trace`.
-
-Usar selectores accesibles como `getByRole()` y `getByLabel()`, con aserciones de espera automática; nunca localizar por clases generadas por styled-components. Los paneles de proyecto contraídos se ocultan con `display: none`, así que sus tarjetas quedan fuera del árbol de accesibilidad hasta expandirlos.
-
-Sólo se ejecuta Chromium: Firefox y WebKit se agregan únicamente ante un requisito explícito. Las trazas, capturas y videos se conservan solo para fallos o reintentos. La suite no crea, modifica, aprueba ni fusiona merge requests salvo que un caso futuro lo requiera con limpieza segura.
+Los selectores usan `getByRole()` y `getByLabel()`, nunca clases de styled-components. La suite no crea, aprueba ni fusiona merge requests. Las trazas, capturas y videos se conservan sólo ante fallos o reintentos.
 
 ## Validación antes de entregar
 
 Para cualquier cambio:
 
 1. Ejecutar `npm test` y `npm run lint` desde la raíz.
-2. Si cambia el frontend, ejecutar `npm run build` en `frontend/`.
-3. Iniciar los paquetes afectados y revisar terminales y consola del navegador.
+2. Si cambia el frontend, ejecutar `npm run build --prefix frontend`.
+3. Si cambia la documentación, ejecutar `npm run docs:build`.
+4. Iniciar los paquetes afectados y revisar terminales y consola del navegador.
 
 Para cambios de interfaz, además:
 
-1. Recorrer la página con `Tab`, `Shift+Tab`, `Enter` y `Espacio`, comprobando el enlace para saltar al contenido, el orden del foco y su visibilidad.
-2. Verificar encabezados, regiones, nombres y estados en el árbol de accesibilidad, y los anuncios de carga, actualización, error y resultado vacío.
-3. Validar contraste en tema oscuro, zoom al 200 % y la preferencia de movimiento reducido.
+1. Verificar tema oscuro, estados de carga, error y vacío, y zoom al 200 %.
+2. Recorrer la pantalla con teclado y comprobar orden y visibilidad del foco.
+3. Revisar nombres, roles, regiones y anuncios dinámicos en el árbol de accesibilidad.
+4. Comprobar contraste y `prefers-reduced-motion`.
 
-Esta revisión apunta a WCAG 2.2 nivel AA; una declaración formal de conformidad exige evaluar todas las pantallas y estados con tecnologías de asistencia reales.
+El objetivo es WCAG 2.2 nivel AA; una declaración formal de conformidad requiere evaluar todas las pantallas y estados con tecnologías de asistencia reales.
