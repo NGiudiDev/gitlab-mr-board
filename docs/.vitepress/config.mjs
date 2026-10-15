@@ -23,7 +23,6 @@ const sidebar = [
       { text: "ADR 0004: Documentación con VitePress", link: "/decisions/0004-sitio-de-documentacion" },
       { text: "ADR 0006: Login de usuarios", link: "/decisions/0006-autenticacion-local-con-sesiones" },
       { text: "ADR 0007: Gestión de usuarios", link: "/decisions/0007-gestion-de-usuarios" },
-      { text: "ADR 0008: credenciales de GitLab por usuario", link: "/decisions/0008-credenciales-de-gitlab-por-usuario" },
       { text: "ADR 0009: Neon como base de datos", link: "/decisions/0009-neon-como-base-de-datos" },
       { text: "ADR 0010: backend por features", link: "/decisions/0010-backend-por-features" },
       { text: "ADR 0011: cuentas compartidas", link: "/decisions/0011-cuentas-compartidas" },

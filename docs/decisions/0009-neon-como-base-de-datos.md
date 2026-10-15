@@ -7,7 +7,7 @@
 
 La primera implementación de la autenticación definida en el [ADR 0006](0006-autenticacion-local-con-sesiones.md) persistía usuarios y sesiones en una base SQLite local abierta con `node:sqlite`. El archivo de la base requería respaldo, no se compartía entre instancias y no servía para un despliegue con sistema de archivos efímero.
 
-Ese límite se volvió concreto. La base guarda ahora usuarios, sesiones y —desde el [ADR 0008](0008-credenciales-de-gitlab-por-usuario.md)— las credenciales de GitLab de cada persona. Un archivo en el disco del proceso significa que cualquier despliegue con sistema de archivos efímero borra las cuentas, que no se puede correr más de una instancia, y que el respaldo es un procedimiento manual aparte.
+Ese límite se volvió concreto cuando la base pasó a guardar usuarios, sesiones y credenciales de GitLab. Un archivo en el disco del proceso significa que cualquier despliegue con sistema de archivos efímero borra las cuentas, que no se puede correr más de una instancia, y que el respaldo es un procedimiento manual aparte.
 
 ## Decisión
 

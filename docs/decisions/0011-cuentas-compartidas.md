@@ -5,7 +5,7 @@
 
 ## Contexto
 
-El [ADR 0008](0008-credenciales-de-gitlab-por-usuario.md) puso los proyectos y el access token de GitLab en manos de cada persona. Resolvió sacarlos del `.env`, pero dejó un costo de entrada alto: **cada integrante del equipo tiene que generar su propio PAT, averiguar los IDs de los proyectos y cargarlos** antes de ver un tablero que, en la práctica, es el mismo para todos. Además multiplica las consultas a GitLab —una por persona— para traer exactamente los mismos merge requests.
+La primera configuración persistida puso los proyectos y el access token de GitLab en manos de cada persona. Resolvió sacarlos del `.env`, pero dejó un costo de entrada alto: **cada integrante del equipo tiene que generar su propio PAT, averiguar los IDs de los proyectos y cargarlos** antes de ver un tablero que, en la práctica, es el mismo para todos. Además multiplica las consultas a GitLab —una por persona— para traer exactamente los mismos merge requests.
 
 Lo que el equipo quiere es lo contrario: que lo configure **una sola persona** y que el resto entre a mirar.
 
