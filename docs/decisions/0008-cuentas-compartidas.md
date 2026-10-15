@@ -1,11 +1,11 @@
-# ADR 0011: agrupar a los usuarios en cuentas que comparten las credenciales de GitLab
+# ADR 0008: Cuentas compartidas
 
-- Estado: aceptada
+- Estado: Aceptada
 - Fecha: 2026-09-08
 
 ## Contexto
 
-El [ADR 0008](0008-credenciales-de-gitlab-por-usuario.md) puso los proyectos y el access token de GitLab en manos de cada persona. Resolvió sacarlos del `.env`, pero dejó un costo de entrada alto: **cada integrante del equipo tiene que generar su propio PAT, averiguar los IDs de los proyectos y cargarlos** antes de ver un tablero que, en la práctica, es el mismo para todos. Además multiplica las consultas a GitLab —una por persona— para traer exactamente los mismos merge requests.
+La primera configuración persistida puso los proyectos y el access token de GitLab en manos de cada persona. Resolvió sacarlos del `.env`, pero dejó un costo de entrada alto: **cada integrante del equipo tiene que generar su propio PAT, averiguar los IDs de los proyectos y cargarlos** antes de ver un tablero que, en la práctica, es el mismo para todos. Además multiplica las consultas a GitLab —una por persona— para traer exactamente los mismos merge requests.
 
 Lo que el equipo quiere es lo contrario: que lo configure **una sola persona** y que el resto entre a mirar.
 
@@ -35,6 +35,6 @@ El modelo y las reglas se documentan en el [dominio de cuentas](../domains/cuent
 - **Sumar a alguien al tablero deja de requerir credenciales de GitLab**: alcanza con el código de invitación, o con un alta desde la pantalla de usuarios. Ése era el objetivo.
 - **Todos los miembros ven exactamente lo mismo**, con los permisos del token de la cuenta. Se pierde la posibilidad de que cada persona siguiera proyectos distintos, que en la práctica nadie usaba: para eso ahora hay que abrir otra cuenta.
 - **Menos consultas a GitLab**: la caché compartida hace que el equipo entero cueste una consulta por TTL en lugar de una por persona.
-- **Quien tiene el código puede entrar a ver el tablero.** Es el mismo riesgo del registro abierto del [ADR 0007](0007-registro-abierto-y-gestion-de-usuarios.md), acotado a quien recibió el código; renovarlo corta la puerta sin echar a nadie.
-- **La migración descarta los token personales.** El esquema conserva el nickname de cada persona y toma como configuración de la cuenta la última que se hubiera guardado; el resto de los token quedaban de más y la tabla vieja se elimina. Los tokens descartados se pueden volver a cargar, y el detalle está en el [dominio de cuentas](../domains/cuentas.md#migración-desde-la-configuración-por-persona).
+- **Quien tiene el código puede entrar a ver el tablero.** Es el mismo riesgo del registro abierto del [ADR 0006](0006-gestion-de-usuarios.md), acotado a quien recibió el código; renovarlo corta la puerta sin echar a nadie.
+- **La migración descarta los token personales.** El esquema conserva el nickname de cada persona y toma como configuración de la cuenta la última que se hubiera guardado; el resto de los token quedaban de más y la tabla vieja se elimina. Un administrador puede volver a cargar la configuración desde «Mi cuenta».
 - **Queda una cuenta vacía cuando se borra a su último miembro.** No molesta —nadie puede entrar a una cuenta sin miembros— y evita borrar en cascada la configuración de un equipo por dar de baja a una persona.

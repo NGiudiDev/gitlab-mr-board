@@ -1,6 +1,6 @@
-# ADR 0004: generar un sitio de documentación con VitePress
+# ADR 0004: Documentación con VitePress
 
-- Estado: aceptada
+- Estado: Aceptada
 - Fecha: 2026-09-02
 
 ## Contexto
@@ -17,13 +17,16 @@ Reglas que acompañan la decisión:
 
 - La configuración vive en `docs/.vitepress/config.mjs`, dentro de la carpeta de documentación centralizada que exige AGENTS.md.
 - Los índices siguen llamándose `README.md` para que se rendericen al navegar el repositorio; `rewrites` los sirve como `index.md` en el sitio.
-- El sidebar se declara a mano en lugar de autogenerarse: con cinco secciones es más explícito y obliga a decidir con qué título aparece cada página.
+- El sidebar se declara a mano en lugar de autogenerarse: con pocas secciones es más explícito y obliga a decidir con qué título aparece cada página.
 - `ignoreDeadLinks` queda en `false`: un enlace roto entre documentos rompe el build en vez de pasar desapercibido.
 - La búsqueda es local, con índice estático, sin depender de un servicio externo.
-- El sitio se genera bajo demanda y se lee local; no se publica en ningún hosting. `DOCS_BASE` ajusta la ruta base si alguna vez se sirve desde un subdirectorio.
+- El sitio se publica en **GitHub Pages** mediante `.github/workflows/deploy_docs.yml` cuando un cambio llega a `main`, y también admite ejecución manual.
+- El workflow construye con `DOCS_BASE=/gitlab-mr-board/`, porque Pages sirve el repositorio bajo ese subdirectorio. El desarrollo local conserva `/` como base.
 
 El Markdown no cambia: los documentos se siguen escribiendo igual y se leen igual en el repositorio.
 
 ## Consecuencias
 
-La documentación gana búsqueda y navegación por secciones, y el build actúa como verificación de integridad de los enlaces internos. El costo es una dependencia de desarrollo con su árbol transitivo y la obligación de sumar cada documento nuevo al sidebar —si se olvida, la página existe pero queda fuera de la navegación—. Como no hay publicación automática, el sitio sólo existe para quien lo levanta: el repositorio sigue siendo la fuente de lectura por defecto. Si más adelante se publica, todo lo que esté en `docs/` pasa a ser público.
+La documentación gana búsqueda, navegación por secciones y una URL estable. El build actúa como verificación de integridad de los enlaces internos y el despliegue reutiliza exactamente ese resultado.
+
+El costo es una dependencia de desarrollo con su árbol transitivo, un workflow adicional y la obligación de sumar cada documento nuevo al sidebar. Todo lo que se incorpora a `docs/` queda público al llegar a `main`, por lo que no debe contener secretos ni información interna.

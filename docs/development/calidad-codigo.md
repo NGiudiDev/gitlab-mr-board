@@ -1,32 +1,38 @@
 # Calidad de código
 
+Las reglas generales para contribuir están en `AGENTS.md`. Esta página conserva únicamente las convenciones de formato y ejecución que necesitan más detalle.
+
 ## Estilo de código
 
-ESLint exige comillas dobles para los strings y punto y coma al final de cada sentencia. Ambas reglas se aplican automáticamente con `npm run lint:fix`.
+ESLint exige comillas dobles y punto y coma. Los componentes usan exports nombrados; `export default` queda para integraciones que lo requieren.
 
-Los componentes publican exports nombrados. `export default` queda reservado para integraciones que lo exijan, como ciertos archivos de configuración. Cada componente conserva una sola responsabilidad; una parte se extrae cuando tiene un contrato propio o permite reutilización real, no sólo para reducir la cantidad de líneas.
+En el frontend, los imports se agrupan en este orden, omitiendo grupos vacíos:
 
-En el frontend, ordenar los imports por origen: paquetes externos, módulos compartidos de `app/`, módulos de otras features y módulos de la feature actual. Omitir los grupos vacíos, separar los presentes con una línea en blanco y mantener juntos los imports del mismo origen. Dentro de cada componente, colocar primero las props, después los hooks y valores derivados, luego los handlers y efectos, y al final los retornos. Conservar el orden que exijan los hooks y las dependencias entre declaraciones.
+1. Paquetes externos.
+2. Módulos compartidos de `app/`.
+3. Módulos de otras features.
+4. Módulos de la feature actual.
 
-En JSX, separar con una línea en blanco los bloques hermanos que cumplen funciones distintas, como el encabezado y su descripción, las alertas, los campos y las secciones de una page. Mantener juntos los elementos que forman una unidad, como un `dt` con su `dd` o una etiqueta con su ayuda. No dejar espacios en líneas vacías ni agregar comentarios que repitan el nombre o el contenido evidente del componente; los comentarios explican decisiones que el código no muestra por sí solo.
+Cada grupo se separa con una línea en blanco. Dentro de un componente se declaran props, hooks, valores derivados, handlers y efectos antes del retorno, respetando siempre las dependencias entre declaraciones.
 
-La [arquitectura del frontend](../architecture/frontend.md#dirección-de-dependencias) define qué capas pueden importarse. Las pages son el borde habitual de composición entre features; una sincronización directa entre stores debe ser explícita y quedar documentada allí. Un componente o hook no toma reglas de presentación o dominio ajenas. Los archivos `.jsx` contienen componentes y handlers ligados a su estado; las funciones auxiliares puras viven en `utils/` dentro de su dueño. Si sirven a varias features, pertenecen a `app/utils/`. Una constante compartida sigue el mismo criterio en `constants/`; no se extrae sólo para reducir líneas.
+En JSX, una línea en blanco separa bloques hermanos con funciones distintas; los elementos que forman una unidad permanecen juntos. Los comentarios explican decisiones no evidentes, nunca el contenido que ya expresa el código.
 
-## Efectos y operaciones asíncronas
+La [arquitectura del frontend](../architecture/frontend.md#dirección-de-dependencias) define dónde vive cada responsabilidad. Las pages son el borde habitual para coordinar features; las utilidades y constantes se comparten sólo cuando tienen más de un consumidor real.
 
-Todo `useEffect` que inicia una petición, suscripción o temporizador debe ser idempotente bajo `StrictMode` y limpiar el recurso al desmontar. Para una petición local, usar `AbortController` y descartar `AbortError`; para un store de módulo compartido, reutilizar la promesa en curso y liberar suscripciones o intervalos cuando desmonta el último consumidor. Una respuesta vieja no debe poder sobrescribir el estado de una petición más nueva.
+## Operaciones asíncronas
 
-Los hooks son dueños de las operaciones de su dominio, pero las preocupaciones de transporte repetidas —URL base, cookie, serialización JSON, lectura del error y expiración de sesión ante 401— pertenecen a la infraestructura de API. Los mensajes técnicos se traducen allí; el hook decide cómo se representa el resultado en su feature.
+Todo `useEffect` con peticiones, suscripciones o temporizadores debe ser idempotente bajo `StrictMode` y liberar sus recursos al desmontar.
 
-## Comandos
+- Una petición local usa `AbortController` y descarta `AbortError`.
+- Un store compartido reutiliza la promesa en curso y detiene sus recursos al perder el último consumidor.
+- Una respuesta anterior nunca puede sobrescribir el estado de una solicitud más nueva.
+- URL base, cookies, serialización, lectura de errores y expiración de sesión son responsabilidades de transporte; el hook decide cómo representa el resultado en su feature.
+
+## Herramientas
 
 | Comando | Uso |
 |---|---|
-| `npm run lint` | Valida el código sin modificar archivos |
-| `npm run lint:fix` | Corrige comillas, punto y coma y exports automáticamente |
+| `npm run lint` | Valida el código sin modificar archivos. |
+| `npm run lint:fix` | Aplica las correcciones automáticas de ESLint. |
 
-## VS Code
-
-El repositorio recomienda la extensión oficial ESLint mediante `.vscode/extensions.json`. `.vscode/settings.json` ejecuta `source.fixAll.eslint` en cada guardado.
-
-`editor.formatOnSave` permanece desactivado porque ESLint aplica el cambio como una acción de código, no como formateo.
+VS Code recomienda la extensión oficial de ESLint mediante `.vscode/extensions.json`. La configuración del repositorio ejecuta `source.fixAll.eslint` al guardar y mantiene `editor.formatOnSave` desactivado para no aplicar dos formateadores distintos.

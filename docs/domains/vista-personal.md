@@ -1,78 +1,37 @@
 # Vista personal
 
-- Estado: implementada.
+La vista personal muestra los merge requests donde una persona tiene una acción pendiente. Es una proyección del tablero general: no cambia la clasificación ni calcula responsables.
 
-## Objetivo
+## Acceso
 
-Ver todos los merge requests en los que una persona tiene una acción pendiente. Complementa al tablero general: no lo reemplaza ni modifica sus reglas de clasificación.
+| Rol | Persona mostrada |
+|---|---|
+| `user` | Siempre quien inició sesión, identificado por `meta.viewerUsername`. |
+| `admin` | La persona elegida entre `meta.people`. |
 
-**Quién puede mirar a quién depende del rol.** Un usuario común ve siempre sus propias tareas, sin elegir a nadie; sólo un `admin` puede mirar el tablero de otra persona, y para eso tiene el selector.
+Si un usuario no configuró su [nickname de GitLab](autenticacion.md#nickname-de-gitlab), la vista le indica cómo hacerlo. Un administrador sin selección recibe una invitación a elegir una persona.
 
-La persona se identifica por su `username` de GitLab; el nombre visible es sólo presentación, porque puede repetirse o cambiar.
+El selector no es una barrera de seguridad: todos los integrantes ya pueden ver el tablero general completo de su cuenta.
 
-## Alcance
+## Regla de filtrado
 
-- Alternar entre **Vista general** y **Vista personal** desde la misma aplicación.
-- Abrir directamente las tareas propias, sin ningún paso previo.
-- Para un `admin`, elegir otra persona mediante un control con etiqueta accesible.
-- Mostrar únicamente los MRs donde esa persona sea responsable según el [dominio de merge requests](merge-requests.md#responsable). La vista filtra por el campo `responsiblePeople` que ya viene resuelto: no reimplementa ni duplica la regla.
-- Reutilizar el tablero general sin alterar la agrupación por proyecto, las columnas, su orden ni las tarjetas.
-- Mantener la actualización manual, el polling, los estados de carga y los errores existentes.
-- Mostrar un estado vacío específico cuando la persona no tenga tareas pendientes.
+El frontend conserva únicamente los MRs cuyo `responsiblePeople` contiene el `username` seleccionado. La asignación de responsables pertenece al [dominio de Merge Requests](merge-requests.md#responsable) y nunca se reimplementa en la interfaz.
 
-La vista no incorpora preferencias persistentes, notificaciones ni asignación de responsables desde el tablero.
+El filtrado no altera proyectos, columnas, tarjetas, actualización manual ni polling. Los totales cuentan sólo los resultados visibles.
 
-## De quién son las tareas que se muestran
+## Contrato
 
-### Un usuario común: siempre las propias
+La respuesta del tablero incluye:
 
-Cada persona guarda su **nickname de GitLab** en «Mi cuenta» ([autenticación](autenticacion.md#nickname-de-gitlab)). Es el único dato de GitLab que sigue cargando cada uno: los proyectos y el token son de la cuenta. El backend lo devuelve en `meta.viewerUsername` junto con el tablero, y la vista personal filtra por él sin pedir nada.
+- `responsiblePeople` por merge request.
+- `meta.people`, con autores y reviewers únicos para el selector de admin.
+- `meta.viewerUsername`, agregado para quien consulta y no compartido en la caché.
 
-Si todavía no lo configuró, la vista le indica que debe hacerlo en «Mi cuenta» en lugar de mostrar columnas vacías.
-
-### Un `admin`: cualquiera
-
-Sólo con rol `admin` de la cuenta aparece el selector. El backend reúne a los autores y reviewers de la respuesta consolidada y publica la lista sin duplicados en `meta.people`, ordenada por nombre visible y desempatada por `username`. Cada opción muestra ambos para evitar ambigüedad.
-
-- Al entrar por primera vez no hay persona seleccionada: la interfaz pide elegir una y no muestra columnas vacías.
-- La selección permanece durante las actualizaciones y al volver a la vista general, mientras dure la sesión.
-- Si la persona deja de aparecer en la lista, se conserva la selección y se muestra el estado sin tareas.
-
-La selección y el modo de vista son estado compartido porque afectan a más de un componente. No se persisten al recargar la página ni se reflejan en la URL.
-
-::: warning No es una barrera de acceso
-Esconder el selector es una simplificación de la interfaz, no un permiso: la vista general sigue mostrando todos los merge requests de los proyectos de la cuenta, y la respuesta del backend incluye a todas las personas. Quien quiera mirar los datos de otro los tiene igual.
-:::
-
-## Presentación
-
-La vista reutiliza `MrBoard`, así que un mismo MR conserva su proyecto, columna, tarjeta, indicadores y enlace a GitLab. Las únicas diferencias son el filtro y los totales:
-
-- Un encabezado identifica a la persona seleccionada.
-- Se mantienen las secciones desplegables de todos los proyectos configurados.
-- Los totales cuentan los MRs visibles de la persona, no el total global recibido.
-- El estado vacío informa “No tenés tareas pendientes” a quien mira lo suyo, y “No hay tareas pendientes para esta persona” a un `admin` que eligió a alguien.
-
-La interfaz debe funcionar con teclado, conservar foco visible y anunciar los cambios de persona y cantidad de resultados mediante una región viva. La selección no se comunica sólo con color o posición.
-
-## Datos y contrato
-
-El filtrado ocurre en el frontend sobre la respuesta ya consolidada, así que no hace falta un endpoint nuevo y se conservan la caché y el polling. El backend expone `authorUsername`, el `username` de reviewers y aprobadores, `responsiblePeople` por merge request, `meta.people` para el selector y `meta.viewerUsername` con el nickname de quien pide el tablero. Ese último campo es lo único de la respuesta que no se comparte entre los miembros de la cuenta: la ruta lo completa al entregarla.
-
-Como todos esos campos llegan normalizados de la misma fuente, `utils/personal_view.utils.js` compara los `username` por igualdad exacta. Sólo selecciona datos: no contiene reglas de negocio.
+La vista se resuelve sobre esa respuesta, sin un endpoint adicional. El modo y la selección duran durante la sesión del frontend, pero no se guardan en la URL ni en almacenamiento local.
 
 ## Casos límite
 
-- Dos personas con el mismo nombre visible permanecen como opciones diferentes.
-- Un MR aparece una sola vez para una persona aunque coincida por más de una relación.
-- Las aprobaciones con estado `unknown` no se interpretan como aprobación.
-- Los MRs `unknown` y `backlog` no se incluyen porque no tienen responsable.
+- Dos personas con el mismo nombre siguen separadas por `username`.
+- Un MR aparece una sola vez aunque una persona coincida por más de una relación.
+- `backlog` y `unknown` quedan fuera porque no tienen responsables.
 - Una persona sin tareas conserva una vista válida con total cero.
-
-## Implementación
-
-`utils/personal_view.utils.js` busca la persona y filtra sus merge requests; el store conserva `viewMode` y `selectedUsername` durante la sesión; `BoardPage` decide de quién son las tareas —`selectedUsername` para un `admin`, `meta.viewerUsername` para el resto— y `ViewControls` muestra el selector sólo con `canChoosePerson`; `MrBoard` recibe la colección completa o la filtrada sin cambiar su estructura. No se agregó ninguna dependencia de routing ni de estado global.
-
-## Decisiones pendientes
-
-Antes de una segunda iteración hay que decidir si la selección se guarda en la URL o en almacenamiento local. No bloquea el alcance actual.

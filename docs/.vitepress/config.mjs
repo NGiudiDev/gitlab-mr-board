@@ -1,16 +1,15 @@
 import { defineConfig } from "vitepress";
 
-// El sidebar se declara a mano: con cinco secciones es más explícito que
+// El sidebar se declara a mano: con pocas secciones es más explícito que
 // autogenerarlo, y obliga a decidir el título con el que aparece cada página.
 const sidebar = [
   {
     text: "Arquitectura",
     link: "/architecture/",
     items: [
-      { text: "Visión general", link: "/architecture/vision-general" },
+      { text: "Producto", link: "/architecture/producto" },
       { text: "Backend", link: "/architecture/backend" },
       { text: "Frontend", link: "/architecture/frontend" },
-      { text: "Interfaz visual", link: "/architecture/interfaz-visual" },
     ],
   },
   {
@@ -18,17 +17,13 @@ const sidebar = [
     link: "/decisions/",
     items: [
       { text: "ADR 0001: Backend for Frontend", link: "/decisions/0001-backend-for-frontend" },
-      { text: "ADR 0002: caché en memoria", link: "/decisions/0002-cache-en-memoria" },
-      { text: "ADR 0003: estrategia de test", link: "/decisions/0003-estrategia-de-test" },
-      { text: "ADR 0004: sitio de documentación", link: "/decisions/0004-sitio-de-documentacion" },
-      { text: "ADR 0005: frontend en React", link: "/decisions/0005-frontend-en-react" },
-      { text: "ADR 0006: login local con SQLite", link: "/decisions/0006-login-local-con-sqlite" },
-      { text: "ADR 0007: registro y gestión de usuarios", link: "/decisions/0007-registro-abierto-y-gestion-de-usuarios" },
-      { text: "ADR 0008: credenciales de GitLab por usuario", link: "/decisions/0008-credenciales-de-gitlab-por-usuario" },
-      { text: "ADR 0009: Neon como base de datos", link: "/decisions/0009-neon-como-base-de-datos" },
-      { text: "ADR 0010: backend por features", link: "/decisions/0010-backend-por-features" },
-      { text: "ADR 0011: cuentas compartidas", link: "/decisions/0011-cuentas-compartidas" },
-      { text: "ADR 0012: JavaScript sin TypeScript", link: "/decisions/0012-javascript-sin-typescript" },
+      { text: "ADR 0002: Caché en memoria", link: "/decisions/0002-cache-en-memoria" },
+      { text: "ADR 0003: Estrategia de test", link: "/decisions/0003-estrategia-de-test" },
+      { text: "ADR 0004: Documentación con VitePress", link: "/decisions/0004-sitio-de-documentacion" },
+      { text: "ADR 0005: Login de usuarios", link: "/decisions/0005-autenticacion-local-con-sesiones" },
+      { text: "ADR 0006: Gestión de usuarios", link: "/decisions/0006-gestion-de-usuarios" },
+      { text: "ADR 0007: Neon como base de datos", link: "/decisions/0007-neon-como-base-de-datos" },
+      { text: "ADR 0008: Cuentas compartidas", link: "/decisions/0008-cuentas-compartidas" },
     ],
   },
   {
@@ -43,11 +38,11 @@ const sidebar = [
     text: "Dominios",
     link: "/domains/",
     items: [
+      { text: "Cuentas", link: "/domains/cuentas" },
+      { text: "Autenticación", link: "/domains/autenticacion" },
+      { text: "Configuración de GitLab", link: "/domains/configuracion-gitlab" },
       { text: "Merge Requests", link: "/domains/merge-requests" },
       { text: "Vista personal", link: "/domains/vista-personal" },
-      { text: "Autenticación", link: "/domains/autenticacion" },
-      { text: "Cuentas", link: "/domains/cuentas" },
-      { text: "Configuración de GitLab", link: "/domains/configuracion-gitlab" },
     ],
   },
 ];
@@ -62,8 +57,7 @@ export default defineConfig({
     "README.md": "index.md",
     ":section/README.md": ":section/index.md",
   },
-  // El sitio se sirve local. `DOCS_BASE` ajusta la ruta si algún día se
-  // publica bajo un subdirectorio.
+  // El desarrollo local usa `/`; el workflow define el subdirectorio de Pages.
   base: process.env.DOCS_BASE ?? "/",
   cleanUrls: true,
   // 5173 y 4173 los usa el frontend; el sitio de docs no debe competir por ellos.

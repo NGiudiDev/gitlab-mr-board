@@ -2,6 +2,15 @@
 
 GitLab MR Board es un tablero web que reúne los Merge Requests abiertos de varios proyectos de GitLab y los organiza según su estado de mergeabilidad. Muestra aprobaciones, discusiones pendientes, pipelines, conflictos y responsables sin exponer el token de GitLab en el navegador: un administrador de cada cuenta carga los proyectos y el access token desde «Mi cuenta», el backend lo guarda cifrado y el resto del equipo se suma con un código de invitación.
 
+## Stack tecnológico
+
+- **Lenguaje y runtime:** JavaScript con ES modules sobre Node.js 24.
+- **Frontend:** React 19, React Router 8, styled-components 6 y Vite 6.
+- **Backend:** Express 4, API de GitLab, Nodemailer y cookies de sesión HTTP-only.
+- **Persistencia:** PostgreSQL en Neon mediante `@neondatabase/serverless`; PGlite para los test de integración.
+- **Test:** Vitest 4, React Testing Library, happy-dom y Playwright.
+- **Calidad y documentación:** ESLint 10 y VitePress 1.
+
 ## Requisitos
 
 - Node.js 24.
@@ -103,6 +112,8 @@ npm run lint
 ```
 
 La documentación técnica vive en [`docs/`](docs/README.md) y se publica con VitePress:
+
+La versión publicada está en [GitHub Pages](https://ngiudidev.github.io/gitlab-mr-board/). Cada cambio que llega a `main` genera y despliega el sitio automáticamente.
 
 | Comando | Uso |
 |---|---|

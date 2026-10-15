@@ -1,52 +1,47 @@
 # Configuración de GitLab
 
-Cada **cuenta** indica desde qué proyectos se alimenta su tablero y con qué access token se los consulta. Los carga un administrador una sola vez y con ellos se arma el tablero de todos los miembros: quien se suma no configura nada. Los motivos y las alternativas descartadas están en el [ADR 0008](../decisions/0008-credenciales-de-gitlab-por-usuario.md) y el [ADR 0011](../decisions/0011-cuentas-compartidas.md); este documento describe el modelo y las reglas.
+Cada cuenta define una lista de proyectos y un access token para construir su tablero. Un administrador configura ambos una sola vez y todos los integrantes consumen el mismo resultado.
 
-La configuración se carga en la sección **«Mi cuenta»**, en la tarjeta «Cuenta de GitLab». El **nickname de GitLab**, en cambio, lo carga cada persona: pertenece al usuario y no a la cuenta, así que vive en la [autenticación](autenticacion.md#nickname-de-gitlab).
+El nickname de GitLab es personal y se define en [Autenticación](autenticacion.md#nickname-de-gitlab).
 
-## Modelo de datos
+## Modelo
 
-En la misma base Postgres de la [autenticación](autenticacion.md) hay una tabla más:
+`account_gitlab_settings` mantiene una única configuración por cuenta:
 
-- **`account_gitlab_settings`**: `account_id` (clave primaria y foránea a `accounts`), `project_ids`, `encrypted_access_token`, `updated_at`. Se borra en cascada al eliminar la cuenta.
+- `account_id`: clave primaria y referencia a la cuenta.
+- `project_ids`: lista de proyectos.
+- `encrypted_access_token`: token cifrado.
+- `updated_at`: versión usada para invalidar la caché.
 
-Cada cuenta tiene a lo sumo una configuración, así que el alta y la modificación son la misma operación: un `INSERT ... ON CONFLICT DO UPDATE`. Los IDs viven en una columna `TEXT[]`, porque son una lista corta que siempre se lee completa.
+## Proyectos
 
-Antes esta tabla se llamaba `gitlab_settings` y era de cada usuario. El paso de una a otra lo hace el propio esquema al arrancar: está descrito en el [dominio de cuentas](cuentas.md#migración-desde-la-configuración-por-persona).
+- Se exige entre uno y cincuenta IDs numéricos.
+- Se aceptan como lista o como texto separado por comas, espacios o punto y coma.
+- Se eliminan repetidos y se conserva el orden ingresado.
+- Una ruta `grupo/proyecto` no es válida: la API trabaja con IDs.
 
-## Reglas
+## Access token
 
-### IDs de proyecto
+El token debe tener al menos 20 caracteres y alcance `read_api` sobre todos los proyectos configurados. Puede ser personal, de proyecto o de grupo; no se exige un prefijo específico.
 
-- Al menos uno y como máximo 50.
-- Sólo números. Los IDs viajan dentro de la ruta de la API de GitLab, así que aceptar únicamente números evita además que un valor arbitrario altere la URL consultada. Una ruta `grupo/proyecto` se rechaza con HTTP 400.
-- Se aceptan escritos como lista o como texto separado por comas, espacios o punto y coma. Se descartan los repetidos y se conserva el orden ingresado.
+Se cifra con AES-256-GCM y una clave derivada de `ENCRYPTION_KEY`. Cambiar esa variable vuelve ilegibles los token guardados y obliga a cargarlos nuevamente.
 
-### Access token
+El token nunca vuelve al navegador. La lectura sólo incluye `tokenHint` con sus últimos cuatro caracteres. En una actualización, omitir un token nuevo conserva el existente; la primera configuración sí lo exige.
 
-- Un PAT de GitLab con el alcance `read_api` sobre los proyectos configurados. Conviene que sea de alguien que vaya a seguir en el equipo, o un token de grupo: con él consulta todo el mundo.
-- Mínimo 20 caracteres. No se exige el prefijo `glpat-`, porque los tokens de proyecto y de grupo usan otros.
-- Se guarda **cifrado con AES-256-GCM**, en el formato `v1.vector.etiqueta.cifrado` con las partes en base64. El vector de inicialización es aleatorio en cada guardado, así que cifrar dos veces el mismo token da resultados distintos; la etiqueta de autenticación hace que un valor alterado en la base falle al descifrarse en lugar de devolver basura.
-- La clave se deriva con scrypt de `ENCRYPTION_KEY`. Cambiar esa variable vuelve ilegibles los tokens ya guardados: el backend lo registra en el log, trata la configuración como inexistente y hay que cargar el token de nuevo.
-- **Nunca vuelve al navegador.** Las respuestas incluyen `tokenHint` —sus últimos cuatro caracteres— para reconocer cuál está guardado.
-- Guardar sin escribir un token nuevo conserva el que ya estaba, de modo que se pueden cambiar los proyectos sin volver a escribirlo. En la primera configuración el token es obligatorio.
+## Permisos y endpoints
 
-## Endpoints
+Todas las operaciones usan la cuenta de la sesión.
 
-Todos operan sobre la configuración de la cuenta de quien tiene la sesión abierta: el `account_id` sale de la sesión y nunca del cuerpo de la petición, así que no hay forma de leer ni modificar la de otra cuenta.
-
-| Ruta | Permiso | Uso |
+| Ruta | Acceso | Uso |
 |---|---|---|
-| `GET /api/gitlab-settings` | Sesión | Devuelve `{ settings }` con `projectIds`, `tokenHint` y `updatedAt`, o `null` si no hay nada configurado |
-| `PUT /api/gitlab-settings` | `admin` | Recibe `{ projectIds, accessToken? }` y devuelve la configuración guardada |
-| `DELETE /api/gitlab-settings` | `admin` | Borra la configuración y responde 204 |
+| `GET /api/gitlab-settings` | Sesión | Devuelve proyectos, `tokenHint` y fecha, o `null`. |
+| `PUT /api/gitlab-settings` | Admin | Crea o actualiza la configuración. |
+| `DELETE /api/gitlab-settings` | Admin | Elimina la configuración. |
 
-La lectura la puede hacer cualquier miembro: necesita saber si el tablero ya tiene de dónde alimentarse y, si no, a quién pedírselo. La escritura exige rol `admin`, porque un cambio afecta a todo el equipo; al resto le responde **403**.
-
-Los datos inválidos responden **HTTP 400** con el motivo en español.
+Una configuración inválida responde 400 y una escritura sin rol, 403.
 
 ## Efecto en el tablero
 
-`GET /api/pull-requests` consulta GitLab con el token de la cuenta de quien pregunta. Sin configuración responde **HTTP 409** con `{ "error": ..., "code": "gitlab_settings_missing" }`. El frontend presenta un enlace a «Mi cuenta» a quien puede resolverlo, y a los demás les dice que se lo pidan a quien administra.
+Sin configuración, `GET /api/pull-requests` responde 409 con el código `gitlab_settings_missing`. El frontend guía al administrador hacia «Mi cuenta» y al resto le indica que solicite la configuración.
 
-La caché del tablero es **por cuenta** y guarda junto a la respuesta la fecha de la configuración con la que se consultó. Cambiar los proyectos o el token cambia esa fecha, así que la entrada guardada deja de servir sin necesidad de avisarle al router. Lo único que no se comparte es `meta.viewerUsername`, que la ruta completa con el nickname de quien pregunta al entregar la respuesta. El resto del comportamiento de la caché —TTL, `force=true` y su alcance por proceso— está en la [arquitectura del backend](../architecture/backend.md#caché).
+Cambiar proyectos o token modifica `updated_at` e invalida la entrada de caché asociada. El comportamiento general de la caché está en la [arquitectura del backend](../architecture/backend.md#caché).

@@ -1,178 +1,103 @@
 # Arquitectura del backend
 
-El backend es un **Backend for Frontend (BFF)** construido con Node.js y Express, en JavaScript ([ADR 0012](../decisions/0012-javascript-sin-typescript.md)). Mantiene los token de GitLab fuera del navegador, consolida la información de varios proyectos y entrega al frontend un contrato adaptado al tablero.
+El backend es un **Backend for Frontend (BFF)** construido con Node.js, Express y JavaScript. Mantiene los secretos fuera del navegador, concentra las reglas de negocio y publica un contrato preparado para la interfaz.
 
-Usa ES modules, así que los imports relativos llevan la extensión `.js` explícita, como exige Node. No hay compilación: Node ejecuta directamente los archivos de `src/`.
+## Responsabilidades
+
+- Autenticar sesiones y validar permisos.
+- Aislar los datos por cuenta.
+- Administrar usuarios, cuentas y configuración de GitLab.
+- Consultar, enriquecer y clasificar merge requests.
+- Persistir datos propios en Postgres y mantener una caché temporal de GitLab.
+- Traducir fallos externos en respuestas HTTP consistentes.
 
 ## Organización del código
 
-`src/` se organiza **por feature primero y por capa después**, con el mismo criterio que el frontend ([ADR 0010](../decisions/0010-backend-por-features.md)):
+`backend/src/` se organiza por feature y luego por capa:
 
 ```text
 src/
-  app.js, index.js, config.js     Composición, arranque y configuración
+  app.js, index.js, config.js
   features/
-    accounts/                      routes/ services/ utils/
-    auth/                          routes/ services/ utils/
-    gitlabSettings/                routes/ services/ utils/
-    mergeRequests/                 routes/ services/ utils/
-    users/                         routes/ services/ utils/
-  shared/                          database.js httpError.js
-  scripts/                         Herramientas de línea de comandos
+    accounts/          routes/ services/ utils/
+    auth/              routes/ services/ utils/
+    gitlabSettings/    routes/ services/ utils/
+    mergeRequests/     routes/ services/ utils/
+    users/             routes/ services/ utils/
+  shared/              database.js httpError.js
+  scripts/             herramientas operativas
 ```
 
-Dentro de cada feature se mantiene la separación de capas: `routes/` define los contratos HTTP, valida entradas y permisos y traduce errores a estados HTTP; `services/` concentra la lógica de negocio y el acceso a la base y a GitLab; `utils/` guarda las piezas auxiliares que sólo usa esa feature.
+- `routes/` define contratos HTTP, valida entradas y aplica permisos.
+- `services/` contiene reglas de negocio e integración con datos o servicios externos.
+- `utils/` reúne auxiliares exclusivos de una feature.
+- `shared/` contiene únicamente infraestructura usada por varias features.
+- `app.js` compone Express; `index.js` inicia el servidor local; `config.js` valida la configuración.
 
-En `shared/` va únicamente lo que usan varias features. Lo que usa una sola vive dentro de ella, aunque parezca genérico: el limitador de concurrencia pertenece a `mergeRequests` y el cifrador de secretos a `gitlabSettings`.
-
-### Composición y entradas
-
-- `src/index.js`: prepara la aplicación y recién entonces inicia el servidor local en el puerto configurado. No contiene rutas ni lógica de negocio.
-- `src/app.js`: construye Express mediante `createApp()`, abre la base y aplica el esquema mediante `createConfiguredApp()`, y exporta por omisión el handler que usa Vercel. Configura CORS y JSON, registra el health check, monta los routers de cada feature —exigiendo sesión en `/api`, y rol `admin` en la administración de usuarios y en la escritura de la cuenta y de la configuración de GitLab— y centraliza los errores no controlados. Importa cada router por su ruta completa: no hay barrels.
-- `src/config.js`: carga `backend/.env`, valida las variables obligatorias y expone la configuración normalizada.
-- `src/scripts/users.js`: herramienta de línea de comandos para administrar cuentas y usuarios. Es un punto de entrada más, como `index.js`, y no forma parte de la API.
-
-### Feature `accounts`
-
-- `routes/accounts.js`: lectura de la cuenta de la sesión, cambio de su nombre y renovación de su código de invitación.
-- `services/accountRepository.js`: acceso a las cuentas y conteo de sus miembros.
-- `services/accountService.js`: valida el nombre, resuelve el código de invitación y arma la vista pública, que incluye el código sólo para un `admin`.
-- `utils/inviteCode.js`: generación y normalización del código de invitación.
-
-### Feature `auth`
-
-- `routes/auth.js`: registro, login, sesión y cambio de la propia contraseña. Publica además los middlewares `createRequireSession` y `createRequireAdmin`, que reutilizan las otras features.
-- `services/authRepository.js`: acceso exclusivo a sesiones.
-- `services/authService.js`: registro que crea o resuelve la cuenta, ingreso, vencimiento y cierre de sesión, contraseñas y freno de fuerza bruta.
-- `utils/`: derivación de contraseñas y lectura de cookies.
-
-### Feature `users`
-
-- `routes/users.js`: perfil y nickname propios para cualquier sesión; listado, alta administrada y estados para rol `admin`.
-- `services/userRepository.js`: acceso exclusivo a la tabla `users`.
-- `services/userService.js`: validación, alta, perfil, nickname de GitLab, pertenencia a la cuenta, listado, estados y borrado.
-- `utils/gitlabUsername.js`: validación del nickname personal de GitLab.
-
-### Feature `gitlabSettings`
-
-- `routes/gitlabSettings.js`: lectura de la configuración de la cuenta para cualquier miembro, y guardado y borrado para un `admin`.
-- `services/gitlabSettingsRepository.js`: acceso a la configuración de cada cuenta.
-- `services/gitlabSettingsService.js`: valida los IDs de proyecto y el access token, y cifra y descifra el token con el cifrador inyectado.
-- `utils/encryption.js`: cifrado simétrico de secretos.
-
-### Feature `mergeRequests`
-
-- `routes/mergeRequests.js`: contratos del tablero, caché por cuenta, `viewerUsername` y validación de que sólo los MRs listos acepten una fecha de subida.
-- `services/gitlabApi.js`: construye el cliente de GitLab para un access token concreto, y encapsula URLs, paginación y acceso limitado a la API v4.
-- `services/mergeRequestService.js`: coordina las consultas, enriquece los merge requests y construye la respuesta del BFF.
-- `services/mergeRequestRules.js`: reglas puras de clasificación, responsabilidad y normalización que no dependen de Express ni de la red.
-- `services/mergeRequestUploadDateService.js` y su repositorio: validación y persistencia por cuenta de la fecha de subida.
-- `utils/`: limitador de concurrencia y reglas de bloqueo técnico.
-
-### `shared/`
-
-- `database.js`: abre el pool contra Neon con `@neondatabase/serverless`, expone la interfaz mínima `Database` —`query` y `close`— y aplica el esquema. Los repositorios reciben esa interfaz y no el driver: es lo que permite ejecutarlos contra otro Postgres en los test. Comparten una única conexión, porque las claves foráneas entre sus tablas sólo valen dentro de la misma base.
-- `httpError.js`: `HttpError` —un error de negocio que ya sabe con qué código responder— y `respondWithHttpError`, que lo traduce a una respuesta y registra el resto como error interno.
-
-`test/` contiene configuración, fixtures y utilidades de los test. Las convenciones se mantienen en la [estrategia de test](../development/test.md).
+No hay barrels. Cada import identifica el archivo dueño del contrato.
 
 ## Construcción y arranque
 
-`createApp()` construye la aplicación sin abrir un puerto y `src/index.js` es el único responsable de invocar `listen()`, así que la aplicación puede ejecutarse en memoria o en distintos entornos. Tanto `createApp()` como `createMergeRequestsRouter()` reciben por inyección la fuente de merge requests y el reloj de la caché, lo que permite controlar sus dependencias sin consultar GitLab ni depender del tiempo real. `createApp()` acepta además todos los servicios ya construidos; si le falta alguno, abre el pool de `DATABASE_URL` y lo arma sobre la conexión compartida.
+`createApp()` construye Express sin abrir un puerto y permite inyectar servicios para los test. `createConfiguredApp()` abre un único pool de Neon, aplica el esquema idempotente y construye las dependencias compartidas antes de aceptar solicitudes.
 
-`createConfiguredApp()` abre una sola base y aplica el esquema antes de construir los servicios. El handler exportado por omisión conserva esa inicialización por proceso para las invocaciones de Vercel y la descarta si falla, de modo que una interrupción transitoria de Neon pueda reintentarse. Si la preparación no termina, responde HTTP 503; el arranque local reutiliza la misma función y no abre el puerto hasta que la base está lista.
+Si la base no está disponible durante la preparación, el backend responde HTTP 503 y permite reintentar la inicialización. El proceso local no abre el puerto hasta completar ese paso.
 
-## Flujo de una consulta
+## Flujo del tablero
 
-Una solicitud a `GET /api/pull-requests` atraviesa el siguiente flujo:
+Una solicitud a `GET /api/pull-requests` sigue este recorrido:
 
-1. El router lee la configuración de la cuenta de quien pregunta y descifra su access token; sin configuración responde HTTP 409.
-2. El router responde con la caché vigente de esa cuenta, salvo que la solicitud incluya `?force=true`.
-3. El servicio construye el cliente de GitLab con ese token y consulta en paralelo los merge requests abiertos y la ruta de cada proyecto configurado.
-4. Cada merge request se enriquece en paralelo con aprobaciones, discusiones y el último pipeline.
-5. El limitador del proceso permite hasta seis operaciones concurrentes contra GitLab, sin importar cuántas personas consulten a la vez.
-6. Las reglas puras calculan la clasificación del merge request y sus responsables.
-7. Los resultados se ordenan por fecha de actualización descendente y se agregan los metadatos de la consulta, incluidas las personas participantes.
-8. El router conserva la respuesta de GitLab en memoria, le agrega las fechas de subida persistidas para la cuenta y completa en `meta.viewerUsername` el nickname de quien preguntó antes de devolverla.
+1. Valida la sesión y obtiene la cuenta desde ella.
+2. Lee y descifra la configuración de GitLab de esa cuenta.
+3. Reutiliza la caché vigente, salvo que se solicite `force=true`.
+4. Consulta proyectos y merge requests respetando el límite de concurrencia.
+5. Enriquece cada resultado con aprobaciones, discusiones y pipeline.
+6. Aplica reglas puras de clasificación y responsabilidad.
+7. Agrega fechas persistidas y la identidad de quien consulta.
+8. Devuelve el contrato consolidado al frontend.
 
-Los datos obtenidos de GitLab no se guardan: cada proceso mantiene su propia caché y la pierde al reiniciarse. Las fechas de subida sí se persisten en Postgres porque son datos propios del tablero. El resto de la persistencia se describe en el [dominio de autenticación](../domains/autenticacion.md) y en la [configuración de GitLab](../domains/configuracion-gitlab.md).
+Las reglas funcionales están en [Merge Requests](../domains/merge-requests.md); este documento sólo describe cómo circulan los datos.
+
+## Persistencia
+
+PostgreSQL en Neon es la fuente de verdad para cuentas, usuarios, sesiones, configuración de GitLab y fechas de subida. Los repositorios dependen de una interfaz mínima `Database` con `query` y `close`, por lo que los test pueden usar PGlite sin acoplar el dominio al driver.
+
+El pool se abre una vez por proceso y se comparte entre repositorios. La decisión y sus consecuencias están en el [ADR 0007](../decisions/0007-neon-como-base-de-datos.md).
 
 ## Integración con GitLab
 
-`gitlabApi.js` usa la API v4 y envía mediante el encabezado `PRIVATE-TOKEN` el access token de quien consulta, que el backend descifra al armar el cliente. El token necesita el alcance `read_api` y nunca se incluye en la respuesta al navegador.
+El cliente usa la API v4 con un access token cifrado de la cuenta. El token necesita alcance `read_api` y nunca vuelve al navegador. Las consultas paginadas solicitan hasta 100 elementos por página y un limitador permite como máximo seis operaciones simultáneas por proceso.
 
-Las consultas paginadas solicitan hasta 100 elementos por página y recorren como máximo diez páginas. El encabezado `x-next-page` de GitLab determina si existe una página siguiente.
-
-El `RateLimiter` es del proceso y permite hasta seis operaciones concurrentes: protege a la instancia de GitLab del total de consultas, sin importar en nombre de quién se hagan. Las funciones del resto del backend acceden a GitLab mediante `fetchWithLimit()` o `fetchPaginatedWithLimit()` del cliente para respetar este límite.
-
-## Enriquecimiento y tolerancia a fallos
-
-El backend prioriza entregar una vista parcial antes que descartar toda la respuesta cuando falla información secundaria:
-
-- Si falla la consulta de merge requests de un proyecto, se registra el error y ese proyecto aporta una lista vacía.
-- Si no se puede obtener la ruta de un proyecto, se usa `project-<id>` como nombre de respaldo.
-- Si fallan las aprobaciones o las discusiones, su estado pasa a `unknown`.
-- Si falla la consulta del pipeline, su estado pasa a `none`.
-- Si falla la operación global de la ruta, el backend responde HTTP 502 con un mensaje contextual.
-- Si falla la consulta a la base al validar la sesión o al leer la configuración, el backend responde HTTP 503 y no 401 ni 502: el problema no es de la sesión ni de GitLab.
-- Los errores no controlados llegan al middleware global y producen HTTP 500. Express 4 no captura promesas rechazadas, así que cada handler asíncrono maneja sus propios errores.
+Cuando falla información secundaria, el backend conserva una respuesta parcial: aprobaciones y discusiones quedan como `unknown`, el pipeline como `none` y un proyecto sin nombre recibe uno de respaldo. Un fallo global de GitLab responde HTTP 502.
 
 ## Caché
 
-`createMergeRequestsRouter()` mantiene en memoria **una respuesta por cuenta**: sus miembros consultan GitLab con las mismas credenciales, así que comparten la respuesta y el equipo entero cuesta una sola consulta. Compartirla entre cuentas, en cambio, filtraría proyectos que no configuraron. Su duración se configura con `POLL_CACHE_TTL_MS`, cuyo valor predeterminado es 60 segundos.
+La caché de merge requests vive en memoria y mantiene una entrada por cuenta durante `POLL_CACHE_TTL_MS`.
 
-- Una solicitud normal reutiliza la caché de esa cuenta mientras el TTL siga vigente.
-- Lo único que no se comparte es `meta.viewerUsername`: la ruta lo completa al entregar la respuesta, así que dos personas de la misma cuenta reciben los mismos merge requests con distinta identidad.
-- Las fechas de subida tampoco forman parte de la entrada almacenada: se leen de Postgres y se agregan al responder, de modo que un cambio se vea sin invalidar la caché de GitLab.
-- Junto a la respuesta se guarda la fecha de la configuración con la que se consultó. Cambiar los proyectos o el token la descarta, sin necesidad de avisarle al router.
-- `GET /api/pull-requests?force=true` omite la lectura de la caché, vuelve a consultar GitLab y reemplaza el valor almacenado.
-- La caché solo se actualiza después de obtener una respuesta satisfactoria.
-- Varias instancias del backend no comparten caché entre sí.
+- Los miembros de una cuenta comparten los datos obtenidos de GitLab.
+- `meta.viewerUsername` y las fechas de subida se agregan al responder y no forman parte de la entrada compartida.
+- Cambiar los proyectos o el token invalida la entrada mediante la fecha de la configuración.
+- `force=true` omite la lectura y reemplaza la entrada después de una consulta satisfactoria.
+- Las instancias del backend no comparten caché.
 
-## Endpoints
+## Seguridad y errores
 
-### `GET /health`
+- Las rutas privadas de `/api` exigen sesión; login, registro y recuperación son excepciones públicas explícitas. Las operaciones administrativas también exigen rol `admin`.
+- El `accountId` se toma de la sesión y nunca del cuerpo de la petición.
+- Consultar un recurso de otra cuenta responde 404 para no revelar su existencia.
+- Los access token se guardan cifrados y las contraseñas, derivadas.
+- Un fallo de persistencia responde 503; uno de GitLab, 502; un error no controlado, 500.
+- Express 4 no captura promesas rechazadas, por lo que cada handler asíncrono maneja sus errores.
 
-Devuelve el estado del proceso. Sirve como chequeo de vida, pero no comprueba la conectividad ni las credenciales de GitLab.
+## API
 
-### `/api/auth/*`
+| Ruta | Propósito | Permiso |
+|---|---|---|
+| `GET /health` | Estado del proceso. | Público |
+| `/api/auth/*` | Registro, login, sesión y contraseña propia. | Según operación |
+| `/api/account` | Cuenta e invitación. | Sesión; escritura de admin |
+| `/api/users/*` | Perfil propio y gestión de integrantes. | Sesión; gestión de admin |
+| `/api/gitlab-settings` | Configuración compartida de GitLab. | Sesión; escritura de admin |
+| `GET /api/pull-requests` | Tablero consolidado. | Sesión |
+| `PUT /api/pull-requests/:projectId/:mergeRequestIid/upload-date` | Fecha de subida de un MR listo. | Sesión |
 
-Administran la autenticación. `register` da de alta un usuario y abre su sesión, sumándolo a la cuenta de `inviteCode` o creando una nueva con `accountName`; `login` recibe `{ email, password }` y responde con el usuario, entregando el token en una cookie `HttpOnly`; `logout` la invalida; `me` devuelve el usuario de la sesión vigente; `password` cambia la contraseña propia exigiendo la actual.
-
-### `/api/account`
-
-La cuenta de la sesión: su nombre, cuánta gente la integra y, sólo para un `admin`, su código de invitación. Renombrarla y renovar el código exigen rol `admin`. Las reglas están en el [dominio de cuentas](../domains/cuentas.md).
-
-### `/api/users/*`
-
-`PATCH /api/users/me/profile` cambia el nombre visible y el email propios; `PUT /api/users/me/gitlab-username` guarda el nickname personal de GitLab. Ambas exigen sólo sesión y devuelven la identidad actualizada.
-
-El listado, el alta con rol y la habilitación o deshabilitación exigen rol `admin` y alcanzan **sólo a la cuenta de quien administra**: el `email` es único en toda la base, así que sin ese límite un administrador llegaría a los usuarios de otra cuenta. Sobre alguien de otra cuenta responden 404.
-
-No hay ruta para restablecer la contraseña de otra persona: fijarle la contraseña a alguien equivale a poder entrar como esa persona, así que la operación quedó sólo en `npm run users -- password`, que exige acceso al servidor.
-
-La tabla completa de permisos y las reglas —vencimiento, estados, freno de fuerza bruta y límite de registros— están en el [dominio de autenticación](../domains/autenticacion.md).
-
-### `/api/gitlab-settings`
-
-Configuración de GitLab de la cuenta: los IDs de los proyectos y el access token con el que se los consulta. Leerla exige sesión y escribirla, rol `admin`; siempre opera sobre la cuenta de la sesión. El token se guarda cifrado y nunca vuelve al navegador. Las rutas y las reglas están en la [configuración de GitLab](../domains/configuracion-gitlab.md).
-
-### `GET /api/pull-requests`
-
-**Exige una sesión válida**: sin ella responde HTTP 401. Si en la cuenta todavía no se configuró GitLab responde HTTP 409 con el código `gitlab_settings_missing`. Devuelve los merge requests consolidados en `mergeRequests` y un objeto `meta` con la fecha de consulta, cantidad de proyectos, total de resultados, nombres de todos los proyectos configurados, las personas participantes en `people` y el nickname de GitLab de quien pregunta en `viewerUsername`.
-
-Cada merge request incluye el nombre y el `username` del autor. El nombre se presenta en la interfaz y `authorUsername` aporta la identidad estable con la que se comparan las personas. `uploadDate` contiene la fecha de subida compartida en formato `AAAA-MM-DD`, o `null` cuando todavía no se definió.
-
-El backend resuelve además la responsabilidad de cada merge request en `responsiblePeople` y publica en `meta.people` la lista de autores y reviewers sin duplicados. El frontend consume ambos campos tal como llegan: las reglas se documentan en el [dominio de merge requests](../domains/merge-requests.md#responsable) y su uso, en la [vista personal](../domains/vista-personal.md).
-
-El parámetro opcional `force=true` fuerza la actualización de la caché. Cualquier otro valor se trata como una solicitud normal.
-
-### `PUT /api/pull-requests/:projectId/:mergeRequestIid/upload-date`
-
-Guarda o reemplaza la fecha de subida con `{ uploadDate: "AAAA-MM-DD" }`; una cadena vacía la quita. Exige sesión, que el MR forme parte del tablero actual de la cuenta y que su clasificación sea `ready_to_merge`. Responde 400 ante IDs o fechas inválidos, 404 si el MR no pertenece al tablero y 409 si no está listo para mergear.
-
-## Configuración
-
-`src/config.js` carga `backend/.env`. `DATABASE_URL` y `ENCRYPTION_KEY` son obligatorias; si falta alguna, el proceso informa el problema y termina. Los valores opcionales controlan la URL de GitLab, el puerto, el TTL de la caché, las reglas de aprobación y la ubicación y duración de las sesiones. El access token y los proyectos no son configuración del proceso: los carga un administrador de cada cuenta y se guardan en la base.
-
-La lista completa, sus valores predeterminados y el procedimiento de actualización se mantienen en el [README de la raíz](https://github.com/NGiudiDev/gitlab-mr-board/blob/main/README.md#backend).
+Los cuerpos, estados y reglas de cada operación se mantienen en [Dominios](../domains/). La configuración del proceso está en el [README de la raíz](https://github.com/NGiudiDev/gitlab-mr-board/blob/main/README.md#backend).
