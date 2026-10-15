@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { MrCard } from "./mr_card.jsx";
@@ -19,15 +19,11 @@ afterEach(() => {
 });
 
 describe("MrCard", () => {
-  it("enlaza el título al MR de GitLab en una pestaña nueva", () => {
-    const { container } = renderCard({ title: "Agregar filtro por autor" });
-    const link = container.querySelector("a");
+  it("muestra el título sin enlazarlo a GitLab", () => {
+    renderCard({ title: "Agregar filtro por autor" });
 
-    expect(link.textContent).toContain("Agregar filtro por autor");
-    expect(link.getAttribute("href")).toBe("https://gitlab.example.com/equipo/tablero/-/merge_requests/1");
-    expect(link.getAttribute("target")).toBe("_blank");
-    expect(link.getAttribute("rel")).toBe("noopener");
-    expect(link.textContent).toContain("abre en una pestaña nueva");
+    expect(screen.getByRole("heading", { name: "Agregar filtro por autor" })).not.toBeNull();
+    expect(screen.queryByRole("link", { name: /Agregar filtro por autor/ })).toBeNull();
   });
 
   it("muestra la rama de origen y la de destino", () => {
@@ -92,5 +88,34 @@ describe("MrCard", () => {
     renderCard({ title: "Agregar filtro por autor" });
 
     expect(screen.getByRole("article")).not.toBeNull();
+  });
+
+  it("mantiene la fecha fuera de la tarjeta", () => {
+    renderCard({ uploadDate: "2026-10-10" });
+
+    expect(screen.queryByLabelText("Fecha de subida")).toBeNull();
+  });
+
+  it("abre el detalle al activar la superficie de la tarjeta", () => {
+    renderCard({ title: "Agregar filtro por autor" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Ver detalles de Agregar filtro por autor" }));
+
+    expect(screen.getByRole("dialog")).not.toBeNull();
+    expect(screen.getByLabelText("Fecha de subida")).not.toBeNull();
+  });
+
+  it("cierra el detalle con Escape y devuelve el foco a la tarjeta", async () => {
+    renderCard({ title: "Agregar filtro por autor" });
+    const openButton = screen.getByRole("button", { name: "Ver detalles de Agregar filtro por autor" });
+    openButton.focus();
+    fireEvent.click(openButton);
+
+    await act(async () => {
+      fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+    });
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(document.activeElement).toBe(openButton);
   });
 });

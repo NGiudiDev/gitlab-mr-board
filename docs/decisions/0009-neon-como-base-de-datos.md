@@ -24,7 +24,7 @@ Persistir en **Neon**, un Postgres serverless administrado, con el driver oficia
 - **Un ORM como Drizzle o Prisma**: da tipos derivados del esquema y migraciones versionadas, pero es una dependencia grande para tres tablas y contradice la idea de proyecto liviano.
 - **Postgres real en los test, con Docker o una rama de Neon**: es lo más fiel, pero `npm test` dejaría de correr solo y la suite pasaría a depender de credenciales y de limpieza entre casos.
 - **Repositorios falsos en memoria para los test**: rápido y sin dependencias, pero el SQL real quedaría sin cubrir.
-- **Seguir con SQLite y montar un volumen persistente**: es lo que hoy documenta la guía de producción. Resuelve el respaldo pero no el escalado, y ata el despliegue a las plataformas que ofrecen volúmenes.
+- **Seguir con SQLite y montar un volumen persistente**: era el esquema documentado antes de adoptar Neon. Resuelve el respaldo pero no el escalado, y ata el despliegue a las plataformas que ofrecen volúmenes.
 
 ## Consecuencias
 

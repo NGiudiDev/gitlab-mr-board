@@ -5,7 +5,12 @@ import { Styles as AppStyles } from "../../../../app/app.styles.jsx";
 import { Styles } from "./board_column.style.js";
 
 export function BoardColumn(props) {
-  const { idPrefix, mergeRequests, title } = props;
+  const {
+    idPrefix,
+    mergeRequests,
+    onUploadDateChange = async () => {},
+    title,
+  } = props;
 
   const headingId = `columna-${idPrefix}-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
 
@@ -23,7 +28,7 @@ export function BoardColumn(props) {
       <Styles.CardList role="list">
         {mergeRequests.map((mr) => (
           <li key={mr.id}>
-            <MrCard mr={mr} />
+            <MrCard mr={mr} onUploadDateChange={onUploadDateChange} />
           </li>
         ))}
       </Styles.CardList>

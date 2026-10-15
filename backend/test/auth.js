@@ -10,6 +10,8 @@ import { createAuthRepository } from "../src/features/auth/services/authReposito
 import { createAuthService } from "../src/features/auth/services/authService.js";
 import { createGitLabSettingsRepository } from "../src/features/gitlabSettings/services/gitlabSettingsRepository.js";
 import { createGitLabSettingsService } from "../src/features/gitlabSettings/services/gitlabSettingsService.js";
+import { createMergeRequestUploadDateRepository } from "../src/features/mergeRequests/services/mergeRequestUploadDateRepository.js";
+import { createMergeRequestUploadDateService } from "../src/features/mergeRequests/services/mergeRequestUploadDateService.js";
 import { createUserRepository } from "../src/features/users/services/userRepository.js";
 import { createUserService } from "../src/features/users/services/userService.js";
 import { createTestDatabase } from "./database.js";
@@ -33,7 +35,7 @@ function createTestGitLabSettingsService(database) {
 }
 
 /**
- * Arma los cuatro servicios sobre una misma base en memoria.
+ * Arma los servicios sobre una misma base en memoria.
  *
  * Comparten la conexión porque las claves foráneas entre sus tablas sólo valen
  * dentro de la misma base.
@@ -57,6 +59,9 @@ function createTestServices(database) {
       userService,
     }),
     gitlabSettingsService: createTestGitLabSettingsService(database),
+    mergeRequestUploadDateService: createMergeRequestUploadDateService({
+      repository: createMergeRequestUploadDateRepository(database),
+    }),
     userService,
   };
 }
@@ -69,7 +74,7 @@ async function createEmptyServices() {
 /**
  * Arma los servicios con una cuenta y un usuario de prueba ya dados de alta.
  *
- * Devuelve los cuatro para poder pasárselos enteros a `createApp`: si alguno
+ * Devuelve todos para poder pasárselos enteros a `createApp`: si alguno
  * faltara, la app armaría el resto contra Neon.
  *
  * @param role Rol del usuario de prueba; `admin` para las rutas de gestión.
@@ -109,6 +114,7 @@ async function createAuthenticatedApp(options = {}, role = "user") {
     accountService,
     authService,
     gitlabSettingsService,
+    mergeRequestUploadDateService,
     userService,
   } = await createTestServicesWithUser(role);
 
@@ -124,10 +130,18 @@ async function createAuthenticatedApp(options = {}, role = "user") {
   });
 
   return {
-    app: createApp({ ...options, accountService, authService, gitlabSettingsService, userService }),
+    app: createApp({
+      ...options,
+      accountService,
+      authService,
+      gitlabSettingsService,
+      mergeRequestUploadDateService,
+      userService,
+    }),
     accountService,
     authService,
     gitlabSettingsService,
+    mergeRequestUploadDateService,
     userService,
     account,
     user: { ...user, gitlabUsername: TEST_GITLAB_USERNAME },
