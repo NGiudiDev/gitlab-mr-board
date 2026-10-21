@@ -6,7 +6,9 @@ import { App } from "./app/app.jsx";
 
 import { GlobalStyles } from "./app/app.styles.jsx";
 
-createRoot(document.getElementById("app")).render(
+import { errorReporting } from "./errorReporting.js";
+
+createRoot(document.getElementById("app"), errorReporting.initialize()).render(
   <StrictMode>
     <BrowserRouter>
       <GlobalStyles />

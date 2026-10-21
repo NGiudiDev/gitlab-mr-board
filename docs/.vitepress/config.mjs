@@ -10,6 +10,7 @@ const sidebar = [
       { text: "Producto", link: "/architecture/producto" },
       { text: "Backend", link: "/architecture/backend" },
       { text: "Frontend", link: "/architecture/frontend" },
+      { text: "Observabilidad", link: "/architecture/observabilidad" },
     ],
   },
   {
