@@ -1,5 +1,8 @@
 import { createConfiguredApp } from "./app.js";
 import config from "./config.js";
+import { errorReporter } from "./shared/errorReporting.js";
+
+errorReporter.initialize();
 
 /**
  * Abre la base, deja el esquema aplicado y recién entonces atiende pedidos.
@@ -17,8 +20,12 @@ async function main() {
   });
 }
 
-main().catch((error) => {
+main().catch(async (error) => {
+  errorReporter.captureException(error, { phase: "arranque del backend" });
   console.error("No se pudo iniciar el backend:", error);
   console.error("Revisá DATABASE_URL y que la base de Neon esté disponible.");
   process.exitCode = 1;
+  await errorReporter.close().catch((closeError) => {
+    console.error("No se pudo completar el envío del reporte de Sentry:", closeError);
+  });
 });

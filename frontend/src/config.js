@@ -6,4 +6,9 @@ export const config = {
     import.meta.env.VITE_API_BASE_URL,
     import.meta.env.PROD ? "" : DEFAULT_API_BASE_URL,
   ),
+  sentry: {
+    dsn: import.meta.env.VITE_SENTRY_DSN?.trim() || "",
+    environment: import.meta.env.MODE || "development",
+    release: import.meta.env.VITE_SENTRY_RELEASE?.trim() || "",
+  },
 };

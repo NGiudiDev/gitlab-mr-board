@@ -9,6 +9,7 @@ El frontend es una aplicación de página única construida con React 19, Vite y
 - Agrupar, ordenar, formatear y filtrar campos ya calculados por el backend.
 - Mantener estado compartido de sesión, cuenta y merge requests.
 - Comunicar carga, errores y cambios asíncronos de forma accesible.
+- Reportar errores globales y de React a Sentry sin enviar PII.
 
 ## Organización del código
 
@@ -33,6 +34,7 @@ Cada funcionalidad usa `components/`, `hooks/`, `pages/`, `constants/` y `utils/
 ## Dirección de dependencias
 
 - `main.jsx` monta React, el router y los estilos globales.
+- `errorReporting.js` inicia Sentry y conecta los callbacks de errores de React 19.
 - `app/` importa pages y stores para resolver layout, rutas y sesión.
 - Las pages coordinan features cuando una pantalla reúne más de un dominio.
 - Los componentes dependen de su feature y de primitivas visuales de `app/`.
@@ -120,3 +122,5 @@ La interfaz apunta a WCAG 2.2 nivel AA:
 - Contraste mínimo y reducción de animaciones con `prefers-reduced-motion`.
 
 Las reglas funcionales de cada pantalla se mantienen en [Dominios](../domains/) y la validación automatizada y manual, en [Test](../development/test.md).
+
+El alcance y la privacidad de los reportes se detallan en [Observabilidad](observabilidad.md).

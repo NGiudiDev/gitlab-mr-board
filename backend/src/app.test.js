@@ -4,7 +4,11 @@ import { TEST_TOKEN } from "../test/constants.js";
 
 import { createAuthenticatedApp } from "../test/auth.js";
 import { requestApp } from "../test/httpClient.js";
-import handleVercelRequest, { createApp, createVercelHandler } from "./app.js";
+import handleVercelRequest, {
+  createApp,
+  createErrorHandler,
+  createVercelHandler,
+} from "./app.js";
 
 describe("GET /health", () => {
   it("informa el estado del proceso", async () => {
@@ -53,9 +57,10 @@ describe("entrada de Vercel", () => {
       setHeader: vi.fn(),
     };
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const errorReporter = { captureException: vi.fn() };
     const handler = createVercelHandler(async () => {
       throw error;
-    });
+    }, errorReporter);
 
     await handler({}, response);
 
@@ -68,6 +73,34 @@ describe("entrada de Vercel", () => {
       "No se pudo preparar el backend para atender la solicitud:",
       error,
     );
+    expect(errorReporter.captureException).toHaveBeenCalledWith(error, {
+      phase: "preparación de la función",
+    });
+
+    consoleError.mockRestore();
+  });
+});
+
+describe("errores no controlados", () => {
+  it("reporta el fallo y devuelve una respuesta segura", () => {
+    const error = new Error("fallo interno");
+    const errorReporter = { captureException: vi.fn() };
+    const response = {
+      json: vi.fn(),
+      status: vi.fn().mockReturnThis(),
+    };
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const errorHandler = createErrorHandler(errorReporter);
+
+    errorHandler(error, { method: "POST", originalUrl: "/api/recurso" }, response, vi.fn());
+
+    expect(errorReporter.captureException).toHaveBeenCalledWith(error, {
+      method: "POST",
+      path: "/api/recurso",
+    });
+    expect(response.status).toHaveBeenCalledWith(500);
+    expect(response.json).toHaveBeenCalledWith({ error: "Error interno del servidor." });
+    expect(consoleError).toHaveBeenCalledWith("Error no controlado:", error);
 
     consoleError.mockRestore();
   });

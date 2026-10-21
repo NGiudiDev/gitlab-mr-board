@@ -10,6 +10,7 @@ El backend es un **Backend for Frontend (BFF)** construido con Node.js, Express 
 - Consultar, enriquecer y clasificar merge requests.
 - Persistir datos propios en Postgres y mantener una caché temporal de GitLab.
 - Traducir fallos externos en respuestas HTTP consistentes.
+- Reportar a Sentry los errores no controlados sin exponer datos sensibles.
 
 ## Organización del código
 
@@ -87,6 +88,8 @@ La caché de merge requests vive en memoria y mantiene una entrada por cuenta du
 - Los access token se guardan cifrados y las contraseñas, derivadas.
 - Un fallo de persistencia responde 503; uno de GitLab, 502; un error no controlado, 500.
 - Express 4 no captura promesas rechazadas, por lo que cada handler asíncrono maneja sus errores.
+
+El alcance y las reglas de privacidad de los reportes están en [Observabilidad](observabilidad.md).
 
 ## API
 
