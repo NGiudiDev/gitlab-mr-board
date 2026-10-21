@@ -22,6 +22,11 @@ export function LoginForm(props) {
     onSubmit({ email: email.trim(), password });
   }
 
+  function handleNewAccount() {
+    throw new Error("Test operativo de Sentry frontend");
+    onShowRegister();
+  }
+
   return (
     <Styles.AuthForm aria-labelledby="login-heading" onSubmit={handleSubmit}>
       <Styles.AuthFormHeading id="login-heading">
@@ -83,7 +88,7 @@ export function LoginForm(props) {
 
       <Styles.AuthFormSwitch>
         ¿No tenés cuenta?{" "}
-        <Styles.ButtonLink onClick={onShowRegister} type="button">
+        <Styles.ButtonLink onClick={handleNewAccount} type="button">
           Crear una cuenta
         </Styles.ButtonLink>
       </Styles.AuthFormSwitch>
