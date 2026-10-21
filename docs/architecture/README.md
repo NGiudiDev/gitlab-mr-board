@@ -14,4 +14,8 @@ La arquitectura se documenta desde tres puntos de vista. Cada página resume res
 
 [Frontend](frontend.md) presenta la aplicación React, sus pantallas, la dirección de dependencias, los stores y las decisiones visuales y de accesibilidad.
 
+## Observabilidad
+
+[Observabilidad](observabilidad.md) define qué fallos se envían a Sentry, cómo se configura la integración y qué datos deben quedar fuera de los reportes.
+
 Las decisiones que justifican esta estructura están en los [ADR](../decisions/). Las reglas funcionales vigentes están en [Dominios](../domains/).

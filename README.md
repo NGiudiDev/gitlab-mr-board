@@ -9,6 +9,7 @@ GitLab MR Board es un tablero web que reúne los Merge Requests abiertos de vari
 - **Backend:** Express 4, API de GitLab, Nodemailer y cookies de sesión HTTP-only.
 - **Persistencia:** PostgreSQL en Neon mediante `@neondatabase/serverless`; PGlite para los test de integración.
 - **Test:** Vitest 4, React Testing Library, happy-dom y Playwright.
+- **Observabilidad:** Sentry para reportes de errores no controlados.
 - **Calidad y documentación:** ESLint 10 y VitePress 1.
 
 ## Requisitos
@@ -53,7 +54,7 @@ node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))"
 | `DATABASE_URL` | Sí | — | Cadena de conexión de Neon; se recomienda la del pooler |
 | `ENCRYPTION_KEY` | Sí | — | Clave de al menos 32 caracteres para cifrar los access token |
 | `GITLAB_BASE_URL` | No | `https://gitlab.com` | Instancia de GitLab |
-| `NODE_ENV` | No | — | En `production` habilita SMTP y la cookie segura; usar `development` localmente |
+| `NODE_ENV` | No | `development` para Sentry | Define el ambiente del backend; en `production` habilita SMTP y la cookie segura |
 | `PORT` | No | `3001` | Puerto del backend |
 | `POLL_CACHE_TTL_MS` | No | `60000` | TTL de la caché en milisegundos |
 | `TEAM_LEAD_USERNAME` | No | `NGiudi` | Username cuya aprobación cuenta como la del líder |
@@ -68,6 +69,8 @@ node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))"
 | `SMTP_SECURE` | No | `false` | Usa TLS desde el inicio; normalmente `true` con el puerto 465 |
 | `SMTP_USER` | No | — | Usuario SMTP; debe configurarse junto con `SMTP_PASSWORD` |
 | `SMTP_PASSWORD` | No | — | Contraseña SMTP; debe configurarse junto con `SMTP_USER` |
+| `SENTRY_DSN` | No | — | DSN del proyecto de Sentry; sin valor deshabilita los reportes del backend |
+| `SENTRY_RELEASE` | No | SHA de Vercel, si está disponible | Identificador inmutable del despliegue; debe coincidir con el del frontend |
 
 En desarrollo, los correos no se envían: el enlace de restablecimiento se escribe en la terminal. Los proyectos y el PAT con alcance `read_api` no son variables de entorno; un administrador los carga desde «Mi cuenta» y el backend los guarda en la base con el token cifrado.
 
@@ -76,8 +79,10 @@ En desarrollo, los correos no se envían: el enlace de restablecimiento se escri
 | Variable | Obligatoria | Predeterminado | Uso |
 |---|---:|---|---|
 | `VITE_API_BASE_URL` | No | `http://localhost:3001` en desarrollo; mismo origen en producción | URL base HTTP(S) del backend |
+| `VITE_SENTRY_DSN` | No | — | DSN público del proyecto de Sentry; sin valor deshabilita los reportes del frontend |
+| `VITE_SENTRY_RELEASE` | No | SHA de Vercel, si está disponible | Identificador inmutable del despliegue; debe coincidir con el del backend |
 
-Vite expone al navegador todas las variables con prefijo `VITE_`; nunca deben contener secretos.
+Vite expone al navegador todas las variables con prefijo `VITE_`; nunca deben contener secretos. El DSN de Sentry es público, pero un token de autenticación para publicar source maps no lo es y no debe usar ese prefijo. El alcance y las reglas de privacidad están en [Observabilidad](docs/architecture/observabilidad.md).
 
 ## Ejecución
 

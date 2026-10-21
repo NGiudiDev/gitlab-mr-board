@@ -86,6 +86,11 @@ const config = {
     user: smtpUser,
     password: smtpPassword,
   },
+  sentry: {
+    dsn: process.env.SENTRY_DSN?.trim() || "",
+    environment: process.env.NODE_ENV || "development",
+    release: process.env.SENTRY_RELEASE?.trim() || process.env.VERCEL_GIT_COMMIT_SHA?.trim() || "",
+  },
   // Cifra los access token de GitLab guardados en la base. Cambiarla vuelve
   // ilegibles los tokens ya guardados: hay que cargarlos de nuevo.
   encryptionKey,

@@ -114,6 +114,10 @@
 
 - **Usar versiones exactas**, sin `^` ni `~`, y mantener actualizado el `package-lock.json` correspondiente.
 
+### Observabilidad
+
+- Sentry reporta sólo errores no controlados y queda deshabilitado cuando el paquete no tiene DSN. Mantener los adaptadores inyectables, `sendDefaultPii: false` y el mismo identificador de release en backend y frontend. No adjuntar cuerpos, cookies, cabeceras, credenciales ni datos personales; el alcance y la configuración viven en [`docs/architecture/observabilidad.md`](docs/architecture/observabilidad.md).
+
 ### Commits
 
 - Formato `<type>: <description>` en inglés (por ejemplo: `feat: add author filter`, `fix: correct approval calculation`).

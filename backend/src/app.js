@@ -21,16 +21,24 @@ import { createUsersRouter } from "./features/users/routes/users.js";
 import { createUserRepository } from "./features/users/services/userRepository.js";
 import { createUserService } from "./features/users/services/userService.js";
 import { applySchema, createNeonDatabase } from "./shared/database.js";
+import { errorReporter } from "./shared/errorReporting.js";
 
 let configuredAppPromise;
+errorReporter.initialize();
 
 const ALLOWED_ORIGINS = ["http://localhost:5173", "http://localhost:4173"];
 
 /** Convierte cualquier error no controlado en una respuesta HTTP segura. */
-const errorHandler = (error, _request, response, _next) => {
-  console.error("Error no controlado:", error);
-  response.status(500).json({ error: "Error interno del servidor." });
-};
+function createErrorHandler(reporter = errorReporter) {
+  return (error, request, response, _next) => {
+    reporter.captureException(error, {
+      method: request.method,
+      path: request.originalUrl,
+    });
+    console.error("Error no controlado:", error);
+    response.status(500).json({ error: "Error interno del servidor." });
+  };
+}
 
 /**
  * Arma sobre una base ya abierta los servicios que necesita la aplicación.
@@ -127,7 +135,7 @@ function resolveServices(options) {
  * test de integración la ejecuten en memoria.
  */
 function createApp(options = {}) {
-  const { fetchMergeRequests, now } = options;
+  const { errorReporter: appErrorReporter = errorReporter, fetchMergeRequests, now } = options;
   const {
     accountService,
     authService,
@@ -160,7 +168,7 @@ function createApp(options = {}) {
       now,
     }),
   );
-  app.use(errorHandler);
+  app.use(createErrorHandler(appErrorReporter));
 
   return app;
 }
@@ -204,15 +212,17 @@ async function getConfiguredApp() {
  * Adapta Express al contrato de entrada de una Vercel Function.
  *
  * @param loadApp Inicializador inyectable para los test.
+ * @param reporter Adaptador de reportes inyectable para los test.
  * @returns Handler compatible con Vercel.
  */
-function createVercelHandler(loadApp = getConfiguredApp) {
+function createVercelHandler(loadApp = getConfiguredApp, reporter = errorReporter) {
   return async (request, response) => {
     try {
       const app = await loadApp();
 
       return app(request, response);
     } catch (error) {
+      reporter.captureException(error, { phase: "preparación de la función" });
       console.error("No se pudo preparar el backend para atender la solicitud:", error);
       response.statusCode = 503;
       response.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -224,4 +234,4 @@ function createVercelHandler(loadApp = getConfiguredApp) {
 const handleVercelRequest = createVercelHandler();
 
 export default handleVercelRequest;
-export { createApp, createConfiguredApp, createServices, createVercelHandler };
+export { createApp, createConfiguredApp, createErrorHandler, createServices, createVercelHandler };
