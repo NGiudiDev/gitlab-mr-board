@@ -1,4 +1,4 @@
-import { isAdmin } from "../../features/accounts/utils/account.utils.js";
+import { isAdmin } from "../../features/users/utils/user.utils.js";
 
 import { NAVIGATION_SECTIONS } from "../constants/routes.consts.js";
 

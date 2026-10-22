@@ -1,9 +1,10 @@
 import { useState } from "react";
 
-import { Styles } from "../../../../app/app.styles.jsx";
-import { MaskedField } from "../../../../app/components/masked_field/masked_field.jsx";
+import { MaskedField } from "../../../../design_system/masked_field/masked_field.jsx";
 
-const MINIMUM_PASSWORD_LENGTH = 8;
+import { Styles } from "../../../../app/app.styles.jsx";
+
+import { MINIMUM_PASSWORD_LENGTH } from "../../constants/auth.consts.js";
 
 export function ResetPasswordForm(props) {
   const {

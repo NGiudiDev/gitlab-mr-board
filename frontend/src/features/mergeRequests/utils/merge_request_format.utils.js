@@ -1,4 +1,14 @@
 /**
+ * Presenta la hora de la última actualización del tablero.
+ *
+ * @param {Date} date Instante a mostrar.
+ * @returns {string} Hora y minutos locales.
+ */
+export function formatClockTime(date) {
+  return date.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
+}
+
+/**
  * Formatea una fecha del merge request con fecha y hora locales.
  *
  * @param {string} iso Fecha en formato ISO.
@@ -12,6 +22,16 @@ export function formatMergeRequestDateTime(iso) {
 }
 
 /**
+ * Toma el nombre del proyecto de su ruta completa en GitLab.
+ *
+ * @param {string} projectPath Ruta `grupo/subgrupo/proyecto`.
+ * @returns {string} Último tramo de la ruta.
+ */
+export function formatProjectName(projectPath) {
+  return projectPath.split("/").at(-1);
+}
+
+/**
  * Resume cuánto tiempo pasó desde la última actualización.
  *
  * @param {string} iso Fecha en formato ISO.
@@ -20,12 +40,12 @@ export function formatMergeRequestDateTime(iso) {
  */
 export function formatRelativeTime(iso, currentTime = Date.now()) {
   const elapsedSeconds = (currentTime - new Date(iso).getTime()) / 1000;
-  
+
   if (elapsedSeconds < 3600) {
     return `${Math.max(1, Math.round(elapsedSeconds / 60))}m`;
   }
-  
+
   if (elapsedSeconds < 86400) return `${Math.round(elapsedSeconds / 3600)}h`;
-  
+
   return `${Math.round(elapsedSeconds / 86400)}d`;
 }

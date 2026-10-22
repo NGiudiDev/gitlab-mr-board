@@ -2,86 +2,13 @@ import { Styles as AppStyles } from "../../../../app/app.styles.jsx";
 
 import { Styles } from "./blocker_badge.style.js";
 
-function iconFor(type, data) {
-  if (type === "pipeline") {
-    const status = data.status;
-    if (status === "success") return "✓";
-    if (status === "failed" || status === "canceled") return "✗";
-    if (status === "running" || status === "pending") return "●";
-    return "–";
-  }
-  if (type === "threads") return data.unresolvedCount > 0 ? "✉" : "✓";
-  if (type === "approvals") return data.status === "approved" ? "✓" : "✎";
-  if (type === "conflicts") return data.hasConflicts ? "✗" : "✓";
-  return "";
-}
+import { describeBlocker } from "../../utils/blocker_badge.utils.js";
 
-function labelFor(type, data) {
-  if (type === "pipeline") {
-    const map = { success: "CI OK", failed: "CI Falló", running: "CI...", pending: "CI...", canceled: "CI Cancel", none: "Sin CI" };
-    return map[data.status] || "CI ?";
-  }
-  if (type === "threads") {
-    const count = data.unresolvedCount;
-    return count > 0 ? `${count} hilo${count > 1 ? "s" : ""}` : "Hilos OK";
-  }
-  if (type === "approvals") {
-    if (data.status === "unknown") return "Approvals ?";
-    return `${data.given}/${data.required}`;
-  }
-  if (type === "conflicts") return data.hasConflicts ? "Con conflictos" : "Sin conflictos";
-  return "";
-}
-
-function tooltipFor(type, data) {
-  if (type === "pipeline") return `Pipeline: ${data.status}`;
-  if (type === "threads") return `${data.unresolvedCount} hilos sin resolver`;
-  if (type === "approvals") {
-    if (data.status === "unknown") return "No se pudo obtener info de approvals";
-    const { given, required, approvers, hasLeadApproval } = data;
-    const parts = [`${given}/${required} aprobaciones`];
-    if (approvers && approvers.length > 0) parts.push(`Aprobado por: ${approvers.join(", ")}`);
-    if (!hasLeadApproval) parts.push("Falta aprobación del líder");
-    return parts.join("\n");
-  }
-  if (type === "conflicts") {
-    return data.hasConflicts ? "Tiene conflictos de merge" : "Sin conflictos de merge";
-  }
-  return "";
-}
-
-function badgeColors(type, data) {
-  if (type === "pipeline") {
-    const status = data.status;
-    if (status === "success") return ["var(--color-ready-soft)", "var(--color-ready)"];
-    if (status === "failed" || status === "canceled") return ["var(--color-conflict-soft)", "var(--color-conflict)"];
-    if (status === "running" || status === "pending") return ["var(--color-draft-soft)", "var(--color-draft)"];
-    return ["var(--color-surface)", "var(--color-text-muted)"];
-  }
-  if (type === "threads") {
-    return data.unresolvedCount > 0
-      ? ["var(--color-conflict-soft)", "var(--color-conflict)"]
-      : ["var(--color-ready-soft)", "var(--color-ready)"];
-  }
-  if (type === "approvals") {
-    if (data.status === "approved") return ["var(--color-ready-soft)", "var(--color-ready)"];
-    if (data.status === "pending") return ["var(--color-draft-soft)", "var(--color-draft)"];
-    return ["var(--color-surface)", "var(--color-text-muted)"];
-  }
-  if (type === "conflicts") {
-    return data.hasConflicts
-      ? ["var(--color-conflict-soft)", "var(--color-conflict)"]
-      : ["var(--color-ready-soft)", "var(--color-ready)"];
-  }
-  return ["var(--color-surface)", "var(--color-text-muted)"];
-}
-
+/** Badge de un bloqueante del merge request: CI, hilos, approvals o conflictos. */
 export function BlockerBadge(props) {
   const { data, type } = props;
 
-  const linkUrl = type === "pipeline" ? data.pipelineUrl || null : null;
-  const tooltip = tooltipFor(type, data);
-  const colors = badgeColors(type, data);
+  const { colors, icon, label, linkUrl, tooltip } = describeBlocker(type, data);
 
   return (
     <Styles.Badge
@@ -93,8 +20,8 @@ export function BlockerBadge(props) {
       target={linkUrl ? "_blank" : undefined}
       title={tooltip}
     >
-      <span aria-hidden="true">{iconFor(type, data)}</span>
-      <span>{labelFor(type, data)}</span>
+      <span aria-hidden="true">{icon}</span>
+      <span>{label}</span>
       {linkUrl ? <AppStyles.VisuallyHidden>(abre en una pestaña nueva)</AppStyles.VisuallyHidden> : null}
     </Styles.Badge>
   );

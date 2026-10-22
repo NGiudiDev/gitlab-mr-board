@@ -8,25 +8,25 @@ import {
 
 export const GlobalStyles = createGlobalStyle`
   :root {
-    color-scheme: dark;
+    --color-accent: #45b8c9;
     --color-bg: #12141a;
-    --color-surface: #1a1d24;
-    --color-surface-raised: #22262f;
     --color-border: #2a2f3a;
     --color-border-soft: #22252d;
-    --color-control: #667085;
-    --color-accent: #45b8c9;
-    --color-ready: #4fb477;
-    --color-ready-soft: #16261d;
-    --color-draft: #d9a441;
-    --color-draft-soft: #2b2213;
     --color-conflict: #f06a6f;
     --color-conflict-soft: #301617;
-    --color-text-primary: #e7e9ed;
-    --color-text-muted: #9098a6;
+    --color-control: #667085;
+    --color-draft: #d9a441;
+    --color-draft-soft: #2b2213;
+    --color-ready: #4fb477;
+    --color-ready-soft: #16261d;
+    --color-surface: #1a1d24;
+    --color-surface-raised: #22262f;
     --color-text-faint: #858e9e;
-    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+    --color-text-muted: #9098a6;
+    --color-text-primary: #e7e9ed;
     --font-mono: ui-monospace, "SFMono-Regular", "SF Mono", Consolas, "Cascadia Code", monospace;
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+    color-scheme: dark;
   }
 
   *, *::before, *::after {
@@ -34,16 +34,16 @@ export const GlobalStyles = createGlobalStyle`
   }
 
   html {
-    min-height: 100%;
     background: var(--color-bg);
+    min-height: 100%;
   }
 
   body {
-    min-height: 100vh;
-    margin: 0;
     background: var(--color-bg);
     color: var(--color-text-primary);
     font-family: var(--font-sans);
+    margin: 0;
+    min-height: 100vh;
     -webkit-font-smoothing: antialiased;
   }
 
@@ -58,16 +58,16 @@ export const GlobalStyles = createGlobalStyle`
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
-      scroll-behavior: auto !important;
-      transition-duration: 0.01ms !important;
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
     }
   }
 
   ::-webkit-scrollbar {
-    width: 6px;
     height: 6px;
+    width: 6px;
   }
 
   ::-webkit-scrollbar-track {
@@ -75,75 +75,75 @@ export const GlobalStyles = createGlobalStyle`
   }
 
   ::-webkit-scrollbar-thumb {
-    border-radius: 3px;
     background: var(--color-border);
+    border-radius: 3px;
   }
 `;
 
 const Alert = styled.p`
-  margin: 0 0 1rem;
-  padding: 0.5rem 0.75rem;
+  background: ${({ $success }) => $success ? "var(--color-ready-soft)" : "var(--color-conflict-soft)"};
   border: 1px solid ${({ $success }) => $success ? "var(--color-ready)" : "var(--color-conflict)"};
   border-radius: 0.375rem;
-  background: ${({ $success }) => $success ? "var(--color-ready-soft)" : "var(--color-conflict-soft)"};
   color: var(--color-text-primary);
   font-size: 0.78125rem;
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.75rem;
 `;
 
 const AuthForm = styled.form`
-  width: 100%;
-  max-width: 24rem;
-  margin: 4rem auto 0;
-  padding: 1.5rem;
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 0.5rem;
-  background: var(--color-surface);
+  margin: 4rem auto 0;
+  max-width: 24rem;
+  padding: 1.5rem;
+  width: 100%;
 `;
 
 const AuthFormDescription = styled.p`
-  margin: 0 0 1.25rem;
   color: var(--color-text-muted);
   font-size: 0.78125rem;
+  margin: 0 0 1.25rem;
 `;
 
 const AuthFormHeading = styled.h1`
-  margin: 0 0 0.25rem;
   color: var(--color-text-primary);
   font-size: 1.125rem;
   font-weight: 600;
+  margin: 0 0 0.25rem;
 `;
 
 const AuthFormSwitch = styled.p`
-  margin: 1rem 0 0;
   color: var(--color-text-muted);
   font-size: 0.78125rem;
+  margin: 1rem 0 0;
   text-align: center;
 `;
 
 const Button = styled.button`
-  padding: 0.5rem 0.75rem;
+  background: var(--color-accent);
   border: 0;
   border-radius: 0.375rem;
-  background: var(--color-accent);
   color: var(--color-bg);
+  cursor: pointer;
   font-size: 0.8125rem;
   font-weight: 600;
-  cursor: pointer;
+  padding: 0.5rem 0.75rem;
   ${disabledControlStyles}
   ${focusRingStyles}
 `;
 
 const AuthSubmitButton = styled(Button)`
-  width: 100%;
   margin-top: 0.5rem;
+  width: 100%;
 `;
 
 const ButtonLink = styled.button`
-  padding: 0;
-  border: 0;
   background: none;
+  border: 0;
   color: var(--color-accent);
   cursor: pointer;
+  padding: 0;
   ${focusRingStyles}
 `;
 
@@ -151,22 +151,29 @@ const DetailList = styled.dl`
   font-size: 0.8125rem;
 `;
 
+const DialogActions = styled.div`
+  display: flex;
+  gap: 0.625rem;
+  justify-content: flex-end;
+  margin-top: 1.25rem;
+`;
+
 const DetailValue = styled.dd`
-  margin: 0.25rem 0 0;
   color: var(--color-text-primary);
+  margin: 0.25rem 0 0;
 `;
 
 const Field = styled.input`
-  display: block;
-  width: 100%;
-  margin-top: 0.25rem;
-  padding: 0.5rem 0.75rem;
+  background: var(--color-surface-raised);
   border: 1px solid var(--color-control);
   border-radius: 0.375rem;
-  background: var(--color-surface-raised);
   color: var(--color-text-primary);
+  display: block;
   font: inherit;
   font-size: 0.8125rem;
+  margin-top: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  width: 100%;
 
   &:disabled {
     opacity: 0.5;
@@ -180,21 +187,21 @@ const FormField = styled.div`
 `;
 
 const Hint = styled.p`
-  margin: 0.25rem 0 0;
   color: var(--color-text-faint);
   font-size: 0.75rem;
   font-weight: 400;
+  margin: 0.25rem 0 0;
 `;
 
 const InlineFeedback = styled.p`
-  margin: 0.75rem 0 0;
   color: ${({ $success }) => $success ? "var(--color-ready)" : "var(--color-conflict)"};
   font-size: 0.75rem;
+  margin: 0.75rem 0 0;
 `;
 
 const Label = styled.label`
-  display: block;
   color: var(--color-text-muted);
+  display: block;
   font-size: 0.75rem;
   font-weight: 600;
 `;
@@ -205,17 +212,17 @@ const LoadingText = styled.p`
 `;
 
 const PageSections = styled.div`
-  max-width: 36rem;
   margin: 0 auto;
+  max-width: 36rem;
 
   > section {
-    padding: 1.25rem 0;
     border-top: 1px solid var(--color-border-soft);
+    padding: 1.25rem 0;
   }
 
   > section:first-child {
-    padding-top: 0;
     border-top: 0;
+    padding-top: 0;
   }
 
   > section:last-child {
@@ -224,13 +231,13 @@ const PageSections = styled.div`
 `;
 
 const SecondaryButton = styled.button`
-  padding: 0.5rem 0.75rem;
+  background: transparent;
   border: 1px solid var(--color-control);
   border-radius: 0.375rem;
-  background: transparent;
   color: var(--color-text-primary);
-  font-size: 0.78125rem;
   cursor: pointer;
+  font-size: 0.78125rem;
+  padding: 0.5rem 0.75rem;
 
   &:hover {
     border-color: var(--color-accent);
@@ -241,16 +248,16 @@ const SecondaryButton = styled.button`
 `;
 
 const SectionDescription = styled.p`
-  margin: 0 0 1rem;
   color: var(--color-text-muted);
   font-size: 0.78125rem;
+  margin: 0 0 1rem;
 `;
 
 const SectionHeading = styled.h2`
-  margin: 0 0 0.25rem;
   color: var(--color-text-primary);
   font-size: 1rem;
   font-weight: 600;
+  margin: 0 0 0.25rem;
 `;
 
 const SpacedLabel = styled(Label)`
@@ -258,12 +265,12 @@ const SpacedLabel = styled(Label)`
 `;
 
 const StatusPanel = styled.div`
-  padding: 4rem 1rem;
+  background: var(--color-surface);
   border: 1px dashed var(--color-border);
   border-radius: 0.5rem;
-  background: var(--color-surface);
   color: var(--color-text-muted);
   font-size: 0.8125rem;
+  padding: 4rem 1rem;
   text-align: center;
 `;
 
@@ -286,6 +293,7 @@ export const Styles = {
   ButtonLink,
   DetailList,
   DetailValue,
+  DialogActions,
   Field,
   FormField,
   Hint,

@@ -1,28 +1,25 @@
 import { useState } from "react";
 
-import { BlockerBadge } from "../blocker_badge/blocker_badge.jsx";
+import { MrBlockers } from "../mr_blockers/mr_blockers.jsx";
 import { MrDetailModal } from "../mr_detail_modal/mr_detail_modal.jsx";
 
 import { Styles } from "./mr_card.style.js";
 
 import { formatRelativeTime } from "../../utils/merge_request_format.utils.js";
+import { formatResponsiblePeople } from "../../utils/merge_request_people.utils.js";
 
-const COLOR_BY_MERGEABILITY = {
-  ready_to_merge: "var(--color-ready)",
-  mr_warning: "var(--color-draft)",
-  in_progress: "var(--color-text-faint)",
-  review: "#60a5fa",
-  qa: "#c084fc",
-  backlog: "var(--color-text-muted)",
-};
+import {
+  COLOR_BY_MERGEABILITY,
+  DEFAULT_MERGEABILITY_COLOR,
+} from "../../constants/merge_request_card.consts.js";
 
 export function MrCard(props) {
   const { mr, onUploadDateChange = async () => {} } = props;
 
   const [detailOpen, setDetailOpen] = useState(false);
 
-  const assignee = mr.responsiblePeople.map((person) => person.name).join(", ");
-  const color = COLOR_BY_MERGEABILITY[mr.mergeability] || "var(--color-text-faint)";
+  const assignee = formatResponsiblePeople(mr.responsiblePeople);
+  const color = COLOR_BY_MERGEABILITY[mr.mergeability] || DEFAULT_MERGEABILITY_COLOR;
 
   return (
     <>
@@ -41,10 +38,7 @@ export function MrCard(props) {
         </Styles.Branches>
 
         <Styles.Badges>
-          <BlockerBadge data={mr.blockers.pipeline} type="pipeline" />
-          <BlockerBadge data={mr.blockers.threads} type="threads" />
-          <BlockerBadge data={mr.blockers.approvals} type="approvals" />
-          <BlockerBadge data={{ hasConflicts: mr.hasConflicts }} type="conflicts" />
+          <MrBlockers mr={mr} />
         </Styles.Badges>
 
         {assignee ? (

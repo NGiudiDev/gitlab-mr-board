@@ -1,12 +1,5 @@
 import { css } from "styled-components";
 
-export const focusRingStyles = css`
-  &:focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 2px;
-  }
-`;
-
 export const disabledControlStyles = css`
   &:disabled {
     cursor: not-allowed;
@@ -14,14 +7,21 @@ export const disabledControlStyles = css`
   }
 `;
 
+export const focusRingStyles = css`
+  &:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+`;
+
 export const visuallyHiddenStyles = css`
-  position: absolute;
-  width: 1px;
+  border: 0;
+  clip: rect(0, 0, 0, 0);
   height: 1px;
-  padding: 0;
   margin: -1px;
   overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+  padding: 0;
+  position: absolute;
   white-space: nowrap;
-  border: 0;
+  width: 1px;
 `;

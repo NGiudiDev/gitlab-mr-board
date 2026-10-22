@@ -1,13 +1,16 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 
-import { BlockerBadge } from "../blocker_badge/blocker_badge.jsx";
-
 import { Styles as AppStyles } from "../../../../app/app.styles.jsx";
+import { keepFocusInside } from "../../../../app/utils/focus.utils.js";
+
+import { MrBlockers } from "../mr_blockers/mr_blockers.jsx";
+import { MrDetailFields } from "../mr_detail_fields/mr_detail_fields.jsx";
+import { MrUploadDateForm } from "../mr_upload_date_form/mr_upload_date_form.jsx";
+
 import { Styles } from "./mr_detail_modal.style.js";
 
-import { formatMergeRequestDateTime } from "../../utils/merge_request_format.utils.js";
-import { keepFocusInside } from "../../../../app/utils/focus.utils.js";
+import { useUploadDateForm } from "../../hooks/useUploadDateForm.js";
 
 export function MrDetailModal(props) {
   const {
@@ -16,17 +19,16 @@ export function MrDetailModal(props) {
     onUploadDateChange = async () => {},
   } = props;
 
-  const [uploadDate, setUploadDate] = useState(mr.uploadDate ?? "");
-  const [uploadDateError, setUploadDateError] = useState("");
-  const [savingUploadDate, setSavingUploadDate] = useState(false);
   const closeButtonRef = useRef(null);
   const dialogRef = useRef(null);
 
-  const assignee = mr.responsiblePeople.map((person) => person.name).join(", ");
+  const uploadDateForm = useUploadDateForm(mr, onUploadDateChange, onClose);
+
   const headingId = `mr-detail-title-${mr.id}`;
-  const projectName = mr.projectPath.split("/").at(-1);
   const statusId = `upload-date-status-${mr.id}`;
 
+  // El diálogo toma el foco al abrirse, bloquea el scroll del fondo y devuelve
+  // el foco a quien lo abrió al cerrarse.
   useEffect(() => {
     const previouslyFocused = document.activeElement;
     const previousOverflow = document.body.style.overflow;
@@ -40,32 +42,19 @@ export function MrDetailModal(props) {
   }, []);
 
   function handleBackdropMouseDown(event) {
-    if (event.target !== event.currentTarget || savingUploadDate) return;
+    if (event.target !== event.currentTarget || uploadDateForm.saving) return;
+
     onClose();
   }
 
   function handleKeyDown(event) {
-    if (event.key === "Escape" && !savingUploadDate) {
+    if (event.key === "Escape" && !uploadDateForm.saving) {
       event.preventDefault();
       onClose();
       return;
     }
 
     keepFocusInside(event, dialogRef.current);
-  }
-
-  async function handleSubmit(event) {
-    event.preventDefault();
-    setUploadDateError("");
-    setSavingUploadDate(true);
-
-    try {
-      await onUploadDateChange(mr.projectId, mr.iid, uploadDate);
-      onClose();
-    } catch (error) {
-      setUploadDateError(error instanceof Error ? error.message : "No se pudo guardar la fecha.");
-      setSavingUploadDate(false);
-    }
   }
 
   return createPortal(
@@ -79,9 +68,10 @@ export function MrDetailModal(props) {
       >
         <Styles.Header>
           <Styles.Title id={headingId}>{mr.title}</Styles.Title>
+
           <Styles.CloseButton
             aria-label="Cerrar detalle del merge request"
-            disabled={savingUploadDate}
+            disabled={uploadDateForm.saving}
             onClick={onClose}
             ref={closeButtonRef}
             type="button"
@@ -102,77 +92,26 @@ export function MrDetailModal(props) {
         </Styles.Branches>
 
         <Styles.Badges>
-          <BlockerBadge data={mr.blockers.pipeline} type="pipeline" />
-          <BlockerBadge data={mr.blockers.threads} type="threads" />
-          <BlockerBadge data={mr.blockers.approvals} type="approvals" />
-          <BlockerBadge data={{ hasConflicts: mr.hasConflicts }} type="conflicts" />
+          <MrBlockers mr={mr} />
         </Styles.Badges>
 
-        <Styles.Details>
-          <div>
-            <dt>Autor</dt>
-            <dd>{mr.author}</dd>
-          </div>
-          <div>
-            <dt>Responsable</dt>
-            <dd>{assignee || "Sin responsable"}</dd>
-          </div>
-          <div>
-            <dt>Proyecto</dt>
-            <dd>{projectName}</dd>
-          </div>
-          <div>
-            <dt>Merge request</dt>
-            <dd>!{mr.iid}</dd>
-          </div>
-          <div>
-            <dt>Creado</dt>
-            <dd>{formatMergeRequestDateTime(mr.createdAt)}</dd>
-          </div>
-          <div>
-            <dt>Actualizado</dt>
-            <dd>{formatMergeRequestDateTime(mr.updatedAt)}</dd>
-          </div>
-        </Styles.Details>
+        <MrDetailFields mr={mr} />
 
         {mr.mergeability === "ready_to_merge" ? (
-          <Styles.Form onSubmit={handleSubmit}>
-            <Styles.UploadDateLabel htmlFor={`upload-date-${mr.id}`}>
-              Fecha de subida
-            </Styles.UploadDateLabel>
-            <Styles.UploadDateInput
-              aria-describedby={statusId}
-              disabled={savingUploadDate}
-              id={`upload-date-${mr.id}`}
-              onChange={(event) => setUploadDate(event.target.value)}
-              type="date"
-              value={uploadDate}
-            />
-            <Styles.UploadDateStatus
-              $error={Boolean(uploadDateError)}
-              id={statusId}
-              role={uploadDateError ? "alert" : "status"}
-            >
-              {savingUploadDate ? "Guardando fecha..." : uploadDateError}
-            </Styles.UploadDateStatus>
-
-            <Styles.Actions>
-              <AppStyles.SecondaryButton
-                disabled={savingUploadDate}
-                onClick={onClose}
-                type="button"
-              >
-                Cancelar
-              </AppStyles.SecondaryButton>
-              <AppStyles.Button disabled={savingUploadDate} type="submit">
-                {savingUploadDate ? "Guardando..." : "Guardar"}
-              </AppStyles.Button>
-            </Styles.Actions>
-          </Styles.Form>
+          <MrUploadDateForm
+            error={uploadDateForm.error}
+            fieldId={`upload-date-${mr.id}`}
+            onCancel={onClose}
+            onChange={uploadDateForm.setUploadDate}
+            onSubmit={uploadDateForm.submit}
+            saving={uploadDateForm.saving}
+            statusId={statusId}
+            uploadDate={uploadDateForm.uploadDate}
+          />
         ) : (
-          <Styles.Actions>
+          <AppStyles.DialogActions>
             <AppStyles.Button onClick={onClose} type="button">Cerrar</AppStyles.Button>
-          </Styles.Actions>
+          </AppStyles.DialogActions>
         )}
       </Styles.Dialog>
     </Styles.Backdrop>,

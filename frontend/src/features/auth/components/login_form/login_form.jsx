@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { MaskedField } from "../../../../app/components/masked_field/masked_field.jsx";
+import { MaskedField } from "../../../../design_system/masked_field/masked_field.jsx";
 
 import { Styles } from "../../../../app/app.styles.jsx";
 

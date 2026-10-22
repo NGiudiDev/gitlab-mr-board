@@ -8,7 +8,7 @@ import { GitlabUserSettingsSection } from "../../../users/components/gitlab_user
 import { Styles } from "../../../../app/app.styles.jsx";
 
 import { fetchMergeRequests } from "../../../mergeRequests/hooks/useMergeRequests.js";
-import { isAdmin } from "../../utils/account.utils.js";
+import { isAdmin } from "../../../users/utils/user.utils.js";
 
 export function AccountPage(props) {
   const { onSaveGitlabUsername, submitting, user } = props;

@@ -14,26 +14,26 @@ const SkeletonContent = styled.div`
 `;
 
 const SkeletonLine = styled.div`
-  width: ${({ $width }) => $width};
+  background: var(--color-surface-raised);
+  border-radius: 0.25rem;
   height: 0.75rem;
   margin: ${({ $hint }) => $hint ? "0.5rem 0 0" : "0 0 0.5rem"};
-  border-radius: 0.25rem;
-  background: var(--color-surface-raised);
+  width: ${({ $width }) => $width};
 `;
 
 const SkeletonField = styled.div`
-  width: 100%;
-  height: 2.5rem;
+  background: var(--color-surface-raised);
   border: 1px solid var(--color-border-soft);
   border-radius: 0.375rem;
-  background: var(--color-surface-raised);
+  height: 2.5rem;
+  width: 100%;
 `;
 
 const SkeletonButton = styled.div`
-  width: 11rem;
-  height: 2.25rem;
-  border-radius: 0.375rem;
   background: var(--color-surface-raised);
+  border-radius: 0.375rem;
+  height: 2.25rem;
+  width: 11rem;
 `;
 
 export const Styles = {

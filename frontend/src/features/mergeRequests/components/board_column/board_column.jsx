@@ -1,8 +1,10 @@
+import { Styles as AppStyles } from "../../../../app/app.styles.jsx";
 
 import { MrCard } from "../mr_card/mr_card.jsx";
 
-import { Styles as AppStyles } from "../../../../app/app.styles.jsx";
 import { Styles } from "./board_column.style.js";
+
+import { toDomId } from "../../utils/dom_id.utils.js";
 
 export function BoardColumn(props) {
   const {
@@ -12,7 +14,7 @@ export function BoardColumn(props) {
     title,
   } = props;
 
-  const headingId = `columna-${idPrefix}-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+  const headingId = `columna-${idPrefix}-${toDomId(title)}`;
 
   return (
     <Styles.Column aria-labelledby={headingId}>

@@ -1,12 +1,12 @@
 import { useState } from "react";
 
-import { MaskedField } from "../../../../app/components/masked_field/masked_field.jsx";
-
 import { Styles as AppStyles } from "../../../../app/app.styles.jsx";
-import { Styles } from "./register_form.style.js";
+import { MaskedField } from "../../../../design_system/masked_field/masked_field.jsx";
 
-//TODO: Pasar esta constante a un archivo de constantes.
-const MINIMUM_PASSWORD_LENGTH = 8;
+import { RegisterAccountChoice } from "../register_account_choice/register_account_choice.jsx";
+import { RegisterTeamFields } from "../register_team_fields/register_team_fields.jsx";
+
+import { MINIMUM_PASSWORD_LENGTH } from "../../constants/auth.consts.js";
 
 export function RegisterForm(props) {
   const {
@@ -24,6 +24,8 @@ export function RegisterForm(props) {
   const [joinExisting, setJoinExisting] = useState(true);
   const [localError, setLocalError] = useState(null);
   const [password, setPassword] = useState("");
+
+  const visibleError = localError ?? error;
 
   function handleSubmit(event) {
     event.preventDefault();
@@ -45,8 +47,6 @@ export function RegisterForm(props) {
     });
   }
 
-  const visibleError = localError ?? error;
-
   return (
     <AppStyles.AuthForm aria-labelledby="registro-heading" onSubmit={handleSubmit}>
       <AppStyles.AuthFormHeading id="registro-heading">
@@ -63,69 +63,15 @@ export function RegisterForm(props) {
         </AppStyles.Alert>
       ) : null}
 
-      <Styles.ChoiceFieldset>
-        <Styles.ChoiceLegend>
-          ¿Cómo querés entrar?
-        </Styles.ChoiceLegend>
-        <Styles.ChoiceGroup>
-          <Styles.ChoiceButton
-            $active={joinExisting}
-            aria-pressed={joinExisting}
-            onClick={() => setJoinExisting(true)}
-            type="button"
-          >
-            Sumarme a un equipo
-          </Styles.ChoiceButton>
-          <Styles.ChoiceButton
-            $active={!joinExisting}
-            aria-pressed={!joinExisting}
-            onClick={() => setJoinExisting(false)}
-            type="button"
-          >
-            Crear un equipo
-          </Styles.ChoiceButton>
-        </Styles.ChoiceGroup>
-      </Styles.ChoiceFieldset>
+      <RegisterAccountChoice joinExisting={joinExisting} onChange={setJoinExisting} />
 
-      {joinExisting ? (
-        <>
-          <AppStyles.SpacedLabel htmlFor="registro-invitacion">
-            Código de invitación
-            <AppStyles.Field
-              aria-describedby="registro-invitacion-ayuda"
-              autoCapitalize="characters"
-              id="registro-invitacion"
-              name="inviteCode"
-              onChange={(event) => setInviteCode(event.target.value)}
-              required
-              spellCheck="false"
-              type="text"
-              value={inviteCode}
-            />
-          </AppStyles.SpacedLabel>
-          <Styles.RegisterHint id="registro-invitacion-ayuda">
-            Te lo da quien administra el tablero de tu equipo. Con él ves los mismos proyectos, sin cargar credenciales de GitLab.
-          </Styles.RegisterHint>
-        </>
-      ) : (
-        <>
-          <AppStyles.SpacedLabel htmlFor="registro-cuenta">
-            Nombre del equipo (opcional)
-            <AppStyles.Field
-              aria-describedby="registro-cuenta-ayuda"
-              id="registro-cuenta"
-              maxLength={80}
-              name="accountName"
-              onChange={(event) => setAccountName(event.target.value)}
-              type="text"
-              value={accountName}
-            />
-          </AppStyles.SpacedLabel>
-          <Styles.RegisterHint id="registro-cuenta-ayuda">
-            Vas a quedar administrador: cargás una vez los proyectos y el access token de GitLab, y el resto del equipo se suma con un código.
-          </Styles.RegisterHint>
-        </>
-      )}
+      <RegisterTeamFields
+        accountName={accountName}
+        inviteCode={inviteCode}
+        joinExisting={joinExisting}
+        onAccountNameChange={setAccountName}
+        onInviteCodeChange={setInviteCode}
+      />
 
       <AppStyles.SpacedLabel htmlFor="registro-email">
         Email

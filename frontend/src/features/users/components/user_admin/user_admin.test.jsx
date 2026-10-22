@@ -113,12 +113,20 @@ describe("alta de usuarios", () => {
     await userEvent.selectOptions(screen.getByLabelText("Rol"), "admin");
     await submitNewUser();
 
-    expect(fetchMock.mock.calls[0]).toEqual(["http://localhost:3001/api/users", {
+    const [url, options] = fetchMock.mock.calls[0];
+
+    expect(url).toBe("http://localhost:3001/api/users");
+    expect(options).toMatchObject({
       credentials: "include",
-      method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: "zoe@example.com", displayName: "", password: "contrasena-de-prueba", role: "admin" }),
-    }]);
+      method: "POST",
+    });
+    expect(JSON.parse(options.body)).toEqual({
+      displayName: "",
+      email: "zoe@example.com",
+      password: "contrasena-de-prueba",
+      role: "admin",
+    });
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 

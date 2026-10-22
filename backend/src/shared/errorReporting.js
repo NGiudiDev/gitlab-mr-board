@@ -2,7 +2,13 @@ import * as Sentry from "@sentry/node";
 
 import config from "../config.js";
 
-/** Elimina del evento los campos que pueden contener datos de una persona. */
+/**
+ * Crea una copia del evento de Sentry sin `request` ni `user` para evitar el
+ * envío de datos personales.
+ *
+ * @param {object} event Evento que Sentry está por enviar.
+ * @returns {object} Copia saneada del evento; el original no se modifica.
+ */
 function removeSensitiveEventData(event) {
   const sanitizedEvent = { ...event };
 

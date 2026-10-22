@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/react";
 
-import { config } from "./config.js";
+import { config } from "../../config.js";
 
 /** Elimina del evento los campos que pueden contener datos de una persona. */
 function removeSensitiveEventData(event) {
@@ -65,6 +65,12 @@ function createErrorReporting(options, sdk = Sentry) {
   return { initialize };
 }
 
-const errorReporting = createErrorReporting(config.sentry);
-
-export { createErrorReporting, errorReporting, removeSensitiveEventData };
+/**
+ * Construye el adaptador de reportes con la configuración de Sentry del
+ * frontend.
+ *
+ * @returns Adaptador que inicia Sentry y entrega opciones para `createRoot`.
+ */
+export function createSentryErrorReporting() {
+  return createErrorReporting(config.sentry);
+}

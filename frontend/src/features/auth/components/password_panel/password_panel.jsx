@@ -1,8 +1,10 @@
 import { useState } from "react";
 
-import { MaskedField } from "../../../../app/components/masked_field/masked_field.jsx";
+import { MaskedField } from "../../../../design_system/masked_field/masked_field.jsx";
 
 import { Styles } from "../../../../app/app.styles.jsx";
+
+import { MINIMUM_PASSWORD_LENGTH } from "../../constants/auth.consts.js";
 
 export function PasswordPanel(props) {
   const { onChangePassword = () => {}, submitting = false, user = null } = props;
@@ -58,7 +60,7 @@ export function PasswordPanel(props) {
           autoComplete="new-password"
           id="cuenta-nueva"
           label="Contraseña nueva"
-          minLength={8}
+          minLength={MINIMUM_PASSWORD_LENGTH}
           onChange={(event) => setNewPassword(event.target.value)}
           required
           spaced
@@ -70,7 +72,7 @@ export function PasswordPanel(props) {
           autoComplete="new-password"
           id="cuenta-confirmacion"
           label="Repetí la contraseña nueva"
-          minLength={8}
+          minLength={MINIMUM_PASSWORD_LENGTH}
           onChange={(event) => setConfirmation(event.target.value)}
           required
           spaced

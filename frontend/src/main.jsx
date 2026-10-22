@@ -6,9 +6,11 @@ import { App } from "./app/app.jsx";
 
 import { GlobalStyles } from "./app/app.styles.jsx";
 
-import { errorReporting } from "./errorReporting.js";
+import { createSentryErrorReporting } from "./app/utils/error_reporting.utils.js";
 
-createRoot(document.getElementById("app"), errorReporting.initialize()).render(
+const sentryErrorReporting = createSentryErrorReporting();
+
+createRoot(document.getElementById("app"), sentryErrorReporting.initialize()).render(
   <StrictMode>
     <BrowserRouter>
       <GlobalStyles />

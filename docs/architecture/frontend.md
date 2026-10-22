@@ -17,7 +17,13 @@ El frontend es una aplicación de página única construida con React 19, Vite y
 src/
   main.jsx
   config.js
-  app/                 layout, rutas y estilos compartidos
+  app/                 layout, rutas, estilos compartidos y reporte de errores
+    components/
+    constants/
+    utils/
+  design_system/       controles visuales sin dominio, usados por varias features
+    masked_field/
+    visibility_icon/
   features/
     accounts/
     api/
@@ -29,15 +35,17 @@ src/
 
 Cada funcionalidad usa `components/`, `hooks/`, `pages/`, `constants/` y `utils/` sólo cuando los necesita. Cada componente o page vive en una carpeta `snake_case` junto con sus estilos exclusivos y sus test.
 
-`app/` se reserva para composición general. Las reglas específicas pertenecen a su feature y las reglas de dominio llegan resueltas desde el backend.
+Un archivo de componente define únicamente el componente que exporta: sus funciones auxiliares viven en `utils/` y sus valores fijos en `constants/`, dentro de la misma feature. Cuando un componente acumula más de una responsabilidad se parte en componentes hermanos, y el estado que coordina varias piezas se extrae a un hook de la feature.
+
+`app/` se reserva para composición general. `design_system/` guarda los controles que no conocen ningún dominio y que varias features comparten, como `MaskedField` y su icono: no importan features ni stores, sólo los tokens y las primitivas visuales de `app/`. Las reglas específicas pertenecen a su feature y las reglas de dominio llegan resueltas desde el backend.
 
 ## Dirección de dependencias
 
 - `main.jsx` monta React, el router y los estilos globales.
-- `errorReporting.js` inicia Sentry y conecta los callbacks de errores de React 19.
+- `app/utils/error_reporting.utils.js` inicia Sentry y conecta los callbacks de errores de React 19.
 - `app/` importa pages y stores para resolver layout, rutas y sesión.
 - Las pages coordinan features cuando una pantalla reúne más de un dominio.
-- Los componentes dependen de su feature y de primitivas visuales de `app/`.
+- Los componentes dependen de su feature, de las primitivas visuales de `app/` y de los controles de `design_system/`.
 - Los hooks encapsulan acceso remoto y estado de su feature.
 - Los archivos `.style.js` sólo contienen presentación.
 
@@ -65,16 +73,18 @@ Las restricciones visibles mejoran el recorrido, pero el backend sigue siendo la
 ```text
 App
 └── AppLayout
-    ├── BoardPage
-    │   ├── ViewControls
-    │   ├── TopBar
-    │   └── MrBoard → BoardColumn → MrCard → MrDetailModal
-    ├── AccountPage
-    ├── ProfilePage
-    └── UsersPage
+    ├── GuestRoutes → LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage
+    └── AuthenticatedRoutes
+        ├── BoardPage
+        │   ├── ViewControls
+        │   ├── TopBar → TopBarStatus
+        │   └── MrBoard → ProjectGroup → BoardColumn → MrCard → MrDetailModal
+        ├── AccountPage
+        ├── ProfilePage
+        └── UsersPage → UserAdmin → CreateUserForm, UsersTable
 ```
 
-Las pages componen pantallas; los componentes reciben props explícitas y comunican acciones mediante callbacks. `MrBoard` conserva localmente qué proyectos están expandidos y presenta los merge requests que recibe sin reinterpretar su clasificación o sus responsables.
+`App` elige entre las rutas con sesión y las de ingreso; cada grupo de rutas vive en su propio componente de `app/components/`. Las pages componen pantallas; los componentes reciben props explícitas y comunican acciones mediante callbacks. `MrBoard` conserva localmente qué proyectos están expandidos y presenta los merge requests que recibe sin reinterpretar su clasificación o sus responsables; `MrBlockers` reúne los cuatro badges que comparten la tarjeta y el detalle.
 
 ## Estado compartido
 
@@ -86,7 +96,7 @@ Los stores usan `useSyncExternalStore` y viven a nivel de módulo:
 | `useAccount` | Cuenta compartida e invitación visible. |
 | `useMergeRequests` | Tablero, metadatos, carga, errores, vista y persona seleccionada. |
 
-El primer consumidor del tablero inicia la carga y el polling; el último en desmontarse detiene el intervalo. Los efectos son idempotentes porque `StrictMode` los ejecuta dos veces durante el desarrollo. Al cerrar sesión se reinician los tres stores.
+El primer consumidor del tablero inicia la carga y el polling; el último en desmontarse detiene el intervalo. Los efectos son idempotentes porque `StrictMode` los ejecuta dos veces durante el desarrollo. Al cerrar sesión se reinician los tres stores: de eso se ocupa `features/auth/hooks/useLogout.js`, el único lugar que conoce ese orden.
 
 `useState` queda para estado local, como campos de formulario, menús, modales y proyectos expandidos.
 

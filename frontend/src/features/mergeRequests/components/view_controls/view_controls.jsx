@@ -2,10 +2,7 @@ import { Styles } from "./view_controls.style.js";
 
 import { findPersonByUsername } from "../../utils/personal_view.utils.js";
 
-const VIEW_OPTIONS = [
-  { id: "general", label: "General" },
-  { id: "personal", label: "Personal" },
-];
+import { VIEW_MODES, VIEW_OPTIONS } from "../../constants/merge_request_view.consts.js";
 
 export function ViewControls(props) {
   const {
@@ -15,17 +12,14 @@ export function ViewControls(props) {
     people = [],
     selectedPersonName = "",
     selectedUsername = "",
-    viewMode = "general",
+    viewMode = VIEW_MODES.general,
   } = props;
 
   const selectedPersonIsAvailable = Boolean(findPersonByUsername(people, selectedUsername));
 
   return (
     <Styles.Controls aria-label="Configuración de la vista">
-      <Styles.Options
-        aria-label="Tipo de vista"
-        role="group"
-      >
+      <Styles.Options aria-label="Tipo de vista" role="group">
         {VIEW_OPTIONS.map((option) => {
           const isSelected = viewMode === option.id;
 
@@ -43,7 +37,7 @@ export function ViewControls(props) {
         })}
       </Styles.Options>
 
-      {viewMode === "personal" && canChoosePerson ? (
+      {viewMode === VIEW_MODES.personal && canChoosePerson ? (
         <Styles.PersonLabel>
           Persona
           <Styles.PersonSelect
@@ -51,11 +45,13 @@ export function ViewControls(props) {
             value={selectedUsername}
           >
             <option value="">Elegí una persona</option>
+
             {selectedUsername && !selectedPersonIsAvailable ? (
               <option value={selectedUsername}>
                 {selectedPersonName || `@${selectedUsername}`} (sin tareas actuales)
               </option>
             ) : null}
+
             {people.map((person) => (
               <option key={person.username.toLowerCase()} value={person.username}>
                 {person.name} (@{person.username})
